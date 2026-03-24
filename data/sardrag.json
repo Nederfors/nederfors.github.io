@@ -124,7 +124,7 @@
               "kraver": [
                 {
                   "utrustning_typ": ["Rustning"],
-                  "utrustning_kvalitet": ["Robustanpassad (Novis)", "Robustanpassad (Gesäll)", "Robustanpassad (Mästare)"]
+                  "utrustning_kvalitet": ["Robustanpassad (Novis)"]
                 }
               ]
             }
@@ -141,7 +141,7 @@
               "kraver": [
                 {
                   "utrustning_typ": ["Rustning"],
-                  "utrustning_kvalitet": ["Robustanpassad (Gesäll)", "Robustanpassad (Mästare)"]
+                  "utrustning_kvalitet": ["Robustanpassad (Gesäll)"]
                 }
               ]
             }
@@ -173,7 +173,8 @@
                   "Rese",
                   "Best",
                   "Mörkt blod",
-                  "Blodvadare"
+                  "Blodvadare",
+                  "Monster"
                 ]
               }
             }

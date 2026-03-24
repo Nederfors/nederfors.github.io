@@ -2371,6 +2371,7 @@ function applyCharacterChange(options = {}) {
 }
 // Expose for other modules that want to trigger a full UI sync
 window.applyCharacterChange = applyCharacterChange;
+window.getRuntimeStore = () => store;
 
 function syncEntriesAfterAppUpdate(options = {}) {
   if (!store || typeof store !== 'object') return { updated: 0, characters: 0, charIds: [] };

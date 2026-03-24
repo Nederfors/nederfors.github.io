@@ -1,6 +1,7 @@
 {
   "typ_regler": {
     "Elityrke": {
+      "ignorera_krav_popup": true,
       "kraver": [
         {
           "nar": {

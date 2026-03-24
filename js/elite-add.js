@@ -180,6 +180,43 @@
     }
   }
 
+  function getActiveStore() {
+    if (typeof window.getRuntimeStore === 'function') {
+      try {
+        const runtimeStore = window.getRuntimeStore();
+        if (runtimeStore && typeof runtimeStore === 'object') return runtimeStore;
+      } catch {}
+    }
+    if (window.storeHelper && typeof window.storeHelper.load === 'function') {
+      try {
+        const latest = window.storeHelper.load();
+        if (latest && typeof latest === 'object') return latest;
+      } catch {}
+    }
+    try {
+      if (typeof store === 'object' && store) return store;
+    } catch {}
+    return null;
+  }
+
+  async function ensureActiveStore() {
+    let activeStore = getActiveStore();
+    if (activeStore?.current) return activeStore;
+    if (!(await requireCharacter())) return null;
+    activeStore = getActiveStore();
+    return activeStore?.current ? activeStore : null;
+  }
+
+  function syncEliteMutationUi() {
+    if (typeof window.applyCharacterChange === 'function') {
+      window.applyCharacterChange();
+      return;
+    }
+    if (typeof window.updateXP === 'function') {
+      window.updateXP();
+    }
+  }
+
   function parsePositiveLimit(value) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return null;
@@ -814,7 +851,8 @@
     const cls = pop.querySelector('#masterCancel');
     const currentList = (() => {
       try {
-        return storeHelper.getCurrentList(store);
+        const activeStore = getActiveStore();
+        return activeStore ? storeHelper.getCurrentList(activeStore) : [];
       } catch {
         return [];
       }
@@ -3065,23 +3103,26 @@
   }
 
   async function addReq(entry, levels){
-    if(!store.current && !(await requireCharacter())) return;
+    const activeStore = await ensureActiveStore();
+    if(!activeStore) return false;
     const groups = parseGroupRequirements(entry?.krav || {});
-    const list = storeHelper.getCurrentList(store);
+    const list = storeHelper.getCurrentList(activeStore);
     const fallbackMap = autoPickLevels(groups, list);
     const rows = selectionRowsFromInput(levels, fallbackMap);
-    if (!rows.length) return;
+    if (!rows.length) return false;
     const nextList = applySelectionRowsToList(list, rows);
-    storeHelper.setCurrentList(store, nextList);
+    storeHelper.setCurrentList(activeStore, nextList);
+    return true;
   }
 
   async function addElite(entry, opts = {}){
-    if(!store.current && !(await requireCharacter())) return;
-    const list = storeHelper.getCurrentList(store);
-    if(list.some(item => item.namn === entry.namn)) return;
+    const activeStore = await ensureActiveStore();
+    if(!activeStore) return false;
+    const list = storeHelper.getCurrentList(activeStore);
+    if(list.some(item => item.namn === entry.namn)) return false;
     const skipDup = !!opts.skipDuplicateConfirm;
     if(list.some(isElityrke) && !skipDup){
-      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
+      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return false;
     }
     const res = eliteReq.check(entry, list);
     if(!res.ok){
@@ -3089,19 +3130,21 @@
         (res.missing.length ? `Saknar: ${res.missing.join(', ')}\n` : '') +
         (res.primary ? '' : 'Primärförmågekravet uppfylls inte.\n') +
         'Lägga till ändå?';
-      if(!(await confirmPopup(msg))) return;
+      if(!(await confirmPopup(msg))) return false;
     }
     list.push({ ...entry });
-    storeHelper.setCurrentList(store, list);
+    storeHelper.setCurrentList(activeStore, list);
+    return true;
   }
 
   async function handle(btn){
     const name = btn.dataset.eliteReq;
     const entry = lookupEntry({ id: name, name });
     if(!entry) return;
-    if(!store.current && !(await requireCharacter())) return;
+    const activeStore = await ensureActiveStore();
+    if(!activeStore) return;
 
-    const listPre = storeHelper.getCurrentList(store);
+    const listPre = storeHelper.getCurrentList(activeStore);
     if(listPre.some(item => item.namn === entry.namn)) return;
     if(listPre.some(isElityrke)){
       if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
@@ -3111,32 +3154,38 @@
     if(!groups.length){
       await addReq(entry);
       await addElite(entry, { skipDuplicateConfirm: true });
-      updateXP();
-      if (window.applyCharacterChange) applyCharacterChange();
+      syncEliteMutationUi();
       return;
     }
 
-    openPopup(entry, groups, levels => {
+    openPopup(entry, groups, async levels => {
       if(!levels) return;
-      addReq(entry, levels);
-      addElite(entry, { skipDuplicateConfirm: true });
-      updateXP();
-      if (window.applyCharacterChange) applyCharacterChange();
+      await addReq(entry, levels);
+      await addElite(entry, { skipDuplicateConfirm: true });
+      syncEliteMutationUi();
     });
   }
 
   function onClick(e){
+    if (document.body?.dataset?.role !== 'index') return;
     const button = e.target.closest('button[data-elite-req]');
     if(!button) return;
     handle(button);
   }
 
-  if (typeof document !== 'undefined' && document?.addEventListener) {
-    document.addEventListener('DOMContentLoaded', () => {
-      if(document.body?.dataset?.role === 'index'){
-        document.getElementById('lista')?.addEventListener('click', onClick);
-      }
-    });
+  function bindIndexEliteClickHandler() {
+    if (typeof document === 'undefined' || !document?.addEventListener) return;
+    if (document.body?.dataset?.eliteReqBound === '1') return;
+    if (document.body) document.body.dataset.eliteReqBound = '1';
+    document.addEventListener('click', onClick);
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindIndexEliteClickHandler, { once: true });
+    } else {
+      bindIndexEliteClickHandler();
+    }
   }
 
   function getValfrittTypeOptions() {
@@ -3157,6 +3206,8 @@
     parseGroupRequirements,
     addReq,
     addElite,
+    handle,
+    bindIndexEliteClickHandler,
     projectRequirementList,
     checkProjectedRequirements,
     getValfrittTypeOptions

@@ -18,6 +18,7 @@ const CORE_SCRIPTS = [
   'js/entry-card.js',
   'js/entry-card-builder.js',
   'js/choice-popup.js',
+  'js/requirement-popup.js',
   'js/exceptionellt.js',
   'js/djurmask.js',
   'js/beastform.js',

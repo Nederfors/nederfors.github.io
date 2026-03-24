@@ -21,9 +21,15 @@ def run_step(label: str, script_path: str) -> None:
     subprocess.run([sys.executable, script_path], cwd=ROOT_DIR, check=True)
 
 
+def run_npm_build() -> None:
+    print("[master-sync] npm run build", flush=True)
+    subprocess.run(["npm", "run", "build"], cwd=ROOT_DIR, check=True)
+
+
 def main() -> None:
     for label, script_path in SCRIPT_SEQUENCE:
         run_step(label, script_path)
+    run_npm_build()
     print("[master-sync] done", flush=True)
 
 

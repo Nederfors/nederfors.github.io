@@ -118,6 +118,80 @@ describe('rules-helper unit coverage', () => {
     expect(getMissingReasons(entry, [{ namn: 'Andeform' }]).length).toBeGreaterThan(0);
   });
 
+  it('surfaces alternative name requirements in stop messages', () => {
+    const rulesHelper = loadRulesHelper();
+
+    const candidate = {
+      id: 'test-robust',
+      namn: 'Testrobust',
+      taggar: {
+        typ: ['Särdrag'],
+        regler: {
+          kraver: [
+            {
+              nar: {
+                nagon_av_namn: ['Troll', 'Rese', 'Monster']
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    const reasons = rulesHelper.getMissingRequirementReasonsForCandidate(candidate, []);
+    expect(reasons).toHaveLength(1);
+    expect(reasons[0]?.alternativeNames).toEqual(['Troll', 'Rese', 'Monster']);
+    expect(reasons[0]?.missingNames).toEqual(expect.arrayContaining(['Troll', 'Rese', 'Monster']));
+
+    const stopResult = rulesHelper.evaluateEntryStops(candidate, [], { action: 'add' });
+    expect(rulesHelper.formatEntryStopMessages(candidate.namn, stopResult)).toContain('Krav: Troll, Rese eller Monster');
+  });
+
+  it('does not let equipment-quality rules unlock entry requirements', () => {
+    const rulesHelper = loadRulesHelper();
+
+    const candidate = {
+      id: 'test-robust-level',
+      namn: 'Testrobust nivå',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Särdrag'],
+        nivå_data: {
+          Novis: {
+            regler: {
+              kraver: [
+                {
+                  utrustning_typ: ['Rustning'],
+                  utrustning_kvalitet: ['Robustanpassad (Novis)']
+                }
+              ]
+            }
+          }
+        },
+        regler: {
+          kraver: [
+            {
+              nar: {
+                nagon_av_namn: ['Troll', 'Rese', 'Monster']
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    const missingWithoutPrereq = rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [], { level: 'Novis' });
+    expect(missingWithoutPrereq).toHaveLength(1);
+    expect(missingWithoutPrereq[0]?.missingNames).toEqual(expect.arrayContaining(['Troll', 'Rese', 'Monster']));
+
+    const blockedStop = rulesHelper.evaluateEntryStops(candidate, [], { action: 'add', level: 'Novis' });
+    expect(blockedStop.hasStops).toBe(true);
+    expect(rulesHelper.formatEntryStopMessages(candidate.namn, blockedStop)).toContain('Krav: Troll, Rese eller Monster');
+
+    const unlockedStop = rulesHelper.evaluateEntryStops(candidate, [{ namn: 'Troll' }], { action: 'add', level: 'Novis' });
+    expect(unlockedStop.hasStops).toBe(false);
+  });
+
   it('evaluates rule-extension nar conditions and numeric modifiers', () => {
     const rulesHelper = loadRulesHelper();
 
@@ -374,5 +448,155 @@ describe('rules-helper unit coverage', () => {
     expect(rulesHelper.getEquippedDefenseModifier(list, [], {
       equippedItemFacts: [extraItemFact]
     })).toBe(15);
+  });
+
+  it('offers only directly addable requirement unlocks and flags locked ones', () => {
+    const rulesHelper = loadRulesHelper({
+      lookupEntry({ name }) {
+        const entries = {
+          'Målförmåga': {
+            namn: 'Målförmåga',
+            nivå: 'Novis',
+            taggar: {
+              typ: ['Förmåga'],
+              regler: {
+                kraver: [
+                  { namn: ['Direkt krav'] },
+                  { namn: ['Låst krav'] },
+                  { namn: ['Krockkrav'] }
+                ],
+                kraver_logik: 'or'
+              }
+            }
+          },
+          'Direkt krav': {
+            namn: 'Direkt krav',
+            nivåer: { Novis: true },
+            taggar: { typ: ['Förmåga'] }
+          },
+          'Låst krav': {
+            namn: 'Låst krav',
+            nivåer: { Novis: true },
+            taggar: {
+              typ: ['Förmåga'],
+              regler: {
+                kraver: [{ namn: ['Grundkrav'] }]
+              }
+            }
+          },
+          'Krockkrav': {
+            namn: 'Krockkrav',
+            nivåer: { Novis: true },
+            taggar: {
+              typ: ['Förmåga'],
+              regler: {
+                krockar: [{ namn: 'Redan vald' }]
+              }
+            }
+          },
+          'Grundkrav': {
+            namn: 'Grundkrav',
+            nivåer: { Novis: true },
+            taggar: { typ: ['Förmåga'] }
+          },
+          'Redan vald': {
+            namn: 'Redan vald',
+            nivåer: { Novis: true },
+            taggar: { typ: ['Förmåga'] }
+          }
+        };
+        return entries[name] || null;
+      }
+    });
+
+    const candidate = {
+      namn: 'Målförmåga',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          kraver: [
+            { namn: ['Direkt krav'] },
+            { namn: ['Låst krav'] },
+            { namn: ['Krockkrav'] }
+          ],
+          kraver_logik: 'or'
+        }
+      }
+    };
+    const list = [{ namn: 'Redan vald', nivå: 'Novis', taggar: { typ: ['Förmåga'] } }];
+
+    const options = rulesHelper.getRequirementAssistOptions(candidate, list, { level: 'Novis' });
+    const byName = new Map(options.map(option => [option.name, option]));
+
+    expect(byName.get('Direkt krav')).toBeTruthy();
+    expect(byName.get('Låst krav')).toBeTruthy();
+    expect(byName.get('Krockkrav')).toBeTruthy();
+
+    const state = rulesHelper.evaluateRequirementAssistState(candidate, list, options, [], {
+      action: 'add',
+      level: 'Novis'
+    });
+    const stateByName = new Map(state.options.map(option => [option.name, option]));
+
+    expect(stateByName.get('Direkt krav')?.disabled).toBe(false);
+    expect(stateByName.get('Direkt krav')?.status).toBe('available');
+    expect(stateByName.get('Låst krav')?.disabled).toBe(true);
+    expect(stateByName.get('Låst krav')?.status).toBe('locked');
+    expect(stateByName.get('Låst krav')?.messages?.join(' ')).toMatch(/Grundkrav/);
+    expect(stateByName.get('Krockkrav')?.disabled).toBe(true);
+    expect(stateByName.get('Krockkrav')?.status).toBe('conflict');
+
+    const unlockedState = rulesHelper.evaluateRequirementAssistState(candidate, list, options, [
+      byName.get('Direkt krav')?.key
+    ], {
+      action: 'add',
+      level: 'Novis'
+    });
+
+    expect(unlockedState.unlocked).toBe(true);
+    expect(unlockedState.targetStopResult?.hasStops).toBe(false);
+  });
+
+  it('lets type rules opt out of the requirement popup', () => {
+    const rulesHelper = loadRulesHelper();
+
+    const typeOptOutEntry = {
+      namn: 'Järnsvuren',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Elityrke']
+      }
+    };
+    Object.defineProperty(typeOptOutEntry, '__typ_regler', {
+      value: {
+        Elityrke: {
+          regler: {
+            ignorera_krav_popup: true
+          }
+        }
+      },
+      enumerable: false,
+      configurable: true
+    });
+
+    expect(rulesHelper.shouldSkipRequirementPopup(typeOptOutEntry, { level: 'Novis' })).toBe(true);
+
+    const entryOverride = {
+      ...typeOptOutEntry,
+      taggar: {
+        ...typeOptOutEntry.taggar,
+        regler: {
+          ignorera_krav_popup: false
+        }
+      }
+    };
+    Object.defineProperty(entryOverride, '__typ_regler', {
+      value: typeOptOutEntry.__typ_regler,
+      enumerable: false,
+      configurable: true
+    });
+
+    expect(rulesHelper.shouldSkipRequirementPopup(entryOverride, { level: 'Novis' })).toBe(false);
   });
 });

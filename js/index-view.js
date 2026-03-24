@@ -61,6 +61,48 @@
     return !!(await confirmPopup(text));
   }
 
+  async function resolveRuleStopDecision(entryName, candidateEntry, list, stopResult, action = 'add', options = {}) {
+    const popup = window.requirementPopup;
+    const popupLevel = options?.toLevel || options?.level || candidateEntry?.nivå || '';
+    const skipRequirementPopup = typeof window.rulesHelper?.shouldSkipRequirementPopup === 'function'
+      ? window.rulesHelper.shouldSkipRequirementPopup(candidateEntry, {
+        action,
+        level: popupLevel
+      })
+      : false;
+    if (!skipRequirementPopup && popup && typeof popup.open === 'function' && candidateEntry && Array.isArray(list)) {
+      const title = action === 'level-change'
+        ? `Lås upp nivåändring för ${quoteName(entryName) || 'posten'}`
+        : `Lås upp ${quoteName(entryName) || 'posten'}`;
+      const subtitle = action === 'level-change'
+        ? 'Välj krav som ska läggas till eller höjas för att låsa upp nivåändringen. Du kan också fortsätta med override.'
+        : 'Välj krav som ska läggas till eller höjas för att låsa upp posten. Du kan också fortsätta med override.';
+      const result = await popup.open({
+        title,
+        subtitle,
+        entryName,
+        candidate: candidateEntry,
+        list,
+        action,
+        level: options?.level || candidateEntry?.nivå || '',
+        fromLevel: options?.fromLevel || '',
+        toLevel: options?.toLevel || candidateEntry?.nivå || '',
+        replaceTargetUid: options?.replaceTargetUid || '',
+        overrideLabel: action === 'level-change' ? 'Ändra ändå' : 'Lägg till ändå'
+      });
+      if (result && typeof result === 'object' && typeof result.action === 'string') {
+        return result;
+      }
+    }
+
+    const approved = await confirmRuleStopOverride(entryName, stopResult, action);
+    return {
+      action: approved ? 'override' : 'cancel',
+      selectedKeys: [],
+      state: null
+    };
+  }
+
   async function handleSnapshotEntryRemoval(entry) {
     if (!entry || typeof entry !== 'object') return true;
     const helper = window.snapshotHelper;
@@ -3352,16 +3394,37 @@
             }
           }
         } else {
-          const list = storeHelper.getCurrentList(store);
+          let list = storeHelper.getCurrentList(store);
           const beforeList = list.map(item => ({ ...item }));
           const disBefore = storeHelper.countDisadvantages(list);
           let requiresFullRefresh = hasActiveIndexFilters();
+          let requirementAffectedEntries = [];
           const checkDisadvWarning = async () => {
             if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
               await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
             }
           };
           const levelCandidate = { ...p, nivå: lvl };
+          const skipRequirementPopup = typeof window.rulesHelper?.shouldSkipRequirementPopup === 'function'
+            ? window.rulesHelper.shouldSkipRequirementPopup(levelCandidate, {
+              action: 'add',
+              level: lvl
+            })
+            : false;
+
+          if (skipRequirementPopup && isElityrke(p) && typeof window.eliteAdd?.handle === 'function') {
+            cancelAddScenario(addScenarioId, {
+              scope: 'index',
+              entry: name,
+              reason: 'redirected-elite-flow'
+            });
+            await window.eliteAdd.handle({
+              dataset: {
+                eliteReq: p.namn
+              }
+            });
+            return;
+          }
 
           const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
             ? window.rulesHelper.evaluateEntryStops(levelCandidate, list, {
@@ -3382,15 +3445,34 @@
                 replaceTargetNames: conflictRes.replaceTargetNames || [],
                 grantedLevelStop: null,
                 hardStops: [],
-                hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
-              };
-            })();
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
+            };
+          })();
           const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
-          const forceRuleOverride = (stopResult.hasStops || hasReplaceTargets)
-            ? (await confirmRuleStopOverride(p.namn, stopResult, 'add'))
-            : false;
+          let forceRuleOverride = false;
+          let conflictBaseList = list;
+          if (stopResult.hasStops || hasReplaceTargets) {
+            const decision = await resolveRuleStopDecision(p.namn, levelCandidate, beforeList, stopResult, 'add', {
+              level: lvl
+            });
+            if (decision?.action === 'cancel') {
+              cancelAddScenario(addScenarioId, {
+                scope: 'index',
+                entry: name,
+                reason: 'requirements-blocked'
+              });
+              return;
+            }
+            forceRuleOverride = decision?.action === 'override';
+            if (decision?.action === 'apply' && Array.isArray(decision?.state?.projectedRequirementList)) {
+              conflictBaseList = decision.state.projectedRequirementList;
+              requirementAffectedEntries = Array.isArray(decision?.state?.affectedEntries)
+                ? decision.state.affectedEntries
+                : [];
+            }
+          }
           requiresFullRefresh = requiresFullRefresh || forceRuleOverride || hasReplaceTargets;
-          if (stopResult.hasStops && !forceRuleOverride) {
+          if (stopResult.hasStops && !forceRuleOverride && conflictBaseList === beforeList) {
             cancelAddScenario(addScenarioId, {
               scope: 'index',
               entry: name,
@@ -3405,10 +3487,11 @@
                 .map(value => String(value || '').trim())
                 .filter(Boolean)
             );
-            for (let i = list.length - 1; i >= 0; i--) {
-              if (replaceSet.has(list[i]?.namn || '') && !list[i]?.manualRuleOverride) list.splice(i, 1);
-            }
+            conflictBaseList = conflictBaseList.filter(entry =>
+              !replaceSet.has(entry?.namn || '') || entry?.manualRuleOverride
+            );
           }
+          list = conflictBaseList;
           const listChoice = await pickListEntryChoice(p, list, lvl);
           if (listChoice.hasChoice && listChoice.cancelled) {
             if (listChoice.noOptions) {
@@ -3450,8 +3533,12 @@
                     })
                   ))
                 ));
+                const pendingChoiceEntries = []
+                  .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
+                  .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
+                  .concat(Array.isArray(mutationSummary?.grantedEntriesAdded) ? mutationSummary.grantedEntriesAdded : []);
                 const choiceResolution = await timeActiveAddStage('pending-choice-resolution', () => (
-                  resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded)
+                  resolvePendingChoiceEntries(pendingChoiceEntries)
                 ), {
                   branch: 'list',
                   mode: 'replace-existing',
@@ -3507,8 +3594,12 @@
                 })
               ))
             ));
+            const pendingChoiceEntries = []
+              .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
+              .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
+              .concat(Array.isArray(mutationSummary?.grantedEntriesAdded) ? mutationSummary.grantedEntriesAdded : []);
             const choiceResolution = await timeActiveAddStage('pending-choice-resolution', () => (
-              resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded)
+              resolvePendingChoiceEntries(pendingChoiceEntries)
             ), {
               branch: 'list',
               mode: 'add',
@@ -3882,13 +3973,14 @@
             return null;
           }
         })();
-        ent.nivå = select.value;
-        const levelChoice = await pickListEntryChoice(ent, list, ent.nivå, ent, {
+        const updatedEntry = { ...ent, nivå: select.value };
+        const originalEntry = { ...ent };
+        const originalMatchOptions = buildChoiceEntryMatchOptions(originalEntry);
+        const levelChoice = await pickListEntryChoice(updatedEntry, before, updatedEntry.nivå, ent, {
           promptIfMissingOnly: true
         });
         if (levelChoice.hasChoice) {
           if (levelChoice.cancelled) {
-            ent.nivå = old;
             select.value = old;
             window.entryCardFactory?.syncLevelControl?.(select);
             if (levelChoice.noOptions) {
@@ -3900,41 +3992,51 @@
           }
           const field = levelChoice.rule?.field;
           if (field) {
-            ent[field] = levelChoice.value;
-            if (levelChoice.duplicate?.replaceExisting) {
-              const wanted = normalizeChoiceToken(levelChoice.value);
-              for (let i = list.length - 1; i >= 0; i--) {
-                const item = list[i];
-                if (!item || item === ent) continue;
-                if (!isSameChoiceSource(item, ent)) continue;
-                if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
-                list.splice(i, 1);
-              }
-            }
+            updatedEntry[field] = levelChoice.value;
           }
         } else {
           const staleField = previousChoiceRule?.field;
-          if (staleField && Object.prototype.hasOwnProperty.call(ent, staleField)) {
-            delete ent[staleField];
-          } else if (name === 'Monsterlärd' && ent.trait) {
-            delete ent.trait;
+          if (staleField && Object.prototype.hasOwnProperty.call(updatedEntry, staleField)) {
+            delete updatedEntry[staleField];
+          } else if (name === 'Monsterlärd' && updatedEntry.trait) {
+            delete updatedEntry.trait;
+          }
+        }
+        let nextList = before.map(item => ({ ...item }));
+        const currentEntry = findMatchingListEntry(nextList, originalEntry, originalMatchOptions);
+        const currentIndex = currentEntry ? nextList.indexOf(currentEntry) : -1;
+        let finalEntry = { ...updatedEntry };
+        if (currentIndex >= 0) {
+          nextList[currentIndex] = finalEntry;
+        } else {
+          nextList.push(finalEntry);
+        }
+        if (levelChoice.hasChoice && levelChoice.rule?.field && levelChoice.duplicate?.replaceExisting) {
+          const field = levelChoice.rule.field;
+          const wanted = normalizeChoiceToken(levelChoice.value);
+          for (let i = nextList.length - 1; i >= 0; i--) {
+            const item = nextList[i];
+            if (!item || item === finalEntry) continue;
+            if (!isSameChoiceSource(item, finalEntry)) continue;
+            if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
+            nextList.splice(i, 1);
           }
         }
         const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
-          ? window.rulesHelper.evaluateEntryStops(ent, before, {
+          ? window.rulesHelper.evaluateEntryStops(finalEntry, before, {
             action: 'level-change',
             fromLevel: old,
-            toLevel: ent.nivå,
-            level: ent.nivå,
+            toLevel: finalEntry.nivå,
+            level: finalEntry.nivå,
             beforeList: before,
-            afterList: list
+            afterList: nextList
           })
           : (() => {
             const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
-              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
+              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(finalEntry, before, { level: finalEntry.nivå })
               : []);
             const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
-              ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
+              ? window.rulesHelper.getConflictResolutionForCandidate(finalEntry, before, { level: finalEntry.nivå })
               : { blockingReasons: [], replaceTargetNames: [] });
             const blockingConflicts = conflictRes.blockingReasons;
             return {
@@ -3946,18 +4048,41 @@
               hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
             };
           })();
-        const forceRuleOverride = stopResult.hasStops
-          ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
-          : false;
+        let forceRuleOverride = false;
+        let requirementAffectedEntries = [];
+        if (stopResult.hasStops) {
+          const decision = await resolveRuleStopDecision(name, finalEntry, before, stopResult, 'level-change', {
+            level: finalEntry.nivå,
+            fromLevel: old,
+            toLevel: finalEntry.nivå,
+            replaceTargetUid: finalEntry?.__uid || ''
+          });
+          if (decision?.action === 'cancel') {
+            select.value = old;
+            window.entryCardFactory?.syncLevelControl?.(select);
+            return;
+          }
+          forceRuleOverride = decision?.action === 'override';
+          if (decision?.action === 'apply' && Array.isArray(decision?.state?.projectedList)) {
+            nextList = decision.state.projectedList;
+            requirementAffectedEntries = Array.isArray(decision?.state?.affectedEntries)
+              ? decision.state.affectedEntries
+              : [];
+            finalEntry = findMatchingListEntry(
+              nextList,
+              finalEntry,
+              buildChoiceEntryMatchOptions(finalEntry)
+            ) || finalEntry;
+          }
+        }
         if (stopResult.hasStops && !forceRuleOverride) {
-          ent.nivå = old;
           select.value = old;
           window.entryCardFactory?.syncLevelControl?.(select);
           return;
         }
-        if (forceRuleOverride) ent.manualRuleOverride = true;
+        if (forceRuleOverride) finalEntry.manualRuleOverride = true;
         if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
-          const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+          const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, nextList, before);
           if (toClean.length > 0) {
             const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
             if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
@@ -3967,10 +4092,14 @@
         }
         const mutationSummary = await withBusyInteraction(select, () => (
           runDeferredCurrentCharacterMutation(() => (
-            storeHelper.setCurrentList(store, list)
+            storeHelper.setCurrentList(store, nextList)
           ))
         ));
-        const choiceResolution = await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
+        const pendingChoiceEntries = []
+          .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
+          .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
+          .concat(Array.isArray(mutationSummary?.grantedEntriesAdded) ? mutationSummary.grantedEntriesAdded : []);
+        const choiceResolution = await resolvePendingChoiceEntries(pendingChoiceEntries);
         scheduleCharacterMutationRefresh({
           xp: true,
           traits: true,
@@ -3980,7 +4109,12 @@
           afterPaint: true
         });
         let needsSelectionRefresh = hasActiveIndexFilters();
-        if (!needsSelectionRefresh && !refreshAffectedIndexCards(mutationSummary, [ent])) {
+        const liveEntry = findMatchingListEntry(
+          storeHelper.getCurrentList(store),
+          finalEntry,
+          buildChoiceEntryMatchOptions(finalEntry)
+        ) || finalEntry;
+        if (!needsSelectionRefresh && !refreshAffectedIndexCards(mutationSummary, [liveEntry])) {
           needsSelectionRefresh = true;
         }
         (choiceResolution?.summaries || []).forEach(summary => {

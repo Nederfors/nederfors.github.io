@@ -106,6 +106,10 @@
     'kraver_typ_och_entry',
     'krav_typ_och_entry'
   ]);
+  const REQUIREMENT_POPUP_SKIP_KEYS = Object.freeze([
+    'ignorera_krav_popup',
+    'skip_requirement_popup'
+  ]);
   const ARTIFACT_EFFECT_STAT_KEY_MAP = Object.freeze({
     xp: 'xp',
     erf: 'xp',
@@ -519,6 +523,54 @@
       const mergedTemplateConfig = mergeRequirementRuleConfigs(top, levelConfig);
       return mergeRequirementRuleConfigs(acc, mergedTemplateConfig);
     }, {});
+  }
+
+  function readBooleanRuleFlag(container, keys) {
+    if (!container || typeof container !== 'object' || Array.isArray(container)) return undefined;
+    for (const key of Array.isArray(keys) ? keys : [keys]) {
+      if (!key || !Object.prototype.hasOwnProperty.call(container, key)) continue;
+      return Boolean(container[key]);
+    }
+    return undefined;
+  }
+
+  function mergeBooleanRuleFlag(currentValue, nextValue) {
+    return nextValue === undefined ? Boolean(currentValue) : Boolean(nextValue);
+  }
+
+  function shouldSkipRequirementPopup(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    const level = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : (typeof entry?.nivå === 'string' ? entry.nivå.trim() : '');
+
+    let skipPopup = false;
+
+    getTypeRuleTemplateEntries(entry).forEach(templateEntry => {
+      skipPopup = mergeBooleanRuleFlag(
+        skipPopup,
+        readBooleanRuleFlag(getTopLevelRuleContainer(templateEntry), REQUIREMENT_POPUP_SKIP_KEYS)
+      );
+      getLevelRuleContainers(templateEntry, level).forEach(container => {
+        skipPopup = mergeBooleanRuleFlag(
+          skipPopup,
+          readBooleanRuleFlag(container, REQUIREMENT_POPUP_SKIP_KEYS)
+        );
+      });
+    });
+
+    skipPopup = mergeBooleanRuleFlag(
+      skipPopup,
+      readBooleanRuleFlag(getTopLevelRuleContainer(entry), REQUIREMENT_POPUP_SKIP_KEYS)
+    );
+    getLevelRuleContainers(entry, level).forEach(container => {
+      skipPopup = mergeBooleanRuleFlag(
+        skipPopup,
+        readBooleanRuleFlag(container, REQUIREMENT_POPUP_SKIP_KEYS)
+      );
+    });
+
+    return skipPopup;
   }
 
   function getLevelDataMap(entry) {
@@ -3431,6 +3483,11 @@
     return 'krav';
   }
 
+  function isEquipmentRequirementRule(rule) {
+    if (!rule || typeof rule !== 'object') return false;
+    return Array.isArray(rule.utrustning_typ) || Array.isArray(rule.utrustning_kvalitet);
+  }
+
   function getCandidateRequirementRuleSets(candidateEntry, level = '') {
     const sourceEntry = resolveRuleSourceEntry(candidateEntry || {});
     const typeRules = getTypeRules(sourceEntry, level);
@@ -3446,8 +3503,8 @@
     const rawContainer = getTopLevelRuleContainer(sourceEntry);
     const skipTypeKraver = rawContainer?.ignorera_typ_kraver === true;
     return {
-      entryRequirements: toRuleList(entryRules?.kraver),
-      typeRequirements: skipTypeKraver ? [] : toRuleList(typeRules?.kraver),
+      entryRequirements: toRuleList(entryRules?.kraver).filter(rule => !isEquipmentRequirementRule(rule)),
+      typeRequirements: skipTypeKraver ? [] : toRuleList(typeRules?.kraver).filter(rule => !isEquipmentRequirementRule(rule)),
       entryScopeLogic: normalizeRequirementLogic(entryRequirementConfig.scopeLogic, 'or'),
       typeScopeLogic: normalizeRequirementLogic(typeRequirementConfig.scopeLogic, 'or'),
       scopeCombinationLogic
@@ -3472,6 +3529,7 @@
       const allRequired = failedReasons.flatMap(r => r.requiredNames || []);
       const allMissingLevels = failedReasons.flatMap(r => r.missingLevelRequirements || []);
       const allLevelReqs = failedReasons.flatMap(r => r.levelRequirements || []);
+      const allAlternativeNames = failedReasons.flatMap(r => r.alternativeNames || []);
       return {
         code: getRequirementReasonCode(rule, candidate),
         sourceEntryId: candidate?.id || '',
@@ -3479,6 +3537,7 @@
         sourceEntryLevel: candidate?.nivå || '',
         requiredNames: getUniqueNames(allRequired),
         missingNames: getUniqueNames(allMissing),
+        alternativeNames: getUniqueNames(allAlternativeNames),
         levelRequirements: allLevelReqs,
         missingLevelRequirements: allMissingLevels,
         message: String(rule?.meddelande || rule?.message || '').trim()
@@ -3487,6 +3546,7 @@
 
     const baseRequiredNames = getRequirementNames(rule);
     const levelRequirements = getRequirementLevelRules(rule, baseRequiredNames);
+    const alternativeNames = getRequirementAlternativeNames(rule);
     const requiredNames = getUniqueNames([
       ...baseRequiredNames,
       ...levelRequirements.map(requirement => requirement.name)
@@ -3503,10 +3563,23 @@
         minLevelName: requirement.minLevelName,
         minLevelValue: requirement.minLevelValue
       }));
+    const missingAlternativeNames = alternativeNames.filter(name => !nameSet.has(normalizeLevelName(name)));
+    const alternativeRequirementFailed = alternativeNames.length > 0
+      && missingAlternativeNames.length === alternativeNames.length;
+    const combinedRequiredNames = getUniqueNames([
+      ...requiredNames,
+      ...alternativeNames
+    ]);
+    const combinedMissingNames = getUniqueNames([
+      ...missingNames,
+      ...(alternativeRequirementFailed ? missingAlternativeNames : [])
+    ]);
 
-    const satisfied = (requiredNames.length || levelRequirements.length)
-      ? (missingNames.length === 0 && missingLevelRequirements.length === 0)
-      : matchesListCondition(rule, contextEntries);
+    const satisfied = (
+      missingNames.length === 0
+      && missingLevelRequirements.length === 0
+      && matchesListCondition(rule, contextEntries)
+    );
     if (satisfied) return null;
 
     return {
@@ -3514,8 +3587,9 @@
       sourceEntryId: candidate?.id || '',
       sourceEntryName: candidate?.namn || '',
       sourceEntryLevel: candidate?.nivå || '',
-      requiredNames,
-      missingNames,
+      requiredNames: combinedRequiredNames,
+      missingNames: combinedMissingNames,
+      alternativeNames,
       levelRequirements,
       missingLevelRequirements,
       message: String(rule?.meddelande || rule?.message || '').trim()
@@ -3828,6 +3902,651 @@
     });
 
     return out;
+  }
+
+  function getRequirementAlternativeNames(rule) {
+    return getUniqueNames([
+      ...toArray(rule?.nar?.nagon_av_namn),
+      ...toArray(rule?.nar?.någon_av_namn)
+    ]);
+  }
+
+  function formatRequirementNameList(names = [], glue = 'eller') {
+    const list = getUniqueNames(names);
+    if (!list.length) return '';
+    if (list.length === 1) return list[0];
+    if (list.length === 2) return `${list[0]} ${glue} ${list[1]}`;
+    return `${list.slice(0, -1).join(', ')} ${glue} ${list[list.length - 1]}`;
+  }
+
+  function buildRequirementReasonSummaryText(reason, rule) {
+    const explicit = String(reason?.message || rule?.meddelande || rule?.message || '').trim();
+    if (explicit) return explicit;
+
+    const altNames = getRequirementAlternativeNames(rule);
+    if (altNames.length) return `Kräver ${formatRequirementNameList(altNames, 'eller')}.`;
+
+    const levelRequirements = Array.isArray(reason?.missingLevelRequirements)
+      ? reason.missingLevelRequirements
+      : [];
+    if (levelRequirements.length) {
+      return levelRequirements
+        .map(requirement => {
+          const name = String(requirement?.name || '').trim();
+          const levelName = String(requirement?.minLevelName || '').trim();
+          if (!name || !levelName) return '';
+          return `Kräver ${name} på ${levelName}.`;
+        })
+        .filter(Boolean)
+        .join(' ');
+    }
+
+    const names = Array.isArray(reason?.missingNames) && reason.missingNames.length
+      ? reason.missingNames
+      : (Array.isArray(reason?.requiredNames) ? reason.requiredNames : []);
+    if (names.length) return `Kräver ${formatRequirementNameList(names, 'och')}.`;
+    return 'Krav måste uppfyllas.';
+  }
+
+  function getDefinedEntryLevels(entry) {
+    if (!entry || typeof entry !== 'object') return [];
+    const sourceEntry = resolveRuleSourceEntry(entry);
+    const rawLevels = []
+      .concat(Object.keys(sourceEntry?.nivåer || {}))
+      .concat(Object.keys(sourceEntry?.nivaer || {}));
+    const levelData = getLevelDataMap(sourceEntry);
+    if (levelData && typeof levelData === 'object') {
+      rawLevels.push(...Object.keys(levelData));
+    }
+
+    const out = [];
+    const seen = new Set();
+    rawLevels.forEach(rawLevel => {
+      const level = String(rawLevel || '').trim();
+      const token = normalizeLevelName(level);
+      if (!level || !token || seen.has(token)) return;
+      seen.add(token);
+      out.push(level);
+    });
+
+    return out.sort((left, right) => {
+      const leftValue = getLevelValue(left);
+      const rightValue = getLevelValue(right);
+      if (leftValue !== rightValue) return leftValue - rightValue;
+      return String(left).localeCompare(String(right), 'sv');
+    });
+  }
+
+  function resolveRequirementEntryLevel(entry, preferredLevel = '') {
+    const preferred = String(preferredLevel || '').trim();
+    const definedLevels = getDefinedEntryLevels(entry);
+    if (preferred) {
+      const wanted = normalizeLevelName(preferred);
+      const exact = definedLevels.find(level => normalizeLevelName(level) === wanted);
+      if (exact) return exact;
+      if (getLevelValue(preferred) > 0) return getCanonicalLevelLabel(preferred) || preferred;
+      return preferred;
+    }
+
+    if (typeof window.storeHelper?.resolveEntryLevel === 'function') {
+      try {
+        const resolved = String(window.storeHelper.resolveEntryLevel(entry) || '').trim();
+        if (resolved) {
+          const match = definedLevels.find(level => normalizeLevelName(level) === normalizeLevelName(resolved));
+          return match || resolved;
+        }
+      } catch (_) {
+        // Ignore level resolver errors and fall through to static level data.
+      }
+    }
+
+    return definedLevels[0] || '';
+  }
+
+  function findRequirementExistingEntry(list, referenceEntry, requiredLevel = '') {
+    const entries = Array.isArray(list) ? list : [];
+    const wantedId = referenceEntry?.id === undefined || referenceEntry?.id === null
+      ? ''
+      : String(referenceEntry.id).trim();
+    const wantedName = normalizeLevelName(referenceEntry?.namn || referenceEntry?.name || '');
+    if (!wantedId && !wantedName) return null;
+
+    const desiredLevelValue = getLevelValue(requiredLevel);
+    let bestMatch = null;
+    let bestLevelValue = -1;
+
+    entries.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const entryId = entry?.id === undefined || entry?.id === null
+        ? ''
+        : String(entry.id).trim();
+      const sameId = Boolean(wantedId && entryId && wantedId === entryId);
+      const sameName = Boolean(wantedName && normalizeLevelName(entry?.namn || '') === wantedName);
+      if (!sameId && !sameName) return;
+
+      const levelValue = getLevelValue(entry?.nivå || '');
+      if (!bestMatch) {
+        bestMatch = entry;
+        bestLevelValue = levelValue;
+        return;
+      }
+
+      if (desiredLevelValue > 0) {
+        const currentBelow = levelValue < desiredLevelValue;
+        const bestBelow = bestLevelValue < desiredLevelValue;
+        if (currentBelow && !bestBelow) {
+          bestMatch = entry;
+          bestLevelValue = levelValue;
+          return;
+        }
+        if (currentBelow && bestBelow && levelValue > bestLevelValue) {
+          bestMatch = entry;
+          bestLevelValue = levelValue;
+          return;
+        }
+        if (!bestBelow && !currentBelow && levelValue > bestLevelValue) {
+          bestMatch = entry;
+          bestLevelValue = levelValue;
+        }
+        return;
+      }
+
+      if (levelValue > bestLevelValue) {
+        bestMatch = entry;
+        bestLevelValue = levelValue;
+      }
+    });
+
+    return bestMatch;
+  }
+
+  function buildRequirementAssistKey(name, level = '') {
+    const keyName = normalizeLevelName(name || '');
+    const keyLevel = normalizeLevelName(level || '');
+    return keyLevel ? `${keyName}|${keyLevel}` : keyName;
+  }
+
+  function addRequirementAssistSpec(specMap, rawName, rawLevel, reasonText = '') {
+    const name = String(rawName || '').trim();
+    if (!name) return;
+    const level = String(rawLevel || '').trim();
+    const key = buildRequirementAssistKey(name, level);
+    if (!key) return;
+
+    if (!specMap.has(key)) {
+      specMap.set(key, {
+        key,
+        name,
+        level,
+        reasons: []
+      });
+    }
+
+    const spec = specMap.get(key);
+    const message = String(reasonText || '').trim();
+    if (message && !spec.reasons.includes(message)) spec.reasons.push(message);
+  }
+
+  function collectRequirementAssistSpecsFromRule(specMap, rule, candidate, entries, contextEntries, nameSet) {
+    if (!rule || typeof rule !== 'object') return;
+    const reason = buildRequirementReason(rule, candidate, entries, contextEntries, nameSet);
+    if (!reason) return;
+
+    const reasonText = buildRequirementReasonSummaryText(reason, rule);
+
+    if (Array.isArray(rule?.grupp) && rule.grupp.length) {
+      rule.grupp.forEach(subRule => {
+        collectRequirementAssistSpecsFromRule(specMap, subRule, candidate, entries, contextEntries, nameSet);
+      });
+      return;
+    }
+
+    if (Array.isArray(rule?.nar_eller) && rule.nar_eller.length) {
+      rule.nar_eller.forEach(narRule => {
+        collectRequirementAssistSpecsFromRule(specMap, {
+          ...rule,
+          nar: narRule,
+          nar_eller: undefined
+        }, candidate, entries, contextEntries, nameSet);
+      });
+      return;
+    }
+
+    if (Array.isArray(rule?.nar?.eller) && rule.nar.eller.length) {
+      rule.nar.eller.forEach(narRule => {
+        collectRequirementAssistSpecsFromRule(specMap, {
+          ...rule,
+          nar: {
+            ...rule.nar,
+            ...narRule,
+            eller: undefined
+          }
+        }, candidate, entries, contextEntries, nameSet);
+      });
+      return;
+    }
+
+    const missingLevelRequirements = Array.isArray(reason?.missingLevelRequirements)
+      ? reason.missingLevelRequirements
+      : [];
+    const levelRequirementNameSet = new Set();
+    missingLevelRequirements.forEach(requirement => {
+      const name = String(requirement?.name || '').trim();
+      const minLevelName = String(requirement?.minLevelName || '').trim()
+        || getCanonicalLevelLabel(requirement?.minLevelValue || '')
+        || '';
+      if (!name) return;
+      levelRequirementNameSet.add(normalizeLevelName(name));
+      addRequirementAssistSpec(specMap, name, minLevelName, reasonText);
+    });
+
+    const alternativeNames = getRequirementAlternativeNames(rule);
+    if (alternativeNames.length) {
+      alternativeNames.forEach(name => {
+        if (nameSet.has(normalizeLevelName(name))) return;
+        addRequirementAssistSpec(specMap, name, '', reasonText);
+      });
+      return;
+    }
+
+    const missingNames = Array.isArray(reason?.missingNames) && reason.missingNames.length
+      ? reason.missingNames
+      : [];
+    missingNames.forEach(name => {
+      const clean = String(name || '').trim();
+      if (!clean) return;
+      if (levelRequirementNameSet.has(normalizeLevelName(clean))) return;
+      addRequirementAssistSpec(specMap, clean, '', reasonText);
+    });
+  }
+
+  function resolveRequirementAssistSpec(rawSpec, entries) {
+    const requestedName = String(rawSpec?.name || '').trim();
+    if (!requestedName) return null;
+
+    const sourceEntry = typeof window.lookupEntry === 'function'
+      ? (() => {
+        try {
+          const hit = window.lookupEntry({ name: requestedName }) || window.lookupEntry(requestedName);
+          return hit && typeof hit === 'object' ? resolveRuleSourceEntry(hit) : null;
+        } catch (_) {
+          return null;
+        }
+      })()
+      : null;
+
+    const canonicalName = String(sourceEntry?.namn || requestedName).trim();
+    const resolvedLevel = resolveRequirementEntryLevel(sourceEntry || { namn: canonicalName }, rawSpec?.level || '');
+    const existingEntry = findRequirementExistingEntry(entries, sourceEntry || { namn: canonicalName }, resolvedLevel);
+    const desiredLevelValue = getLevelValue(resolvedLevel);
+    const existingLevelValue = getLevelValue(existingEntry?.nivå || '');
+    const operation = existingEntry && desiredLevelValue > 0 && existingLevelValue < desiredLevelValue
+      ? 'upgrade'
+      : 'add';
+
+    return {
+      key: buildRequirementAssistKey(canonicalName, resolvedLevel),
+      name: canonicalName,
+      requestedName,
+      level: resolvedLevel,
+      typeLabel: getEntryTypeLabel(canonicalName),
+      sourceEntry,
+      sourceEntryId: sourceEntry?.id || '',
+      existingEntryUid: String(existingEntry?.__uid || '').trim(),
+      existingEntryId: existingEntry?.id || sourceEntry?.id || '',
+      currentLevel: String(existingEntry?.nivå || '').trim(),
+      reasons: Array.isArray(rawSpec?.reasons) ? rawSpec.reasons.slice() : [],
+      operation,
+      unresolved: !sourceEntry
+    };
+  }
+
+  function cloneRequirementAssistList(list) {
+    const cloned = (Array.isArray(list) ? list : [])
+      .map(entry => (entry && typeof entry === 'object' ? { ...entry } : entry));
+    return copyListContextRules(cloned, list);
+  }
+
+  function findRequirementAssistEntry(list, spec) {
+    const entries = Array.isArray(list) ? list : [];
+    const targetUid = String(spec?.existingEntryUid || '').trim();
+    const targetId = spec?.existingEntryId === undefined || spec?.existingEntryId === null
+      ? ''
+      : String(spec.existingEntryId).trim();
+    const targetName = normalizeLevelName(spec?.name || spec?.requestedName || '');
+
+    return entries.find(entry => {
+      if (!entry || typeof entry !== 'object') return false;
+      const entryUid = String(entry?.__uid || '').trim();
+      if (targetUid && entryUid && targetUid === entryUid) return true;
+      const entryId = entry?.id === undefined || entry?.id === null ? '' : String(entry.id).trim();
+      if (targetId && entryId && targetId === entryId) return true;
+      return Boolean(targetName && normalizeLevelName(entry?.namn || '') === targetName);
+    }) || null;
+  }
+
+  function applyRequirementAssistSpecToList(list, spec) {
+    const working = Array.isArray(list) ? list : [];
+    if (!spec || typeof spec !== 'object') {
+      return { list: working, affectedEntry: null };
+    }
+
+    if (spec.operation === 'upgrade') {
+      const hit = findRequirementAssistEntry(working, spec);
+      if (!hit) return { list: working, affectedEntry: null };
+      if (spec.level) hit.nivå = spec.level;
+      return { list: working, affectedEntry: hit };
+    }
+
+    if (!spec.sourceEntry || typeof spec.sourceEntry !== 'object') {
+      return { list: working, affectedEntry: null };
+    }
+
+    const nextEntry = { ...spec.sourceEntry };
+    if (spec.level) nextEntry.nivå = spec.level;
+    working.push(nextEntry);
+    return { list: working, affectedEntry: nextEntry };
+  }
+
+  function getRequirementAssistOperationLabel(spec) {
+    const level = String(spec?.level || '').trim();
+    if (spec?.operation === 'upgrade') {
+      return level ? `Höj till ${level}` : 'Uppgradera';
+    }
+    if (level) return `Lägg till på ${level}`;
+    return 'Lägg till';
+  }
+
+  function evaluateRequirementAssistOption(spec, baseList) {
+    if (!spec || typeof spec !== 'object') {
+      return {
+        disabled: true,
+        status: 'blocked',
+        statusLabel: 'Spärrad',
+        messages: ['Ogiltigt krav.']
+      };
+    }
+
+    if (spec.unresolved || !spec.sourceEntry) {
+      return {
+        disabled: true,
+        status: 'blocked',
+        statusLabel: 'Spärrad',
+        messages: ['Kravet hittades inte i databasen.']
+      };
+    }
+
+    const entries = getRuleEntries(baseList);
+    const desiredLevel = String(spec.level || '').trim();
+
+    if (spec.operation === 'upgrade') {
+      const existingEntry = findRequirementAssistEntry(entries, spec);
+      if (!existingEntry) {
+        return {
+          disabled: true,
+          status: 'blocked',
+          statusLabel: 'Spärrad',
+          messages: ['Posten kunde inte längre uppgraderas.']
+        };
+      }
+
+      const candidate = { ...existingEntry };
+      if (desiredLevel) candidate.nivå = desiredLevel;
+      const preview = cloneRequirementAssistList(entries);
+      const previewHit = findRequirementAssistEntry(preview, spec);
+      if (previewHit && desiredLevel) previewHit.nivå = desiredLevel;
+      const stopResult = evaluateEntryStops(candidate, entries, {
+        action: 'level-change',
+        fromLevel: existingEntry?.nivå || '',
+        toLevel: desiredLevel,
+        level: desiredLevel,
+        beforeList: entries,
+        afterList: preview
+      });
+      const stopMessages = formatEntryStopMessages(spec.name, stopResult);
+      const hasReplaceTargets = Array.isArray(stopResult?.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
+      if (Array.isArray(stopResult?.requirementReasons) && stopResult.requirementReasons.length) {
+        return {
+          disabled: true,
+          status: 'locked',
+          statusLabel: 'Låst bakom krav',
+          messages: stopMessages,
+          stopResult
+        };
+      }
+      if ((Array.isArray(stopResult?.blockingConflicts) && stopResult.blockingConflicts.length) || hasReplaceTargets) {
+        return {
+          disabled: true,
+          status: 'conflict',
+          statusLabel: 'Krockar',
+          messages: stopMessages,
+          stopResult
+        };
+      }
+      if (stopResult?.hasStops) {
+        return {
+          disabled: true,
+          status: 'blocked',
+          statusLabel: 'Spärrad',
+          messages: stopMessages,
+          stopResult
+        };
+      }
+      return {
+        disabled: false,
+        status: 'available',
+        statusLabel: 'Tillgänglig',
+        messages: stopMessages,
+        stopResult,
+        affectedEntry: candidate
+      };
+    }
+
+    const candidate = { ...spec.sourceEntry };
+    if (desiredLevel) candidate.nivå = desiredLevel;
+    const stopResult = evaluateEntryStops(candidate, entries, {
+      action: 'add',
+      level: desiredLevel
+    });
+    const stopMessages = formatEntryStopMessages(spec.name, stopResult);
+    const hasReplaceTargets = Array.isArray(stopResult?.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
+    if (Array.isArray(stopResult?.requirementReasons) && stopResult.requirementReasons.length) {
+      return {
+        disabled: true,
+        status: 'locked',
+        statusLabel: 'Låst bakom krav',
+        messages: stopMessages,
+        stopResult
+      };
+    }
+    if ((Array.isArray(stopResult?.blockingConflicts) && stopResult.blockingConflicts.length) || hasReplaceTargets) {
+      return {
+        disabled: true,
+        status: 'conflict',
+        statusLabel: 'Krockar',
+        messages: stopMessages,
+        stopResult
+      };
+    }
+    if (stopResult?.hasStops) {
+      return {
+        disabled: true,
+        status: 'blocked',
+        statusLabel: 'Spärrad',
+        messages: stopMessages,
+        stopResult
+      };
+    }
+    return {
+      disabled: false,
+      status: 'available',
+      statusLabel: 'Tillgänglig',
+      messages: stopMessages,
+      stopResult,
+      affectedEntry: candidate
+    };
+  }
+
+  function buildRequirementAssistPreview(list, optionSpecs, selectedKeys = []) {
+    let previewList = cloneRequirementAssistList(list);
+    const byKey = new Map(
+      toArray(optionSpecs)
+        .filter(spec => spec && typeof spec === 'object' && spec.key)
+        .map(spec => [String(spec.key), spec])
+    );
+    const affectedEntries = [];
+    const appliedKeys = [];
+
+    toArray(selectedKeys).forEach(rawKey => {
+      const key = String(rawKey || '').trim();
+      if (!key) return;
+      const spec = byKey.get(key);
+      if (!spec) return;
+      const applied = applyRequirementAssistSpecToList(previewList, spec);
+      previewList = applied.list;
+      if (applied.affectedEntry) affectedEntries.push(applied.affectedEntry);
+      appliedKeys.push(key);
+    });
+
+    return {
+      projectedRequirementList: previewList,
+      affectedEntries,
+      appliedKeys
+    };
+  }
+
+  function buildRequirementAssistTargetPreviewList(baseList, candidateEntry, options = {}) {
+    const preview = cloneRequirementAssistList(baseList);
+    const action = String(options?.action || 'add').trim();
+    const candidate = candidateEntry && typeof candidateEntry === 'object'
+      ? { ...candidateEntry }
+      : null;
+    if (!candidate) return preview;
+
+    if (action === 'level-change') {
+      const replaceUid = String(options?.replaceTargetUid || candidate?.__uid || '').trim();
+      let replaced = false;
+      if (replaceUid) {
+        for (let i = 0; i < preview.length; i += 1) {
+          if (String(preview[i]?.__uid || '').trim() !== replaceUid) continue;
+          preview[i] = candidate;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) return buildLevelChangeAfterEntries(preview, candidate);
+      return preview;
+    }
+
+    preview.push(candidate);
+    return preview;
+  }
+
+  function normalizeRequirementAssistSelection(list, optionSpecs, selectedKeys = []) {
+    let normalized = getUniqueNames(selectedKeys.map(value => String(value || '').trim())).filter(Boolean);
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+      for (const key of normalized.slice()) {
+        const otherKeys = normalized.filter(value => value !== key);
+        const preview = buildRequirementAssistPreview(list, optionSpecs, otherKeys);
+        const spec = toArray(optionSpecs).find(item => String(item?.key || '') === key) || null;
+        const state = evaluateRequirementAssistOption(spec, preview.projectedRequirementList);
+        if (!state.disabled) continue;
+        normalized = otherKeys;
+        changed = true;
+        break;
+      }
+    }
+
+    return normalized;
+  }
+
+  function getRequirementAssistOptions(candidateEntry, list, options = {}) {
+    if (!candidateEntry || typeof candidateEntry !== 'object') return [];
+    const entries = getRuleEntries(list);
+    const candidateLevel = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
+    const candidate = candidateLevel && candidateEntry?.nivå !== candidateLevel
+      ? { ...candidateEntry, nivå: candidateLevel }
+      : candidateEntry;
+    const contextEntries = [...entries, candidate];
+    const nameSet = new Set(entries.map(entry => normalizeLevelName(entry?.namn || '')).filter(Boolean));
+    const evaluation = buildCandidateRequirementEvaluationSet(candidate, entries, candidateLevel);
+    const specMap = new Map();
+
+    [...evaluation.entryEvaluations, ...evaluation.typeEvaluations].forEach(item => {
+      if (!item || item.passed !== false) return;
+      collectRequirementAssistSpecsFromRule(specMap, item.rule, candidate, entries, contextEntries, nameSet);
+    });
+
+    return Array.from(specMap.values())
+      .map(rawSpec => resolveRequirementAssistSpec(rawSpec, entries))
+      .filter(Boolean)
+      .sort((left, right) => {
+        const leftName = String(left?.name || '').trim();
+        const rightName = String(right?.name || '').trim();
+        const leftLevelValue = getLevelValue(left?.level || '');
+        const rightLevelValue = getLevelValue(right?.level || '');
+        if (leftName !== rightName) return leftName.localeCompare(rightName, 'sv');
+        if (leftLevelValue !== rightLevelValue) return leftLevelValue - rightLevelValue;
+        return String(left?.operation || '').localeCompare(String(right?.operation || ''), 'sv');
+      });
+  }
+
+  function evaluateRequirementAssistState(candidateEntry, list, optionSpecs, selectedKeys = [], options = {}) {
+    const normalizedSelectedKeys = normalizeRequirementAssistSelection(list, optionSpecs, selectedKeys);
+    const preview = buildRequirementAssistPreview(list, optionSpecs, normalizedSelectedKeys);
+    const targetPreviewList = buildRequirementAssistTargetPreviewList(
+      preview.projectedRequirementList,
+      candidateEntry,
+      options
+    );
+    const action = String(options?.action || 'add').trim();
+    const targetLevel = typeof options?.toLevel === 'string' && options.toLevel.trim()
+      ? options.toLevel.trim()
+      : (typeof options?.level === 'string' && options.level.trim()
+        ? options.level.trim()
+        : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : ''));
+    const targetStopResult = evaluateEntryStops(candidateEntry, preview.projectedRequirementList, {
+      action,
+      level: targetLevel,
+      fromLevel: options?.fromLevel || '',
+      toLevel: options?.toLevel || targetLevel,
+      beforeList: preview.projectedRequirementList,
+      afterList: targetPreviewList
+    });
+
+    const targetMessages = formatEntryStopMessages(candidateEntry?.namn || '', targetStopResult);
+    const selectedKeySet = new Set(normalizedSelectedKeys);
+    const optionStates = toArray(optionSpecs).map(spec => {
+      const key = String(spec?.key || '').trim();
+      const selected = key && selectedKeySet.has(key);
+      const otherKeys = selected
+        ? normalizedSelectedKeys.filter(value => value !== key)
+        : normalizedSelectedKeys;
+      const otherPreview = buildRequirementAssistPreview(list, optionSpecs, otherKeys);
+      const nextState = evaluateRequirementAssistOption(spec, otherPreview.projectedRequirementList);
+      return {
+        ...spec,
+        ...nextState,
+        selected,
+        actionLabel: getRequirementAssistOperationLabel(spec)
+      };
+    });
+
+    return {
+      options: optionStates,
+      selectedKeys: normalizedSelectedKeys,
+      projectedRequirementList: preview.projectedRequirementList,
+      projectedList: targetPreviewList,
+      affectedEntries: preview.affectedEntries,
+      targetStopResult,
+      targetMessages,
+      unlocked: !targetStopResult?.hasStops
+    };
   }
 
   function getEntryTypeLabel(name) {
@@ -4157,6 +4876,23 @@
         levelRequirementNames.add(normalizeLevelName(name));
         add(`Krav: ${name} >= ${levelName}`);
       });
+      const alternativeNames = getUniqueNames(
+        Array.isArray(reason?.alternativeNames) ? reason.alternativeNames : []
+      );
+      if (alternativeNames.length) {
+        const missingNameSet = new Set(
+          (Array.isArray(reason?.missingNames) ? reason.missingNames : [])
+            .map(name => normalizeLevelName(name))
+            .filter(Boolean)
+        );
+        const missingAlternativeNames = alternativeNames.filter(name =>
+          missingNameSet.has(normalizeLevelName(name))
+        );
+        if (missingAlternativeNames.length === alternativeNames.length) {
+          add(`Krav: ${formatRequirementNameList(alternativeNames, 'eller')}`);
+          return;
+        }
+      }
       const names = Array.isArray(reason?.missingNames) && reason.missingNames.length
         ? reason.missingNames
         : (Array.isArray(reason?.requiredNames) ? reason.requiredNames : []);
@@ -5458,6 +6194,9 @@
     getConflictResolutionForCandidate,
     getMissingRequirementReasonsForCandidate,
     getRequirementEffectsForCandidate,
+    shouldSkipRequirementPopup,
+    getRequirementAssistOptions,
+    evaluateRequirementAssistState,
     getEntryMaxCount,
     evaluateEntryStops,
     formatEntryStopMessages,

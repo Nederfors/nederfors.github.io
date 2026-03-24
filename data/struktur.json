@@ -3,7 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-23T19:19:29.488290+00:00",
+      "genererad": "2026-03-24T07:19:36.555480+00:00",
       "antal_typer_hittade": 58,
       "källfiler": [
         "data/diverse.json",
@@ -2963,9 +2963,7 @@
                         "Rustning"
                       ],
                       "utrustning_kvalitet": [
-                        "Robustanpassad (Novis)",
-                        "Robustanpassad (Gesäll)",
-                        "Robustanpassad (Mästare)"
+                        "Robustanpassad (Novis)"
                       ]
                     }
                   ]
@@ -2986,8 +2984,7 @@
                         "Rustning"
                       ],
                       "utrustning_kvalitet": [
-                        "Robustanpassad (Gesäll)",
-                        "Robustanpassad (Mästare)"
+                        "Robustanpassad (Gesäll)"
                       ]
                     }
                   ]
@@ -3024,7 +3021,8 @@
                       "Rese",
                       "Best",
                       "Mörkt blod",
-                      "Blodvadare"
+                      "Blodvadare",
+                      "Monster"
                     ]
                   }
                 }

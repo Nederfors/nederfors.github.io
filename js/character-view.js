@@ -50,6 +50,48 @@
     return !!(await confirmPopup(text));
   }
 
+  async function resolveRuleStopDecision(entryName, candidateEntry, list, stopResult, action = 'add', options = {}) {
+    const popup = window.requirementPopup;
+    const popupLevel = options?.toLevel || options?.level || candidateEntry?.nivå || '';
+    const skipRequirementPopup = typeof window.rulesHelper?.shouldSkipRequirementPopup === 'function'
+      ? window.rulesHelper.shouldSkipRequirementPopup(candidateEntry, {
+        action,
+        level: popupLevel
+      })
+      : false;
+    if (!skipRequirementPopup && popup && typeof popup.open === 'function' && candidateEntry && Array.isArray(list)) {
+      const title = action === 'level-change'
+        ? `Lås upp nivåändring för ${quoteName(entryName) || 'posten'}`
+        : `Lås upp ${quoteName(entryName) || 'posten'}`;
+      const subtitle = action === 'level-change'
+        ? 'Välj krav som ska läggas till eller höjas för att låsa upp nivåändringen. Du kan också fortsätta med override.'
+        : 'Välj krav som ska läggas till eller höjas för att låsa upp posten. Du kan också fortsätta med override.';
+      const result = await popup.open({
+        title,
+        subtitle,
+        entryName,
+        candidate: candidateEntry,
+        list,
+        action,
+        level: options?.level || candidateEntry?.nivå || '',
+        fromLevel: options?.fromLevel || '',
+        toLevel: options?.toLevel || candidateEntry?.nivå || '',
+        replaceTargetUid: options?.replaceTargetUid || '',
+        overrideLabel: action === 'level-change' ? 'Ändra ändå' : 'Lägg till ändå'
+      });
+      if (result && typeof result === 'object' && typeof result.action === 'string') {
+        return result;
+      }
+    }
+
+    const approved = await confirmRuleStopOverride(entryName, stopResult, action);
+    return {
+      action: approved ? 'override' : 'cancel',
+      selectedKeys: [],
+      state: null
+    };
+  }
+
   async function handleSnapshotEntryRemoval(entry, store) {
     if (!entry || typeof entry !== 'object') return true;
     const helper = window.snapshotHelper;
@@ -2695,6 +2737,7 @@
       let list;
       let mutationSummary = null;
       let choiceResolution = null;
+      let requirementAffectedEntries = [];
       if (act === 'add') {
         if (!multi) return;
         const lvlSel = liEl.querySelector('select.level');
@@ -2733,19 +2776,30 @@
             };
           })();
         const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
-        const forceRuleOverride = (stopResult.hasStops || hasReplaceTargets)
-          ? (await confirmRuleStopOverride(name, stopResult, 'add'))
-          : false;
-        if (stopResult.hasStops && !forceRuleOverride) return;
-
+        let forceRuleOverride = false;
         let conflictBaseList = before;
+        if (stopResult.hasStops || hasReplaceTargets) {
+          const decision = await resolveRuleStopDecision(name, levelCandidate, before, stopResult, 'add', {
+            level: lvl
+          });
+          if (decision?.action === 'cancel') return;
+          forceRuleOverride = decision?.action === 'override';
+          if (decision?.action === 'apply' && Array.isArray(decision?.state?.projectedRequirementList)) {
+            conflictBaseList = decision.state.projectedRequirementList;
+            requirementAffectedEntries = Array.isArray(decision?.state?.affectedEntries)
+              ? decision.state.affectedEntries
+              : [];
+          }
+        }
+        if (stopResult.hasStops && !forceRuleOverride && conflictBaseList === before) return;
+
         if (!forceRuleOverride && hasReplaceTargets) {
           const replaceSet = new Set(
             stopResult.replaceTargetNames
               .map(value => String(value || '').trim())
               .filter(Boolean)
           );
-          conflictBaseList = before.filter(entry => !replaceSet.has(entry?.namn || '') || entry?.manualRuleOverride);
+          conflictBaseList = conflictBaseList.filter(entry => !replaceSet.has(entry?.namn || '') || entry?.manualRuleOverride);
         }
         const added = { ...p, nivå: lvl };
         const addChoice = await pickCharacterEntryChoice(added, conflictBaseList, lvl);
@@ -2907,7 +2961,11 @@
             storeHelper.setCurrentList(store, list)
           ))
         ));
-        choiceResolution = await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
+        const pendingChoiceEntries = []
+          .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
+          .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
+          .concat(Array.isArray(mutationSummary?.grantedEntriesAdded) ? mutationSummary.grantedEntriesAdded : []);
+        choiceResolution = await resolvePendingChoiceEntries(pendingChoiceEntries);
       }
       if (p.namn === 'Privilegierad') {
         invUtil.renderInventory();
@@ -3041,13 +3099,14 @@
             return null;
           }
         })();
-        ent.nivå = select.value;
-        const levelChoice = await pickCharacterEntryChoice(ent, list, ent.nivå, ent, {
+        const updatedEntry = { ...ent, nivå: nextLevel };
+        const originalEntry = { ...ent };
+        const originalMatchOptions = buildChoiceEntryMatchOptions(originalEntry);
+        const levelChoice = await pickCharacterEntryChoice(updatedEntry, before, updatedEntry.nivå, ent, {
           promptIfMissingOnly: true
         });
         if (levelChoice.hasChoice) {
           if (levelChoice.cancelled) {
-            ent.nivå = old;
             select.value = old;
             window.entryCardFactory?.syncLevelControl?.(select);
             if (levelChoice.noOptions) {
@@ -3067,41 +3126,51 @@
           }
           const field = levelChoice.rule?.field;
           if (field) {
-            ent[field] = levelChoice.value;
-            if (levelChoice.duplicate?.replaceExisting) {
-              const wanted = normalizeChoiceToken(levelChoice.value);
-              for (let i = list.length - 1; i >= 0; i--) {
-                const item = list[i];
-                if (!item || item === ent) continue;
-                if (!isSameChoiceSource(item, ent)) continue;
-                if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
-                list.splice(i, 1);
-              }
-            }
+            updatedEntry[field] = levelChoice.value;
           }
         } else {
           const staleField = previousChoiceRule?.field;
-          if (staleField && Object.prototype.hasOwnProperty.call(ent, staleField)) {
-            delete ent[staleField];
-          } else if (name === 'Monsterlärd' && ent.trait) {
-            delete ent.trait;
+          if (staleField && Object.prototype.hasOwnProperty.call(updatedEntry, staleField)) {
+            delete updatedEntry[staleField];
+          } else if (name === 'Monsterlärd' && updatedEntry.trait) {
+            delete updatedEntry.trait;
+          }
+        }
+        let nextList = before.map(item => ({ ...item }));
+        const currentEntry = findMatchingCharacterListEntry(nextList, originalEntry, originalMatchOptions);
+        const currentIndex = currentEntry ? nextList.indexOf(currentEntry) : -1;
+        let finalEntry = { ...updatedEntry };
+        if (currentIndex >= 0) {
+          nextList[currentIndex] = finalEntry;
+        } else {
+          nextList.push(finalEntry);
+        }
+        if (levelChoice.hasChoice && levelChoice.rule?.field && levelChoice.duplicate?.replaceExisting) {
+          const field = levelChoice.rule.field;
+          const wanted = normalizeChoiceToken(levelChoice.value);
+          for (let i = nextList.length - 1; i >= 0; i--) {
+            const item = nextList[i];
+            if (!item || item === finalEntry) continue;
+            if (!isSameChoiceSource(item, finalEntry)) continue;
+            if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
+            nextList.splice(i, 1);
           }
         }
         const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
-          ? window.rulesHelper.evaluateEntryStops(ent, before, {
+          ? window.rulesHelper.evaluateEntryStops(finalEntry, before, {
             action: 'level-change',
             fromLevel: old,
-            toLevel: ent.nivå,
-            level: ent.nivå,
+            toLevel: finalEntry.nivå,
+            level: finalEntry.nivå,
             beforeList: before,
-            afterList: list
+            afterList: nextList
           })
           : (() => {
             const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
-              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
+              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(finalEntry, before, { level: finalEntry.nivå })
               : []);
             const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
-              ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
+              ? window.rulesHelper.getConflictResolutionForCandidate(finalEntry, before, { level: finalEntry.nivå })
               : { blockingReasons: [], replaceTargetNames: [] });
             const blockingConflicts = conflictRes.blockingReasons;
             return {
@@ -3113,11 +3182,40 @@
               hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
             };
           })();
-        const forceRuleOverride = stopResult.hasStops
-          ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
-          : false;
+        let forceRuleOverride = false;
+        let requirementAffectedEntries = [];
+        if (stopResult.hasStops) {
+          const decision = await resolveRuleStopDecision(name, finalEntry, before, stopResult, 'level-change', {
+            level: finalEntry.nivå,
+            fromLevel: old,
+            toLevel: finalEntry.nivå,
+            replaceTargetUid: finalEntry?.__uid || ''
+          });
+          if (decision?.action === 'cancel') {
+            select.value = old;
+            window.entryCardFactory?.syncLevelControl?.(select);
+            cancelLevelScenario(levelScenarioId, {
+              scope: 'character',
+              entry: name,
+              branch: 'list',
+              reason: 'requirements-blocked'
+            });
+            return;
+          }
+          forceRuleOverride = decision?.action === 'override';
+          if (decision?.action === 'apply' && Array.isArray(decision?.state?.projectedList)) {
+            nextList = decision.state.projectedList;
+            requirementAffectedEntries = Array.isArray(decision?.state?.affectedEntries)
+              ? decision.state.affectedEntries
+              : [];
+            finalEntry = findMatchingCharacterListEntry(
+              nextList,
+              finalEntry,
+              buildChoiceEntryMatchOptions(finalEntry)
+            ) || finalEntry;
+          }
+        }
         if (stopResult.hasStops && !forceRuleOverride) {
-          ent.nivå = old;
           select.value = old;
           window.entryCardFactory?.syncLevelControl?.(select);
           cancelLevelScenario(levelScenarioId, {
@@ -3128,9 +3226,9 @@
           });
           return;
         }
-        if (forceRuleOverride) ent.manualRuleOverride = true;
+        if (forceRuleOverride) finalEntry.manualRuleOverride = true;
         if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
-          const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+          const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, nextList, before);
           if (toClean.length > 0) {
             const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
             if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
@@ -3141,15 +3239,19 @@
         const mutationSummary = await withBusyInteraction(select, () => (
           runDeferredCurrentCharacterMutation(() => (
             timeActiveLevelStage('store-mutation', () => (
-              storeHelper.setCurrentList(store, list)
+              storeHelper.setCurrentList(store, nextList)
             ), {
               surface: 'character',
               branch: 'list'
             })
           ))
         ));
+        const pendingChoiceEntries = []
+          .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
+          .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
+          .concat(Array.isArray(mutationSummary?.grantedEntriesAdded) ? mutationSummary.grantedEntriesAdded : []);
         const choiceResolution = await timeActiveLevelStage('pending-choice-resolution', () => (
-          resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded)
+          resolvePendingChoiceEntries(pendingChoiceEntries)
         ), {
           surface: 'character',
           branch: 'list'
@@ -3169,7 +3271,12 @@
         let renderMode = 'targeted';
         const patchedInPlace = timeActiveLevelStage('targeted-ui-refresh', () => {
           if (needsSelectionRefresh) return false;
-          return replaceCharacterSelectionCard(cardEl, ent);
+          const liveEntry = findMatchingCharacterListEntry(
+            storeHelper.getCurrentList(store),
+            finalEntry,
+            buildChoiceEntryMatchOptions(finalEntry)
+          ) || finalEntry;
+          return replaceCharacterSelectionCard(cardEl, liveEntry);
         }, {
           surface: 'character',
           branch: 'list'
