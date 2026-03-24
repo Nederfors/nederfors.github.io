@@ -1,6 +1,7 @@
 const PRELOAD_SCRIPTS = [
   'js/auto-resize.js',
   'js/text-format.js',
+  'js/catalog-schema.js',
   'js/utils.js',
   'js/rules-helper.js',
   'js/store.js'

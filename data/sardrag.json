@@ -1,359 +1,425 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Särdrag": {},
     "Monstruöst särdrag": {}
   },
   "entries": [
     {
       "id": "sa1",
-      "namn": "Förväxling",
-      "beskrivning": "Endast tillgänglig för Bortbytingar. Rollpersonen har en illusorisk talang som gör att den kan låna andras utseende för en stund. Hos unga bortbytingar är förmågan automatisk, och de kan ha svårt för att inte anta lite av andras utseende och manér om de umgås med dem en längre stund. Hos mogna bortbytingar brukar förmågan växa in under medvetandets kontroll.",
-      "taggar": {
-        "typ": [
+      "name": "Förväxling",
+      "description": "Endast tillgänglig för Bortbytingar. Rollpersonen har en illusorisk talang som gör att den kan låna andras utseende för en stund. Hos unga bortbytingar är förmågan automatisk, och de kan ha svårt för att inte anta lite av andras utseende och manér om de umgås med dem en längre stund. Hos mogna bortbytingar brukar förmågan växa in under medvetandets kontroll.",
+      "tags": {
+        "types": [
           "Särdrag"
         ],
-        "test": [
+        "tests": [
           "Diskret",
           "Viljestark"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Bortbyting"
-                ]
-              }
-            }
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark anta en falsk skepnad; form, utseende, röst och kläder av en annan varelse, dock ej av en specifik individ. Bortbytingen kan behålla skenverket under en scen, sedan tynar illusionen bort. Varje person som rollpersonen pratar med genomskådar skenverket om rollpersonen inte lyckas med ett [Diskret←Vaksam].",
+          "actions": [
+            "Fri"
           ]
         },
-        "handling": {
-          "Novis": [
+        "Gesäll": {
+          "description": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark under kort tid anta formen av specifika individer den träffat, och kan inkludera kläder och andra attribut i avbilden. I närstrid mot flera personer är likheten stor nog för att göra det svårt för fienden att träffa rätt. Det är 50 procent chans att fienden träffar sin avbildade kompanjon istället för rollpersonen. Att upprätthålla avbilden kräver koncentration, det vill säga ett slag mot Viljestark varje runda och dessutom ett lyckat [Viljestark -Skada] varje gång bortbytingen skadas.",
+          "actions": [
             "Fri"
-          ],
-          "Gesäll": [
-            "Fri"
-          ],
-          "Mästare": [
+          ]
+        },
+        "Mästare": {
+          "description": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark anta formen av en specifik individ och därtill behålla formen under en scen. Varje person som rollpersonen pratar med genomskådar skenverket om rollpersonen inte lyckas med ett [Diskret←Vaksam]. För att rollpersonen ska lura personer som känner den lånade formen krävs först ett slag på avstånd, och ytterligare ett slag om samtal inleds.",
+          "actions": [
             "Fri"
           ]
         }
       },
-      "nivåer": {
-        "Novis": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark anta en falsk skepnad; form, utseende, röst och kläder av en annan varelse, dock ej av en specifik individ. Bortbytingen kan behålla skenverket under en scen, sedan tynar illusionen bort. Varje person som rollpersonen pratar med genomskådar skenverket om rollpersonen inte lyckas med ett [Diskret←Vaksam].",
-        "Gesäll": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark under kort tid anta formen av specifika individer den träffat, och kan inkludera kläder och andra attribut i avbilden. I närstrid mot flera personer är likheten stor nog för att göra det svårt för fienden att träffa rätt. Det är 50 procent chans att fienden träffar sin avbildade kompanjon istället för rollpersonen. Att upprätthålla avbilden kräver koncentration, det vill säga ett slag mot Viljestark varje runda och dessutom ett lyckat [Viljestark -Skada] varje gång bortbytingen skadas.",
-        "Mästare": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark anta formen av en specifik individ och därtill behålla formen under en scen. Varje person som rollpersonen pratar med genomskådar skenverket om rollpersonen inte lyckas med ett [Diskret←Vaksam]. För att rollpersonen ska lura personer som känner den lånade formen krävs först ett slag på avstånd, och ytterligare ett slag om samtal inleds."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa1__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Bortbyting"
+              ]
+            }
+          }
+        ]
       }
     },
     {
       "id": "sa2",
-      "namn": "Kortlivad",
-      "beskrivning": "Endast tillgänglig för Svartalfer. Varelsens liv är kort även när livsbetingelserna är goda. Varelsen når snabbt mogen ålder och tappar sedan mycket av livets kraft under kommande år. Endast ett fåtal individer av dess sort når fyrtio års ålder, å andra sidan är varelsen kvick att lära och anpassar sig utomordentligt snabbt till nya omgivningar, redan vid fem års ålder är den redo att möta världen. Kortlivad har ingen effekt förutom vad det kan ge rollspelandet.",
-      "taggar": {
-        "typ": [
+      "name": "Kortlivad",
+      "description": "Endast tillgänglig för Svartalfer. Varelsens liv är kort även när livsbetingelserna är goda. Varelsen når snabbt mogen ålder och tappar sedan mycket av livets kraft under kommande år. Endast ett fåtal individer av dess sort når fyrtio års ålder, å andra sidan är varelsen kvick att lära och anpassar sig utomordentligt snabbt till nya omgivningar, redan vid fem års ålder är den redo att möta världen. Kortlivad har ingen effekt förutom vad det kan ge rollspelandet.",
+      "tags": {
+        "types": [
           "Särdrag"
         ],
-        "erf": 0,
-    "regler": {
-      "kraver": [
-        {
-          "nar": {
-            "nagon_av_namn": [
-              "Svartalf"
-            ]
-              }
+        "xp": 0
+      },
+      "levels": {},
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa2__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Svartalf"
+              ]
             }
-          ]
-        }
+          }
+        ]
       }
     },
     {
       "id": "sa3",
-      "namn": "Långlivad",
-      "beskrivning": "Endast tillgänglig för Alver, Resar och BortbytingarVarelsen har ett fördröjt åldrande sedan den uppnått vuxen ålder. Om inte våld, gift eller sjukdom förkortar varelsens liv kan den leva i två eller till och med tre århundraden. Det längre livsspannet gör att varelsen är van att ta saker i lugnare tempo, men det kompenseras av inställningen att det som är värt att göra är värt att göras väl, vilket över tid resulterar i en betydande grad av expertis. Långlivad har ingen effekt förutom vad det kan ge rollspelandet.",
-      "taggar": {
-        "typ": [
+      "name": "Långlivad",
+      "description": "Endast tillgänglig för Alver, Resar och BortbytingarVarelsen har ett fördröjt åldrande sedan den uppnått vuxen ålder. Om inte våld, gift eller sjukdom förkortar varelsens liv kan den leva i två eller till och med tre århundraden. Det längre livsspannet gör att varelsen är van att ta saker i lugnare tempo, men det kompenseras av inställningen att det som är värt att göra är värt att göras väl, vilket över tid resulterar i en betydande grad av expertis. Långlivad har ingen effekt förutom vad det kan ge rollspelandet.",
+      "tags": {
+        "types": [
           "Särdrag"
         ],
-       "erf": 0,
-    "regler": {
-      "kraver": [
-        {
-          "nar": {
-            "nagon_av_namn": [
-              "Alv",
-              "Rese",
-              "Bortbyting"
-            ]
+        "xp": 0
+      },
+      "levels": {},
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa3__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Alv",
+                "Rese",
+                "Bortbyting"
+              ]
+            }
           }
-        }
-      ] 
-        }
+        ]
       }
     },
     {
       "id": "sa4",
-      "namn": "Robust",
-      "beskrivning": "Endast tillgänglig för Resar och Troll. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
-      "taggar": {
-        "typ": [
+      "name": "Robust",
+      "description": "Endast tillgänglig för Resar och Troll. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
+      "tags": {
+        "types": [
           "Särdrag",
           "Monstruöst särdrag"
-        ],
-        "handling": {
-          "Novis": [
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Handling: Speciell. Rollpersonen är cirka två meter lång och råstark. En sådan tornande siluett är lättare att träffa i strid vilket balanseras med en påtaglig stryktålighet. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar dubbelt så mycket. I gengäld ignorerar rollpersonen 1T4 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T4 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −2].",
+          "actions": [
             "Speciell"
           ],
-          "Gesäll": [
-            "Speciell"
-          ],
-          "Mästare": [
-            "Speciell"
-          ]
+          "rules": {
+            "modify": [
+              {
+                "rule_id": "level__sa4__Novis__modify__0",
+                "target": "defense.modifier",
+                "op": "set",
+                "value": -2
+              }
+            ],
+            "require": [
+              {
+                "rule_id": "level__sa4__Novis__require__0",
+                "utrustning_kvalitet": [
+                  "Robustanpassad (Novis)",
+                  "Robustanpassad (Gesäll)",
+                  "Robustanpassad (Mästare)"
+                ],
+                "utrustning_typ": [
+                  "Rustning"
+                ]
+              }
+            ]
+          }
         },
-        "nivå_data": {
-          "Novis": {
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "forsvar_modifierare",
-                  "varde": -2,
-                  "satt": "ersatt"
-                }
-              ],
-              "kraver": [
-                {
-                  "utrustning_typ": ["Rustning"],
-                  "utrustning_kvalitet": ["Robustanpassad (Novis)"]
-                }
-              ]
-            }
-          },
-          "Gesäll": {
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "forsvar_modifierare",
-                  "varde": -3,
-                  "satt": "ersatt"
-                }
-              ],
-              "kraver": [
-                {
-                  "utrustning_typ": ["Rustning"],
-                  "utrustning_kvalitet": ["Robustanpassad (Gesäll)"]
-                }
-              ]
-            }
-          },
-          "Mästare": {
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "forsvar_modifierare",
-                  "varde": -4,
-                  "satt": "ersatt"
-                }
-              ],
-              "kraver": [
-                {
-                  "utrustning_typ": ["Rustning"],
-                  "utrustning_kvalitet": ["Robustanpassad (Mästare)"]
-                }
+        "Gesäll": {
+          "description": "Handling: Speciell. Rollpersonen sträcker sig två och en halv meter över marken, väger tvåhundra kilo och dess hud är grov som bark. En sådan varelse lägger kraft i slagen, men är också lätt att träffa. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därmed kostar tre gånger så mycket. I gengäld ignorerar rollpersonen 1T6 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T6 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −3].\n",
+          "actions": [
+            "Speciell"
+          ],
+          "rules": {
+            "modify": [
+              {
+                "rule_id": "level__sa4__Gesall__modify__0",
+                "target": "defense.modifier",
+                "op": "set",
+                "value": -3
+              }
+            ],
+            "require": [
+              {
+                "rule_id": "level__sa4__Gesall__require__0",
+                "utrustning_kvalitet": [
+                  "Robustanpassad (Gesäll)",
+                  "Robustanpassad (Mästare)"
+                ],
+                "utrustning_typ": [
+                  "Rustning"
+                ]
+              }
+            ]
+          }
+        },
+        "Mästare": {
+          "description": "Handling: Speciell. Rollpersonen är tre meter lång, väger ett halvt ton och krossar mindre varelser medan fiendens vapen studsar mot hud som mest liknar mossig sten. Att träffa en sådan varelse är lätt, men att skada den allvarligt är svårt. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar fyra gånger så mycket. I gengäld ignorerar rollpersonen 1T8 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T8 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −4].",
+          "actions": [
+            "Speciell"
+          ],
+          "rules": {
+            "modify": [
+              {
+                "rule_id": "level__sa4__Mastare__modify__0",
+                "target": "defense.modifier",
+                "op": "set",
+                "value": -4
+              }
+            ],
+            "require": [
+              {
+                "rule_id": "level__sa4__Mastare__require__0",
+                "utrustning_kvalitet": [
+                  "Robustanpassad (Mästare)"
+                ],
+                "utrustning_typ": [
+                  "Rustning"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa4__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Troll",
+                "Rese",
+                "Best",
+                "Mörkt blod",
+                "Blodvadare",
+                "Monster"
               ]
             }
           }
-        },
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Troll",
-                  "Rese",
-                  "Best",
-                  "Mörkt blod",
-                  "Blodvadare",
-                  "Monster"
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "nivåer": {
-        "Novis": "Handling: Speciell. Rollpersonen är cirka två meter lång och råstark. En sådan tornande siluett är lättare att träffa i strid vilket balanseras med en påtaglig stryktålighet. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar dubbelt så mycket. I gengäld ignorerar rollpersonen 1T4 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T4 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −2].",
-        "Gesäll": "Handling: Speciell. Rollpersonen sträcker sig två och en halv meter över marken, väger tvåhundra kilo och dess hud är grov som bark. En sådan varelse lägger kraft i slagen, men är också lätt att träffa. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därmed kostar tre gånger så mycket. I gengäld ignorerar rollpersonen 1T6 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T6 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −3].\n",
-        "Mästare": "Handling: Speciell. Rollpersonen är tre meter lång, väger ett halvt ton och krossar mindre varelser medan fiendens vapen studsar mot hud som mest liknar mossig sten. Att träffa en sådan varelse är lätt, men att skada den allvarligt är svårt. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar fyra gånger så mycket. I gengäld ignorerar rollpersonen 1T8 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T8 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −4]."
+        ]
       }
     },
     {
       "id": "sa5",
-      "namn": "Överlevnadsinstinkt",
-      "beskrivning": "Endast tillgänglig för Svartalfer. Rollpersonen är av ett släkte vars livspann är kort men vars livsenergi motsvarar mer seglivade släktens. För vissa av släktets representanter blir energin mest till högljutt gastande och rastlös aktivitet, men för andra ger den möjligheter till en intensiv överlevnadsinstinkt.",
-      "taggar": {
-        "typ": [
+      "name": "Överlevnadsinstinkt",
+      "description": "Endast tillgänglig för Svartalfer. Rollpersonen är av ett släkte vars livspann är kort men vars livsenergi motsvarar mer seglivade släktens. För vissa av släktets representanter blir energin mest till högljutt gastande och rastlös aktivitet, men för andra ger den möjligheter till en intensiv överlevnadsinstinkt.",
+      "tags": {
+        "types": [
           "Särdrag"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Svartalf"
-                ]
-              }
-            }
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Handling: Fri. Rollpersonens explosiva överlevnadsinstinkt ger en extra förflyttning en gång per scen.",
+          "actions": [
+            "Fri"
           ]
         },
-        "handling": {
-          "Novis": [
-            "Fri"
-          ],
-          "Gesäll": [
+        "Gesäll": {
+          "description": "Handling: Reaktiv. Rollpersonen litar till sina instinkter och dess förmåga att rulla med slag räddar ofta livet på den. Rollpersonens förädlade överlevnadsinstinkt ger denne 1T4 naturlig pansar",
+          "actions": [
             "Reaktiv"
-          ],
-          "Mästare": [
+          ]
+        },
+        "Mästare": {
+          "description": "Handling: Fri. I varje individ av rollpersonens släkte finns en stridslust som ger sig tillkänna i trängda situationer. Rollpersonen har odlat den ettriga aggressionen och kan offra en förflyttningshandling en gång under scenen för att därmed göra en extra stridshandling.",
+          "actions": [
             "Fri"
           ]
         }
       },
-      "nivåer": {
-        "Novis": "Handling: Fri. Rollpersonens explosiva överlevnadsinstinkt ger en extra förflyttning en gång per scen.",
-        "Gesäll": "Handling: Reaktiv. Rollpersonen litar till sina instinkter och dess förmåga att rulla med slag räddar ofta livet på den. Rollpersonens förädlade överlevnadsinstinkt ger denne 1T4 naturlig pansar",
-        "Mästare": "Handling: Fri. I varje individ av rollpersonens släkte finns en stridslust som ger sig tillkänna i trängda situationer. Rollpersonen har odlat den ettriga aggressionen och kan offra en förflyttningshandling en gång under scenen för att därmed göra en extra stridshandling."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa5__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Svartalf"
+              ]
+            }
+          }
+        ]
       }
     },
     {
       "id": "sa6",
-      "namn": "Eonernas visdom",
-      "beskrivning": "Endast tillgänglig för Alver. Alvernas släkte har genom eonerna samlat på sig en kollektiv visdom; en djup källa till kunnande och insikt som många alver kan ta del av genom meditation. Rollpersonen är en av dem som kan använda gångna generationers kunskaper för att lösa aktuella problem. Helt riskfritt är det inte; i denna mörknande värld drar sökandet till sig korruption. Eonernas visdom ger temporär korruption som om det vore en mystisk kraft.",
-      "taggar": {
-        "typ": [
+      "name": "Eonernas visdom",
+      "description": "Endast tillgänglig för Alver. Alvernas släkte har genom eonerna samlat på sig en kollektiv visdom; en djup källa till kunnande och insikt som många alver kan ta del av genom meditation. Rollpersonen är en av dem som kan använda gångna generationers kunskaper för att lösa aktuella problem. Helt riskfritt är det inte; i denna mörknande värld drar sökandet till sig korruption. Eonernas visdom ger temporär korruption som om det vore en mystisk kraft.",
+      "tags": {
+        "types": [
           "Särdrag"
         ],
-        "test": [
+        "tests": [
           "Viljestark"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Alv"
-                ]
-              }
-            }
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Handling: Hel runda. Rollpersonen försjunker i en kort trans och får efter ett lyckat Viljestark tillfälligt tillgång till valfri förmåga på novisnivå, undantaget mystiska traditioner samt förmågorna Ritualist och Mystisk kraft. Insikten håller i sig innevarande scen, därefter bleknar den bort.",
+          "actions": [
+            "Hel runda"
           ]
         },
-        "handling": {
-          "Novis": [
-            "Hel runda"
-          ],
-          "Gesäll": [
+        "Gesäll": {
+          "description": "Handling: Aktiv. Rollpersonens närmare kontakt med det kollektiva minnet gör transen ännu kortare men annars är effekten densamma som novisnivån.",
+          "actions": [
             "Aktiv"
-          ],
-          "Mästare": [
+          ]
+        },
+        "Mästare": {
+          "description": "Handling: Aktiv. Rollpersonen kan gräva djupare i det kollektiva minnet och får efter ett lyckat Viljestark tillfälligt tillgång till valfri förmåga på gesällnivå, undantaget mystiska traditioner samt förmågorna Ritualist och Mystisk kraft. Insikten håller i sig innevarande scen, därefter bleknar den bort.",
+          "actions": [
             "Aktiv"
           ]
         }
       },
-      "nivåer": {
-        "Novis": "Handling: Hel runda. Rollpersonen försjunker i en kort trans och får efter ett lyckat Viljestark tillfälligt tillgång till valfri förmåga på novisnivå, undantaget mystiska traditioner samt förmågorna Ritualist och Mystisk kraft. Insikten håller i sig innevarande scen, därefter bleknar den bort.",
-        "Gesäll": "Handling: Aktiv. Rollpersonens närmare kontakt med det kollektiva minnet gör transen ännu kortare men annars är effekten densamma som novisnivån.",
-        "Mästare": "Handling: Aktiv. Rollpersonen kan gräva djupare i det kollektiva minnet och får efter ett lyckat Viljestark tillfälligt tillgång till valfri förmåga på gesällnivå, undantaget mystiska traditioner samt förmågorna Ritualist och Mystisk kraft. Insikten håller i sig innevarande scen, därefter bleknar den bort."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa6__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Alv"
+              ]
+            }
+          }
+        ]
       }
     },
     {
       "id": "sa7",
-      "namn": "Jordnära",
-      "beskrivning": "Endast tillgänglig för Dvärgar. Dvärgsläktet är knutet till världen på ett intimt sätt, nästan som om det hade avlats av själva världens ben och fortfarande är en del av världskroppen. Dvärgar saknar själ och tar skada istället för Korruption; temporär Korruption ger upphov till blödande sår på varelsens kropp. Permanent korruption medför istället en permanent sänkning av beräkningsgrunden för varelsens Smärttröskel. Detta innebär rent praktiskt att Smärttröskeln minskar med 1 för vartannat poäng i permanent korruption som varelsen drabbas av. Tålighet påverkas inte. Om Smärtgränsen når noll avlider varelsen omedelbart. Avlidna dvärgar går inte att återuppväcka som vandöda och går inte heller att tala med genom ritualen Andebesvärjelse. När de dör så ruttnar de tillbaka till skapelsens ursörja och stoft utan att lämna andliga spår efter sig.",
-      "taggar": {
-        "typ": [
+      "name": "Jordnära",
+      "description": "Endast tillgänglig för Dvärgar. Dvärgsläktet är knutet till världen på ett intimt sätt, nästan som om det hade avlats av själva världens ben och fortfarande är en del av världskroppen. Dvärgar saknar själ och tar skada istället för Korruption; temporär Korruption ger upphov till blödande sår på varelsens kropp. Permanent korruption medför istället en permanent sänkning av beräkningsgrunden för varelsens Smärttröskel. Detta innebär rent praktiskt att Smärttröskeln minskar med 1 för vartannat poäng i permanent korruption som varelsen drabbas av. Tålighet påverkas inte. Om Smärtgränsen når noll avlider varelsen omedelbart. Avlidna dvärgar går inte att återuppväcka som vandöda och går inte heller att tala med genom ritualen Andebesvärjelse. När de dör så ruttnar de tillbaka till skapelsens ursörja och stoft utan att lämna andliga spår efter sig.",
+      "tags": {
+        "types": [
           "Särdrag"
+        ]
+      },
+      "levels": {},
+      "rules": {
+        "modify": [
+          {
+            "rule_id": "entry__sa7__top__modify__0",
+            "target": "pain.threshold_bonus",
+            "op": "add",
+            "value": -1,
+            "formula": {
+              "bas": "permanent_korruption",
+              "division": 2,
+              "avrunda": "nedat"
+            }
+          },
+          {
+            "rule_id": "entry__sa7__top__modify__1",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Mörkt förflutet"
+              ]
+            },
+            "target": "pain.threshold_bonus",
+            "op": "add",
+            "value": -1,
+            "formula": {
+              "bas": "aktuell_smartgrans",
+              "division": 4,
+              "avrunda": "nedat"
+            }
+          },
+          {
+            "rule_id": "entry__sa7__top__modify__2",
+            "target": "corruption.permanent_factor",
+            "value": 0.5
+          }
         ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Dvärg"
-                ]
-              }
+        "require": [
+          {
+            "rule_id": "entry__sa7__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Dvärg"
+              ]
             }
-          ],
-          "andrar": [
-            {
-              "mal": "smartgrans_tillagg",
-              "satt": "add",
-              "formel": {
-                "bas": "permanent_korruption",
-                "division": 2,
-                "avrunda": "nedat"
-              },
-              "varde": -1
-            },
-            {
-              "mal": "smartgrans_tillagg",
-              "satt": "add",
-              "formel": {
-                "bas": "aktuell_smartgrans",
-                "division": 4,
-                "avrunda": "nedat"
-              },
-              "varde": -1,
-              "nar": {
-                "har_namn": [
-                  "Mörkt förflutet"
-                ]
-              }
-            },
-            {
-              "mal": "permanent_korruption_faktor",
-              "varde": 0.5
-            }
-          ]
-        }
+          }
+        ]
       }
     },
     {
       "id": "sa8",
-      "namn": "Provocerande",
-      "beskrivning": "Varelsen har en fallenhet för att provocera alla den möter, så till den grad att den kan dra nytta av detta i strid. För fiender som redan är bärsärkarasande (förmågan Bärsärk) behöver inget slag slås i syfte att uppnå nivåernas effekter, det lyckas automatiskt. Fiender med förmågan Ståndaktig får däremot slå motståndsslag varje runda för att försöka återfå fattningen.",
-      "taggar": {
-        "typ": [
+      "name": "Provocerande",
+      "description": "Varelsen har en fallenhet för att provocera alla den möter, så till den grad att den kan dra nytta av detta i strid. För fiender som redan är bärsärkarasande (förmågan Bärsärk) behöver inget slag slås i syfte att uppnå nivåernas effekter, det lyckas automatiskt. Fiender med förmågan Ståndaktig får däremot slå motståndsslag varje runda för att försöka återfå fattningen.",
+      "tags": {
+        "types": [
           "Särdrag"
         ],
-        "test": [
+        "tests": [
           "Listig"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Andrik"
-                ]
-              }
-            }
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Handling: Fri. Med ett lyckat [Listig←Viljestark] kan varelsen få en fiende att bli orimligt provocerad. Om det lyckas får varelsen en andra chans att lyckas med alla slag där den försöker undgå att påverkas av fiendens handlingar (exempelvis Försvar). Endast en fiende i taget kan bringas ur fattningen på detta sätt. Effekten kvarstår under resten av scenen utan ytterligare slag, men om varelsen vill provocera en annan fiende krävs ett nytt slag.",
+          "actions": [
+            "Fri"
           ]
         },
-        "handling": {
-          "Novis": [
+        "Gesäll": {
+          "description": "Handling: Fri. Som I, men fienden blir också oförsiktig mot anfall. Om slaget mot [Listig←Viljestark] lyckas får varelsen dessutom en andra chans att lyckas med framgångsslag mot fienden.",
+          "actions": [
             "Fri"
-          ],
-          "Gesäll": [
-            "Fri"
-          ],
-          "Mästare": [
+          ]
+        },
+        "Mästare": {
+          "description": "Handling: Aktiv. Varelsen är en mästerlig retsticka och kan med ett lyckat slag mot Listig bringa en hel grupp av fienden ur balans. Lyckas slaget blir samtliga fiender högröda av överilad ilska och varelsen får en andra chans på Försvar, motståndsslag och anfall mot samtliga fiender under resten av scenen.",
+          "actions": [
             "Aktiv"
           ]
         }
       },
-      "nivåer": {
-        "Novis": "Handling: Fri. Med ett lyckat [Listig←Viljestark] kan varelsen få en fiende att bli orimligt provocerad. Om det lyckas får varelsen en andra chans att lyckas med alla slag där den försöker undgå att påverkas av fiendens handlingar (exempelvis Försvar). Endast en fiende i taget kan bringas ur fattningen på detta sätt. Effekten kvarstår under resten av scenen utan ytterligare slag, men om varelsen vill provocera en annan fiende krävs ett nytt slag.",
-        "Gesäll": "Handling: Fri. Som I, men fienden blir också oförsiktig mot anfall. Om slaget mot [Listig←Viljestark] lyckas får varelsen dessutom en andra chans att lyckas med framgångsslag mot fienden.",
-        "Mästare": "Handling: Aktiv. Varelsen är en mästerlig retsticka och kan med ett lyckat slag mot Listig bringa en hel grupp av fienden ur balans. Lyckas slaget blir samtliga fiender högröda av överilad ilska och varelsen får en andra chans på Försvar, motståndsslag och anfall mot samtliga fiender under resten av scenen."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__sa8__top__require__0",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Andrik"
+              ]
+            }
+          }
+        ]
       }
     }
   ]

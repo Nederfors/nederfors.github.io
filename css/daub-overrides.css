@@ -116,6 +116,12 @@
 .db-drawer.offcanvas.open {
   transform: translateX(0);
 }
+@media (max-width: 640px) {
+  .db-drawer.offcanvas {
+    width: 100vw;
+    max-width: 100vw;
+  }
+}
 
 /* ── Entry card visual separation ── */
 .db-card.entry-card {
@@ -123,6 +129,13 @@
   border-radius: 0.75rem;
   background: var(--db-color-surface, #2a1f18);
   padding: 0.65rem 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .db-card.entry-card {
+    padding: 0.45rem 0.4rem;
+    border-radius: 0.5rem;
+  }
 }
 
 /* Subtler hover on entry cards — keep the lift minimal */

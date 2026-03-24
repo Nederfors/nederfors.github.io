@@ -1,18 +1,20 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Anställning": {}
   },
   "entries": [
     {
       "id": "a1",
-      "namn": "Daglönare, landsbygd",
-      "beskrivning": "Tillfällig arbetskraft på landsbygden, anlitas för jordbruk, enklare hantverk eller tunga lyft.",
-      "taggar": {
-        "typ": [
+      "name": "Daglönare, landsbygd",
+      "description": "Tillfällig arbetskraft på landsbygden, anlitas för jordbruk, enklare hantverk eller tunga lyft.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -20,14 +22,15 @@
     },
     {
       "id": "a2",
-      "namn": "Daglönare, stad",
-      "beskrivning": "Arbetare i stadsmiljö, utför tillfälliga sysslor som bärhjälp, städning och enklare hantverk.",
-      "taggar": {
-        "typ": [
+      "name": "Daglönare, stad",
+      "description": "Arbetare i stadsmiljö, utför tillfälliga sysslor som bärhjälp, städning och enklare hantverk.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -35,14 +38,15 @@
     },
     {
       "id": "a3",
-      "namn": "Hantverkare",
-      "beskrivning": "Yrkesperson med egen verkstad, utför hantverk inom bygg, läder, smide eller snickeri.",
-      "taggar": {
-        "typ": [
+      "name": "Hantverkare",
+      "description": "Yrkesperson med egen verkstad, utför hantverk inom bygg, läder, smide eller snickeri.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -50,14 +54,15 @@
     },
     {
       "id": "a4",
-      "namn": "Fältskär",
-      "beskrivning": "Läkekunnig person, utbildad för att behandla sjukdomar och skador.",
-      "taggar": {
-        "typ": [
+      "name": "Fältskär",
+      "description": "Läkekunnig person, utbildad för att behandla sjukdomar och skador.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -65,14 +70,15 @@
     },
     {
       "id": "a5",
-      "namn": "Riddare, frilans",
-      "beskrivning": "Beväpnad ryttare som säljer sina tjänster till högstbjudande, ofta för strid eller eskort.",
-      "taggar": {
-        "typ": [
+      "name": "Riddare, frilans",
+      "description": "Beväpnad ryttare som säljer sina tjänster till högstbjudande, ofta för strid eller eskort.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
@@ -80,14 +86,15 @@
     },
     {
       "id": "a6",
-      "namn": "Soldenär",
-      "beskrivning": "Yrkeskrigare, anställd på dagsbasis för bevakning, strid eller eskort.",
-      "taggar": {
-        "typ": [
+      "name": "Soldenär",
+      "description": "Yrkeskrigare, anställd på dagsbasis för bevakning, strid eller eskort.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -95,14 +102,15 @@
     },
     {
       "id": "a7",
-      "namn": "Ryttare",
-      "beskrivning": "Soldat till häst, används för snabb truppförflyttning och kavalleriuppdrag.",
-      "taggar": {
-        "typ": [
+      "name": "Ryttare",
+      "description": "Soldat till häst, används för snabb truppförflyttning och kavalleriuppdrag.",
+      "tags": {
+        "types": [
           "Anställning"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0

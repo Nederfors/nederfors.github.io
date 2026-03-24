@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+const catalogSchemaPath = path.join(repoRoot, 'js', 'catalog-schema.js');
+const catalogSchemaSource = fs.readFileSync(catalogSchemaPath, 'utf8');
 const rulesHelperPath = path.join(repoRoot, 'js', 'rules-helper.js');
 const rulesHelperSource = fs.readFileSync(rulesHelperPath, 'utf8');
 
@@ -77,8 +79,15 @@ function createSandbox(storageSeed = {}, overrides = {}) {
 
 function loadRulesHelper(overrides = {}) {
   const sandbox = createSandbox({}, overrides);
+  vm.runInNewContext(catalogSchemaSource, sandbox, { filename: catalogSchemaPath });
   vm.runInNewContext(rulesHelperSource, sandbox, { filename: rulesHelperPath });
   return sandbox.window.rulesHelper;
+}
+
+function loadCatalogSchema(overrides = {}) {
+  const sandbox = createSandbox({}, overrides);
+  vm.runInNewContext(catalogSchemaSource, sandbox, { filename: catalogSchemaPath });
+  return sandbox.window.catalogSchema;
 }
 
 describe('rules-helper unit coverage', () => {
@@ -116,6 +125,64 @@ describe('rules-helper unit coverage', () => {
     expect(getMissingReasons(entry, [{ namn: 'Andebesvarjare' }])).toHaveLength(0);
     expect(getMissingReasons(entry, [{ namn: 'Monster' }]).length).toBeGreaterThan(0);
     expect(getMissingReasons(entry, [{ namn: 'Andeform' }]).length).toBeGreaterThan(0);
+  });
+
+  it('normalizes legacy handling into canonical levels actions', () => {
+    const catalogSchema = loadCatalogSchema();
+    const normalized = catalogSchema.normalizeEntry({
+      id: 'handling-test',
+      namn: 'Handlingstest',
+      taggar: {
+        typ: ['Förmåga'],
+        handling: {
+          Novis: ['Aktiv']
+        }
+      }
+    });
+
+    expect(normalized.levels?.Novis?.actions).toEqual(['Aktiv']);
+    expect(normalized.taggar?.handling?.Novis).toEqual(['Aktiv']);
+  });
+
+  it('evaluates canonical selected.levels.by_name requirements', () => {
+    const rulesHelper = loadRulesHelper();
+    const candidate = {
+      id: 'colossal-test',
+      name: 'Kolossal',
+      tags: {
+        types: ['Särdrag']
+      },
+      rules: {
+        require: [
+          {
+            rule_id: 'colossal__requires_master_robust',
+            when: {
+              field: 'selected.levels.by_name.Robust',
+              op: 'gte',
+              value: 'Mästare'
+            },
+            message: 'Kräver Robust på Mästare.'
+          }
+        ]
+      }
+    };
+
+    const missingWithNovice = rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [
+      { name: 'Robust', level: 'Novis', tags: { types: ['Särdrag'] } }
+    ]);
+    expect(missingWithNovice).toHaveLength(1);
+    expect(missingWithNovice[0]?.missingLevelRequirements).toEqual([
+      {
+        name: 'Robust',
+        minLevelName: 'Mästare',
+        minLevelValue: 3
+      }
+    ]);
+
+    const missingWithMaster = rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [
+      { name: 'Robust', level: 'Mästare', tags: { types: ['Särdrag'] } }
+    ]);
+    expect(missingWithMaster).toHaveLength(0);
   });
 
   it('surfaces alternative name requirements in stop messages', () => {
@@ -598,5 +665,96 @@ describe('rules-helper unit coverage', () => {
     });
 
     expect(rulesHelper.shouldSkipRequirementPopup(entryOverride, { level: 'Novis' })).toBe(false);
+  });
+
+  it('supports canonical english require rules with when.any', () => {
+    const rulesHelper = loadRulesHelper();
+
+    const candidate = {
+      id: 'test-english-rule',
+      name: 'English Rule',
+      tags: {
+        types: ['Särdrag'],
+        rules: {
+          require: [
+            {
+              rule_id: 'requires-monster-or-spiritcaller',
+              when: {
+                any: [
+                  { field: 'selected.names', op: 'includes', value: 'Monster' },
+                  { field: 'selected.names', op: 'includes', value: 'Andebesvärjare' }
+                ]
+              },
+              message: 'Kräver Monster eller Andebesvärjare.'
+            }
+          ]
+        }
+      }
+    };
+
+    expect(rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [{ name: 'Monster' }])).toHaveLength(0);
+    expect(rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [{ namn: 'Andebesvärjare' }])).toHaveLength(0);
+    expect(rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [])).toHaveLength(1);
+  });
+
+  it('applies canonical target-type corruption guards without breaking list filtering', () => {
+    const rulesHelper = loadRulesHelper();
+
+    const tradition = {
+      id: 'ordensmagi',
+      name: 'Ordensmagi',
+      tags: {
+        types: ['Förmåga'],
+        traditions: ['Ordensmagiker']
+      },
+      rules: {
+        grant: [
+          {
+            rule_id: 'ordensmagi-guard',
+            when: {
+              field: 'entry.tags.types',
+              op: 'includes_any',
+              value: ['Mystisk kraft', 'Ritual']
+            },
+            target: 'corruption.guard',
+            formula: { bas: 'niva' }
+          }
+        ]
+      }
+    };
+    const power = {
+      id: 'anatema',
+      name: 'Anatema',
+      tags: {
+        types: ['Mystisk kraft'],
+        traditions: ['Ordensmagiker']
+      }
+    };
+
+    expect(rulesHelper.calcPermanentCorruption(
+      [
+        { ...tradition, nivå: 'Gesäll' },
+        { ...power, nivå: 'Mästare' }
+      ],
+      { korruptionstroskel: 14 }
+    )).toBe(1);
+  });
+
+  it('normalizes english levels.actions into the legacy level view', () => {
+    const rulesHelper = loadRulesHelper();
+    const entry = {
+      id: 'test-level-actions',
+      name: 'Level Actions',
+      tags: { types: ['Förmåga'] },
+      levels: {
+        Novis: {
+          actions: ['Aktiv']
+        }
+      }
+    };
+
+    const levelData = rulesHelper.getLevelData(entry, 'Novis');
+    expect(levelData?.actions).toEqual(['Aktiv']);
+    expect(levelData?.handling).toEqual(['Aktiv']);
   });
 });

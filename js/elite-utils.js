@@ -109,6 +109,7 @@
         if (norm) keys.add(norm);
       });
     };
+    add(entry?.levels);
     add(entry?.nivåer);
     add(entry?.nivaer);
     add(entry?.taggar?.nivå_data);
@@ -359,14 +360,103 @@
   function normalizeValfriRule(raw = {}) {
     return {
       typ: normalizeType(raw.typ),
-      taggfalt: String(raw.taggfalt || '').trim(),
-      taggar: uniqStrings(raw.taggar),
+      taggfalt: String(raw.taggfalt || raw.field || '').trim(),
+      taggar: uniqStrings(raw.taggar || raw.values),
+      xp_kallor: normalizeTypeList(raw.xp_kallor || raw.allowed_entry_types),
       krav_erf: toInt(raw.krav_erf, 0)
     };
   }
 
+  function normalizeCanonicalEliteRequirements(raw = {}) {
+    const base = {
+      total_erf: toInt(raw.total_xp ?? raw.total_erf, 0),
+      primarformaga: normalizePrimary({}),
+      specifikt_val: [],
+      valfri_inom_tagg: [],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: normalizeNamedCount({}),
+      specifika_nackdelar: normalizeNamedCount({})
+    };
+
+    toArray(raw.stages).forEach((stage, idx) => {
+      const kind = String(stage?.kind || '').trim();
+      if (!kind) return;
+
+      if (kind === 'primary') {
+        base.primarformaga = normalizePrimary({
+          namn_lista: toArray(stage?.options).map(option => option?.name ?? option?.namn),
+          krav_erf: stage?.min_xp
+        });
+        return;
+      }
+
+      if (kind === 'specific_choice') {
+        const normalized = normalizeSpecificChoice({
+          alternativ: toArray(stage?.options).map(option => ({
+            typ: option?.type ?? option?.typ,
+            namn: option?.name ?? option?.namn
+          })),
+          krav_erf: stage?.min_xp,
+          min_antal: stage?.min_count
+        });
+        if (normalized.alternativ.length && normalized.krav_erf > 0) {
+          base.specifikt_val.push(normalized);
+        }
+        return;
+      }
+
+      if (kind === 'tag_pool') {
+        const normalized = normalizeValfriRule({
+          typ: stage?.entry_type ?? stage?.type,
+          taggfalt: stage?.field,
+          taggar: stage?.values,
+          allowed_entry_types: stage?.allowed_entry_types,
+          krav_erf: stage?.min_xp
+        });
+        if (normalized.taggfalt && normalized.taggar.length && normalized.krav_erf > 0) {
+          base.valfri_inom_tagg.push(normalized);
+        }
+        return;
+      }
+
+      if (kind === 'optional_pool') {
+        base.valfritt = {
+          krav_erf: Math.max(base.valfritt.krav_erf, toInt(stage?.min_xp, 0)),
+          xp_kallor: normalizeTypeList(stage?.allowed_entry_types)
+        };
+        return;
+      }
+
+      if (kind === 'named_count') {
+        const entryType = normalizeType(stage?.entry_type || stage?.type);
+        const named = normalizeNamedCount({
+          namn: stage?.names,
+          min_antal: stage?.min_count
+        });
+        if (entryType === 'Fördel') {
+          base.specifika_fordelar = named;
+        } else if (entryType === 'Nackdel') {
+          base.specifika_nackdelar = named;
+        }
+        return;
+      }
+
+      const id = String(stage?.id || '').trim() || `stage_${idx}`;
+      if (id === 'specific_benefits') {
+        base.specifika_fordelar = normalizeNamedCount({ namn: stage?.names, min_antal: stage?.min_count });
+      } else if (id === 'specific_drawbacks') {
+        base.specifika_nackdelar = normalizeNamedCount({ namn: stage?.names, min_antal: stage?.min_count });
+      }
+    });
+
+    return base;
+  }
+
   function normalizeKrav(rawKrav = {}) {
     const raw = rawKrav && typeof rawKrav === 'object' ? rawKrav : {};
+    if (Array.isArray(raw.stages)) {
+      return normalizeCanonicalEliteRequirements(raw);
+    }
     return {
       total_erf: toInt(raw.total_erf, 0),
       primarformaga: normalizePrimary(raw.primarformaga || {}),
@@ -377,7 +467,8 @@
         .map(normalizeValfriRule)
         .filter(rule => rule.taggfalt && rule.taggar.length > 0 && rule.krav_erf > 0),
       valfritt: {
-        krav_erf: toInt(raw?.valfritt?.krav_erf, 0)
+        krav_erf: toInt(raw?.valfritt?.krav_erf, 0),
+        xp_kallor: normalizeTypeList(raw?.valfritt?.xp_kallor)
       },
       specifika_fordelar: normalizeNamedCount(raw.specifika_fordelar || {}),
       specifika_nackdelar: normalizeNamedCount(raw.specifika_nackdelar || {})
@@ -411,11 +502,11 @@
         if (hit) return hit;
       } catch { }
     }
-    return getDBList(options).find(entry => normalizeKey(entry?.namn) === key) || null;
+    return getDBList(options).find(entry => normalizeKey(entry?.namn || entry?.name) === key) || null;
   }
 
   function entryTypes(entry) {
-    return toArray(entry?.taggar?.typ).map(normalizeType).filter(Boolean);
+    return toArray(entry?.taggar?.typ ?? entry?.tags?.types).map(normalizeType).filter(Boolean);
   }
 
   function entryHasType(entry, type) {
@@ -451,7 +542,7 @@
     if (typeof window.storeHelper?.getEntryMaxCount === 'function') {
       return normalizeMaxCount(window.storeHelper.getEntryMaxCount(entry, options), 1);
     }
-    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
+    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal ?? entry?.tags?.max_count);
     if (tagLimit !== null) return tagLimit;
     const directLimit = parsePositiveLimit(entry?.max_antal);
     if (directLimit !== null) return directLimit;
@@ -515,8 +606,8 @@
   function getTagValues(entry, field) {
     const tagField = String(field || '').trim();
     if (!tagField) return [];
-    if (tagField === 'namn') {
-      const name = String(entry?.namn || '').trim();
+    if (tagField === 'namn' || tagField === 'name') {
+      const name = String(entry?.namn || entry?.name || '').trim();
       return name ? [name] : [];
     }
     const values = [];
@@ -530,6 +621,7 @@
     };
     add(getValueCaseInsensitive(entry, tagField));
     add(getValueCaseInsensitive(entry?.taggar, tagField));
+    add(getValueCaseInsensitive(entry?.tags, tagField));
     return values;
   }
 
@@ -703,7 +795,7 @@
       if (!rule.taggfalt || !rule.taggar.length || minErf <= 0) return;
       const names = rule.taggfalt === 'namn' && rule.taggar.length
         ? rule.taggar.slice()
-        : resolveGroupNamesFromRule(rule, options);
+        : resolveGroupNamesFromTagRule(rule, options, rule.xp_kallor);
       const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
       groups.push({
         source: `valfri_inom_tagg[${idx}]`,
@@ -719,6 +811,7 @@
           taggfalt: rule.taggfalt,
           taggar: rule.taggar,
           typ: rule.typ,
+          xp_kallor: rule.xp_kallor,
           krav_erf: minErf
         }
       });

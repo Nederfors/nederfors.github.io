@@ -1,475 +1,528 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Dryck": {}
   },
   "entries": [
     {
-      "namn": "Lantvin",
-      "beskrivning": "Husets bordsvin, lätt och fruktigt från lokala vingårdar.",
-      "taggar": {
-        "typ": [
+      "id": "dr1",
+      "name": "Lantvin",
+      "description": "Husets bordsvin, lätt och fruktigt från lokala vingårdar.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 3
-      },
-      "id": "dr1"
+      }
     },
     {
-      "namn": "Statarvin",
-      "beskrivning": "Förnämare stadsvin, lagrat och serverat i glas från hyllad vinkällare.",
-      "taggar": {
-        "typ": [
+      "id": "dr2",
+      "name": "Statarvin",
+      "description": "Förnämare stadsvin, lagrat och serverat i glas från hyllad vinkällare.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
-      },
-      "id": "dr2"
+      }
     },
     {
-      "namn": "Lantöl",
-      "beskrivning": "Rustikt bondöl bryggt med korn från närområdet.",
-      "taggar": {
-        "typ": [
+      "id": "dr3",
+      "name": "Lantöl",
+      "description": "Rustikt bondöl bryggt med korn från närområdet.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
-      },
-      "id": "dr3"
+      }
     },
     {
-      "namn": "Kungöl",
-      "beskrivning": "Finstämt stadsöl från bryggeri med flera humlesorter.",
-      "taggar": {
-        "typ": [
+      "id": "dr4",
+      "name": "Kungöl",
+      "description": "Finstämt stadsöl från bryggeri med flera humlesorter.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 2,
         "örtegar": 0
-      },
-      "id": "dr4"
+      }
     },
     {
-      "namn": "Bordsstut",
-      "beskrivning": "Lättare variant av stut med lägre alkoholhalt – mild maltig smak till vardagsmat.",
-      "taggar": {
-        "typ": [
+      "id": "dr5",
+      "name": "Bordsstut",
+      "description": "Lättare variant av stut med lägre alkoholhalt – mild maltig smak till vardagsmat.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
-      },
-      "id": "dr5"
+      }
     },
     {
-      "namn": "Flaska Blot",
-      "beskrivning": "Kryddat, värmt rödvin som serveras ångande under kyliga kvällar.",
-      "taggar": {
-        "typ": [
+      "id": "dr6",
+      "name": "Flaska Blot",
+      "description": "Kryddat, värmt rödvin som serveras ångande under kyliga kvällar.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 3,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "dr6"
+      }
     },
     {
-      "namn": "Flaska Ludendrank",
-      "beskrivning": "Sötare glödgat vin smaksatt med kanel och honung.",
-      "taggar": {
-        "typ": [
+      "id": "dr7",
+      "name": "Flaska Ludendrank",
+      "description": "Sötare glödgat vin smaksatt med kanel och honung.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "dr7"
+      }
     },
     {
-      "namn": "Flaska rödvin",
-      "beskrivning": "En enkel rödvinsbutelj av okänd vingård.",
-      "taggar": {
-        "typ": [
+      "id": "dr8",
+      "name": "Flaska rödvin",
+      "description": "En enkel rödvinsbutelj av okänd vingård.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "dr8"
+      }
     },
     {
-      "namn": "Flaska vitt vin",
-      "beskrivning": "Ljust vin med frisk syra, ursprung ej angivet.",
-      "taggar": {
-        "typ": [
+      "id": "dr9",
+      "name": "Flaska vitt vin",
+      "description": "Ljust vin med frisk syra, ursprung ej angivet.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "dr9"
+      }
     },
     {
-      "namn": "Flaska Söderns sluttning",
-      "beskrivning": "Fylligt vin från Alberetors soliga terrasser – rik fruktighet och lång eftersmak.",
-      "taggar": {
-        "typ": [
+      "id": "dr10",
+      "name": "Flaska Söderns sluttning",
+      "description": "Fylligt vin från Alberetors soliga terrasser – rik fruktighet och lång eftersmak.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 15,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "dr10"
+      }
     },
     {
-      "namn": "Flaska Vearras röda",
-      "beskrivning": "Basvin från Vearra – rustik smak, passar till kraftigare rätter.",
-      "taggar": {
-        "typ": [
+      "id": "dr11",
+      "name": "Flaska Vearras röda",
+      "description": "Basvin från Vearra – rustik smak, passar till kraftigare rätter.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "dr11"
+      }
     },
     {
-      "namn": "Kanna Vesa",
-      "beskrivning": "Blandning av kärnmjölk och getvassla, friskt och omtyckt av alla klaner när man vant sig.",
-      "taggar": {
-        "typ": [
+      "id": "dr12",
+      "name": "Kanna Vesa",
+      "description": "Blandning av kärnmjölk och getvassla, friskt och omtyckt av alla klaner när man vant sig.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
-      },
-      "id": "dr12"
+      }
     },
     {
-      "namn": "Stop beckjom",
-      "beskrivning": "Barbarernas mustiga öl med kvalitet från fuljom till klanen Zareks bättre brygd.",
-      "taggar": {
-        "typ": [
+      "id": "dr13",
+      "name": "Stop beckjom",
+      "description": "Barbarernas mustiga öl med kvalitet från fuljom till klanen Zareks bättre brygd.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
-      },
-      "id": "dr13"
+      }
     },
     {
-      "namn": "Stop stut",
-      "beskrivning": "Den vanligaste öltypen i Ambria – enkel och prisvärd.",
-      "taggar": {
-        "typ": [
+      "id": "dr14",
+      "name": "Stop stut",
+      "description": "Den vanligaste öltypen i Ambria – enkel och prisvärd.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 3
-      },
-      "id": "dr14"
+      }
     },
     {
-      "namn": "Stop Adersel",
-      "beskrivning": "Starkt trippeljäst öl med fyllig maltighet och lång eftersmak.",
-      "taggar": {
-        "typ": [
+      "id": "dr15",
+      "name": "Stop Adersel",
+      "description": "Starkt trippeljäst öl med fyllig maltighet och lång eftersmak.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 8,
         "örtegar": 0
-      },
-      "id": "dr15"
+      }
     },
     {
-      "namn": "Stop Argona",
-      "beskrivning": "Stut av högre klass bryggd av ätten Argona – klar, rund smak.",
-      "taggar": {
-        "typ": [
+      "id": "dr16",
+      "name": "Stop Argona",
+      "description": "Stut av högre klass bryggd av ätten Argona – klar, rund smak.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 2,
         "örtegar": 0
-      },
-      "id": "dr16"
+      }
     },
     {
-      "namn": "Stop Hertigens tröst",
-      "beskrivning": "Enkel stut som värmer gott efter långa resor.",
-      "taggar": {
-        "typ": [
+      "id": "dr17",
+      "name": "Stop Hertigens tröst",
+      "description": "Enkel stut som värmer gott efter långa resor.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
-      },
-      "id": "dr17"
+      }
     },
     {
-      "namn": "Stop Kuruns ära",
-      "beskrivning": "Kraftig trippeljäst öl med fyllig karamellton.",
-      "taggar": {
-        "typ": [
+      "id": "dr18",
+      "name": "Stop Kuruns ära",
+      "description": "Kraftig trippeljäst öl med fyllig karamellton.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
-      },
-      "id": "dr18"
+      }
     },
     {
-      "namn": "Stop Urtal",
-      "beskrivning": "Rödskimrande öl med kraftfull maltprofil och tre jäsningar.",
-      "taggar": {
-        "typ": [
+      "id": "dr19",
+      "name": "Stop Urtal",
+      "description": "Rödskimrande öl med kraftfull maltprofil och tre jäsningar.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
-      },
-      "id": "dr19"
+      }
     },
     {
-      "namn": "Stop Veloum",
-      "beskrivning": "Ljusare mustad öl från norr om Karvosti – svagare än beckjom men smakrik.",
-      "taggar": {
-        "typ": [
+      "id": "dr20",
+      "name": "Stop Veloum",
+      "description": "Ljusare mustad öl från norr om Karvosti – svagare än beckjom men smakrik.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 2,
         "örtegar": 0
-      },
-      "id": "dr20"
+      }
     },
     {
-      "namn": "Stop Zarekisk beckjom",
-      "beskrivning": "Beckjom bryggd av klanen Zarek – den mest uppskattade varianten.",
-      "taggar": {
-        "typ": [
+      "id": "dr21",
+      "name": "Stop Zarekisk beckjom",
+      "description": "Beckjom bryggd av klanen Zarek – den mest uppskattade varianten.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
-      },
-      "id": "dr21"
+      }
     },
     {
-      "namn": "Fruktte",
-      "beskrivning": "Brygd på torkad frukt som ger söt, bärig arom.",
-      "taggar": {
-        "typ": [
+      "id": "dr22",
+      "name": "Fruktte",
+      "description": "Brygd på torkad frukt som ger söt, bärig arom.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
-      },
-      "id": "dr22"
+      }
     },
     {
-      "namn": "Järnekste",
-      "beskrivning": "Piggande te på järneksblad med stram beska.",
-      "taggar": {
-        "typ": [
+      "id": "dr23",
+      "name": "Järnekste",
+      "description": "Piggande te på järneksblad med stram beska.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 8
-      },
-      "id": "dr23"
+      }
     },
     {
-      "namn": "Kryddte",
-      "beskrivning": "Svart blad samsas med kanel och nejlika i värmande kopp.",
-      "taggar": {
-        "typ": [
+      "id": "dr24",
+      "name": "Kryddte",
+      "description": "Svart blad samsas med kanel och nejlika i värmande kopp.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
-      },
-      "id": "dr24"
+      }
     },
     {
-      "namn": "Rökt te",
-      "beskrivning": "Te vars blad rökts över tallved, ger kraftig smak och doft.",
-      "taggar": {
-        "typ": [
+      "id": "dr25",
+      "name": "Rökt te",
+      "description": "Te vars blad rökts över tallved, ger kraftig smak och doft.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
-      },
-      "id": "dr25"
+      }
     },
     {
-      "namn": "Örtte",
-      "beskrivning": "Mild brygd på ängsörter, lugnande och aromatisk.",
-      "taggar": {
-        "typ": [
+      "id": "dr26",
+      "name": "Örtte",
+      "description": "Mild brygd på ängsörter, lugnande och aromatisk.",
+      "tags": {
+        "types": [
           "Dryck"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
-      },
-      "id": "dr26"
+      }
     }
   ]
 }

@@ -51,10 +51,11 @@
   }
 
   function getKrav(entry) {
+    const rawKrav = entry?.elite_requirements || entry?.krav || {};
     if (typeof utils.normalizeKrav === 'function') {
-      return utils.normalizeKrav(entry?.krav || {});
+      return utils.normalizeKrav(rawKrav);
     }
-    return entry?.krav || {};
+    return rawKrav;
   }
 
   function getGroups(entry) {
@@ -65,7 +66,7 @@
   }
 
   function itemName(item) {
-    return String(item?.namn || '').trim();
+    return String(item?.namn || item?.name || '').trim();
   }
 
   function isBenefit(item) {

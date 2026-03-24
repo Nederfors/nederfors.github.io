@@ -322,8 +322,10 @@
           if (resolved) return resolved;
         }
         const likelyFields = [
+          entry.suggested_abilities,
           entry.lampliga_formagor,
           entry.lampliga,
+          entry.elite_abilities,
           entry.Elityrkesförmågor
         ];
         for (let i = 0; i < likelyFields.length; i += 1) {
@@ -388,8 +390,8 @@
     }
 
     seedAbilityPreferences() {
-      toNameArray(this.selectedYrke?.lampliga_formagor).forEach(name => this.addAbilityPreference(name, 4));
-      toNameArray(this.selectedElityrke?.Elityrkesförmågor).forEach(name => this.addAbilityPreference(name, 5));
+      toNameArray(this.selectedYrke?.suggested_abilities || this.selectedYrke?.lampliga_formagor).forEach(name => this.addAbilityPreference(name, 4));
+      toNameArray(this.selectedElityrke?.elite_abilities || this.selectedElityrke?.Elityrkesförmågor).forEach(name => this.addAbilityPreference(name, 5));
       const traitPrefs = Array.isArray(this.traitPreferences) ? this.traitPreferences : [];
       traitPrefs.forEach(pref => {
         const weight = pref.weight || traitWeightFromTarget(pref.target);
@@ -503,7 +505,7 @@
       const elite = this.selectedElityrke;
       if (!elite) return forced;
 
-      const groups = parseElityrkeRequirementGroups(elite.krav);
+      const groups = parseElityrkeRequirementGroups(elite?.elite_requirements || elite?.krav || {});
       const used = new Set();
       const picks = [];
       groups.forEach(group => {
@@ -518,7 +520,7 @@
         });
       });
 
-      const eliteSkills = toNameArray(elite.Elityrkesförmågor);
+      const eliteSkills = toNameArray(elite.elite_abilities || elite.Elityrkesförmågor);
       if (eliteSkills.length) {
         const pick = eliteSkills[randIndex(eliteSkills.length)];
         if (pick) {
@@ -1554,7 +1556,7 @@
     const races = getEntriesByType('Ras').filter(r => r?.namn);
     if (!races.length) return null;
     const suggested = new Set(
-      toNameArray(yrkeEntry?.forslag_pa_slakte)
+      toNameArray(yrkeEntry?.suggested_races || yrkeEntry?.forslag_pa_slakte)
         .map(normalizeName)
         .filter(Boolean)
     );
@@ -1598,7 +1600,7 @@
 
   function isMysticProfession(entry) {
     if (!entry) return false;
-    const names = toNameArray(entry?.lampliga_formagor).concat(toNameArray(entry?.lampliga));
+    const names = toNameArray(entry?.suggested_abilities || entry?.lampliga_formagor).concat(toNameArray(entry?.lampliga));
     return names.some(str => {
       const norm = normalizeName(str);
       return norm.startsWith('mystisk kraft') || norm === 'ritualist';
@@ -1611,7 +1613,7 @@
     const canonical = new Set(getMysticPools().canonicalTraditions.keys());
     const hasKnownTradition = traditionTags.some(tag => canonical.has(tag));
     if (hasKnownTradition) return true;
-    const names = toNameArray(entry?.Elityrkesförmågor);
+    const names = toNameArray(entry?.elite_abilities || entry?.Elityrkesförmågor);
     return names.some(name => {
       const norm = normalizeName(name);
       if (norm.startsWith('mystisk kraft') || norm === 'ritualist') return true;

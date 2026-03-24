@@ -1,18 +1,20 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Gårdsdjur": {}
   },
   "entries": [
     {
       "id": "g1",
-      "namn": "Får",
-      "beskrivning": "Ett ullproducerande tamdjur som ger kött och mjölk, trivs bäst i flock.",
-      "taggar": {
-        "typ": [
+      "name": "Får",
+      "description": "Ett ullproducerande tamdjur som ger kött och mjölk, trivs bäst i flock.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 15
@@ -20,14 +22,15 @@
     },
     {
       "id": "g2",
-      "namn": "Gris",
-      "beskrivning": "Robust djur som förser gården med kött och läder.",
-      "taggar": {
-        "typ": [
+      "name": "Gris",
+      "description": "Robust djur som förser gården med kött och läder.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -35,14 +38,15 @@
     },
     {
       "id": "g3",
-      "namn": "Hund",
-      "beskrivning": "Lojal följeslagare, används för vakthållning, jakt eller vallning.",
-      "taggar": {
-        "typ": [
+      "name": "Hund",
+      "description": "Lojal följeslagare, används för vakthållning, jakt eller vallning.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -50,14 +54,15 @@
     },
     {
       "id": "g4",
-      "namn": "Höna",
-      "beskrivning": "Tamhöna som ger färska ägg och håller skadedjur borta.",
-      "taggar": {
-        "typ": [
+      "name": "Höna",
+      "description": "Tamhöna som ger färska ägg och håller skadedjur borta.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 8
@@ -65,14 +70,15 @@
     },
     {
       "id": "g5",
-      "namn": "Ko",
-      "beskrivning": "Mjölkproducerande nötboskap som även ger kött och draghjälp.",
-      "taggar": {
-        "typ": [
+      "name": "Ko",
+      "description": "Mjölkproducerande nötboskap som även ger kött och draghjälp.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -80,14 +86,15 @@
     },
     {
       "id": "g6",
-      "namn": "Oxe",
-      "beskrivning": "Stark dragare, oumbärlig vid åkerbruk och tunga transporter.",
-      "taggar": {
-        "typ": [
+      "name": "Oxe",
+      "description": "Stark dragare, oumbärlig vid åkerbruk och tunga transporter.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
@@ -95,14 +102,15 @@
     },
     {
       "id": "g7",
-      "namn": "Tjur",
-      "beskrivning": "Vuxen hanne av nötboskap, viktig för avel och ibland för kraft.",
-      "taggar": {
-        "typ": [
+      "name": "Tjur",
+      "description": "Vuxen hanne av nötboskap, viktig för avel och ibland för kraft.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
@@ -110,14 +118,15 @@
     },
     {
       "id": "g8",
-      "namn": "Tupp",
-      "beskrivning": "Färgstark hane som vaktar hönsflocken och gal i gryningen.",
-      "taggar": {
-        "typ": [
+      "name": "Tupp",
+      "description": "Färgstark hane som vaktar hönsflocken och gal i gryningen.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -125,14 +134,15 @@
     },
     {
       "id": "g9",
-      "namn": "Åsna",
-      "beskrivning": "Tåligt lastdjur, uppskattad för sin styrka och sitt lugn.",
-      "taggar": {
-        "typ": [
+      "name": "Åsna",
+      "description": "Tåligt lastdjur, uppskattad för sin styrka och sitt lugn.",
+      "tags": {
+        "types": [
           "Gårdsdjur"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 3,
         "skilling": 0,
         "örtegar": 0

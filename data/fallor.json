@@ -1,39 +1,46 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Elixir": {},
     "Fälla": {}
   },
   "entries": [
     {
       "id": "fal1",
-      "namn": "Svag Alkemisk mina",
-      "taggar": {
-        "typ": [
+      "name": "Svag Alkemisk mina",
+      "tags": {
+        "types": [
           "Elixir",
           "Fälla"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Försåtsgillrare",
-                  "Pyroteknik"
-                ]
-              },
-              "varde": "requires_forsatsgillrare_or_pyroteknik",
-              "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T8 skada; därefter brinner substansen i 1T4 rundor och ger 1T4 skada per runda."
         }
       },
-      "nivåer": {
-        "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T8 skada; därefter brinner substansen i 1T4 rundor och ger 1T4 skada per runda."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__fal1__top__require__0",
+            "message": "Kräver Försåtsgillrare eller Pyroteknik.",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Försåtsgillrare",
+                "Pyroteknik"
+              ]
+            },
+            "value": "requires_forsatsgillrare_or_pyroteknik"
+          }
+        ]
       },
-      "stat": {
-        "vikt": 1.0
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
@@ -41,34 +48,40 @@
     },
     {
       "id": "fal2",
-      "namn": "Medelstark Alkemisk mina",
-      "taggar": {
-        "typ": [
+      "name": "Medelstark Alkemisk mina",
+      "tags": {
+        "types": [
           "Elixir",
           "Fälla"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Försåtsgillrare",
-                  "Pyroteknik"
-                ]
-              },
-              "varde": "requires_forsatsgillrare_or_pyroteknik",
-              "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T10 skada; därefter brinner substansen i 1T6 rundor och ger 1T6 skada per runda."
         }
       },
-      "nivåer": {
-        "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T10 skada; därefter brinner substansen i 1T6 rundor och ger 1T6 skada per runda."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__fal2__top__require__0",
+            "message": "Kräver Försåtsgillrare eller Pyroteknik.",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Försåtsgillrare",
+                "Pyroteknik"
+              ]
+            },
+            "value": "requires_forsatsgillrare_or_pyroteknik"
+          }
+        ]
       },
-      "stat": {
-        "vikt": 1.0
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
@@ -76,34 +89,40 @@
     },
     {
       "id": "fal3",
-      "namn": "Stark Alkemisk mina",
-      "taggar": {
-        "typ": [
+      "name": "Stark Alkemisk mina",
+      "tags": {
+        "types": [
           "Elixir",
           "Fälla"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Försåtsgillrare",
-                  "Pyroteknik"
-                ]
-              },
-              "varde": "requires_forsatsgillrare_or_pyroteknik",
-              "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Mästare": {
+          "description": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T12 skada; därefter brinner substansen i 1T8 rundor och ger 1T8 skada per runda."
         }
       },
-      "nivåer": {
-        "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T12 skada; därefter brinner substansen i 1T8 rundor och ger 1T8 skada per runda."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__fal3__top__require__0",
+            "message": "Kräver Försåtsgillrare eller Pyroteknik.",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_any",
+              "value": [
+                "Försåtsgillrare",
+                "Pyroteknik"
+              ]
+            },
+            "value": "requires_forsatsgillrare_or_pyroteknik"
+          }
+        ]
       },
-      "stat": {
-        "vikt": 1.0
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
@@ -111,19 +130,22 @@
     },
     {
       "id": "fal4",
-      "namn": "Svag Mekanisk fälla",
-      "taggar": {
-        "typ": [
+      "name": "Svag Mekanisk fälla",
+      "tags": {
+        "types": [
           "Fälla"
         ]
       },
-      "nivåer": {
-        "Novis": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T8 skada."
+      "levels": {
+        "Novis": {
+          "description": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T8 skada."
+        }
       },
-      "stat": {
-        "vikt": 1.0
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -131,19 +153,22 @@
     },
     {
       "id": "fal5",
-      "namn": "Medelstark Mekanisk fälla",
-      "taggar": {
-        "typ": [
+      "name": "Medelstark Mekanisk fälla",
+      "tags": {
+        "types": [
           "Fälla"
         ]
       },
-      "nivåer": {
-        "Gesäll": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T10 skada."
+      "levels": {
+        "Gesäll": {
+          "description": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T10 skada."
+        }
       },
-      "stat": {
-        "vikt": 1.0
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
@@ -151,19 +176,22 @@
     },
     {
       "id": "fal6",
-      "namn": "Stark Mekanisk fälla",
-      "taggar": {
-        "typ": [
+      "name": "Stark Mekanisk fälla",
+      "tags": {
+        "types": [
           "Fälla"
         ]
       },
-      "nivåer": {
-        "Mästare": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T12 skada."
+      "levels": {
+        "Mästare": {
+          "description": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T12 skada."
+        }
       },
-      "stat": {
-        "vikt": 1.0
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 3,
         "skilling": 0,
         "örtegar": 0

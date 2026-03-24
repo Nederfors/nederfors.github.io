@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 Uppdaterar:
-- yrke.json -> lampliga_formagor baserat på taggar.ark_trad i:
+- yrke.json -> suggested_abilities baserat på taggar.ark_trad i:
   - basformagor.json (basförmågor)
   - formaga.json (förmågor)
   - mystisk-kraft.json (mystiska krafter)
   - ritual.json (ritualer)
-- elityrke.json -> Elityrkesförmågor baserat på poster i:
+- elityrke.json -> elite_abilities baserat på poster i:
   - formaga.json
   - mystisk-kraft.json
   - ritual.json
@@ -71,6 +71,20 @@ def split_tags(value):
     return out
 
 
+def get_entry_name(entry):
+    return entry.get("name") or entry.get("namn") or ""
+
+
+def get_entry_tags(entry):
+    tags = entry.get("tags")
+    if isinstance(tags, dict):
+        return tags
+    tags = entry.get("taggar")
+    if isinstance(tags, dict):
+        return tags
+    return {}
+
+
 def build_exact_index(names, categories):
     return {name: {category: set() for category in categories} for name in names}
 
@@ -79,13 +93,13 @@ def process_items(items, type_label, valid_names, exact, unknown_tags, required_
     for item in items:
         if not isinstance(item, dict):
             continue
-        name = item.get("namn")
+        name = get_entry_name(item)
         if not name:
             continue
-        taggar = item.get("taggar") or {}
-        if required_type and required_type not in set(split_tags(taggar.get("typ"))):
+        taggar = get_entry_tags(item)
+        if required_type and required_type not in set(split_tags(taggar.get("types") or taggar.get("typ"))):
             continue
-        for tag in split_tags(taggar.get("ark_trad")):
+        for tag in split_tags(taggar.get("traditions") or taggar.get("ark_trad")):
             if tag in valid_names:
                 exact[tag][type_label].add(name)
             else:
@@ -126,8 +140,8 @@ def main():
     mk_data = mk_payload.entries
     ritual_data = ritual_payload.entries
 
-    yrke_names = [entry["namn"] for entry in yrke_data]
-    elityrke_names = [entry["namn"] for entry in elityrke_data]
+    yrke_names = [get_entry_name(entry) for entry in yrke_data]
+    elityrke_names = [get_entry_name(entry) for entry in elityrke_data]
     valid_yrken = set(yrke_names)
     valid_elityrken = set(elityrke_names)
 
@@ -177,26 +191,30 @@ def main():
     updated_yrken = []
     for entry in yrke_data:
         updated_entry = dict(entry)
-        updated_entry["lampliga_formagor"] = merged_for(entry["namn"])
+        updated_entry["suggested_abilities"] = merged_for(get_entry_name(entry))
+        updated_entry.pop("lampliga_formagor", None)
         updated_yrken.append(updated_entry)
 
     updated_elityrken = []
     for entry in elityrke_data:
         updated_entry = dict(entry)
-        updated_entry["Elityrkesförmågor"] = merged_elityrkesformagor_for(entry["namn"])
+        updated_entry["elite_abilities"] = merged_elityrkesformagor_for(get_entry_name(entry))
+        updated_entry.pop("Elityrkesförmågor", None)
         updated_elityrken.append(updated_entry)
 
     yrke_output = build_payload(
         updated_yrken,
         type_rules=yrke_payload.type_rules,
         extra=yrke_payload.extra,
-        as_object=yrke_payload.is_object_format
+        as_object=yrke_payload.is_object_format,
+        schema_version=yrke_payload.schema_version or 3
     )
     elityrke_output = build_payload(
         updated_elityrken,
         type_rules=elityrke_payload.type_rules,
         extra=elityrke_payload.extra,
-        as_object=elityrke_payload.is_object_format
+        as_object=elityrke_payload.is_object_format,
+        schema_version=elityrke_payload.schema_version or 3
     )
 
     dump_json(OUT_YRKE_PATH, yrke_output)
@@ -208,7 +226,7 @@ def main():
 
     print(f"\nSkrev: {OUT_ELITYRKE_PATH}")
     print(
-        "Elityrken med kopplade Elityrkesförmågor: "
+        "Elityrken med kopplade elite_abilities: "
         f"{sum(1 for name in elityrke_names if merged_elityrkesformagor_for(name))}/{len(elityrke_names)}"
     )
 

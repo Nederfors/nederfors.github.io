@@ -1,230 +1,249 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Kvalitet": {},
     "Vapenkvalitet": {}
   },
   "entries": [
     {
       "id": "neu1",
-      "namn": "Kort",
-      "beskrivning": "Vapnet är litet och kan dras som en fri handling, samt kan användas med förmågan Fint.",
-      "taggar": {
-        "typ": [
+      "name": "Kort",
+      "description": "Vapnet är litet och kan dras som en fri handling, samt kan användas med förmågan Fint.",
+      "tags": {
+        "types": [
           "Kvalitet",
           "Vapenkvalitet"
         ]
       },
-      "neutral": true,
-      "effekt": "Dras som fri handling; fungerar med Fint."
+      "levels": {},
+      "effect": "Dras som fri handling; fungerar med Fint.",
+      "neutral": true
     },
     {
       "id": "neu2",
-      "namn": "Långt",
-      "beskrivning": "Vapnet har en längdfördel och ger en gång per runda ett frislag mot en nyanländ närstridsmotståndare som inte bär ett långt vapen (se sid 159).",
-      "taggar": {
-        "typ": [
+      "name": "Långt",
+      "description": "Vapnet har en längdfördel och ger en gång per runda ett frislag mot en nyanländ närstridsmotståndare som inte bär ett långt vapen (se sid 159).",
+      "tags": {
+        "types": [
           "Kvalitet",
           "Vapenkvalitet"
         ]
       },
-      "neutral": true,
-      "effekt": "1 frislag per runda mot ny närstridsmotståndare utan långt vapen."
+      "levels": {},
+      "effect": "1 frislag per runda mot ny närstridsmotståndare utan långt vapen.",
+      "neutral": true
     },
     {
       "id": "neu3",
-      "namn": "Bastardvapen",
-      "beskrivning": "Vapnet kan användas i både en och två händer, även om vapnet främst kommer till sin rätt när det används med båda händerna. Bastardvapnet tappar av SL bestämda kvaliteter om det används med en hand, men då kan användaren också använda sköld vilket i vissa lägen är att föredra. En annan fördel är att vapnet kan användas till häst, hållet i en hand tills ryttaren sitter av och då kan nyttja dess fulla tvåhandskraft.",
-      "taggar": {
-        "typ": [
+      "name": "Bastardvapen",
+      "description": "Vapnet kan användas i både en och två händer, även om vapnet främst kommer till sin rätt när det används med båda händerna. Bastardvapnet tappar av SL bestämda kvaliteter om det används med en hand, men då kan användaren också använda sköld vilket i vissa lägen är att föredra. En annan fördel är att vapnet kan användas till häst, hållet i en hand tills ryttaren sitter av och då kan nyttja dess fulla tvåhandskraft.",
+      "tags": {
+        "types": [
           "Kvalitet",
           "Vapenkvalitet"
         ]
       },
-      "neutral": true,
-      "effekt": "Kan brukas en- eller tvåhandat; enhandat tappar kvaliteter men tillåter sköld och ridbruk."
+      "levels": {},
+      "effect": "Kan brukas en- eller tvåhandat; enhandat tappar kvaliteter men tillåter sköld och ridbruk.",
+      "neutral": true
     },
     {
       "id": "neu4_novis",
-      "namn": "Robustanpassad (Novis)",
-      "beskrivning": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på novisnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x2",
-      "taggar": {
-        "typ": [
+      "name": "Robustanpassad (Novis)",
+      "description": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på novisnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x2",
+      "tags": {
+        "types": [
           "Kvalitet",
           "Rustningskvalitet"
-        ],
-        "regler": {
-          "andrar": [
-            {
-              "mal": "pris_faktor",
-              "varde": 2,
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Rustning"
-                  ]
-                }
-              }
-            },
-            {
-              "mal": "kvalitet_gratisbar",
-              "satt": "ersatt",
-              "varde": false,
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Rustning"
-                  ]
-                }
-              }
-            }
-          ],
-          "krockar": [
-            {
-              "namn": [
-                "Robustanpassad (Novis)",
-                "Robustanpassad (Gesäll)",
-                "Robustanpassad (Mästare)"
-              ],
-              "varde": "kvalitet_krockar_med_andra_i_grupp"
-            },
-            {
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Medeltung Rustning",
-                    "Tung Rustning"
-                  ]
-                }
-              },
-              "varde": "kvalitet_krockar_med_foremaltyp"
-            }
-          ]
-        }
+        ]
       },
-      "neutral": true,
-      "effekt": "Grundpriset på rustningen ökar med x2."
+      "levels": {},
+      "rules": {
+        "modify": [
+          {
+            "rule_id": "entry__neu4_novis__top__modify__0",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Rustning"
+              ]
+            },
+            "target": "price.factor",
+            "value": 2
+          },
+          {
+            "rule_id": "entry__neu4_novis__top__modify__1",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Rustning"
+              ]
+            },
+            "target": "quality.freeable",
+            "op": "set",
+            "value": false
+          }
+        ],
+        "conflict": [
+          {
+            "rule_id": "entry__neu4_novis__top__conflict__0",
+            "value": "kvalitet_krockar_med_andra_i_grupp",
+            "name": [
+              "Robustanpassad (Novis)",
+              "Robustanpassad (Gesäll)",
+              "Robustanpassad (Mästare)"
+            ]
+          },
+          {
+            "rule_id": "entry__neu4_novis__top__conflict__1",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Medeltung Rustning",
+                "Tung Rustning"
+              ]
+            },
+            "value": "kvalitet_krockar_med_foremaltyp"
+          }
+        ]
+      },
+      "effect": "Grundpriset på rustningen ökar med x2.",
+      "neutral": true
     },
     {
       "id": "neu4_gesall",
-      "namn": "Robustanpassad (Gesäll)",
-      "beskrivning": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på gesällnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x3",
-      "taggar": {
-        "typ": [
+      "name": "Robustanpassad (Gesäll)",
+      "description": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på gesällnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x3",
+      "tags": {
+        "types": [
           "Kvalitet",
           "Rustningskvalitet"
-        ],
-        "regler": {
-          "andrar": [
-            {
-              "mal": "pris_faktor",
-              "varde": 3,
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Rustning"
-                  ]
-                }
-              }
-            },
-            {
-              "mal": "kvalitet_gratisbar",
-              "satt": "ersatt",
-              "varde": false,
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Rustning"
-                  ]
-                }
-              }
-            }
-          ],
-          "krockar": [
-            {
-              "namn": [
-                "Robustanpassad (Novis)",
-                "Robustanpassad (Gesäll)",
-                "Robustanpassad (Mästare)"
-              ],
-              "varde": "kvalitet_krockar_med_andra_i_grupp"
-            },
-            {
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Medeltung Rustning",
-                    "Tung Rustning"
-                  ]
-                }
-              },
-              "varde": "kvalitet_krockar_med_foremaltyp"
-            }
-          ]
-        }
+        ]
       },
-      "neutral": true,
-      "effekt": "Grundpriset på rustningen ökar med x3."
+      "levels": {},
+      "rules": {
+        "modify": [
+          {
+            "rule_id": "entry__neu4_gesall__top__modify__0",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Rustning"
+              ]
+            },
+            "target": "price.factor",
+            "value": 3
+          },
+          {
+            "rule_id": "entry__neu4_gesall__top__modify__1",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Rustning"
+              ]
+            },
+            "target": "quality.freeable",
+            "op": "set",
+            "value": false
+          }
+        ],
+        "conflict": [
+          {
+            "rule_id": "entry__neu4_gesall__top__conflict__0",
+            "value": "kvalitet_krockar_med_andra_i_grupp",
+            "name": [
+              "Robustanpassad (Novis)",
+              "Robustanpassad (Gesäll)",
+              "Robustanpassad (Mästare)"
+            ]
+          },
+          {
+            "rule_id": "entry__neu4_gesall__top__conflict__1",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Medeltung Rustning",
+                "Tung Rustning"
+              ]
+            },
+            "value": "kvalitet_krockar_med_foremaltyp"
+          }
+        ]
+      },
+      "effect": "Grundpriset på rustningen ökar med x3.",
+      "neutral": true
     },
     {
       "id": "neu4_mastare",
-      "namn": "Robustanpassad (Mästare)",
-      "beskrivning": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på mästarnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x4",
-      "taggar": {
-        "typ": [
+      "name": "Robustanpassad (Mästare)",
+      "description": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på mästarnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x4",
+      "tags": {
+        "types": [
           "Kvalitet",
           "Rustningskvalitet"
-        ],
-        "regler": {
-          "andrar": [
-            {
-              "mal": "pris_faktor",
-              "varde": 4,
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Rustning"
-                  ]
-                }
-              }
-            },
-            {
-              "mal": "kvalitet_gratisbar",
-              "satt": "ersatt",
-              "varde": false,
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Rustning"
-                  ]
-                }
-              }
-            }
-          ],
-          "krockar": [
-            {
-              "namn": [
-                "Robustanpassad (Novis)",
-                "Robustanpassad (Gesäll)",
-                "Robustanpassad (Mästare)"
-              ],
-              "varde": "kvalitet_krockar_med_andra_i_grupp"
-            },
-            {
-              "nar": {
-                "foremal": {
-                  "typ": [
-                    "Medeltung Rustning",
-                    "Tung Rustning"
-                  ]
-                }
-              },
-              "varde": "kvalitet_krockar_med_foremaltyp"
-            }
-          ]
-        }
+        ]
       },
-      "neutral": true,
-      "effekt": "Grundpriset på rustningen ökar med x4."
+      "levels": {},
+      "rules": {
+        "modify": [
+          {
+            "rule_id": "entry__neu4_mastare__top__modify__0",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Rustning"
+              ]
+            },
+            "target": "price.factor",
+            "value": 4
+          },
+          {
+            "rule_id": "entry__neu4_mastare__top__modify__1",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Rustning"
+              ]
+            },
+            "target": "quality.freeable",
+            "op": "set",
+            "value": false
+          }
+        ],
+        "conflict": [
+          {
+            "rule_id": "entry__neu4_mastare__top__conflict__0",
+            "value": "kvalitet_krockar_med_andra_i_grupp",
+            "name": [
+              "Robustanpassad (Novis)",
+              "Robustanpassad (Gesäll)",
+              "Robustanpassad (Mästare)"
+            ]
+          },
+          {
+            "rule_id": "entry__neu4_mastare__top__conflict__1",
+            "when": {
+              "field": "item.types",
+              "op": "includes_any",
+              "value": [
+                "Medeltung Rustning",
+                "Tung Rustning"
+              ]
+            },
+            "value": "kvalitet_krockar_med_foremaltyp"
+          }
+        ]
+      },
+      "effect": "Grundpriset på rustningen ökar med x4.",
+      "neutral": true
     }
   ]
 }

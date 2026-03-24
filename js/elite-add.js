@@ -96,7 +96,7 @@
   }
 
   function entryTypes(entry) {
-    return toArray(entry?.taggar?.typ).map(type => normalizeType(type)).filter(Boolean);
+    return toArray(entry?.taggar?.typ ?? entry?.tags?.types).map(type => normalizeType(type)).filter(Boolean);
   }
 
   function entryHasType(entry, type) {
@@ -414,6 +414,11 @@
       out.push(name);
     });
     return out;
+  }
+
+  function getEliteRequirementSource(entry) {
+    if (!entry || typeof entry !== 'object') return {};
+    return entry?.elite_requirements || entry?.krav || {};
   }
 
   function gatherEliteExtraNames(entry) {
@@ -3105,7 +3110,7 @@
   async function addReq(entry, levels){
     const activeStore = await ensureActiveStore();
     if(!activeStore) return false;
-    const groups = parseGroupRequirements(entry?.krav || {});
+    const groups = parseGroupRequirements(getEliteRequirementSource(entry));
     const list = storeHelper.getCurrentList(activeStore);
     const fallbackMap = autoPickLevels(groups, list);
     const rows = selectionRowsFromInput(levels, fallbackMap);
@@ -3150,7 +3155,7 @@
       if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
     }
 
-    const groups = parseGroupRequirements(entry?.krav || {});
+    const groups = parseGroupRequirements(getEliteRequirementSource(entry));
     if(!groups.length){
       await addReq(entry);
       await addElite(entry, { skipDuplicateConfirm: true });

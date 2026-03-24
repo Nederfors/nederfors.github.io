@@ -1677,6 +1677,13 @@ function normalizeTableEntries(entries) {
 }
 
 function resolveTypeRuleMap(payload) {
+  if (window.catalogSchema?.normalizePayload) {
+    try {
+      return window.catalogSchema.normalizePayload(payload, { sourceFile: ALL_DATA_FILE }).typeRules || {};
+    } catch (_) {
+      // Fall back to the local compatibility reader below.
+    }
+  }
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {};
   const primary = payload.typ_regler;
   if (primary && typeof primary === 'object' && !Array.isArray(primary)) return primary;
@@ -1686,6 +1693,13 @@ function resolveTypeRuleMap(payload) {
 }
 
 function normalizeEntryDataPayload(payload, sourceFile = '') {
+  if (window.catalogSchema?.normalizePayload) {
+    const normalized = window.catalogSchema.normalizePayload(payload, { sourceFile });
+    return {
+      entries: normalized.entries,
+      typeRules: normalized.typeRules
+    };
+  }
   if (Array.isArray(payload)) {
     return { entries: payload, typeRules: {} };
   }
@@ -1702,6 +1716,9 @@ function normalizeEntryDataPayload(payload, sourceFile = '') {
 }
 
 function attachTypeRules(entry, typeRules) {
+  if (window.catalogSchema?.attachTypeRules) {
+    return window.catalogSchema.attachTypeRules(entry, typeRules);
+  }
   if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
   if (!typeRules || typeof typeRules !== 'object' || Array.isArray(typeRules)) return entry;
   if (!Object.keys(typeRules).length) return entry;
@@ -1888,11 +1905,13 @@ function yrkeInfoHtml(p) {
   const parts = [];
   if (extra) parts.push(extra);
   if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
-  if (p.forslag_pa_slakte) {
-    const val = Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte;
+  const suggestedRaces = p.suggested_races ?? p.forslag_pa_slakte;
+  if (suggestedRaces) {
+    const val = Array.isArray(suggestedRaces) ? suggestedRaces.join(', ') : suggestedRaces;
     parts.push(`<p><strong>Förslag på släkte:</strong> ${val}</p>`);
   }
-  if ((p.lampliga_formagor || []).length) parts.push(`<p><strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}</p>`);
+  const suggestedAbilities = Array.isArray(p.suggested_abilities) ? p.suggested_abilities : (Array.isArray(p.lampliga_formagor) ? p.lampliga_formagor : []);
+  if (suggestedAbilities.length) parts.push(`<p><strong>Lämpliga förmågor:</strong> ${suggestedAbilities.join(', ')}</p>`);
   return wrapBlocks(parts);
 }
 
@@ -2205,7 +2224,7 @@ function buildElityrkeInfoSections(p) {
     });
   }
 
-  const eliteAbilities = Array.isArray(p.Elityrkesförmågor) ? p.Elityrkesförmågor : [];
+  const eliteAbilities = Array.isArray(p.elite_abilities) ? p.elite_abilities : (Array.isArray(p.Elityrkesförmågor) ? p.Elityrkesförmågor : []);
   if (eliteAbilities.length) {
     const abilityBlocks = eliteAbilities
       .map(raw => {

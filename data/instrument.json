@@ -1,22 +1,25 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Musikinstrument": {},
     "Diverse": {}
   },
   "entries": [
     {
       "id": "i1",
-      "namn": "Fiddla",
-      "beskrivning": "Ett ofta tresträngat instrument som spelas med stråke gjord av tagel. Vanligt förekommande i den ambriska bondekulturen.",
-      "taggar": {
-        "typ": [
+      "name": "Fiddla",
+      "description": "Ett ofta tresträngat instrument som spelas med stråke gjord av tagel. Vanligt förekommande i den ambriska bondekulturen.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 0.45
+      "levels": {},
+      "stats": {
+        "vikt": 0.45,
+        "weight": 0.45
       },
-      "grundpris": {
+      "base_price": {
         "daler": 3,
         "skilling": 0,
         "örtegar": 0
@@ -24,17 +27,19 @@
     },
     {
       "id": "i2",
-      "namn": "Luta",
-      "beskrivning": "Stränginstrument med päronformad kropp som spelas med fingrarna eller med ett plektrum.",
-      "taggar": {
-        "typ": [
+      "name": "Luta",
+      "description": "Stränginstrument med päronformad kropp som spelas med fingrarna eller med ett plektrum.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 15,
         "örtegar": 0
@@ -42,17 +47,19 @@
     },
     {
       "id": "i3",
-      "namn": "Mungiga",
-      "beskrivning": "Den smidiga mungigan medförs av mången daglönare, gycklare och hovnarrar och dess grundtoner utgör bakgrundsljud till många samkväm i Ambrias enklare miljöer.",
-      "taggar": {
-        "typ": [
+      "name": "Mungiga",
+      "description": "Den smidiga mungigan medförs av mången daglönare, gycklare och hovnarrar och dess grundtoner utgör bakgrundsljud till många samkväm i Ambrias enklare miljöer.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 0.03
+      "levels": {},
+      "stats": {
+        "vikt": 0.03,
+        "weight": 0.03
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -60,17 +67,19 @@
     },
     {
       "id": "i4",
-      "namn": "Mässingslur",
-      "beskrivning": "Redigt bröldon för pompiga sammanhang.",
-      "taggar": {
-        "typ": [
+      "name": "Mässingslur",
+      "description": "Redigt bröldon för pompiga sammanhang.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -78,17 +87,19 @@
     },
     {
       "id": "i5",
-      "namn": "Näverlur",
-      "beskrivning": "Allmogen i ambrias kullar nyttjar dessa lurar för mångahanda syften; skrämma bort monster och onkytt eller locka på valldjuren. Luren används också för att sända budskap över långa avstånd, en ensam herde kan sända till närliggande fäbodar och därifrån blåses budet vidare över nejden. Skickliga lurblåsare spelar dessutom på sitt eget sätt så att andra vet vem som sänder budet; ”baiagornspår finns här”, ”en ko har försvunnit” eller ”svartalfer har stulit allt smör”.",
-      "taggar": {
-        "typ": [
+      "name": "Näverlur",
+      "description": "Allmogen i ambrias kullar nyttjar dessa lurar för mångahanda syften; skrämma bort monster och onkytt eller locka på valldjuren. Luren används också för att sända budskap över långa avstånd, en ensam herde kan sända till närliggande fäbodar och därifrån blåses budet vidare över nejden. Skickliga lurblåsare spelar dessutom på sitt eget sätt så att andra vet vem som sänder budet; ”baiagornspår finns här”, ”en ko har försvunnit” eller ”svartalfer har stulit allt smör”.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -96,17 +107,19 @@
     },
     {
       "id": "i6",
-      "namn": "Spinett",
-      "beskrivning": "Klaviatur, populärt vid hovet i Yndaros, och formar tillsammans med lutan ryggraden i den ambriska hovmusiken.",
-      "taggar": {
-        "typ": [
+      "name": "Spinett",
+      "description": "Klaviatur, populärt vid hovet i Yndaros, och formar tillsammans med lutan ryggraden i den ambriska hovmusiken.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 18.0
+      "levels": {},
+      "stats": {
+        "vikt": 18,
+        "weight": 18
       },
-      "grundpris": {
+      "base_price": {
         "daler": 15,
         "skilling": 0,
         "örtegar": 0
@@ -114,17 +127,19 @@
     },
     {
       "id": "i7",
-      "namn": "Säckpipa",
-      "beskrivning": "En skalmeja (typ av flöjt) fäst vid en lädersäck som ger en luftreservoar och väsentligt förenklad spelteknik. Särskilt bland vissa barbarklaner är säckpipan populär, men varianter av instrumentet finns också i ambrisk bondekultur. I Ambrias finare salonger göre den sig icke besvär.",
-      "taggar": {
-        "typ": [
+      "name": "Säckpipa",
+      "description": "En skalmeja (typ av flöjt) fäst vid en lädersäck som ger en luftreservoar och väsentligt förenklad spelteknik. Särskilt bland vissa barbarklaner är säckpipan populär, men varianter av instrumentet finns också i ambrisk bondekultur. I Ambrias finare salonger göre den sig icke besvär.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -132,17 +147,19 @@
     },
     {
       "id": "i8",
-      "namn": "Trumma",
-      "beskrivning": "Ett rytmverktyg som förekommer i mångahanda varianter, från barbarernas enklare don till ambriska arméns metallspända taktverk.",
-      "taggar": {
-        "typ": [
+      "name": "Trumma",
+      "description": "Ett rytmverktyg som förekommer i mångahanda varianter, från barbarernas enklare don till ambriska arméns metallspända taktverk.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -150,17 +167,19 @@
     },
     {
       "id": "i9",
-      "namn": "Vevlira",
-      "beskrivning": "Ett stränginstrument som med hjälp av en vev kan ge upphov till typiska knarrljud, använd för att ge tydligare rytm i musiken. Liran har länge varit populär i Ambria (och i Alberetor dessförinnan) men har i just Yndaros kommit att få prägel av tiggarinstrument. Många flyktingar söderifrån försörjer sig nämligen genom att i tid och otid utsätta förbipasserande vandrare för melodi, knarr och malande borduntoner.",
-      "taggar": {
-        "typ": [
+      "name": "Vevlira",
+      "description": "Ett stränginstrument som med hjälp av en vev kan ge upphov till typiska knarrljud, använd för att ge tydligare rytm i musiken. Liran har länge varit populär i Ambria (och i Alberetor dessförinnan) men har i just Yndaros kommit att få prägel av tiggarinstrument. Många flyktingar söderifrån försörjer sig nämligen genom att i tid och otid utsätta förbipasserande vandrare för melodi, knarr och malande borduntoner.",
+      "tags": {
+        "types": [
           "Musikinstrument"
         ]
       },
-      "stat": {
-        "vikt": 4.5
+      "levels": {},
+      "stats": {
+        "vikt": 4.5,
+        "weight": 4.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 3,
         "skilling": 0,
         "örtegar": 0
@@ -168,17 +187,19 @@
     },
     {
       "id": "i10",
-      "namn": "Flöjt",
-      "beskrivning": "Liten träflöjt som kan användas för signaler eller musik.",
-      "taggar": {
-        "typ": [
+      "name": "Flöjt",
+      "description": "Liten träflöjt som kan användas för signaler eller musik.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.06
+      "levels": {},
+      "stats": {
+        "vikt": 0.06,
+        "weight": 0.06
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -186,17 +207,19 @@
     },
     {
       "id": "i11",
-      "namn": "Signalhorn",
-      "beskrivning": "Horn för att påkalla uppmärksamhet på avstånd.",
-      "taggar": {
-        "typ": [
+      "name": "Signalhorn",
+      "description": "Horn för att påkalla uppmärksamhet på avstånd.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4

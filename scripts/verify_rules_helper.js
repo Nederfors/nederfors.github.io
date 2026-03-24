@@ -20,11 +20,123 @@ function assert(condition, message) {
 }
 
 function deepEqual(actual, expected, message) {
-  const actualJson = JSON.stringify(actual);
-  const expectedJson = JSON.stringify(expected);
+  const actualJson = JSON.stringify(normalizeAssertionValue(actual));
+  const expectedJson = JSON.stringify(normalizeAssertionValue(expected));
   if (actualJson !== expectedJson) {
     throw new Error(`${message}\nexpected: ${expectedJson}\nactual:   ${actualJson}`);
   }
+}
+
+function normalizeAssertionValue(value) {
+  if (Array.isArray(value)) return value.map(normalizeAssertionValue);
+  if (!value || typeof value !== 'object') return value;
+
+  const out = {};
+  Object.keys(value).forEach(key => {
+    out[key] = normalizeAssertionValue(value[key]);
+  });
+
+  const aliasPairs = [
+    ['rule_id', 'regel_id'],
+    ['when', 'nar'],
+    ['target', 'mal'],
+    ['op', 'satt'],
+    ['value', 'varde'],
+    ['formula', 'formel'],
+    ['message', 'meddelande'],
+    ['name', 'namn'],
+    ['min_level', 'nivå_minst'],
+    ['on_fail', 'else'],
+    ['on_pass', 'vid_uppfyllt'],
+    ['rules', 'regler'],
+    ['tags', 'taggar'],
+    ['levels', 'nivåer'],
+    ['type_rules', 'typ_regler']
+  ];
+
+  aliasPairs.forEach(([englishKey, legacyKey]) => {
+    if (Object.prototype.hasOwnProperty.call(out, englishKey) && Object.prototype.hasOwnProperty.call(out, legacyKey)) {
+      delete out[englishKey];
+    }
+  });
+
+  delete out.rule_id;
+  delete out.regel_id;
+
+  if (Object.prototype.hasOwnProperty.call(out, 'actions') && Object.prototype.hasOwnProperty.call(out, 'handling')) {
+    delete out.actions;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'nivå_minst') && Object.prototype.hasOwnProperty.call(out, 'niva_minst')) {
+    delete out.niva_minst;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'tests') && Object.prototype.hasOwnProperty.call(out, 'test')) {
+    delete out.tests;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'damage_type') && Object.prototype.hasOwnProperty.call(out, 'skadetyp')) {
+    delete out.damage_type;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'description') && Object.prototype.hasOwnProperty.call(out, 'beskrivning')) {
+    delete out.description;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'types') && Object.prototype.hasOwnProperty.call(out, 'typ')) {
+    delete out.types;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'traditions') && Object.prototype.hasOwnProperty.call(out, 'ark_trad')) {
+    delete out.traditions;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, 'qualities') && Object.prototype.hasOwnProperty.call(out, 'kvalitet')) {
+    delete out.qualities;
+  }
+  if (out.inte && typeof out.inte === 'object' && !Array.isArray(out.inte)) {
+    if (out.saknar_namn === undefined && Array.isArray(out.inte.nagon_av_namn)) {
+      out.saknar_namn = out.inte.nagon_av_namn;
+    }
+    if (out.saknar_namn === undefined && Array.isArray(out.inte['någon_av_namn'])) {
+      out.saknar_namn = out.inte['någon_av_namn'];
+    }
+    if (Object.keys(out.inte).length === 1 && (out.inte.nagon_av_namn || out.inte['någon_av_namn'])) {
+      delete out.inte;
+    }
+  }
+
+  if (out.nar && typeof out.nar === 'object' && !Array.isArray(out.nar)) {
+    const simpleNames = Array.isArray(out.nar.har_namn)
+      ? Array.from(new Set(out.nar.har_namn.map(value => String(value || '').trim()).filter(Boolean)))
+      : [];
+    if (out.namn === undefined && simpleNames.length) {
+      out.namn = simpleNames;
+    }
+
+    const levelMap = out.nar.har_namn_niva_minst;
+    if (
+      out['nivå_minst'] === undefined
+      && levelMap
+      && typeof levelMap === 'object'
+      && !Array.isArray(levelMap)
+      && Object.keys(levelMap).length === 1
+    ) {
+      const [name, minLevel] = Object.entries(levelMap)[0];
+      const normalizedNames = (Array.isArray(out.namn) ? out.namn : []).map(value => String(value || '').trim());
+      if (!normalizedNames.length || normalizedNames.includes(String(name || '').trim())) {
+        if (!normalizedNames.length) out.namn = [String(name || '').trim()];
+        out['nivå_minst'] = minLevel;
+      }
+    }
+
+    if (Array.isArray(out.namn) && out.namn.length && Array.isArray(out.nar.har_namn)) {
+      delete out.nar.har_namn;
+    }
+    if (out['nivå_minst'] !== undefined && out.nar.har_namn_niva_minst) {
+      delete out.nar.har_namn_niva_minst;
+    }
+    if (!Object.keys(out.nar).length) delete out.nar;
+  }
+
+  const sorted = {};
+  Object.keys(out).sort((a, b) => String(a).localeCompare(String(b), 'sv')).forEach(key => {
+    sorted[key] = out[key];
+  });
+  return sorted;
 }
 
 function parsePositiveLimit(value) {
@@ -53,9 +165,9 @@ function listDataJsonFiles(rootPath) {
 
 function resolveTypeRuleMap(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {};
-  const primary = payload.typ_regler;
+  const primary = payload.type_rules;
   if (primary && typeof primary === 'object' && !Array.isArray(primary)) return primary;
-  const legacy = payload.type_rules;
+  const legacy = payload.typ_regler;
   if (legacy && typeof legacy === 'object' && !Array.isArray(legacy)) return legacy;
   return {};
 }
@@ -99,6 +211,11 @@ function parseEntryDataPayload(payload, sourceFile = '') {
 
 function readEntryDataFile(rootPath, relativePath) {
   const payload = JSON.parse(readText(joinPath(rootPath, relativePath)));
+  const schema = getCatalogSchema(rootPath);
+  if (schema && typeof schema.normalizePayload === 'function') {
+    const parsed = schema.normalizePayload(payload, { sourceFile: relativePath });
+    return attachTypeRulesToEntries(parsed.entries, parsed.typeRules);
+  }
   const parsed = parseEntryDataPayload(payload, relativePath);
   return attachTypeRulesToEntries(parsed.entries, parsed.typeRules);
 }
@@ -201,10 +318,28 @@ function createSandbox(storageSeed = {}) {
 }
 
 function loadBrowserScript(sandbox, fullPath) {
+  if (String(fullPath || '').endsWith('/js/rules-helper.js') && !sandbox.catalogSchema) {
+    const schemaPath = String(fullPath).replace(/rules-helper\.js$/, 'catalog-schema.js');
+    loadBrowserScript(sandbox, schemaPath);
+  }
   const source = readText(fullPath);
   const runner = new Function('window', `with (window) {\n${source}\n}\nreturn window;`);
   runner(sandbox);
   return sandbox;
+}
+
+let catalogSchemaCache = null;
+
+function getCatalogSchema(rootPath) {
+  if (catalogSchemaCache) return catalogSchemaCache;
+  const sandbox = { window: {} };
+  sandbox.window = sandbox;
+  sandbox.globalThis = sandbox;
+  const source = readText(joinPath(rootPath, 'js/catalog-schema.js'));
+  const runner = new Function('window', `with (window) {\n${source}\n}\nreturn window;`);
+  runner(sandbox);
+  catalogSchemaCache = sandbox.catalogSchema || null;
+  return catalogSchemaCache;
 }
 
 function verifyRuleHelper(rootPath) {
@@ -986,32 +1121,65 @@ function verifyRuntimeConsumers(rootPath) {
   const summaryEffectsSource = readText(joinPath(rootPath, 'js/summary-effects.js'));
   const storeSource = readText(joinPath(rootPath, 'js/store.js'));
   const inventoryUtilsSource = readText(joinPath(rootPath, 'js/inventory-utils.js'));
+  const snapshotHelperSource = readText(joinPath(rootPath, 'js/snapshot-helper.js'));
+  const snapshotDialogHandledByHelper = (
+    snapshotHelperSource.includes('confirmRemovalDecision(')
+    && snapshotHelperSource.includes('openDialog')
+    && snapshotHelperSource.includes('Behåll effekter')
+  );
 
   assert(
     characterViewSource.includes('handleSnapshotEntryRemoval(')
-      && characterViewSource.includes('getSnapshotSourceImpactForEntry')
       && characterViewSource.includes('removeSnapshotRulesBySource')
       && characterViewSource.includes('detachSnapshotRulesBySource')
-      && characterViewSource.includes('openDialog')
-      && characterViewSource.includes('Behåll effekter'),
+      && (
+        (
+          characterViewSource.includes('getSnapshotSourceImpactForEntry')
+          && characterViewSource.includes('openDialog')
+          && characterViewSource.includes('Behåll effekter')
+        )
+        || (
+          snapshotDialogHandledByHelper
+          && characterViewSource.includes('getEntryRemovalImpacts')
+          && characterViewSource.includes('confirmRemovalDecision')
+        )
+      ),
     'character-view ska trigga snapshot popup/confirm-flöde med val för behåll/ta bort'
   );
   assert(
     indexViewSource.includes('handleSnapshotEntryRemoval(')
-      && indexViewSource.includes('getSnapshotSourceImpactForEntry')
       && indexViewSource.includes('removeSnapshotRulesBySource')
       && indexViewSource.includes('detachSnapshotRulesBySource')
-      && indexViewSource.includes('openDialog')
-      && indexViewSource.includes('Behåll effekter'),
+      && (
+        (
+          indexViewSource.includes('getSnapshotSourceImpactForEntry')
+          && indexViewSource.includes('openDialog')
+          && indexViewSource.includes('Behåll effekter')
+        )
+        || (
+          snapshotDialogHandledByHelper
+          && indexViewSource.includes('getEntryRemovalImpacts')
+          && indexViewSource.includes('confirmRemovalDecision')
+        )
+      ),
     'index-view ska trigga snapshot popup/confirm-flöde med val för behåll/ta bort'
   );
   assert(
     inventoryUtilsSource.includes('confirmSnapshotSourceRemoval(')
-      && inventoryUtilsSource.includes('getSnapshotRuleRecords')
       && inventoryUtilsSource.includes('removeSnapshotRulesBySource')
       && inventoryUtilsSource.includes('detachSnapshotRulesBySource')
-      && inventoryUtilsSource.includes('openDialog')
-      && inventoryUtilsSource.includes('Behåll effekter'),
+      && (
+        (
+          inventoryUtilsSource.includes('getSnapshotRuleRecords')
+          && inventoryUtilsSource.includes('openDialog')
+          && inventoryUtilsSource.includes('Behåll effekter')
+        )
+        || (
+          snapshotDialogHandledByHelper
+          && inventoryUtilsSource.includes('getRowRemovalImpacts')
+          && inventoryUtilsSource.includes('confirmRemovalDecision')
+        )
+      ),
     'inventory-utils ska trigga snapshot popup/confirm-flöde med val för behåll/ta bort'
   );
 

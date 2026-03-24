@@ -1,7 +1,8 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Lägre artefakt": {
-      "regler": {
+      "rules": {
         "kraver_logik": "and",
         "kraver_typ_och_entry": "and"
       }
@@ -10,2006 +11,2636 @@
   "entries": [
     {
       "id": "l1",
-      "namn": "Formelpergament (Novis)",
-      "taggar": {
-        "typ": [
+      "name": "Formelpergament (Novis)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
+        ],
+        "traditions": [
+          "Ordensmagiker"
         ],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [
-          "Ordensmagiker"
-        ],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj formel",
-              "subtitle": "Välj vilken formel som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Mystisk kraft"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ],
-          "kraver": [
-            {
-              "namn": [
-                "Ordensmagiker"
-              ],
-              "meddelande": "Krav: Ordensmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Novis",
-              "meddelande": "Krav: Ordensmagi >= Novis",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Novis": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novisnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst novisnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+      "levels": {
+        "Novis": {
+          "description": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novisnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst novisnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+        }
       },
-      "bound": "kraft",
-      "boundLabel": "Formel",
-      "grundpris": {
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l1__top__require__0",
+            "message": "Krav: Ordensmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Ordensmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l1__top__require__1",
+            "message": "Krav: Ordensmagi >= Novis",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Novis"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ],
+        "choice": [
+          {
+            "rule_id": "entry__l1__top__choice__0",
+            "source": {
+              "types": [
+                "Mystisk kraft"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken formel som ska bindas.",
+            "title": "Välj formel"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Aktiverar en bunden novisformel; förbrukas och ger temporär Korruption."
+      "effect": "Aktiverar en bunden novisformel; förbrukas och ger temporär Korruption.",
+      "bound": "kraft",
+      "boundLabel": "Formel"
     },
     {
       "id": "l2",
-      "namn": "Golpadda",
-      "taggar": {
-        "typ": [
+      "name": "Golpadda",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Novis": "En figurin, ofta en padda, som fungerar som ett larm. Användaren – som måste behärska minst en mystisk kraft – viskar ett kriterium till figurinen: kriteriet måste vara fysiskt och ske i närheten av golpaddan, så som att ”någon passerar i gläntan” eller att ”dörren öppnas utifrån”. Golpaddan avger en högljudd kväkning som väcker alla närvarande när kriteriet uppfylls."
+      "levels": {
+        "Novis": {
+          "description": "En figurin, ofta en padda, som fungerar som ett larm. Användaren – som måste behärska minst en mystisk kraft – viskar ett kriterium till figurinen: kriteriet måste vara fysiskt och ske i närheten av golpaddan, så som att ”någon passerar i gläntan” eller att ”dörren öppnas utifrån”. Golpaddan avger en högljudd kväkning som väcker alla närvarande när kriteriet uppfylls."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Ställ in kriterium; kväker högt när det kriteriumet möts."
+      "effect": "Ställ in kriterium; kväker högt när det kriteriumet möts."
     },
     {
       "id": "l3",
-      "namn": "Mötessten",
-      "taggar": {
-        "typ": [
+      "name": "Mötessten",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Novis": "En sten laddas med en inbjudan till en viss person, som då instinktivt förstår var stenens ägare väntar i ögonblicket då stenen vidrörs. Endast en varelse som behärskar en mystisk kraft kan hantera en mötessten."
+      "levels": {
+        "Novis": {
+          "description": "En sten laddas med en inbjudan till en viss person, som då instinktivt förstår var stenens ägare väntar i ögonblicket då stenen vidrörs. Endast en varelse som behärskar en mystisk kraft kan hantera en mötessten."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Beröring visar instinktivt var ägaren väntar; kräver mystisk kraft."
+      "effect": "Beröring visar instinktivt var ägaren väntar; kräver mystisk kraft."
     },
     {
       "id": "l4",
-      "namn": "Ordensmedaljong",
-      "taggar": {
-        "typ": [
+      "name": "Ordensmedaljong",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Ordensmagiker"
-              ],
-              "meddelande": "Krav: Ordensmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Novis",
-              "meddelande": "Krav: Ordensmagi >= Novis",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "Ordo Magicas medaljonger delas ut till noviser och följer sedan med mystikern genom karriären inom orden. När mystikern uppnår en adepts status ändras symbolen till den nya nivån, och detsamma händer när mästarnivån nås. Vissa ordenskapitel har gjort medaljongen obligatorisk och har också knutit andra funktioner till den, så som vilka dörrar bäraren kan öppna eller en förutbestämd nivå som krävs för att aktivera kapitlets Magiska cirkel."
         }
       },
-      "nivåer": {
-        "Novis": "Ordo Magicas medaljonger delas ut till noviser och följer sedan med mystikern genom karriären inom orden. När mystikern uppnår en adepts status ändras symbolen till den nya nivån, och detsamma händer när mästarnivån nås. Vissa ordenskapitel har gjort medaljongen obligatorisk och har också knutit andra funktioner till den, så som vilka dörrar bäraren kan öppna eller en förutbestämd nivå som krävs för att aktivera kapitlets Magiska cirkel."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l4__top__require__0",
+            "message": "Krav: Ordensmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Ordensmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l4__top__require__1",
+            "message": "Krav: Ordensmagi >= Novis",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Novis"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Visar bärarens ordensgrad och kan fungera som nyckel/krav för ordensfunktioner."
+      "effect": "Visar bärarens ordensgrad och kan fungera som nyckel/krav för ordensfunktioner."
     },
     {
       "id": "l5",
-      "namn": "Pestmask",
-      "taggar": {
-        "typ": [
+      "name": "Pestmask",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Teurg"
-              ],
-              "meddelande": "Krav: Teurg",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Teurgi"
-              ],
-              "nivå_minst": "Novis",
-              "meddelande": "Krav: Teurgi >= Novis",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Novis": {
+          "description": "I en värld full av smittor och gifter är det inte underligt att många metoder – verkningsfulla eller endast skrockfulla – mot sådana fenomen har utvecklats. De teurgiska själavårdarna bär kraftfulla pestmasker som skydd mot smitta och gift. Bäraren av pestmasken får använda sitt Viljestark för att motstå sjukdomar och gifter, istället för Stark."
         }
       },
-      "nivåer": {
-        "Novis": "I en värld full av smittor och gifter är det inte underligt att många metoder – verkningsfulla eller endast skrockfulla – mot sådana fenomen har utvecklats. De teurgiska själavårdarna bär kraftfulla pestmasker som skydd mot smitta och gift. Bäraren av pestmasken får använda sitt Viljestark för att motstå sjukdomar och gifter, istället för Stark."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l5__top__require__0",
+            "message": "Krav: Teurg",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Teurg"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l5__top__require__1",
+            "message": "Krav: Teurgi >= Novis",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Teurgi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Teurgi",
+                  "op": "gte",
+                  "value": "Novis"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Använder Viljestark istället för Stark mot sjukdomar och gifter."
+      "effect": "Använder Viljestark istället för Stark mot sjukdomar och gifter."
     },
     {
       "id": "l6",
-      "namn": "Ritualkodex",
-      "taggar": {
-        "typ": [
+      "name": "Ritualkodex",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
+        "traditions": [],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj ritual",
-              "subtitle": "Välj vilken ritual som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Ritual"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Novis": "En ritual nedtecknas i en kodex på ett sådant sätt att en annan ritualist kan använda den, trots att de inte behärskar ritualen. Kodexen förbrukas när ritualen används."
+      "levels": {
+        "Novis": {
+          "description": "En ritual nedtecknas i en kodex på ett sådant sätt att en annan ritualist kan använda den, trots att de inte behärskar ritualen. Kodexen förbrukas när ritualen används."
+        }
       },
-      "bound": "ritual",
-      "boundLabel": "Ritual",
-      "grundpris": {
+      "rules": {
+        "choice": [
+          {
+            "rule_id": "entry__l6__top__choice__0",
+            "source": {
+              "types": [
+                "Ritual"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken ritual som ska bindas.",
+            "title": "Välj ritual"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Ger tillgång till en ritual du inte kan; förbrukas vid användning."
+      "effect": "Ger tillgång till en ritual du inte kan; förbrukas vid användning.",
+      "bound": "ritual",
+      "boundLabel": "Ritual"
     },
     {
       "id": "l7",
-      "namn": "Sårläkande spindel",
-      "taggar": {
-        "typ": [
+      "name": "Sårläkande spindel",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Novis": "En liten spindelfigurin läggs på ett öppet sår. Där spinner den snabbt in sig själv och skadan, som sedan läker snabbt, 1T12 Tålighet under ett dygn. Spindeln har ingen effekt på skada av gifter eller andra inre tillstånd. Spindeln kryper upp ur såret när dess läkning är gjord, och kan sedan användas igen på nya skador. Den sårläkande spindeln ger 1T4 temporär Korruption till den som helas."
+      "levels": {
+        "Novis": {
+          "description": "En liten spindelfigurin läggs på ett öppet sår. Där spinner den snabbt in sig själv och skadan, som sedan läker snabbt, 1T12 Tålighet under ett dygn. Spindeln har ingen effekt på skada av gifter eller andra inre tillstånd. Spindeln kryper upp ur såret när dess läkning är gjord, och kan sedan användas igen på nya skador. Den sårläkande spindeln ger 1T4 temporär Korruption till den som helas."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Läker 1T12 Tålighet på ett dygn; ger 1T4 temporär Korruption och kan återanvändas."
+      "effect": "Läker 1T12 Tålighet på ett dygn; ger 1T4 temporär Korruption och kan återanvändas."
     },
     {
       "id": "l8",
-      "namn": "Anletsbark",
-      "taggar": {
-        "typ": [
+      "name": "Anletsbark",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Grönvävare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Grönvävare"
-              ],
-              "meddelande": "Krav: Grönvävare",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Häxkonster"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Häxkonster >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Grönvävande häxor täcker ofta sitt anlete med en mask av bark, som en symbol för en önskan att gå upp i det växande. Många av dessa masker hyser kraft och ger då ett omslag per scen för slag rörande krafter som omfattar växter och det växande, exempelvis Törnemantel eller Örtrankor. Det kan röra slag för att använda sådana krafter eller för att motstå effekten av sådana krafter."
         }
       },
-      "nivåer": {
-        "Gesäll": "Grönvävande häxor täcker ofta sitt anlete med en mask av bark, som en symbol för en önskan att gå upp i det växande. Många av dessa masker hyser kraft och ger då ett omslag per scen för slag rörande krafter som omfattar växter och det växande, exempelvis Törnemantel eller Örtrankor. Det kan röra slag för att använda sådana krafter eller för att motstå effekten av sådana krafter."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l8__top__require__0",
+            "message": "Krav: Grönvävare",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Grönvävare"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l8__top__require__1",
+            "message": "Krav: Häxkonster >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Häxkonster"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Häxkonster",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "1 omslag per scen för växtrelaterade krafter (användning eller motstånd)."
+      "effect": "1 omslag per scen för växtrelaterade krafter (användning eller motstånd)."
     },
     {
       "id": "l9",
-      "namn": "Djurmask",
-      "taggar": {
-        "typ": [
+      "name": "Djurmask",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Blodvadare"
-        ],
-        "regler": {
-          "andrar": [
-            {
-              "mal": "karaktarsdrag_max_tillagg",
-              "satt": "add",
-              "varde": 1,
-              "nar": {
-                "trait": [
-                  "Diskret",
-                  "Kvick",
-                  "Listig",
-                  "Stark",
-                  "Vaksam"
-                ]
-              }
-            }
-          ],
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj karaktärsdrag",
-              "subtitle": "Välj vilket karaktärsdrag som ska få +1.",
-              "options": [
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "För blodvadande häxor är identifikationen med bestar stor och djurmasken markerar deras närhet till djuren. Varje djurmask med kraft symboliserar ett djur och ger +1 på ett karaktärsdrag som associeras med djuret; antingen Diskret, Kvick, Listig, Stark eller Vaksam."
+        }
+      },
+      "rules": {
+        "modify": [
+          {
+            "rule_id": "entry__l9__top__modify__0",
+            "when": {
+              "field": "row.trait",
+              "op": "includes_any",
+              "value": [
                 "Diskret",
                 "Kvick",
                 "Listig",
                 "Stark",
                 "Vaksam"
-              ],
-              "duplicate_policy": "confirm"
-            }
-          ],
-          "kraver": [
-            {
-              "namn": [
-                "Blodvadare"
-              ],
-              "meddelande": "Krav: Blodvadare",
-              "else": {
-                "pengar_multiplikator": 10
-              }
+              ]
             },
-            {
-              "namn": [
-                "Häxkonster"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Häxkonster >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
+            "target": "traits.max_bonus",
+            "op": "add",
+            "value": 1
+          }
+        ],
+        "require": [
+          {
+            "rule_id": "entry__l9__top__require__0",
+            "message": "Krav: Blodvadare",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Blodvadare"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
             }
-          ]
-        }
+          },
+          {
+            "rule_id": "entry__l9__top__require__1",
+            "message": "Krav: Häxkonster >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Häxkonster"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Häxkonster",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ],
+        "choice": [
+          {
+            "rule_id": "entry__l9__top__choice__0",
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "options": [
+              "Diskret",
+              "Kvick",
+              "Listig",
+              "Stark",
+              "Vaksam"
+            ],
+            "subtitle": "Välj vilket karaktärsdrag som ska få +1.",
+            "title": "Välj karaktärsdrag"
+          }
+        ]
       },
-      "nivåer": {
-        "Gesäll": "För blodvadande häxor är identifikationen med bestar stor och djurmasken markerar deras närhet till djuren. Varje djurmask med kraft symboliserar ett djur och ger +1 på ett karaktärsdrag som associeras med djuret; antingen Diskret, Kvick, Listig, Stark eller Vaksam."
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
+      "base_price": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "effect": "+1 till ett associerat drag (Diskret, Kvick, Listig, Stark eller Vaksam).",
       "traits": [
         "Diskret",
         "Kvick",
         "Listig",
         "Stark",
         "Vaksam"
-      ],
-      "grundpris": {
-        "daler": 10,
-        "skilling": 0,
-        "örtegar": 0
-      },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 till ett associerat drag (Diskret, Kvick, Listig, Stark eller Vaksam)."
+      ]
     },
     {
       "id": "l10",
-      "namn": "Dödsmask",
-      "taggar": {
-        "typ": [
+      "name": "Dödsmask",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Nekromantiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Nekromantiker"
-              ],
-              "meddelande": "Krav: Nekromantiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Svartkonst"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Svartkonst >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Nekromantikers strävan efter att dominera döden har lett till bärandet av hiskeliga dödsmasker, fyllda med kraft. Dödsmasken ger +1 på alla slag för krafter och ritualer som påverkar döden, eller motstår döden; exempelvis kraften Vandråp och ritualen Väcka vandöd."
         }
       },
-      "nivåer": {
-        "Gesäll": "Nekromantikers strävan efter att dominera döden har lett till bärandet av hiskeliga dödsmasker, fyllda med kraft. Dödsmasken ger +1 på alla slag för krafter och ritualer som påverkar döden, eller motstår döden; exempelvis kraften Vandråp och ritualen Väcka vandöd."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l10__top__require__0",
+            "message": "Krav: Nekromantiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Nekromantiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l10__top__require__1",
+            "message": "Krav: Svartkonst >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Svartkonst"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Svartkonst",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på krafter/ritualer som påverkar eller motstår döden."
+      "effect": "+1 på krafter/ritualer som påverkar eller motstår döden."
     },
     {
       "id": "l11",
-      "namn": "Formelpergament (Gesäll)",
-      "taggar": {
-        "typ": [
+      "name": "Formelpergament (Gesäll)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
+        ],
+        "traditions": [
+          "Ordensmagiker"
         ],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [
-          "Ordensmagiker"
-        ],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj formel",
-              "subtitle": "Välj vilken formel som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Mystisk kraft"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ],
-          "kraver": [
-            {
-              "namn": [
-                "Ordensmagiker"
-              ],
-              "meddelande": "Krav: Ordensmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Gesäll": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på gesällnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst gesällnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+      "levels": {
+        "Gesäll": {
+          "description": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på gesällnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst gesällnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+        }
       },
-      "bound": "kraft",
-      "boundLabel": "Formel",
-      "grundpris": {
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l11__top__require__0",
+            "message": "Krav: Ordensmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Ordensmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l11__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ],
+        "choice": [
+          {
+            "rule_id": "entry__l11__top__choice__0",
+            "source": {
+              "types": [
+                "Mystisk kraft"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken formel som ska bindas.",
+            "title": "Välj formel"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Aktiverar en bunden gesällformel; förbrukas och ger temporär Korruption."
+      "effect": "Aktiverar en bunden gesällformel; förbrukas och ger temporär Korruption.",
+      "bound": "kraft",
+      "boundLabel": "Formel"
     },
     {
       "id": "l12",
-      "namn": "Formelsigill (Gesäll)",
-      "taggar": {
-        "typ": [
+      "name": "Formelsigill (Gesäll)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
+        "traditions": [],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj formel",
-              "subtitle": "Välj vilken formel som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Mystisk kraft"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på gesällnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+      "levels": {
+        "Gesäll": {
+          "description": "Artefaktmakaren har bundit en mystisk kraft på gesällnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+        }
       },
-      "bound": "kraft",
-      "boundLabel": "Formel",
-      "grundpris": {
+      "rules": {
+        "choice": [
+          {
+            "rule_id": "entry__l12__top__choice__0",
+            "source": {
+              "types": [
+                "Mystisk kraft"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken formel som ska bindas.",
+            "title": "Välj formel"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Bryt sigillet för att utlösa en gesällformel; engångs och ger temporär Korruption."
+      "effect": "Bryt sigillet för att utlösa en gesällformel; engångs och ger temporär Korruption.",
+      "bound": "kraft",
+      "boundLabel": "Formel"
     },
     {
       "id": "l13",
-      "namn": "Formelsigill (Novis)",
-      "taggar": {
-        "typ": [
+      "name": "Formelsigill (Novis)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
+        "traditions": [],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj formel",
-              "subtitle": "Välj vilken formel som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Mystisk kraft"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Novis": "Artefaktmakaren har bundit en mystisk kraft på novisnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+      "levels": {
+        "Novis": {
+          "description": "Artefaktmakaren har bundit en mystisk kraft på novisnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+        }
       },
-      "bound": "kraft",
-      "boundLabel": "Formel",
-      "grundpris": {
+      "rules": {
+        "choice": [
+          {
+            "rule_id": "entry__l13__top__choice__0",
+            "source": {
+              "types": [
+                "Mystisk kraft"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken formel som ska bindas.",
+            "title": "Välj formel"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Bryt sigillet för att utlösa en novisformel; engångs och ger temporär Korruption."
+      "effect": "Bryt sigillet för att utlösa en novisformel; engångs och ger temporär Korruption.",
+      "bound": "kraft",
+      "boundLabel": "Formel"
     },
     {
       "id": "l14",
-      "namn": "Gniststen",
-      "taggar": {
-        "typ": [
+      "name": "Gniststen",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Pyromantiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Pyromantiker"
-              ],
-              "meddelande": "Krav: Pyromantiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Pyromantikernas krafter eldas på av denna glödande bärnsten. Gniststenen är en svagare släkting till de omtalade eldstenar som forntida mästerglödgare kunde skapa av frammanade eldandar. Nutida pyromantiker får nöja sig med lägre artefakter som gniststenar, vilka förvisso inte är illa för den vars krafter väsentligen handlar om elden och det brinnande. Mystiska krafter med eldeffekter får +1 på effekttärningen när de skapas av en mystiker med en gniststen i sin hand eller på toppen av sin stav."
         }
       },
-      "nivåer": {
-        "Gesäll": "Pyromantikernas krafter eldas på av denna glödande bärnsten. Gniststenen är en svagare släkting till de omtalade eldstenar som forntida mästerglödgare kunde skapa av frammanade eldandar. Nutida pyromantiker får nöja sig med lägre artefakter som gniststenar, vilka förvisso inte är illa för den vars krafter väsentligen handlar om elden och det brinnande. Mystiska krafter med eldeffekter får +1 på effekttärningen när de skapas av en mystiker med en gniststen i sin hand eller på toppen av sin stav."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l14__top__require__0",
+            "message": "Krav: Pyromantiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Pyromantiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l14__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på effekttärning för eldeffekter när stenen hålls eller sitter på staven."
+      "effect": "+1 på effekttärning för eldeffekter när stenen hålls eller sitter på staven."
     },
     {
       "id": "l15",
-      "namn": "Häxfläta",
-      "taggar": {
-        "typ": [
+      "name": "Häxfläta",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Häxa"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Häxa"
-              ],
-              "meddelande": "Krav: Häxa",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Häxkonster"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Häxkonster >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "En fläta av hår och päls som håller döden borta. Vid dödens tröskel kan flätans knopar lösas upp och förbrukas för att avstå från att slå ett dödsslag under en aktuell runda. Därefter måste dödsslag slås igen som vanligt."
         }
       },
-      "nivåer": {
-        "Gesäll": "En fläta av hår och päls som håller döden borta. Vid dödens tröskel kan flätans knopar lösas upp och förbrukas för att avstå från att slå ett dödsslag under en aktuell runda. Därefter måste dödsslag slås igen som vanligt."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l15__top__require__0",
+            "message": "Krav: Häxa",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Häxa"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l15__top__require__1",
+            "message": "Krav: Häxkonster >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Häxkonster"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Häxkonster",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 9,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Avstå från att slå ett dödsslag."
+      "effect": "Avstå från att slå ett dödsslag."
     },
     {
       "id": "l16",
-      "namn": "Härskarring",
-      "taggar": {
-        "typ": [
+      "name": "Härskarring",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Mentalist"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Mentalist"
-              ],
-              "meddelande": "Krav: Mentalist",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Framstående viljevändare bland ordensmagikerna bär ofta en ring i guld på fingret, handleden, överarmen eller på hjässan som ett pannband. För dem är detta ett tecken på härskarens ädla strävan. Mången gång är dessa också gjutna med viljan att dominera allt levande, för det allmänna godas skull. Dessa guldringar ger +1 på alla slag för ordensmagins mystiska krafter och ritualer som böjer målets vilja, samt motståndet mot dem; specifikt Bända vilja och Telepatiskt förhör."
         }
       },
-      "nivåer": {
-        "Gesäll": "Framstående viljevändare bland ordensmagikerna bär ofta en ring i guld på fingret, handleden, överarmen eller på hjässan som ett pannband. För dem är detta ett tecken på härskarens ädla strävan. Mången gång är dessa också gjutna med viljan att dominera allt levande, för det allmänna godas skull. Dessa guldringar ger +1 på alla slag för ordensmagins mystiska krafter och ritualer som böjer målets vilja, samt motståndet mot dem; specifikt Bända vilja och Telepatiskt förhör."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l16__top__require__0",
+            "message": "Krav: Mentalist",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Mentalist"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l16__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på ordensmagins viljeböjande krafter/ritualer och motstånd mot dem."
+      "effect": "+1 på ordensmagins viljeböjande krafter/ritualer och motstånd mot dem."
     },
     {
       "id": "l17",
-      "namn": "Järnkrona",
-      "taggar": {
-        "typ": [
+      "name": "Järnkrona",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Demonolog"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Demonolog"
-              ],
-              "meddelande": "Krav: Demonolog",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Demonologer bär ofta kronor av rostigt järn vid brytandet i tillvarons murar. Dessa järnkronor ger +1 på slag för att manipulera världens ramar, som de mystiska krafterna Förvisning och Teleportering samt ritualen Frammana daemon."
         }
       },
-      "nivåer": {
-        "Gesäll": "Demonologer bär ofta kronor av rostigt järn vid brytandet i tillvarons murar. Dessa järnkronor ger +1 på slag för att manipulera världens ramar, som de mystiska krafterna Förvisning och Teleportering samt ritualen Frammana daemon."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l17__top__require__0",
+            "message": "Krav: Demonolog",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Demonolog"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l17__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på slag som manipulerar ramarna (Förvisning, Teleportering, Frammana daemon)."
+      "effect": "+1 på slag som manipulerar ramarna (Förvisning, Teleportering, Frammana daemon)."
     },
     {
       "id": "l18",
-      "namn": "Lyckomynt",
-      "taggar": {
-        "typ": [
+      "name": "Lyckomynt",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett guldmynt som har tursamma energier bundna till sig. Myntet bärs i fickan och ger +3 på ett framgångsslag, användbart en gång per scen. Den som leker med sådana krafter riskerar dock att drabbas av dess motsats; om slaget som myntet modifierar blir 16-20 kommer bäraren att ha otur under resten av scenen, motsvarat av att alla framgångsslag får en andra chans att misslyckas."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett guldmynt som har tursamma energier bundna till sig. Myntet bärs i fickan och ger +3 på ett framgångsslag, användbart en gång per scen. Den som leker med sådana krafter riskerar dock att drabbas av dess motsats; om slaget som myntet modifierar blir 16-20 kommer bäraren att ha otur under resten av scenen, motsvarat av att alla framgångsslag får en andra chans att misslyckas."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+3 på ett framgångsslag per scen; vid 16-20 drabbas du av otur resten av scenen och får en andra chans att misslyckas med alla framgånsslag."
+      "effect": "+3 på ett framgångsslag per scen; vid 16-20 drabbas du av otur resten av scenen och får en andra chans att misslyckas med alla framgånsslag."
     },
     {
       "id": "l19",
-      "namn": "Marlitmantel",
-      "taggar": {
-        "typ": [
+      "name": "Marlitmantel",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Skinnet av en skygg marlit, en mästerligt smygjagande ödla, som genom behandling med särskilt bevarande kemikalier behållit sina kameleontlika egenskaper efter bestens död. Bäraren får +1 i Diskret när det gäller att smyga och gömma sig."
+      "levels": {
+        "Gesäll": {
+          "description": "Skinnet av en skygg marlit, en mästerligt smygjagande ödla, som genom behandling med särskilt bevarande kemikalier behållit sina kameleontlika egenskaper efter bestens död. Bäraren får +1 i Diskret när det gäller att smyga och gömma sig."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 Diskret för smyga och gömma sig."
+      "effect": "+1 Diskret för smyga och gömma sig."
     },
     {
       "id": "l20",
-      "namn": "Ritualfokus",
-      "taggar": {
-        "typ": [
+      "name": "Ritualfokus",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett traditionsspecifikt objekt som ger +1 på alla framgångsslag för ritualer ur en viss mystisk tradition."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett traditionsspecifikt objekt som ger +1 på alla framgångsslag för ritualer ur en viss mystisk tradition."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på alla framgångsslag för ritualer i en vald tradition."
+      "effect": "+1 på alla framgångsslag för ritualer i en vald tradition."
     },
     {
       "id": "l21",
-      "namn": "Solmask",
-      "taggar": {
-        "typ": [
+      "name": "Solmask",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Teurg"
-              ],
-              "meddelande": "Krav: Teurg",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Teurgi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Teurgi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Teurgernas solmasker skänker andlig värme till de själskalla och sprider ljus dit där inget annat ljus når in. Buren av en teurg kan de dessutom assistera i fördrivandet och bekämpandet av odöda och styggelser. Masken skänker ljus kring bäraren som om denne bar på en fackla, samt att krafter med helig eller fördrivande effekt får +1 på sin effekttärning."
         }
       },
-      "nivåer": {
-        "Gesäll": "Teurgernas solmasker skänker andlig värme till de själskalla och sprider ljus dit där inget annat ljus når in. Buren av en teurg kan de dessutom assistera i fördrivandet och bekämpandet av odöda och styggelser. Masken skänker ljus kring bäraren som om denne bar på en fackla, samt att krafter med helig eller fördrivande effekt får +1 på sin effekttärning."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l21__top__require__0",
+            "message": "Krav: Teurg",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Teurg"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l21__top__require__1",
+            "message": "Krav: Teurgi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Teurgi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Teurgi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Ger fackelljus; heliga/fördrivande krafter får +1 på effekttärning."
+      "effect": "Ger fackelljus; heliga/fördrivande krafter får +1 på effekttärning."
     },
     {
       "id": "l22",
-      "namn": "Stavfot",
-      "taggar": {
-        "typ": [
+      "name": "Stavfot",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Stavmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Stavmagiker"
-              ],
-              "meddelande": "Krav: Stavmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Stavmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Stavmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Stavmagikerns stav kan få extra kraft i kast och stöt med hjälp av en stavfot, smidd under kastandet av härdande besvärjelser. Stavfoten fästs på en stav och ger +1 på effekttärningen för angrepp med staven som vapen, samt på alla krafter som direkt använder staven som vapen. Även om stavfoten vanligen sitter på en runstav så kan den också fästas på vanliga trästavar och har då samma effekt."
         }
       },
-      "nivåer": {
-        "Gesäll": "Stavmagikerns stav kan få extra kraft i kast och stöt med hjälp av en stavfot, smidd under kastandet av härdande besvärjelser. Stavfoten fästs på en stav och ger +1 på effekttärningen för angrepp med staven som vapen, samt på alla krafter som direkt använder staven som vapen. Även om stavfoten vanligen sitter på en runstav så kan den också fästas på vanliga trästavar och har då samma effekt."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l22__top__require__0",
+            "message": "Krav: Stavmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Stavmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l22__top__require__1",
+            "message": "Krav: Stavmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Stavmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Stavmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på effekttärning med staven som vapen och krafter som slår med staven."
+      "effect": "+1 på effekttärning med staven som vapen och krafter som slår med staven."
     },
     {
       "id": "l23",
-      "namn": "Stavhuvud",
-      "taggar": {
-        "typ": [
+      "name": "Stavhuvud",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Stavmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Stavmagiker"
-              ],
-              "meddelande": "Krav: Stavmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Stavmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Stavmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Stavmagikern kan dra extra fokus ur ett stavhuvud fäst på sin runstav. Stavhuvudet – inte sällan i formen av en vacker sten infattad i meteoritjärn – ger +1 på slag för att lyckas med krafter som inte direkt innefattar staven som vapen: Blodsregn, Sfär och de av symbolismens krafter vilka ingår i stavmagin."
         }
       },
-      "nivåer": {
-        "Gesäll": "Stavmagikern kan dra extra fokus ur ett stavhuvud fäst på sin runstav. Stavhuvudet – inte sällan i formen av en vacker sten infattad i meteoritjärn – ger +1 på slag för att lyckas med krafter som inte direkt innefattar staven som vapen: Blodsregn, Sfär och de av symbolismens krafter vilka ingår i stavmagin."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l23__top__require__0",
+            "message": "Krav: Stavmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Stavmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l23__top__require__1",
+            "message": "Krav: Stavmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Stavmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Stavmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på slag för krafter som inte nyttjar staven som vapen."
+      "effect": "+1 på slag för krafter som inte nyttjar staven som vapen."
     },
     {
       "id": "l24",
-      "namn": "Svepduk",
-      "taggar": {
-        "typ": [
+      "name": "Svepduk",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Andebesvärjare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Andebesvärjare"
-              ],
-              "meddelande": "Krav: Andebesvärjare",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Häxkonster"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Häxkonster >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Häxornas andebesvärjare bär ofta en ansiktsduk eller del av en liksvepning under sitt samröre med de dödas andar, då detta skänker andarna lugn och ger andebesvärjaren närmare kontakt med dem. Mystikern som bär svepduken får +1 på alla slag mot Viljestark som rör hanteringen av andar, vare sig det gäller kontrollen över dem (som kraften Andeplåga) eller motståndskraft mot dem (dvs. mot monstruösa särdrag från andar som angriper Viljestark)."
         }
       },
-      "nivåer": {
-        "Gesäll": "Häxornas andebesvärjare bär ofta en ansiktsduk eller del av en liksvepning under sitt samröre med de dödas andar, då detta skänker andarna lugn och ger andebesvärjaren närmare kontakt med dem. Mystikern som bär svepduken får +1 på alla slag mot Viljestark som rör hanteringen av andar, vare sig det gäller kontrollen över dem (som kraften Andeplåga) eller motståndskraft mot dem (dvs. mot monstruösa särdrag från andar som angriper Viljestark)."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l24__top__require__0",
+            "message": "Krav: Andebesvärjare",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Andebesvärjare"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l24__top__require__1",
+            "message": "Krav: Häxkonster >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Häxkonster"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Häxkonster",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på Viljestark vid hantering av andar ."
+      "effect": "+1 på Viljestark vid hantering av andar ."
     },
     {
       "id": "l25",
-      "namn": "Tankekristall",
-      "taggar": {
-        "typ": [
+      "name": "Tankekristall",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Illusionist"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Illusionist"
-              ],
-              "meddelande": "Krav: Illusionist",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Ordo Magicas illusionister använder ofta en prisma för att beskriva hur uppfattningen av världen kan brytas ned och förstås. Vissa av dessa kristaller är fyllda med sådan mängd tankeväckande energi att de ger bäraren +1 på alla slag för krafter som skapar illusioner."
         }
       },
-      "nivåer": {
-        "Gesäll": "Ordo Magicas illusionister använder ofta en prisma för att beskriva hur uppfattningen av världen kan brytas ned och förstås. Vissa av dessa kristaller är fyllda med sådan mängd tankeväckande energi att de ger bäraren +1 på alla slag för krafter som skapar illusioner."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l25__top__require__0",
+            "message": "Krav: Illusionist",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Illusionist"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l25__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "+1 på slag för illusioner."
+      "effect": "+1 på slag för illusioner."
     },
     {
       "id": "l26",
-      "namn": "Fjärrvapen",
-      "taggar": {
-        "typ": [
+      "name": "Fjärrvapen",
+      "tags": {
+        "types": [
           "Lägre Artefakt",
           "Avståndsvapen"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Mästare": "Ett vapen som smids med kraften att slå, sticka eller skära på avstånd. Endast mystiker (definierat som någon som besitter en mystisk kraft) förstår hur denna kraft kan användas. Attackerna slås som i närstrid men verkar på avstånd och de kräver fritt skottfält, som andra avståndsattacker. Aktiva förmågor kan användas men på en nivå lägre än annars: en mästare kan använda en gesällförmåga genom ett fjärrvapen, en gesäll kan nyttja förmågan på novisnivå. En novis kan inte använda förmågan tillsammans med fjärrvapen."
+      "levels": {
+        "Mästare": {
+          "description": "Ett vapen som smids med kraften att slå, sticka eller skära på avstånd. Endast mystiker (definierat som någon som besitter en mystisk kraft) förstår hur denna kraft kan användas. Attackerna slås som i närstrid men verkar på avstånd och de kräver fritt skottfält, som andra avståndsattacker. Aktiva förmågor kan användas men på en nivå lägre än annars: en mästare kan använda en gesällförmåga genom ett fjärrvapen, en gesäll kan nyttja förmågan på novisnivå. En novis kan inte använda förmågan tillsammans med fjärrvapen."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Närstridsangrepp kan verka på avstånd; aktiva förmågor sänks ett steg och noviser kan inte använda dem."
+      "effect": "Närstridsangrepp kan verka på avstånd; aktiva förmågor sänks ett steg och noviser kan inte använda dem."
     },
     {
       "id": "l27",
-      "namn": "Formelpergament (Mästare)",
-      "taggar": {
-        "typ": [
+      "name": "Formelpergament (Mästare)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
+        ],
+        "traditions": [
+          "Ordensmagiker"
         ],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [
-          "Ordensmagiker"
-        ],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj formel",
-              "subtitle": "Välj vilken formel som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Mystisk kraft"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ],
-          "kraver": [
-            {
-              "namn": [
-                "Ordensmagiker"
-              ],
-              "meddelande": "Krav: Ordensmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Mästare",
-              "meddelande": "Krav: Ordensmagi >= Mästare",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Mästare": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på mästarnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst mästarnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+      "levels": {
+        "Mästare": {
+          "description": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på mästarnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst mästarnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+        }
       },
-      "bound": "kraft",
-      "boundLabel": "Formel",
-      "grundpris": {
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l27__top__require__0",
+            "message": "Krav: Ordensmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Ordensmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l27__top__require__1",
+            "message": "Krav: Ordensmagi >= Mästare",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Mästare"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ],
+        "choice": [
+          {
+            "rule_id": "entry__l27__top__choice__0",
+            "source": {
+              "types": [
+                "Mystisk kraft"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken formel som ska bindas.",
+            "title": "Välj formel"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 6,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Aktiverar en bunden mästarformel; förbrukas och ger temporär Korruption."
+      "effect": "Aktiverar en bunden mästarformel; förbrukas och ger temporär Korruption.",
+      "bound": "kraft",
+      "boundLabel": "Formel"
     },
     {
       "id": "l28",
-      "namn": "Formelsigill (Mästare)",
-      "taggar": {
-        "typ": [
+      "name": "Formelsigill (Mästare)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
+        "traditions": [],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj formel",
-              "subtitle": "Välj vilken formel som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Mystisk kraft"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Mästare": "Artefaktmakaren har bundit en mystisk kraft på mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+      "levels": {
+        "Mästare": {
+          "description": "Artefaktmakaren har bundit en mystisk kraft på mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+        }
       },
-      "bound": "kraft",
-      "boundLabel": "Formel",
-      "grundpris": {
+      "rules": {
+        "choice": [
+          {
+            "rule_id": "entry__l28__top__choice__0",
+            "source": {
+              "types": [
+                "Mystisk kraft"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken formel som ska bindas.",
+            "title": "Välj formel"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Bryt sigillet för att utlösa en mästarformel; engångs och ger temporär Korruption."
+      "effect": "Bryt sigillet för att utlösa en mästarformel; engångs och ger temporär Korruption.",
+      "bound": "kraft",
+      "boundLabel": "Formel"
     },
     {
       "id": "l29",
-      "namn": "Mystiskt fokus",
-      "taggar": {
-        "typ": [
+      "name": "Mystiskt fokus",
+      "tags": {
+        "types": [
           "Lägre Artefakt",
           "Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Mästare": "Ett traditionspecifikt fokus för traditionens mästare som ger ett garanterat lyckat slag vid ett användande av någon av traditionens mystiska krafter, dock kan det endast användas en gång per dag. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
+      "levels": {
+        "Mästare": {
+          "description": "Ett traditionspecifikt fokus för traditionens mästare som ger ett garanterat lyckat slag vid ett användande av någon av traditionens mystiska krafter, dock kan det endast användas en gång per dag. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 20,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "1 garanterat lyckat slag per dag för en traditions kraft; binds via XP eller permanent Korruption."
+      "effect": "1 garanterat lyckat slag per dag för en traditions kraft; binds via XP eller permanent Korruption."
     },
     {
       "id": "l30",
-      "namn": "Ritualsigill",
-      "taggar": {
-        "typ": [
+      "name": "Ritualsigill",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
+        "traditions": [],
         "inventory": {
           "stackbar": true
-        },
-        "ark_trad": [],
-        "regler": {
-          "val": [
-            {
-              "field": "trait",
-              "title": "Välj ritual",
-              "subtitle": "Välj vilken ritual som ska bindas.",
-              "search": true,
-              "source": {
-                "typ": [
-                  "Ritual"
-                ],
-                "sort": "alpha"
-              },
-              "duplicate_policy": "confirm"
-            }
-          ]
         }
       },
-      "nivåer": {
-        "Mästare": "Artefaktmakaren binder en ritual i ett sigill, som när det bryts utlöser ritualens effekt. Skaparen av sigillet måste inte själv behärska ritualen men behöver någon med sig som kan ritualen vid skapandet av sigillet, eller ha tillgång till en ritualkodex med ritualen (kodexen förstörs då när sigillet skapas). Den som bryter sigillet drabbas av temporär korruption som vanligt."
+      "levels": {
+        "Mästare": {
+          "description": "Artefaktmakaren binder en ritual i ett sigill, som när det bryts utlöser ritualens effekt. Skaparen av sigillet måste inte själv behärska ritualen men behöver någon med sig som kan ritualen vid skapandet av sigillet, eller ha tillgång till en ritualkodex med ritualen (kodexen förstörs då när sigillet skapas). Den som bryter sigillet drabbas av temporär korruption som vanligt."
+        }
       },
-      "bound": "ritual",
-      "boundLabel": "Ritual",
-      "grundpris": {
+      "rules": {
+        "choice": [
+          {
+            "rule_id": "entry__l30__top__choice__0",
+            "source": {
+              "types": [
+                "Ritual"
+              ],
+              "sort": "alpha"
+            },
+            "duplicate_policy": "confirm",
+            "field": "trait",
+            "search": true,
+            "subtitle": "Välj vilken ritual som ska bindas.",
+            "title": "Välj ritual"
+          }
+        ]
+      },
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Bryt sigillet för att utlösa en bunden ritual; skapandet kräver ritualist/kodex; ger temporär Korruption."
+      "effect": "Bryt sigillet för att utlösa en bunden ritual; skapandet kräver ritualist/kodex; ger temporär Korruption.",
+      "bound": "ritual",
+      "boundLabel": "Ritual"
     },
     {
       "id": "l31",
-      "namn": "Runstav",
-      "taggar": {
-        "typ": [
+      "name": "Runstav",
+      "tags": {
+        "types": [
           "Lägre Artefakt",
           "Närstridsvapen",
           "Långa vapen",
           "Stav"
         ],
-        "ark_trad": [
+        "traditions": [
           "Stavmagiker"
         ],
-        "kvalitet": [
+        "qualities": [
           "Balanserat",
           "Långt"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Stavmagiker"
-              ],
-              "meddelande": "Krav: Stavmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Stavmagi"
-              ],
-              "nivå_minst": "Mästare",
-              "meddelande": "Krav: Stavmagi >= Mästare",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Mästare": {
+          "description": "Stavmagikernas signum är den personliga runstaven, etsad med elementens runor. Staven avger i ägarens hand en skyddande aura, skydd 1T4, samt utgör också i övrigt grunden för mystikerns krafter."
         }
       },
-      "nivåer": {
-        "Mästare": "Stavmagikernas signum är den personliga runstaven, etsad med elementens runor. Staven avger i ägarens hand en skyddande aura, skydd 1T4, samt utgör också i övrigt grunden för mystikerns krafter."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l31__top__require__0",
+            "message": "Krav: Stavmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Stavmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l31__top__require__1",
+            "message": "Krav: Stavmagi >= Mästare",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Stavmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Stavmagi",
+                  "op": "gte",
+                  "value": "Mästare"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "stat": {
+      "stats": {
         "skada": "1T8",
-        "vikt": 1.0
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "effekt": "Ger skydd 1T4 i ägarens hand och fungerar som stavvapen (1T8, Balanserat, Långt)."
+      "effect": "Ger skydd 1T4 i ägarens hand och fungerar som stavvapen (1T8, Balanserat, Långt)."
     },
     {
       "id": "l32",
-      "namn": "Själssten (artefakt)",
-      "taggar": {
-        "typ": [
+      "name": "Själssten (artefakt)",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Mästare": "Det föremål som krävs för utförande av ritualen med samma namn."
+      "levels": {
+        "Mästare": {
+          "description": "Det föremål som krävs för utförande av ritualen med samma namn."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 100,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Nödvändig komponent för ritualen Själssten."
+      "effect": "Nödvändig komponent för ritualen Själssten."
     },
     {
       "id": "l33",
-      "namn": "Blodskärva",
-      "taggar": {
-        "typ": [
+      "name": "Blodskärva",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Svartkonstnär"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Svartkonstnär"
-              ],
-              "meddelande": "Krav: Svartkonstnär",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Svartkonst"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Svartkonst >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Små, blodröda fragment som påträffats i Davokars randzoner och smusslats genom Tistla Fäste trots påbud. Skärvan pulserar svagt när bäraren blöder. När bäraren tar skada kan skärvan ”matas” av såret: ta 1T4 temporär Korruption för att återfå lika mycket Tålighet. Effekten kan användas varje gång bäraren tar skada. "
         }
       },
-      "nivåer": {
-        "Gesäll": "Små, blodröda fragment som påträffats i Davokars randzoner och smusslats genom Tistla Fäste trots påbud. Skärvan pulserar svagt när bäraren blöder. När bäraren tar skada kan skärvan ”matas” av såret: ta 1T4 temporär Korruption för att återfå lika mycket Tålighet. Effekten kan användas varje gång bäraren tar skada. "
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l33__top__require__0",
+            "message": "Krav: Svartkonstnär",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Svartkonstnär"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l33__top__require__1",
+            "message": "Krav: Svartkonst >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Svartkonst"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Svartkonst",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Ta 1T4 temporär Korruption för att återfå lika mycket Tålighet när du skadas."
+      "effect": "Ta 1T4 temporär Korruption för att återfå lika mycket Tålighet när du skadas."
     },
     {
       "id": "l34",
-      "namn": "Tidsvriden Amulett",
-      "taggar": {
-        "typ": [
+      "name": "Tidsvriden Amulett",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Mentalist"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Mentalist"
-              ],
-              "meddelande": "Krav: Mentalist",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Ett flätat smycke med ett sprucket glasöga som sägs ha fångat en rubbad sekund. Mentalister använder den för att tvinga ögonblicket att upprepa sig, med risk för stel tid. En gång per scen får bäraren slå om ett helt misslyckat slag. Om det nya resultatet blir över 15 förlorar rollpersonen sin nästa handling då tiden hakar upp sig, ger 1T4 korruption vid användning."
         }
       },
-      "nivåer": {
-        "Gesäll": "Ett flätat smycke med ett sprucket glasöga som sägs ha fångat en rubbad sekund. Mentalister använder den för att tvinga ögonblicket att upprepa sig, med risk för stel tid. En gång per scen får bäraren slå om ett helt misslyckat slag. Om det nya resultatet blir över 15 förlorar rollpersonen sin nästa handling då tiden hakar upp sig, ger 1T4 korruption vid användning."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l34__top__require__0",
+            "message": "Krav: Mentalist",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Mentalist"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l34__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Slå om ett misslyckat slag en gång per scen; vid >15 förloras nästa handling. Användning ger 1T4 korruption."
+      "effect": "Slå om ett misslyckat slag en gång per scen; vid >15 förloras nästa handling. Användning ger 1T4 korruption."
     },
     {
       "id": "l35",
-      "namn": "Stavornament",
-      "taggar": {
-        "typ": [
+      "name": "Stavornament",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Stavmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Stavmagiker"
-              ],
-              "meddelande": "Krav: Stavmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Stavmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Stavmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Ett pryttligt band i meteoritjärn eller ben som fästs runt stavens övre halva, laddat för att kortvarigt förtäta kraftflödet i en runstav. Ornamentet används av stavmagiker som söker ett snabbt dubbelslag av samma kraft. En gång per scen kan en mystisk kraft aktiveras två gånger i följd. Den andra aktiveringen kostar 1T4 extra temporär Korruption."
         }
       },
-      "nivåer": {
-        "Gesäll": "Ett pryttligt band i meteoritjärn eller ben som fästs runt stavens övre halva, laddat för att kortvarigt förtäta kraftflödet i en runstav. Ornamentet används av stavmagiker som söker ett snabbt dubbelslag av samma kraft. En gång per scen kan en mystisk kraft aktiveras två gånger i följd. Den andra aktiveringen kostar 1T4 extra temporär Korruption."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l35__top__require__0",
+            "message": "Krav: Stavmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Stavmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l35__top__require__1",
+            "message": "Krav: Stavmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Stavmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Stavmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 14,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Dubblera en kraft en gång per scen; andra aktiveringen kostar +1T4 temporär Korruption."
+      "effect": "Dubblera en kraft en gång per scen; andra aktiveringen kostar +1T4 temporär Korruption."
     },
     {
       "id": "l36",
-      "namn": "Eldstensfragment",
-      "taggar": {
-        "typ": [
+      "name": "Eldstensfragment",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Pyromantiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Pyromantiker"
-              ],
-              "meddelande": "Krav: Pyromantiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "En fjällig, sotglänsande bit av stelnad låga. Fragmentet dricker av brinnande offer och lämnar bärarens nästa angrepp hetare än förut. Varje fiende som dör av en eldeffekt från bärarens mystiska krafter laddar fragmentet. För varje sådant offer får bäraren +1 på nästa anfall med eld under samma strid."
         }
       },
-      "nivåer": {
-        "Gesäll": "En fjällig, sotglänsande bit av stelnad låga. Fragmentet dricker av brinnande offer och lämnar bärarens nästa angrepp hetare än förut. Varje fiende som dör av en eldeffekt från bärarens mystiska krafter laddar fragmentet. För varje sådant offer får bäraren +1 på nästa anfall med eld under samma strid."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l36__top__require__0",
+            "message": "Krav: Pyromantiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Pyromantiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l36__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "För varje fiende som dör av din eld får du +1 på nästa eldangrepp samma strid."
+      "effect": "För varje fiende som dör av din eld får du +1 på nästa eldangrepp samma strid."
     },
     {
       "id": "l37",
-      "namn": "Fördärvat Ormöga",
-      "taggar": {
-        "typ": [
+      "name": "Fördärvat Ormöga",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett infattat, mjölkigt öga från en Kanaran. Bäraren ser ”för tydligt” när ödet slår över åt något håll och slår perfekt lyckat på resultaten 1–2, men även fatalt misslyckat på 19–20 (eller 18-20 om karaktären även har nackdelen otursförföljd)."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett infattat, mjölkigt öga från en Kanaran. Bäraren ser ”för tydligt” när ödet slår över åt något håll och slår perfekt lyckat på resultaten 1–2, men även fatalt misslyckat på 19–20 (eller 18-20 om karaktären även har nackdelen otursförföljd)."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Perfekt lyckat på 1–2; fatalt misslyckat på 19–20 (18–20 med Otursförföljd)."
+      "effect": "Perfekt lyckat på 1–2; fatalt misslyckat på 19–20 (18–20 med Otursförföljd)."
     },
     {
       "id": "l38",
-      "namn": "Runskiva",
-      "taggar": {
-        "typ": [
+      "name": "Runskiva",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption och runskivan konsumeras när magin frigörs. "
+      "levels": {
+        "Gesäll": {
+          "description": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption och runskivan konsumeras när magin frigörs. "
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "En extra förflyttningshandling per scen; kostar 1T4 temporär Korruption."
+      "effect": "En extra förflyttningshandling per scen; kostar 1T4 temporär Korruption."
     },
     {
       "id": "l39",
-      "namn": "Rökelsebrännare",
-      "taggar": {
-        "typ": [
+      "name": "Rökelsebrännare",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Teurg"
-              ],
-              "meddelande": "Krav: Teurg",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Teurgi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Teurgi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Rökelsebrännare fyllda med heliga örter placeras ofta i lägereldar inför strid. Den väldoftande röken anses rena sinnet och stärka kroppen. Alla allierade inom en förflyttning från elden får +1 i bepansring varje runda de slåss i dess sken."
         }
       },
-      "nivåer": {
-        "Gesäll": "Rökelsebrännare fyllda med heliga örter placeras ofta i lägereldar inför strid. Den väldoftande röken anses rena sinnet och stärka kroppen. Alla allierade inom en förflyttning från elden får +1 i bepansring varje runda de slåss i dess sken."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l39__top__require__0",
+            "message": "Krav: Teurg",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Teurg"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l39__top__require__1",
+            "message": "Krav: Teurgi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Teurgi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Teurgi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Allierade inom en förflyttning får +1 i bepansring varje runda i eldens sken."
+      "effect": "Allierade inom en förflyttning får +1 i bepansring varje runda i eldens sken."
     },
     {
       "id": "l40",
-      "namn": "Orikalkumband",
-      "taggar": {
-        "typ": [
+      "name": "Orikalkumband",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett tungt band av orikalkum bärs kring armen och laddas med varje slag mot bärarens bepansring. För varje runda i följd som bäraren tar skada ökar skyddet med ytterligare +1. Effekten bryts om bäraren inte tar skada en runda och bandet måste då börja samla kraft på nytt."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett tungt band av orikalkum bärs kring armen och laddas med varje slag mot bärarens bepansring. För varje runda i följd som bäraren tar skada ökar skyddet med ytterligare +1. Effekten bryts om bäraren inte tar skada en runda och bandet måste då börja samla kraft på nytt."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "Skyddet växer +1 per runda du tar skada; nollställs om du undgår skada."
+      "effect": "Skyddet växer +1 per runda du tar skada; nollställs om du undgår skada."
     },
     {
       "id": "l41",
-      "namn": "Kopparsandglas",
-      "taggar": {
-        "typ": [
+      "name": "Kopparsandglas",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": [
+        "traditions": [
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Ordensmagiker"
-              ],
-              "meddelande": "Krav: Ordensmagiker",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            },
-            {
-              "namn": [
-                "Ordensmagi"
-              ],
-              "nivå_minst": "Gesäll",
-              "meddelande": "Krav: Ordensmagi >= Gesäll",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Ett uråldrigt timglas fyllt med slipat kopparpulver som aldrig tycks ta slut. När glaset vänds som en aktiv handling frigörs gnistrande stoft som angriper en fiende i närheten. Stoftet åsamkar alla fiender inom närstridsområdet 3 elementarskada."
         }
       },
-      "nivåer": {
-        "Gesäll": "Ett uråldrigt timglas fyllt med slipat kopparpulver som aldrig tycks ta slut. När glaset vänds som en aktiv handling frigörs gnistrande stoft som angriper en fiende i närheten. Stoftet åsamkar alla fiender inom närstridsområdet 3 elementarskada."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l41__top__require__0",
+            "message": "Krav: Ordensmagiker",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Ordensmagiker"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          },
+          {
+            "rule_id": "entry__l41__top__require__1",
+            "message": "Krav: Ordensmagi >= Gesäll",
+            "when": {
+              "all": [
+                {
+                  "field": "selected.names",
+                  "op": "includes_all",
+                  "value": [
+                    "Ordensmagi"
+                  ]
+                },
+                {
+                  "field": "selected.levels.by_name.Ordensmagi",
+                  "op": "gte",
+                  "value": "Gesäll"
+                }
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Aktivera för att ge alla fiender i närstrid 3 elementarskada."
+      "effect": "Aktivera för att ge alla fiender i närstrid 3 elementarskada."
     },
     {
       "id": "l42",
-      "namn": "Fågelurna",
-      "taggar": {
-        "typ": [
+      "name": "Fågelurna",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Små urnor dekorerade med färgade fjädrar bärs av resande mystiker som skydd. Urnans kraft frigör en strimma av livskraft när en mystisk kraft lyckas. En gång per runda när bäraren lyckas med en mystisk kraft återfår denne 1 Tålighet."
+      "levels": {
+        "Gesäll": {
+          "description": "Små urnor dekorerade med färgade fjädrar bärs av resande mystiker som skydd. Urnans kraft frigör en strimma av livskraft när en mystisk kraft lyckas. En gång per runda när bäraren lyckas med en mystisk kraft återfår denne 1 Tålighet."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 9,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "Återfå 1 Tålighet en gång per runda vid lyckad mystisk kraft."
+      "effect": "Återfå 1 Tålighet en gång per runda vid lyckad mystisk kraft."
     },
     {
       "id": "l43",
-      "namn": "Tungstensspira",
-      "taggar": {
-        "typ": [
+      "name": "Tungstensspira",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Denna spira är gjuten av ett ovanligt tungt, mörkt mineral. Den skänker bäraren motstånd mot naturens råa krafter. Varje gång bäraren tar elementarskada reduceras skadan med 1, men skadan kan aldrig bli mindre än 1."
+      "levels": {
+        "Gesäll": {
+          "description": "Denna spira är gjuten av ett ovanligt tungt, mörkt mineral. Den skänker bäraren motstånd mot naturens råa krafter. Varje gång bäraren tar elementarskada reduceras skadan med 1, men skadan kan aldrig bli mindre än 1."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "Reducerar elementarskada med 1 (lägst 1)."
+      "effect": "Reducerar elementarskada med 1 (lägst 1)."
     },
     {
       "id": "l44",
-      "namn": "Pilflätade skosnören",
-      "taggar": {
-        "typ": [
+      "name": "Pilflätade skosnören",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig en tredjedels förflyttning extra vid en förflyttningshandling. Skosnörena konsumeras dock när deras förhastande energi frigörs."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig en tredjedels förflyttning extra vid en förflyttningshandling. Skosnörena konsumeras dock när deras förhastande energi frigörs."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 6,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "Avstå förflyttning en runda för +3 m extra nästa runda."
+      "effect": "Avstå förflyttning en runda för +3 m extra nästa runda."
     },
     {
       "id": "l45",
-      "namn": "Evighetslanterna",
-      "taggar": {
-        "typ": [
+      "name": "Evighetslanterna",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren och dess allierade inom synhåll får –1 på Diskret när det gäller att smyga och gömma sig."
+      "levels": {
+        "Gesäll": {
+          "description": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren och dess allierade inom synhåll får –1 på Diskret när det gäller att smyga och gömma sig."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 7,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1.0
-      },
-      "effekt": "Ger evigt fackelljus; –1 Diskret för allierade inom synhåll på att smyga och gömma sig."
+      "effect": "Ger evigt fackelljus; –1 Diskret för allierade inom synhåll på att smyga och gömma sig."
     },
     {
       "id": "l46",
-      "namn": "Mumifierad hartass",
-      "beskrivning": "En torkad hartass insvept i bandage och täckt av små vaxsigill, preparerad för att kanalisera och stärka magins flöde. Genom att krama tassen hårt under den långa ritualen skänker den mystikern fokus och kraft och ger således +1 vid utförandet av mystiska ritualer.",
-      "taggar": {
-        "typ": [
+      "name": "Mumifierad hartass",
+      "description": "En torkad hartass insvept i bandage och täckt av små vaxsigill, preparerad för att kanalisera och stärka magins flöde. Genom att krama tassen hårt under den långa ritualen skänker den mystikern fokus och kraft och ger således +1 vid utförandet av mystiska ritualer.",
+      "tags": {
+        "types": [
           "Specialverktyg"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "rules": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
+      },
+      "base_price": {
         "daler": 5,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 0.1
-      },
-      "effekt": "Ger +1 på [Viljestark] vid utförandet av ritualer."
+      "effect": "Ger +1 på [Viljestark] vid utförandet av ritualer."
     },
     {
       "id": "l47",
-      "namn": "Blått vaxljus",
-      "taggar": {
-        "typ": [
+      "name": "Blått vaxljus",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett ljus av mörkblått vax vars låga flämtar när korruptionen närmar sig. En gång per dygn kan bäraren välja att förlora Tålighet istället för att ta temporär Korruption. Ljuset konsumeras efter användning."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett ljus av mörkblått vax vars låga flämtar när korruptionen närmar sig. En gång per dygn kan bäraren välja att förlora Tålighet istället för att ta temporär Korruption. Ljuset konsumeras efter användning."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 7,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "En gång per dygn: byt temporär Korruption mot lika mycket Tålighet. Engångsanvändning."
+      "effect": "En gång per dygn: byt temporär Korruption mot lika mycket Tålighet. Engångsanvändning."
     },
     {
       "id": "l48",
-      "namn": "Åskskärva",
-      "taggar": {
-        "typ": [
+      "name": "Åskskärva",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "En gnistrande kristall som sprakar av instängd åska. Bäraren rör sig får +1 i Träffsäker."
+      "levels": {
+        "Gesäll": {
+          "description": "En gnistrande kristall som sprakar av instängd åska. Bäraren rör sig får +1 i Träffsäker."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 9,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "+1 Träffsäker."
+      "effect": "+1 Träffsäker."
     },
     {
       "id": "l49",
-      "namn": "Bärnstensinsekt",
-      "taggar": {
-        "typ": [
+      "name": "Bärnstensinsekt",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Gesäll": "Ett uråldrigt fly, fångat i gyllene bärnsten, vibrerar svagt i närheten av fördärv i en frekvens som tycks störa styggelserna. Bäraren gör +1 skada med alla angrepp mot genomkorrumperade varelser."
+      "levels": {
+        "Gesäll": {
+          "description": "Ett uråldrigt fly, fångat i gyllene bärnsten, vibrerar svagt i närheten av fördärv i en frekvens som tycks störa styggelserna. Bäraren gör +1 skada med alla angrepp mot genomkorrumperade varelser."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 1
-      },
-      "effekt": "+1 skada mot genomkorrumperade varelser."
+      "effect": "+1 skada mot genomkorrumperade varelser."
     },
     {
       "id": "l50",
-      "namn": "Katalysatorpärla",
-      "taggar": {
-        "typ": [
+      "name": "Katalysatorpärla",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Novis": "En liten pärla av frostad orikalkum som löses i en dos strax före bruk. När pärlan löses i ett Novis- eller Gesällelixir höjs en förekommande effekttärning i elixiret ett steg (1T4→1T6, 1T6→1T8, 1T8→1T10). Effekten gäller endast den dosen. Att sedan dricka elixiret ger bäraren 1 temporär Korruption. Pärlan förbrukas vid användning."
+      "levels": {
+        "Novis": {
+          "description": "En liten pärla av frostad orikalkum som löses i en dos strax före bruk. När pärlan löses i ett Novis- eller Gesällelixir höjs en förekommande effekttärning i elixiret ett steg (1T4→1T6, 1T6→1T8, 1T8→1T10). Effekten gäller endast den dosen. Att sedan dricka elixiret ger bäraren 1 temporär Korruption. Pärlan förbrukas vid användning."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
+      },
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 0.2
-      },
-      "effekt": "Höjer en effekttärning i ett Novis/Gesällelixir ett steg; ger 1 temporär Korruption; förbrukas."
+      "effect": "Höjer en effekttärning i ett Novis/Gesällelixir ett steg; ger 1 temporär Korruption; förbrukas."
     },
     {
       "id": "l51",
-      "namn": "Reagensspegel",
-      "taggar": {
-        "typ": [
+      "name": "Reagensspegel",
+      "tags": {
+        "types": [
           "Lägre Artefakt"
         ],
-        "ark_trad": []
+        "traditions": []
       },
-      "nivåer": {
-        "Novis": "En polerad skiva av mörksilver som visar en vätskas 'skugga'. Vid analys av okänd dryck, tinktur eller gift får en skolad alkemist en andra chans att lyckas. En lyckad analys avslöjar om vätskan är elixir eller gift, dess nivå (Novis/Gesäll/Mästare) och huvudverkan."
+      "levels": {
+        "Novis": {
+          "description": "En polerad skiva av mörksilver som visar en vätskas 'skugga'. Vid analys av okänd dryck, tinktur eller gift får en skolad alkemist en andra chans att lyckas. En lyckad analys avslöjar om vätskan är elixir eller gift, dess nivå (Novis/Gesäll/Mästare) och huvudverkan."
+        }
       },
-      "grundpris": {
+      "rules": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
+      },
+      "base_price": {
         "daler": 6,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "vikt": 0.5
-      },
-      "effekt": "Analys av elixir får en andra chans att identifiera typ, nivå och huvudverkan."
+      "effect": "Analys av elixir får en andra chans att identifiera typ, nivå och huvudverkan."
     },
     {
       "id": "l52",
-      "namn": "Jakaarsärk",
-      "taggar": {
-        "typ": [
+      "name": "Jakaarsärk",
+      "tags": {
+        "types": [
           "Lägre Artefakt",
           "Rustning",
           "Lätt Rustning"
         ],
-        "kvalitet": [
-          "Otymplig",
-          "Förstärkt"
-        ],
-        "ark_trad": [
+        "traditions": [
           "Ulvahedna"
         ],
-        "regler": {
-          "kraver": [
-            {
-              "namn": [
-                "Ulvahedna"
-              ],
-              "meddelande": "Krav: Ulvahedna",
-              "else": {
-                "pengar_multiplikator": 10
-              }
-            }
-          ]
+        "qualities": [
+          "Otymplig",
+          "Förstärkt"
+        ]
+      },
+      "levels": {
+        "Gesäll": {
+          "description": "Denna massiva väst är sydd av dubbla lager jakaarhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i aktiv Bärsärkargång så skyddar den 1T6 +1."
         }
       },
-      "nivåer": {
-        "Gesäll": "Denna massiva väst är sydd av dubbla lager jakaarhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i aktiv Bärsärkargång så skyddar den 1T6 +1."
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__l52__top__require__0",
+            "message": "Krav: Ulvahedna",
+            "when": {
+              "field": "selected.names",
+              "op": "includes_all",
+              "value": [
+                "Ulvahedna"
+              ]
+            },
+            "on_fail": {
+              "pengar_multiplikator": 10
+            }
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "skydd": "1T4",
+        "vikt": 2.5,
+        "begränsning": -2,
+        "weight": 2.5
+      },
+      "base_price": {
         "daler": 12,
         "skilling": 0,
         "örtegar": 0
       },
-      "stat": {
-        "skydd": "1T4",
-        "vikt": 2.5,
-        "begränsning": -2
+      "effect": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
+    },
+    {
+      "id": "l53",
+      "name": "Mystisk reagens",
+      "tags": {
+        "types": [
+          "Lägre Artefakt"
+        ]
       },
-      "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
-    },
-  {
-    "id": "l53",
-    "namn": "Mystisk reagens",
-    "taggar": {
-      "typ": [
-        "Lägre Artefakt"
-      ]
-    },
-    "nivåer": {
-      "Novis": "Denna noga utvalda samling av sällsynta och potenta ingredienser är oumbärlig för att maximera utövarens magiska potential, oavsett om det rör sig om en näve rent svavel för att frammana en förödande svavelkaskad eller uråldriga hartser för komplexa besvärjelser. Genom att använda rätt materialkomponent i det avgörande ögonblicket skapar reagensen en kraftfull mystisk resonans som en gång per dag ger rollpersonen +1 på ett framgångsslag kopplat till en Mystisk kraft eller Ritual som väljs vid inköp."
-    },
-    "grundpris": {
-      "daler": 10,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "stat": {
-      "vikt": 1.0
-    },
-    "effekt": "En gång per dag +1 på ett framgångsslag kopplat till en specifik Mystisk kraft eller Ritual (väljs vid inköp)."
-  }
+      "levels": {
+        "Novis": {
+          "description": "Denna noga utvalda samling av sällsynta och potenta ingredienser är oumbärlig för att maximera utövarens magiska potential, oavsett om det rör sig om en näve rent svavel för att frammana en förödande svavelkaskad eller uråldriga hartser för komplexa besvärjelser. Genom att använda rätt materialkomponent i det avgörande ögonblicket skapar reagensen en kraftfull mystisk resonans som en gång per dag ger rollpersonen +1 på ett framgångsslag kopplat till en Mystisk kraft eller Ritual som väljs vid inköp."
+        }
+      },
+      "rules": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
+      },
+      "base_price": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "effect": "En gång per dag +1 på ett framgångsslag kopplat till en specifik Mystisk kraft eller Ritual (väljs vid inköp)."
+    }
   ]
 }

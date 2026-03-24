@@ -452,15 +452,28 @@ select.level {
   backdrop-filter: blur(14px);
 }
 
-@media (max-width: 700px) {
+@media (max-width: 640px) {
   body.app-shell {
-    padding-inline: 0.55rem;
+    padding-inline: 0;
   }
 
   .app-title,
   #activeFilters,
   .panel {
-    width: min(100%, calc(100vw - 1.1rem));
-    max-width: min(100%, calc(100vw - 1.1rem));
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 0.5rem;
+  }
+
+  .app-title {
+    padding-inline: 0.6rem;
+  }
+
+  .cat-group > .db-accordion__item[open] {
+    padding: 0.3rem;
+  }
+  .cat-group > .db-accordion__item[open] > .db-accordion__trigger {
+    margin-bottom: 0.45rem;
+    padding: 0.6rem 0.65rem;
   }
 }

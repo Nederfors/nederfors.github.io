@@ -260,6 +260,86 @@
     return parseRequirementLogic(fallback) || 'or';
   }
 
+  function normalizeEntryCompat(entry) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
+    const schema = window.catalogSchema;
+    if (!schema || typeof schema.normalizeEntry !== 'function') return entry;
+    try {
+      const normalized = schema.normalizeEntry(entry);
+      const typeRules = entry.__typ_regler || entry.typ_regler || entry.__type_rules || entry.type_rules;
+      if (typeRules && typeof schema.attachTypeRules === 'function') {
+        return schema.attachTypeRules(normalized, typeRules);
+      }
+      return normalized;
+    } catch (_) {
+      return entry;
+    }
+  }
+
+  function getRuleTarget(rule) {
+    const raw = rule?.target !== undefined ? rule.target : rule?.mal;
+    if (window.catalogSchema?.normalizeRuleTargetToLegacy) {
+      return String(window.catalogSchema.normalizeRuleTargetToLegacy(raw) || '').trim();
+    }
+    return String(raw || '').trim();
+  }
+
+  function getRuleCondition(rule) {
+    if (!rule || typeof rule !== 'object') return null;
+    if (rule.nar && typeof rule.nar === 'object' && !Array.isArray(rule.nar)) return rule.nar;
+    if (window.catalogSchema?.convertWhenToLegacyNar) {
+      try {
+        return window.catalogSchema.convertWhenToLegacyNar(rule.when);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function getRuleOp(rule) {
+    const raw = rule?.op !== undefined ? rule.op : (rule?.satt !== undefined ? rule.satt : rule?.operation);
+    if (window.catalogSchema?.normalizeRuleOp) {
+      return String(window.catalogSchema.normalizeRuleOp(raw) || '').trim();
+    }
+    return normalizeLevelName(raw || '');
+  }
+
+  function getEntryNameCompat(entry) {
+    return String(entry?.name || entry?.namn || '').trim();
+  }
+
+  function getEntryLevelCompat(entry, fallback = '') {
+    const value = entry?.level ?? entry?.nivå ?? entry?.niva ?? fallback;
+    return String(value || '').trim();
+  }
+
+  function getEntryTestsCompat(entry) {
+    const normalized = normalizeEntryCompat(entry);
+    return toArray(normalized?.tags?.tests ?? normalized?.taggar?.test)
+      .map(String)
+      .filter(Boolean);
+  }
+
+  function getEntryEffectiveNames(entry) {
+    const normalized = normalizeEntryCompat(entry);
+    const out = [];
+    const seen = new Set();
+    const add = (value) => {
+      const name = String(value || '').trim();
+      const key = normalizeLevelName(name);
+      if (!name || !key || seen.has(key)) return;
+      seen.add(key);
+      out.push(name);
+    };
+    const name = getEntryNameCompat(normalized);
+    add(name);
+    if (normalizeLevelName(name) === 'blodsband') {
+      add(normalized?.race);
+    }
+    return out;
+  }
+
   function readRequirementLogicFromContainer(container, keys = []) {
     if (!container || typeof container !== 'object' || Array.isArray(container)) return '';
     for (const key of keys) {
@@ -319,10 +399,44 @@
 
   function normalizeRuleBlock(raw) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    if (window.catalogSchema?.normalizeRuleBlock) {
+      try {
+        const normalized = window.catalogSchema.normalizeRuleBlock(raw);
+        if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
+          const out = {};
+          const ruleFamilyKeys = new Set(RULE_KEYS.concat(
+            RULE_KEYS
+              .map(key => window.catalogSchema?.englishRuleFamilyKey?.(key) || '')
+              .filter(Boolean)
+          ));
+          RULE_KEYS.forEach(key => {
+            const list = toRuleList(normalized[key]);
+            if (list.length) out[key] = list;
+          });
+          Object.keys(normalized).forEach(key => {
+            if (ruleFamilyKeys.has(key) || Object.prototype.hasOwnProperty.call(out, key)) return;
+            out[key] = cloneRuleValue(normalized[key]);
+          });
+          return out;
+        }
+      } catch (_) {
+        // Fall through to the local compatibility logic.
+      }
+    }
     const out = {};
+    const ruleFamilyKeys = new Set(RULE_KEYS.concat(
+      RULE_KEYS
+        .map(key => window.catalogSchema?.englishRuleFamilyKey?.(key) || '')
+        .filter(Boolean)
+    ));
     RULE_KEYS.forEach(key => {
-      const list = toRuleList(raw[key]);
+      const englishKey = window.catalogSchema?.englishRuleFamilyKey?.(key) || '';
+      const list = toRuleList(raw[key] ?? (englishKey ? raw[englishKey] : undefined));
       if (list.length) out[key] = list;
+    });
+    Object.keys(raw).forEach(key => {
+      if (ruleFamilyKeys.has(key) || Object.prototype.hasOwnProperty.call(out, key)) return;
+      out[key] = cloneRuleValue(raw[key]);
     });
     return out;
   }
@@ -344,12 +458,14 @@
   function getRuleOverrideToken(key, rule) {
     if (!rule || typeof rule !== 'object') return '';
     const explicitId = String(rule.regel_id || rule.rule_id || rule.id || '').trim();
-    if (explicitId) return `id:${normalizeLevelName(explicitId)}`;
+    const normalizedId = normalizeLevelName(explicitId);
+    const syntheticId = /^(entry|level|type_rule)_[a-z0-9_:-]+/.test(normalizedId);
+    if (explicitId && !syntheticId) return `id:${normalizedId}`;
 
-    const mal = String(rule.mal || '').trim();
+    const mal = getRuleTarget(rule);
     if (mal) return `mal:${normalizeLevelName(mal)}`;
 
-    const nar = rule.nar && typeof rule.nar === 'object' ? rule.nar : {};
+    const nar = getRuleCondition(rule) || {};
     const ruleNames = toArray(rule.namn).map(name => normalizeLevelName(name)).filter(Boolean);
     const narNames = toArray(nar.namn).map(name => normalizeLevelName(name)).filter(Boolean);
     const narTypes = toArray(nar.typ).map(type => normalizeLevelName(type)).filter(Boolean);
@@ -394,7 +510,8 @@
   }
 
   function getTypeRuleMap(entry) {
-    const map = entry?.__typ_regler || entry?.typ_regler || entry?.__type_rules || entry?.type_rules;
+    const normalized = normalizeEntryCompat(entry);
+    const map = normalized?.__typ_regler || normalized?.typ_regler || normalized?.__type_rules || normalized?.type_rules;
     if (!map || typeof map !== 'object' || Array.isArray(map)) return null;
     return map;
   }
@@ -574,9 +691,13 @@
   }
 
   function getLevelDataMap(entry) {
-    const tags = entry?.taggar;
-    if (!tags || typeof tags !== 'object') return null;
-    return tags.nivå_data || tags.niva_data || null;
+    const normalized = normalizeEntryCompat(entry);
+    const tags = normalized?.taggar || normalized?.tags;
+    if (tags && typeof tags === 'object') {
+      const levelData = tags.nivå_data || tags.niva_data;
+      if (levelData && typeof levelData === 'object') return levelData;
+    }
+    return null;
   }
 
   function findLevelData(entry, level) {
@@ -588,8 +709,24 @@
     return exactKey ? levelData[exactKey] : null;
   }
 
+  function getLevelData(entry, level) {
+    const normalized = normalizeEntryCompat(entry);
+    const legacy = findLevelData(normalized, level) || {};
+    const levels = normalized?.levels && typeof normalized.levels === 'object'
+      ? normalized.levels
+      : {};
+    const wanted = normalizeLevelName(level);
+    const exactKey = Object.keys(levels).find(key => normalizeLevelName(key) === wanted);
+    const canonical = exactKey ? levels[exactKey] : null;
+    if (canonical && typeof canonical === 'object') {
+      return { ...legacy, ...canonical };
+    }
+    return legacy;
+  }
+
   function getTopLevelRuleContainer(entry) {
-    const raw = entry?.taggar?.regler;
+    const normalized = normalizeEntryCompat(entry);
+    const raw = normalized?.taggar?.regler || normalized?.tags?.rules || normalized?.rules || normalized?.regler;
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
     return raw;
   }
@@ -645,45 +782,61 @@
   }
 
   function resolveRuleSourceEntry(entry) {
-    if (!entry || typeof entry !== 'object') return entry;
-    const hasInlineRules = entryHasInlineRules(entry);
-    if (hasInlineRules && getTypeRuleMap(entry)) return entry;
-    if (typeof window.lookupEntry !== 'function') return entry;
+    const normalizedEntry = normalizeEntryCompat(entry);
+    if (!normalizedEntry || typeof normalizedEntry !== 'object') return normalizedEntry;
+    const hasInlineRules = entryHasInlineRules(normalizedEntry);
+    if (hasInlineRules && getTypeRuleMap(normalizedEntry)) return normalizedEntry;
+    if (typeof window.lookupEntry !== 'function') return normalizedEntry;
 
     const query = {};
-    if (entry.id !== undefined && entry.id !== null) query.id = entry.id;
-    if (typeof entry.namn === 'string' && entry.namn.trim()) query.name = entry.namn;
-    if (!Object.keys(query).length) return entry;
+    if (normalizedEntry.id !== undefined && normalizedEntry.id !== null) query.id = normalizedEntry.id;
+    if (typeof normalizedEntry.namn === 'string' && normalizedEntry.namn.trim()) query.name = normalizedEntry.namn;
+    if (!Object.keys(query).length && typeof normalizedEntry.name === 'string' && normalizedEntry.name.trim()) {
+      query.name = normalizedEntry.name.trim();
+    }
+    if (!Object.keys(query).length) return normalizedEntry;
 
     try {
       const hit = window.lookupEntry(query);
       if (hit && typeof hit === 'object') {
-        const hitTypeRules = getTypeRuleMap(hit);
+        const normalizedHit = normalizeEntryCompat(hit);
+        const hitTypeRules = getTypeRuleMap(normalizedHit);
         if (hasInlineRules) {
-          return attachTypeRuleMap(entry, hitTypeRules);
+          return attachTypeRuleMap(normalizedEntry, hitTypeRules);
         }
-        const extendsName = typeof hit.taggar?.extends === 'string' ? hit.taggar.extends.trim() : '';
+        const extendsName = typeof normalizedHit.taggar?.extends === 'string' ? normalizedHit.taggar.extends.trim() : '';
         if (extendsName) {
           try {
             const base = window.lookupEntry({ name: extendsName });
             if (base && typeof base === 'object') {
+              const normalizedBase = normalizeEntryCompat(base);
+              const mergedRules = mergeRuleBlocks(
+                normalizedBase.taggar?.regler || normalizedBase.tags?.rules || normalizedBase.regler || normalizedBase.rules || {},
+                normalizedHit.taggar?.regler || normalizedHit.tags?.rules || normalizedHit.regler || normalizedHit.rules || {}
+              );
               return attachTypeRuleMap({
-                ...hit,
+                ...normalizedHit,
+                tags: {
+                  ...normalizedHit.tags,
+                  rules: mergedRules
+                },
                 taggar: {
-                  ...hit.taggar,
-                  regler: mergeRuleBlocks(base.taggar?.regler || {}, hit.taggar?.regler || {})
-                }
+                  ...normalizedHit.taggar,
+                  regler: mergedRules
+                },
+                rules: mergedRules,
+                regler: mergedRules
               }, hitTypeRules);
             }
           } catch (_) { /* ignore base lookup errors */ }
         }
-        return attachTypeRuleMap(hit, hitTypeRules);
+        return attachTypeRuleMap(normalizedHit, hitTypeRules);
       }
     } catch (_) {
       // Ignore lookup errors and keep the original entry as source.
     }
 
-    return entry;
+    return normalizedEntry;
   }
 
   function getEntryRules(entry, options = {}) {
@@ -732,8 +885,17 @@
     if (rawRule.source && typeof rawRule.source === 'object' && !Array.isArray(rawRule.source)) {
       rule.source = cloneRuleValue(rawRule.source);
     }
+    if (rawRule.when && typeof rawRule.when === 'object' && !Array.isArray(rawRule.when)) {
+      rule.when = cloneRuleValue(rawRule.when);
+    }
     if (rawRule.nar && typeof rawRule.nar === 'object' && !Array.isArray(rawRule.nar)) {
       rule.nar = cloneRuleValue(rawRule.nar);
+    }
+    if (!rule.nar && rule.when && typeof window.catalogSchema?.convertWhenToLegacyNar === 'function') {
+      try {
+        const nar = window.catalogSchema.convertWhenToLegacyNar(rule.when);
+        if (nar) rule.nar = nar;
+      } catch (_) { /* ignore conversion failures */ }
     }
     return rule;
   }
@@ -1554,7 +1716,7 @@
       RULE_KEYS.forEach(key => {
         if (keyFilter && key !== keyFilter) return;
         toRuleList(rules[key]).forEach(rule => {
-          if (targetFilter && String(rule?.mal || '') !== targetFilter) return;
+          if (targetFilter && getRuleTarget(rule) !== targetFilter) return;
           out.push({
             ...cloneRuleValue(rule),
             sourceEntryId: entry.id,
@@ -1575,7 +1737,7 @@
         ? cloneRuleValue(record.rule)
         : null;
       if (!rule) return;
-      if (targetFilter && String(rule?.mal || '') !== targetFilter) return;
+      if (targetFilter && getRuleTarget(rule) !== targetFilter) return;
       out.push({
         ...rule,
         sourceEntryId: record.sourceEntryId,
@@ -1593,7 +1755,7 @@
     const seen = new Set();
     const out = [];
     getListRules(entries, { key: 'andrar', mal }).forEach(rule => {
-      if (String(rule?.satt || '') !== 'ersatt') return;
+      if (getRuleOp(rule) !== 'set') return;
       if (!evaluateRuleNar(rule, { list: entries, ...context })) return;
       const trait = String(rule?.varde || '').trim();
       if (!trait || seen.has(trait)) return;
@@ -1612,7 +1774,7 @@
     const seen = new Set();
     const out = [];
     getListRules(entries, { key: 'andrar', mal: 'anfall_karaktarsdrag' }).forEach(rule => {
-      if (String(rule?.satt || '') !== 'ersatt') return;
+      if (getRuleOp(rule) !== 'set') return;
       if (!evaluateRuleNar(rule, { list: entries, ...context })) return;
       const trait = String(rule?.varde || '').trim();
       if (!trait || seen.has(trait)) return;
@@ -1632,7 +1794,7 @@
   function getSeparateDefenseTraitRules(list, context = {}) {
     const entries = Array.isArray(list) ? list : [];
     const candidates = getListRules(entries, { key: 'andrar', mal: 'separat_forsvar_karaktarsdrag' })
-      .filter(rule => String(rule?.satt || '') === 'ersatt'
+      .filter(rule => getRuleOp(rule) === 'set'
         && evaluateRuleNar(rule, { list: entries, ...context }));
     // Deduplicate by (sourceEntryId, varde): last rule in accumulation order is the highest level
     const seen = new Map();
@@ -2113,7 +2275,7 @@
     const seen = new Set();
 
     getRuleList(sourceEntry, 'ger', { level: sourceLevel }).forEach(rule => {
-      if (String(rule?.mal || '') !== 'post') return;
+      if (getRuleTarget(rule) !== 'post') return;
       if (!matchesListCondition(rule, entries)) return;
 
       getEntryGrantRefs(rule).forEach(target => {
@@ -2243,6 +2405,14 @@
   function buildCombatContext(list, weaponFacts, extra = {}) {
     const normalizedFacts = normalizeDefenseWeaponFacts(weaponFacts);
     const equippedFacts = buildCombatEquipmentFacts(normalizedFacts, extra);
+    const activeFacts = extra?.activeItemFact
+      ? normalizeDefenseWeaponFacts([extra.activeItemFact])
+      : normalizedFacts;
+    const activeTypes = activeFacts.flatMap(f => toArray(f?.types).map(String).filter(Boolean));
+    const hasRangedActiveItem = hasNormalizedAny(activeTypes, ['Avståndsvapen', 'Projektilvapen']);
+    const hasMeleeActiveItem = activeTypes.length
+      ? !hasRangedActiveItem
+      : false;
     const antalVapen = Number.isFinite(Number(extra?.antalVapen))
       ? Number(extra.antalVapen)
       : normalizedFacts.filter(f => f.isWeapon).length;
@@ -2284,6 +2454,8 @@
       weaponFacts: normalizedFacts,
       vapenFakta,
       antalVapen,
+      narstrid: extra?.narstrid ?? (activeTypes.length ? hasMeleeActiveItem : undefined),
+      avstand: extra?.avstand ?? (activeTypes.length ? hasRangedActiveItem : undefined),
       foremal,
       utrustadeNamn: equippedNames,
       utrustadTyper: equippedTypes,
@@ -2301,12 +2473,12 @@
     let total = 0;
     (Array.isArray(entries) ? entries : []).forEach(entry => {
       const rules = getRuleList(entry, 'andrar', { level: entry?.nivå })
-        .filter(rule => String(rule?.mal || '') === targetMal
+        .filter(rule => getRuleTarget(rule) === targetMal
           && evaluateRuleNar(rule, context));
       if (!rules.length) return;
       let entryValue = 0;
       rules.forEach(rule => {
-        if (String(rule?.satt || '') === 'ersatt') {
+        if (getRuleOp(rule) === 'set') {
           entryValue = Number(rule?.varde || 0);
         } else {
           entryValue += Number(rule?.varde || 0);
@@ -2533,13 +2705,13 @@
     let total = 0;
     entries.forEach(entry => {
       const rules = getRuleList(entry, 'andrar', { level: entry?.nivå })
-        .filter(rule => String(rule?.mal || '') === 'forsvar_modifierare'
-          && rule?.nar?.har_utrustad_typ != null
+        .filter(rule => getRuleTarget(rule) === 'forsvar_modifierare'
+          && getRuleCondition(rule)?.har_utrustad_typ != null
           && evaluateRuleNar(rule, context));
       if (!rules.length) return;
       let entryValue = 0;
       rules.forEach(rule => {
-        if (String(rule?.satt || '') === 'ersatt') {
+        if (getRuleOp(rule) === 'set') {
           entryValue = Number(rule?.varde || 0);
         } else {
           entryValue += Number(rule?.varde || 0);
@@ -2622,6 +2794,44 @@
     return rounded;
   }
 
+  function getNarForemalCondition(nar) {
+    if (!nar || typeof nar !== 'object' || Array.isArray(nar)) return null;
+    const out = nar.foremal && typeof nar.foremal === 'object' && !Array.isArray(nar.foremal)
+      ? cloneRuleValue(nar.foremal)
+      : {};
+    const keyMap = {
+      'foremal.typ': 'typ',
+      'foremal.ingen_typ': 'ingen_typ',
+      'foremal.nagon_kvalitet': 'nagon_kvalitet',
+      'foremal.id': 'id',
+      'foremal.namn': 'namn',
+      'foremal.niva': 'niva',
+      'foremal.nivå': 'nivå',
+      'foremal.antal_kvalitet_minst': 'antal_kvalitet_minst',
+      'foremal.antal_kvalitet_max': 'antal_kvalitet_max',
+      'foremal.antal_positiv_kvalitet_minst': 'antal_positiv_kvalitet_minst',
+      'foremal.antal_positiv_kvalitet_max': 'antal_positiv_kvalitet_max',
+      'foremal.antal_mystisk_kvalitet_minst': 'antal_mystisk_kvalitet_minst',
+      'foremal.antal_mystisk_kvalitet_max': 'antal_mystisk_kvalitet_max',
+      'foremal.krav_uppfyllda': 'krav_uppfyllda',
+      'foremal.krav_saknas': 'krav_saknas'
+    };
+    Object.keys(keyMap).forEach(sourceKey => {
+      if (!Object.prototype.hasOwnProperty.call(nar, sourceKey)) return;
+      const targetKey = keyMap[sourceKey];
+      if (!Object.prototype.hasOwnProperty.call(out, targetKey)) {
+        out[targetKey] = cloneRuleValue(nar[sourceKey]);
+      }
+    });
+    const negated = nar.inte && typeof nar.inte === 'object' && !Array.isArray(nar.inte)
+      ? getNarForemalCondition(nar.inte)
+      : null;
+    if (negated?.typ && out.ingen_typ === undefined) {
+      out.ingen_typ = cloneRuleValue(negated.typ);
+    }
+    return Object.keys(out).length ? out : null;
+  }
+
   function getNameCount(list, name, options = {}) {
     const target = normalizeLevelName(name || '');
     if (!target) return 0;
@@ -2642,6 +2852,291 @@
       if (!entryHasType(entry, typeName)) return count;
       return count + 1;
     }, 0);
+  }
+
+  function getCaseInsensitiveObjectValue(obj, key) {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+    if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
+    const normalizedKey = normalizeLevelName(key);
+    const match = Object.keys(obj).find(name => normalizeLevelName(name) === normalizedKey);
+    return match ? obj[match] : undefined;
+  }
+
+  function getPathValue(source, path) {
+    const parts = toArray(String(path || '').split('.')).filter(Boolean);
+    if (!parts.length) return undefined;
+    let current = source;
+    for (let i = 0; i < parts.length; i += 1) {
+      if (current === undefined || current === null) return undefined;
+      if (Array.isArray(current)) {
+        const index = Number(parts[i]);
+        if (!Number.isInteger(index) || index < 0 || index >= current.length) return undefined;
+        current = current[index];
+        continue;
+      }
+      if (typeof current !== 'object') return undefined;
+      current = getCaseInsensitiveObjectValue(current, parts[i]);
+    }
+    return current;
+  }
+
+  function buildCanonicalConditionContext(context = {}) {
+    const ctx = context && typeof context === 'object' ? context : {};
+    const selectedList = Array.isArray(ctx.list) ? ctx.list.map(normalizeEntryCompat) : [];
+    const primaryEntry = normalizeEntryCompat(ctx.entry || ctx.targetEntry || ctx.sourceEntry || null);
+    const sourceEntry = normalizeEntryCompat(ctx.sourceEntry || ctx.entry || null);
+    const byName = Object.create(null);
+    const byType = Object.create(null);
+    const selectedNames = [];
+    const selectedLevelsByName = Object.create(null);
+    const selectedTypes = new Set();
+
+    selectedList.forEach(entry => {
+      const name = getEntryNameCompat(entry);
+      if (name) byName[name] = (Number(byName[name]) || 0) + 1;
+      const levelName = getCanonicalLevelLabel(getEntryLevelCompat(entry));
+      if (name && levelName) {
+        const prevLevelValue = getLevelValue(selectedLevelsByName[name] || '');
+        const nextLevelValue = getLevelValue(levelName);
+        if (nextLevelValue >= prevLevelValue) {
+          selectedLevelsByName[name] = levelName;
+        }
+      }
+      getEntryEffectiveNames(entry).forEach(effectiveName => {
+        selectedNames.push(effectiveName);
+      });
+      getEntryTypes(entry).forEach(typeName => {
+        selectedTypes.add(typeName);
+        byType[typeName] = (Number(byType[typeName]) || 0) + 1;
+      });
+    });
+
+    const item = ctx.foremal && typeof ctx.foremal === 'object' ? ctx.foremal : {};
+    const equippedNames = toArray(ctx.utrustadeNamn).map(String).filter(Boolean);
+    const equippedTypes = toArray(ctx.utrustadTyper).map(String).filter(Boolean);
+    const equippedQualities = toArray(ctx.utrustadeKvaliteter).map(String).filter(Boolean);
+    const weaponFacts = Array.isArray(ctx.vapenFakta) ? ctx.vapenFakta : [];
+    const weaponTypeSet = new Set();
+    const weaponQualitySet = new Set();
+    weaponFacts.forEach(fact => {
+      toArray(fact?.typer).map(String).filter(Boolean).forEach(typeName => weaponTypeSet.add(typeName));
+      toArray(fact?.kvaliteter).map(String).filter(Boolean).forEach(name => weaponQualitySet.add(name));
+    });
+
+    const sourceLevel = String(ctx.sourceLevel || getEntryLevelCompat(sourceEntry) || '').trim();
+    const lookup = selectedList.length ? buildListEntryLookup(selectedList) : null;
+    const sourceIsSelected = sourceEntry && lookup
+      ? isEntryInListLookup(sourceEntry, lookup)
+      : false;
+
+    return {
+      entry: primaryEntry ? {
+        id: primaryEntry?.id,
+        name: getEntryNameCompat(primaryEntry),
+        description: String(primaryEntry?.description || primaryEntry?.beskrivning || '').trim(),
+        tags: {
+          types: getEntryTypes(primaryEntry),
+          traditions: getEntryTraditions(primaryEntry),
+          tests: getEntryTestsCompat(primaryEntry)
+        },
+        levels: primaryEntry?.levels && typeof primaryEntry.levels === 'object' ? primaryEntry.levels : {}
+      } : {},
+      source: sourceEntry ? {
+        id: sourceEntry?.id,
+        name: getEntryNameCompat(sourceEntry),
+        tags: {
+          types: getEntryTypes(sourceEntry),
+          traditions: getEntryTraditions(sourceEntry),
+          tests: getEntryTestsCompat(sourceEntry)
+        },
+        levels: sourceEntry?.levels && typeof sourceEntry.levels === 'object' ? sourceEntry.levels : {},
+        level: sourceLevel,
+        is_selected: sourceIsSelected
+      } : {
+        level: sourceLevel,
+        is_selected: sourceIsSelected
+      },
+      selected: {
+        names: selectedNames,
+        types: Array.from(selectedTypes),
+        levels: {
+          by_name: selectedLevelsByName
+        }
+      },
+      item: {
+        id: item?.id,
+        name: String(item?.name || item?.namn || '').trim(),
+        type: toArray(item?.type ?? item?.types ?? item?.typ),
+        types: toArray(item?.types ?? item?.type ?? item?.typ),
+        qualities: toArray(item?.qualities ?? item?.quality ?? item?.kvalitet),
+        quality: toArray(item?.quality ?? item?.qualities ?? item?.kvalitet),
+        level: String((item?.level ?? item?.niva ?? item?.nivå) || '').trim(),
+        quality_count: Number((item?.quality_count ?? item?.kvalitet_antal ?? item?.antal_kvalitet ?? toArray(item?.qualities ?? item?.quality ?? item?.kvalitet).length) || 0),
+        positive_quality_count: Number((item?.positive_quality_count ?? item?.positiv_kvalitet_antal ?? item?.antal_positiv_kvalitet) || 0),
+        mystic_quality_count: Number((item?.mystic_quality_count ?? item?.mystisk_kvalitet_antal ?? item?.antal_mystisk_kvalitet) || 0),
+        requirement_met: item?.requirement_met ?? item?.krav_uppfyllda
+      },
+      combat: {
+        is_melee: ctx?.combat?.is_melee ?? ctx?.narstrid,
+        is_ranged: ctx?.combat?.is_ranged ?? ctx?.avstand,
+        has_advantage: ctx?.combat?.has_advantage ?? ctx?.overtag,
+        after_move: ctx?.combat?.after_move ?? ctx?.efter_forflyttning
+      },
+      state: {
+        counts: {
+          by_name: byName,
+          by_type: byType
+        },
+        values: ctx?.computedValues && typeof ctx.computedValues === 'object' ? ctx.computedValues : {},
+        attributes: ctx?.attribut && typeof ctx.attribut === 'object' ? ctx.attribut : {},
+        equipped: {
+          names: equippedNames,
+          types: equippedTypes,
+          qualities: equippedQualities,
+          weapons: {
+            count: Number(ctx?.antalVapen || weaponFacts.length || 0),
+            types: Array.from(weaponTypeSet),
+            qualities: Array.from(weaponQualitySet)
+          }
+        }
+      },
+      row: {
+        trait: String(ctx?.row?.trait || '').trim()
+      }
+    };
+  }
+
+  function getCanonicalConditionContext(context = {}) {
+    if (!context || typeof context !== 'object') {
+      return buildCanonicalConditionContext(context);
+    }
+    if (context.__canonicalConditionContext) return context.__canonicalConditionContext;
+    const built = buildCanonicalConditionContext(context);
+    try {
+      Object.defineProperty(context, '__canonicalConditionContext', {
+        value: built,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      context.__canonicalConditionContext = built;
+    }
+    return built;
+  }
+
+  function normalizeComparableValue(value) {
+    if (value === undefined || value === null) return value;
+    if (typeof value === 'string') return normalizeCompareToken(value);
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value === 'boolean') return value;
+    return value;
+  }
+
+  function normalizeComparableArray(value) {
+    return toArray(value)
+      .map(normalizeComparableValue)
+      .filter(item => item !== undefined && item !== null && !(typeof item === 'string' && !item));
+  }
+
+  function valuesEqual(left, right) {
+    const normalizedLeft = normalizeComparableValue(left);
+    const normalizedRight = normalizeComparableValue(right);
+    if (typeof normalizedLeft === 'number' && typeof normalizedRight === 'number') {
+      return normalizedLeft === normalizedRight;
+    }
+    return normalizedLeft === normalizedRight;
+  }
+
+  function coerceComparisonNumber(value) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+    const levelValue = getLevelValue(value);
+    return levelValue > 0 ? levelValue : null;
+  }
+
+  function evaluateWhenLeaf(node, context) {
+    const field = String(node?.field || '').trim();
+    const op = normalizeLevelName(node?.op || '');
+    const actual = getPathValue(getCanonicalConditionContext(context), field);
+    const expected = node?.value;
+
+    if (op === 'exists') {
+      const exists = !(actual === undefined || actual === null || (typeof actual === 'string' && !actual.trim()));
+      if (expected === undefined) return exists;
+      return exists === Boolean(expected);
+    }
+
+    if (op === 'equals') {
+      if (Array.isArray(actual) && !Array.isArray(expected)) {
+        return normalizeComparableArray(actual).some(value => valuesEqual(value, expected));
+      }
+      if (Array.isArray(actual) || Array.isArray(expected)) {
+        const left = normalizeComparableArray(actual);
+        const right = normalizeComparableArray(expected);
+        return left.length === right.length && left.every((value, index) => valuesEqual(value, right[index]));
+      }
+      return valuesEqual(actual, expected);
+    }
+
+    if (op === 'not_equals') {
+      return !evaluateWhenLeaf({ field, op: 'equals', value: expected }, context);
+    }
+
+    if (op === 'includes') {
+      return normalizeComparableArray(actual).some(value => valuesEqual(value, expected));
+    }
+
+    if (op === 'includes_any') {
+      const haystack = normalizeComparableArray(actual);
+      return normalizeComparableArray(expected).some(value => haystack.some(item => valuesEqual(item, value)));
+    }
+
+    if (op === 'includes_all') {
+      const haystack = normalizeComparableArray(actual);
+      return normalizeComparableArray(expected).every(value => haystack.some(item => valuesEqual(item, value)));
+    }
+
+    if (['gt', 'gte', 'lt', 'lte'].includes(op)) {
+      const left = coerceComparisonNumber(actual);
+      const right = coerceComparisonNumber(expected);
+      if (left === null || right === null) return false;
+      if (op === 'gt') return left > right;
+      if (op === 'gte') return left >= right;
+      if (op === 'lt') return left < right;
+      return left <= right;
+    }
+
+    return false;
+  }
+
+  function evaluateWhenNode(node, context) {
+    if (!node) return true;
+    if (Array.isArray(node)) return node.every(part => evaluateWhenNode(part, context));
+    if (node.field) return evaluateWhenLeaf(node, context);
+    if (Array.isArray(node.all)) return node.all.every(part => evaluateWhenNode(part, context));
+    if (Array.isArray(node.any)) return node.any.some(part => evaluateWhenNode(part, context));
+    if (node.not && typeof node.not === 'object') return !evaluateWhenNode(node.not, context);
+    return true;
+  }
+
+  function evaluateWhenLeafForList(node, context) {
+    const field = String(node?.field || '').trim();
+    if (field === 'entry' || field.startsWith('entry.')) {
+      // Target-entry predicates are evaluated later by dedicated target matching.
+      return true;
+    }
+    return evaluateWhenLeaf(node, context);
+  }
+
+  function evaluateWhenNodeForList(node, context) {
+    if (!node) return true;
+    if (Array.isArray(node)) return node.every(part => evaluateWhenNodeForList(part, context));
+    if (node.field) return evaluateWhenLeafForList(node, context);
+    if (Array.isArray(node.all)) return node.all.every(part => evaluateWhenNodeForList(part, context));
+    if (Array.isArray(node.any)) return node.any.some(part => evaluateWhenNodeForList(part, context));
+    if (node.not && typeof node.not === 'object') return !evaluateWhenNodeForList(node.not, context);
+    return true;
   }
 
   function evaluateNar(nar, context) {
@@ -2799,7 +3294,7 @@
     // --- Item-context conditions (only when foremal is in context) ---
     if (ctx.foremal !== undefined) {
       const target = ctx.foremal && typeof ctx.foremal === 'object' ? ctx.foremal : {};
-      const cond = nar.foremal && typeof nar.foremal === 'object' ? nar.foremal : {};
+      const cond = getNarForemalCondition(nar) || {};
       const requiredTypes = toArray(cond.typ).map(String).filter(Boolean);
       if (requiredTypes.length && !hasNormalizedAny(target.typ, requiredTypes)) return false;
       const excludedTypes = toArray(cond.ingen_typ).map(String).filter(Boolean);
@@ -2878,10 +3373,13 @@
   // Evaluates a rule's nar condition, supporting both nar (AND) and nar_eller (OR over multiple nar blocks).
   function evaluateRuleNar(rule, context) {
     if (!rule || typeof rule !== 'object') return true;
+    if (rule.when && typeof rule.when === 'object' && !Array.isArray(rule.when)) {
+      return evaluateWhenNode(rule.when, context);
+    }
     if (Array.isArray(rule.nar_eller) && rule.nar_eller.length) {
       return rule.nar_eller.some(alt => evaluateNar(alt, context));
     }
-    return evaluateNar(rule.nar, context);
+    return evaluateNar(getRuleCondition(rule), context);
   }
 
   // Thin wrappers — preserve existing call signatures while delegating to evaluateNar.
@@ -2901,7 +3399,7 @@
     let total = 0;
     (Array.isArray(entries) ? entries : []).forEach(entry => {
       const rules = getRuleList(entry, 'andrar', { level: entry.nivå })
-        .filter(rule => String(rule?.mal || '') === targetMal
+        .filter(rule => getRuleTarget(rule) === targetMal
           && evaluateRuleNar(rule, {
             vapenFakta: weaponContext?.vapenFakta,
             antalVapen: weaponContext?.antalVapen
@@ -3010,7 +3508,7 @@
     let total = 0;
     entries.forEach(entry => {
       const rules = getRuleList(entry, 'andrar')
-        .filter(rule => String(rule?.mal || '') === String(mal)
+        .filter(rule => getRuleTarget(rule) === String(mal)
           && evaluateRuleNar(rule, { utrustadTyper: armorContext?.utrustadTyper }));
       total += rules.reduce((sum, rule) => sum + Number(rule.varde || 0), 0);
     });
@@ -3083,7 +3581,8 @@
   }
 
   function getEntryTypes(entry) {
-    return toTagList(entry?.taggar?.typ);
+    const normalized = normalizeEntryCompat(entry);
+    return toTagList(normalized?.taggar?.typ ?? normalized?.tags?.types ?? normalized?.typ ?? normalized?.types);
   }
 
   function entryHasType(entry, typeName) {
@@ -3093,7 +3592,8 @@
   function getEntryTraditions(entry) {
     const seen = new Set();
     const out = [];
-    toTagList(entry?.taggar?.ark_trad)
+    const normalized = normalizeEntryCompat(entry);
+    toTagList(normalized?.taggar?.ark_trad ?? normalized?.tags?.traditions)
       .map(normalizeTradition)
       .filter(Boolean)
       .forEach(tradition => {
@@ -3177,13 +3677,27 @@
       list: Array.isArray(list) ? list : [],
       sourceLevel: rule?.sourceEntryLevel || extra?.sourceLevel
     };
-    return evaluateRuleNar(rule, ctx);
+    if (rule?.when && typeof rule.when === 'object' && !Array.isArray(rule.when)) {
+      const sourceEntry = rule?.sourceEntry || extra?.sourceEntry || null;
+      return evaluateWhenNodeForList(rule.when, sourceEntry ? { ...ctx, sourceEntry } : ctx);
+    }
+
+    const nar = getRuleCondition(rule);
+    if (!evaluateNar(nar, ctx)) return false;
+
+    const onlySelected = readOnlySelectedFlag(nar, NAR_ONLY_SELECTED_KEYS);
+    if (onlySelected === undefined) return true;
+    const sourceEntry = rule?.sourceEntry || extra?.sourceEntry || null;
+    if (!sourceEntry) return !onlySelected;
+    const lookup = buildListEntryLookup(ctx.list);
+    const isSelected = isEntryInListLookup(sourceEntry, lookup);
+    return Boolean(onlySelected) === isSelected;
   }
 
   function matchesTargetCondition(rule, targetEntry, options = {}) {
-    const nar = rule?.nar || {};
+    const nar = getRuleCondition(rule) || {};
     const names = toArray(nar.namn).map(String).filter(Boolean);
-    if (names.length && !names.some(name => normalizeLevelName(targetEntry?.namn || '') === normalizeLevelName(name))) {
+    if (names.length && !names.some(name => normalizeLevelName(getEntryNameCompat(targetEntry)) === normalizeLevelName(name))) {
       return false;
     }
     const types = toArray(nar.typ).map(String).filter(Boolean);
@@ -3229,8 +3743,8 @@
   }
 
   function addConflictReason(out, seen, rule, sourceEntry, targetEntry) {
-    const sourceName = normalizeLevelName(sourceEntry?.namn || '');
-    const targetName = normalizeLevelName(targetEntry?.namn || '');
+    const sourceName = normalizeLevelName(getEntryNameCompat(sourceEntry));
+    const targetName = normalizeLevelName(getEntryNameCompat(targetEntry));
     if (!sourceName || !targetName) return;
 
     const reasonCode = getConflictReasonCode(rule, sourceEntry, targetEntry);
@@ -3243,13 +3757,13 @@
 
     out.push({
       code: reasonCode,
-      mode: normalizeConflictMode(rule?.satt),
+      mode: normalizeConflictMode(getRuleOp(rule) === 'set' ? 'ersatt' : rule?.satt),
       sourceEntryId: sourceEntry?.id || '',
-      sourceEntryName: sourceEntry?.namn || '',
-      sourceEntryLevel: sourceEntry?.nivå || '',
+      sourceEntryName: getEntryNameCompat(sourceEntry),
+      sourceEntryLevel: getEntryLevelCompat(sourceEntry),
       targetEntryId: targetEntry?.id || '',
-      targetEntryName: targetEntry?.namn || '',
-      targetEntryLevel: targetEntry?.nivå || ''
+      targetEntryName: getEntryNameCompat(targetEntry),
+      targetEntryLevel: getEntryLevelCompat(targetEntry)
     });
   }
 
@@ -3370,9 +3884,9 @@
     let highestLevelValue = 0;
     let highestLevelName = '';
     (Array.isArray(list) ? list : []).forEach(entry => {
-      if (normalizeLevelName(entry?.namn || '') !== nameToken) return;
+      if (normalizeLevelName(getEntryNameCompat(entry)) !== nameToken) return;
       found = true;
-      const levelName = String(entry?.nivå || '').trim();
+      const levelName = getEntryLevelCompat(entry);
       const levelValue = getLevelValue(levelName);
       if (levelValue > highestLevelValue) {
         highestLevelValue = levelValue;
@@ -3428,6 +3942,102 @@
     });
   }
 
+  function getRequirementNamesFromWhenLeaf(node) {
+    const field = String(node?.field || '').trim();
+    const op = normalizeLevelName(node?.op || '');
+    if (!field || !op) return [];
+
+    if (field === 'selected.names') {
+      if (op === 'includes' || op === 'equals' || op === 'includes_any' || op === 'includes_all') {
+        return toArray(node?.value).map(value => String(value || '').trim()).filter(Boolean);
+      }
+      return [];
+    }
+
+    if (field.startsWith('selected.levels.by_name.')) {
+      const name = field.split('.').slice(3).join('.');
+      return name ? [name] : [];
+    }
+
+    return [];
+  }
+
+  function extractSingleRequirementNameFromWhen(node) {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) return '';
+    if (node.field) {
+      const names = getRequirementNamesFromWhenLeaf(node);
+      return names.length === 1 ? names[0] : '';
+    }
+    if (Array.isArray(node.all)) {
+      const names = getUniqueNames(node.all.flatMap(child => getRequirementNamesFromWhenLeaf(child)));
+      return names.length === 1 ? names[0] : '';
+    }
+    return '';
+  }
+
+  function collectRequiredNamesFromWhen(node, out, withinAny = false) {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) return;
+    if (node.field) {
+      if (withinAny) return;
+      const field = String(node.field || '').trim();
+      const op = normalizeLevelName(node.op || '');
+      if (field !== 'selected.names') return;
+      const names = toArray(node.value).map(value => String(value || '').trim()).filter(Boolean);
+      if (op === 'includes_all' || op === 'includes' || op === 'equals') {
+        names.forEach(name => out.add(name));
+      }
+      return;
+    }
+    if (Array.isArray(node.all)) {
+      node.all.forEach(child => collectRequiredNamesFromWhen(child, out, withinAny));
+      return;
+    }
+    if (Array.isArray(node.any)) {
+      node.any.forEach(child => collectRequiredNamesFromWhen(child, out, true));
+      return;
+    }
+  }
+
+  function collectRequirementLevelsFromWhen(node, addPair, withinAny = false) {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) return;
+    if (node.field) {
+      if (withinAny) return;
+      const field = String(node.field || '').trim();
+      const op = normalizeLevelName(node.op || '');
+      if (!field.startsWith('selected.levels.by_name.')) return;
+      if (op !== 'gte' && op !== 'gt' && op !== 'equals') return;
+      const name = field.split('.').slice(3).join('.');
+      if (!name) return;
+      addPair(name, node.value);
+      return;
+    }
+    if (Array.isArray(node.all)) {
+      node.all.forEach(child => collectRequirementLevelsFromWhen(child, addPair, withinAny));
+      return;
+    }
+    if (Array.isArray(node.any)) {
+      node.any.forEach(child => collectRequirementLevelsFromWhen(child, addPair, true));
+      return;
+    }
+  }
+
+  function collectAlternativeNamesFromWhen(node, out) {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) return;
+    if (Array.isArray(node.any)) {
+      const names = getUniqueNames(node.any.map(extractSingleRequirementNameFromWhen).filter(Boolean));
+      if (names.length) {
+        names.forEach(name => out.add(name));
+        return;
+      }
+      node.any.forEach(child => collectAlternativeNamesFromWhen(child, out));
+      return;
+    }
+    if (Array.isArray(node.all)) {
+      node.all.forEach(child => collectAlternativeNamesFromWhen(child, out));
+      return;
+    }
+  }
+
   function getRequirementLevelRules(rule, requiredNames = []) {
     const byName = new Map();
     const add = (rawName, rawLevel) => {
@@ -3460,18 +4070,24 @@
     collectRequirementLevelPairs(rule?.['namn_nivå_minst'], add);
     collectRequirementLevelPairs(rule?.name_level_min, add);
 
-    const nar = rule?.nar && typeof rule.nar === 'object' ? rule.nar : null;
+    const nar = getRuleCondition(rule);
     collectRequirementLevelPairs(nar?.har_namn_niva_minst, add);
     collectRequirementLevelPairs(nar?.['har_namn_nivå_minst'], add);
     collectRequirementLevelPairs(nar?.har_namn_level_min, add);
+    collectRequirementLevelsFromWhen(rule?.when, add);
 
     return Array.from(byName.values());
   }
 
   function getRequirementNames(rule) {
+    const nar = getRuleCondition(rule) || {};
+    const fromWhen = new Set();
+    collectRequiredNamesFromWhen(rule?.when, fromWhen);
     return getUniqueNames([
       ...toArray(rule?.namn),
-      ...toArray(rule?.nar?.har_namn)
+      ...toArray(rule?.name),
+      ...toArray(nar?.har_namn),
+      ...Array.from(fromWhen)
     ]);
   }
 
@@ -3533,8 +4149,8 @@
       return {
         code: getRequirementReasonCode(rule, candidate),
         sourceEntryId: candidate?.id || '',
-        sourceEntryName: candidate?.namn || '',
-        sourceEntryLevel: candidate?.nivå || '',
+        sourceEntryName: getEntryNameCompat(candidate),
+        sourceEntryLevel: getEntryLevelCompat(candidate),
         requiredNames: getUniqueNames(allRequired),
         missingNames: getUniqueNames(allMissing),
         alternativeNames: getUniqueNames(allAlternativeNames),
@@ -3585,8 +4201,8 @@
     return {
       code: getRequirementReasonCode(rule, candidate),
       sourceEntryId: candidate?.id || '',
-      sourceEntryName: candidate?.namn || '',
-      sourceEntryLevel: candidate?.nivå || '',
+      sourceEntryName: getEntryNameCompat(candidate),
+      sourceEntryLevel: getEntryLevelCompat(candidate),
       requiredNames: combinedRequiredNames,
       missingNames: combinedMissingNames,
       alternativeNames,
@@ -3609,7 +4225,7 @@
   }
 
   function evaluateRequirementRules(candidate, entries, contextEntries, requirementRules, scope = 'entry') {
-    const nameSet = new Set(entries.map(entry => normalizeLevelName(entry?.namn || '')).filter(Boolean));
+    const nameSet = buildNameSet(entries);
     return toRuleList(requirementRules).map(rule => {
       const reason = buildRequirementReason(rule, candidate, entries, contextEntries, nameSet);
       return {
@@ -3905,9 +4521,13 @@
   }
 
   function getRequirementAlternativeNames(rule) {
+    const nar = getRuleCondition(rule) || {};
+    const fromWhen = new Set();
+    collectAlternativeNamesFromWhen(rule?.when, fromWhen);
     return getUniqueNames([
-      ...toArray(rule?.nar?.nagon_av_namn),
-      ...toArray(rule?.nar?.någon_av_namn)
+      ...toArray(nar?.nagon_av_namn),
+      ...toArray(nar?.någon_av_namn),
+      ...Array.from(fromWhen)
     ]);
   }
 
@@ -4112,12 +4732,13 @@
       return;
     }
 
-    if (Array.isArray(rule?.nar?.eller) && rule.nar.eller.length) {
-      rule.nar.eller.forEach(narRule => {
+    const ruleNar = getRuleCondition(rule);
+    if (Array.isArray(ruleNar?.eller) && ruleNar.eller.length) {
+      ruleNar.eller.forEach(narRule => {
         collectRequirementAssistSpecsFromRule(specMap, {
           ...rule,
           nar: {
-            ...rule.nar,
+            ...ruleNar,
             ...narRule,
             eller: undefined
           }
@@ -4974,11 +5595,14 @@
   }
 
   function buildNameSet(list) {
-    return new Set(
-      (Array.isArray(list) ? list : [])
-        .map(entry => normalizeLevelName(entry?.namn || ''))
+    const out = new Set();
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      getEntryEffectiveNames(entry)
+        .map(normalizeLevelName)
         .filter(Boolean)
-    );
+        .forEach(name => out.add(name));
+    });
+    return out;
   }
 
   function getRequirementDependents(list, removedEntry, options = {}) {
@@ -5095,13 +5719,15 @@
   }
 
   function applyNumericChange(currentValue, rule, sourceEntry, options = {}) {
-    const mode = normalizeLevelName(rule?.satt || '');
+    const mode = getRuleOp(rule);
     const amount = getRuleNumericValue(rule, sourceEntry, options);
     if (!Number.isFinite(amount)) return currentValue;
-    if (mode === 'ersatt' || mode === 'satt') return amount;
-    if (mode === 'multiplicera') return currentValue * amount;
-    if (mode === 'minimum') return Math.max(currentValue, amount);
-    if (mode === 'maximum') return Math.min(currentValue, amount);
+    if (mode === 'set' || mode === 'ersatt' || mode === 'satt') return amount;
+    if (mode === 'multiply' || mode === 'multiplicera') return currentValue * amount;
+    if (mode === 'divide' || mode === 'dividera') return amount === 0 ? currentValue : (currentValue / amount);
+    if (mode === 'max' || mode === 'minimum') return Math.max(currentValue, amount);
+    if (mode === 'min' || mode === 'maximum') return Math.min(currentValue, amount);
+    if (mode === 'subtract' || mode === 'subtrahera') return currentValue - amount;
     return currentValue + amount;
   }
 
@@ -5136,9 +5762,7 @@
   }
 
   function collectSnapshotNarSourceValues(rule, context, sourceValues) {
-    const nar = rule?.nar && typeof rule.nar === 'object' && !Array.isArray(rule.nar)
-      ? rule.nar
-      : null;
+    const nar = getRuleCondition(rule);
     if (!nar) return {};
     const computedValues = {};
     const addMal = (malName) => {
@@ -5222,8 +5846,8 @@
       }
 
       collectSnapshotFormulaSourceValues(rule, { resolveMal, baseOptions }, sourceValues);
-      const mal = String(rule?.mal || '').trim();
-      const mode = normalizeLevelName(rule?.satt || '');
+      const mal = getRuleTarget(rule);
+      const mode = getRuleOp(rule);
       const amount = computeSnapshotRuleAmount(rule, sourceEntry || rule?.sourceEntry, {
         ...baseOptions,
         list: baseList,
@@ -5233,7 +5857,7 @@
       if (amount !== null && mal) {
         const currentValue = Number(resolveMal(mal, baseOptions));
         if (Number.isFinite(currentValue)) {
-          const nextValue = (mode === 'ersatt' || mode === 'satt')
+          const nextValue = (mode === 'set' || mode === 'ersatt' || mode === 'satt')
             ? Number(amount)
             : currentValue + Number(amount);
           if (Number.isFinite(nextValue)) snapshotState[mal] = nextValue;
@@ -5358,7 +5982,7 @@
       const rowLevel = typeof row?.nivå === 'string' ? row.nivå : '';
 
       getRuleList(sourceEntry, 'andrar', { level: rowLevel }).forEach(rule => {
-        if (String(rule?.mal || '') !== 'karaktarsdrag_max_tillagg') return;
+        if (getRuleTarget(rule) !== 'karaktarsdrag_max_tillagg') return;
         if (!matchesInventoryRuleCondition(rule, row, sourceEntry)) return;
         maxTotal = applyNumericChange(maxTotal, rule, sourceEntry, {
           ...options,
@@ -5422,7 +6046,7 @@
 
     entries.forEach(entry => {
       getRuleList(entry, 'ger', { level: entry?.nivå || '' }).forEach(rule => {
-        if (String(rule?.mal || '') !== 'permanent_korruption') return;
+        if (getRuleTarget(rule) !== 'permanent_korruption') return;
         if (!matchesListCondition(rule, entries)) return;
 
         const amount = getRuleNumericValue(rule, entry, {
@@ -5434,8 +6058,8 @@
         contributions.push({
           amount,
           sourceEntryId: entry.id,
-          sourceEntryName: entry.namn || '',
-          sourceEntryLevel: entry.nivå || '',
+          sourceEntryName: getEntryNameCompat(entry),
+          sourceEntryLevel: getEntryLevelCompat(entry),
           kind: 'regel'
         });
         runningPermanentCorruption += amount;
@@ -5460,8 +6084,8 @@
       contributions.push({
         amount,
         sourceEntryId: entry.id,
-        sourceEntryName: entry.namn || '',
-        sourceEntryLevel: entry.nivå || '',
+        sourceEntryName: getEntryNameCompat(entry),
+        sourceEntryLevel: getEntryLevelCompat(entry),
         kind: isMysticPower ? 'mystisk_kraft' : 'ritual'
       });
       runningPermanentCorruption += amount;
@@ -5513,7 +6137,7 @@
         sourceEntry: rule?.sourceEntry || null,
         computedValues: narComputed
       })) return;
-      const mal = String(rule?.mal || '').trim();
+      const mal = getRuleTarget(rule);
       const amount = computeSnapshotRuleAmount(rule, rule?.sourceEntry, {
         ...options,
         list,
@@ -5523,8 +6147,7 @@
         aktuell_malvarde: resolveAndrarMal(mal, options)
       });
       if (amount === null) return;
-      const mode = normalizeLevelName(rule?.satt || '');
-      if (mode === 'ersatt' || mode === 'satt') {
+      if (getRuleOp(rule) === 'set') {
         total = Number(amount);
       } else {
         total += Number(amount);
@@ -5579,7 +6202,7 @@
   }
 
   function describeWeaponTarget(rule) {
-    const foremal = rule?.nar?.foremal;
+    const foremal = getNarForemalCondition(getRuleCondition(rule));
     const types = toArray(foremal?.typ).map(String);
     const excludedTypes = toArray(foremal?.ingen_typ).map(String);
     const anyQualities = toArray(foremal?.nagon_kvalitet);
@@ -5604,7 +6227,7 @@
   }
 
   function describeAttackContext(rule) {
-    const nar = rule?.nar || {};
+    const nar = getRuleCondition(rule) || {};
     const weaponTarget = describeWeaponTarget(rule);
 
     if (nar.overtag) return 'attacker med Övertag';
@@ -5632,7 +6255,7 @@
   }
 
   function describeMysticContext(rule) {
-    const nar = rule?.nar || {};
+    const nar = getRuleCondition(rule) || {};
     const targets = [];
     if (nar.mystisk_kraft !== false) targets.push('mystiska förmågor');
     if (nar.ritual !== false) targets.push('ritualer');
@@ -5645,8 +6268,8 @@
     const seen = new Set();
     const out = [];
     getListRules(list, { key: 'andrar' }).forEach(rule => {
-      if (String(rule?.satt || '') !== 'ersatt') return;
-      const target = String(rule?.mal || '').trim();
+      if (getRuleOp(rule) !== 'set') return;
+      const target = getRuleTarget(rule);
       const trait = String(rule?.varde || '').trim();
       if (!trait) return;
 
@@ -5689,12 +6312,13 @@
   // vikt_tillagg rules are summed (starting from 0); supports nar.foremal item targeting.
   function getItemWeightModifiers(list, entry) {
     if (!entry) return { faktor: 1, tillagg: 0 };
+    const normalizedEntry = normalizeEntryCompat(entry);
     const entries = Array.isArray(list) ? list : [];
     const foremalCtx = {
-      id: entry.id,
-      namn: entry.namn,
-      typ: entry.taggar?.typ ?? [],
-      kvalitet: entry.taggar?.kvalitet ?? []
+      id: normalizedEntry?.id,
+      namn: getEntryNameCompat(normalizedEntry),
+      typ: normalizedEntry?.tags?.types ?? normalizedEntry?.taggar?.typ ?? [],
+      kvalitet: normalizedEntry?.tags?.qualities ?? normalizedEntry?.taggar?.kvalitet ?? []
     };
     const ctx = { list: entries, foremal: foremalCtx };
     const faktor = getListRules(entries, { key: 'andrar', mal: 'vikt_faktor' })
@@ -5708,9 +6332,10 @@
 
   function getEntryPrimaryLevelName(entry) {
     if (!entry || typeof entry !== 'object') return '';
-    const ownLevel = typeof entry.nivå === 'string' ? entry.nivå.trim() : '';
+    const ownLevel = getEntryLevelCompat(entry);
     if (ownLevel) return ownLevel;
-    const levelKeys = Object.keys(entry.nivåer || {});
+    const normalized = normalizeEntryCompat(entry);
+    const levelKeys = Object.keys(normalized?.levels || normalized?.nivåer || {});
     return levelKeys.find(key => String(key || '').trim()) || '';
   }
 
@@ -5761,7 +6386,7 @@
   }
 
   function buildItemRuleTargetContext(targetEntry, qualityNames = [], extra = {}) {
-    const entry = targetEntry && typeof targetEntry === 'object' ? targetEntry : {};
+    const entry = normalizeEntryCompat(targetEntry && typeof targetEntry === 'object' ? targetEntry : {});
     const names = toArray(qualityNames).map(String).map(name => name.trim()).filter(Boolean);
     const details = extra && typeof extra === 'object' ? extra : {};
     const qualitySummary = getQualityContextSummary(names);
@@ -5773,8 +6398,8 @@
     const mysticCount = Number(details.mystisk_kvalitet_antal ?? details.antal_mystisk_kvalitet ?? qualitySummary.mysticCount);
     const out = {
       id: entry.id,
-      namn: entry.namn,
-      typ: toArray(entry?.taggar?.typ ?? entry?.typ),
+      namn: getEntryNameCompat(entry),
+      typ: toArray(entry?.tags?.types ?? entry?.taggar?.typ ?? entry?.typ),
       kvalitet: names,
       niva: levelName,
       kvalitet_antal: Number.isFinite(qualityCount) ? qualityCount : names.length,
@@ -5829,7 +6454,7 @@
   function readPriceRuleMatchMode(rule) {
     const fromRule = normalizeRequirementLogic(rule?.matchning, 'and');
     if (fromRule) return fromRule;
-    const fromNar = normalizeRequirementLogic(rule?.nar?.matchning, 'and');
+    const fromNar = normalizeRequirementLogic(getRuleCondition(rule)?.matchning, 'and');
     if (fromNar) return fromNar;
     return 'and';
   }
@@ -5897,8 +6522,13 @@
 
   function evaluatePriceRuleNar(rule, context = {}) {
     if (!rule || typeof rule !== 'object') return false;
-    const nar = rule.nar && typeof rule.nar === 'object' ? rule.nar : null;
-    if (!nar) return true;
+    const nar = getRuleCondition(rule);
+    if (!nar) {
+      if (rule.when && typeof rule.when === 'object' && !Array.isArray(rule.when)) {
+        return evaluateWhenNode(rule.when, context);
+      }
+      return true;
+    }
 
     const narWithoutForemal = cloneRuleValue(nar);
     delete narWithoutForemal.foremal;
@@ -5920,15 +6550,25 @@
     let additiveO = 0;
     let explicit = false;
     getRuleList(entry, 'andrar', { level: entry?.nivå || '' })
-      .filter(rule => String(rule?.mal || '') === 'pris_faktor')
+      .filter(rule => getRuleTarget(rule) === 'pris_faktor')
       .forEach(rule => {
         if (!evaluatePriceRuleNar(rule, context)) return;
-        const operation = normalizePriceOperation(rule?.operation, rule?.satt);
+        const canonicalOp = getRuleOp(rule);
+        let operation = normalizePriceOperation(rule?.operation, rule?.satt);
+        if (rule?.operation === undefined && rule?.satt === undefined && canonicalOp) {
+          operation = canonicalOp;
+        }
         const value = readPriceRuleNumericValue(rule, operation);
         if (value === null) return;
         const setterMode = normalizeLevelName(rule?.satt || '');
-        const replace = setterMode === 'ersatt' || setterMode === 'satt' || setterMode === 'replace' || setterMode === 'set';
-        if (operation === 'add') {
+        const replace = canonicalOp === 'set'
+          || setterMode === 'ersatt'
+          || setterMode === 'satt'
+          || setterMode === 'replace'
+          || setterMode === 'set';
+        if (operation === 'set') {
+          factor = value;
+        } else if (operation === 'add') {
           additiveO = replace ? value : additiveO + value;
         } else if (operation === 'subtract') {
           additiveO = replace ? -value : additiveO - value;
@@ -5961,13 +6601,12 @@
     let gratisbar = false;
     let explicit = false;
     getRuleList(entry, 'andrar', { level: entry?.nivå || '' })
-      .filter(rule => String(rule?.mal || '') === 'kvalitet_gratisbar')
+      .filter(rule => getRuleTarget(rule) === 'kvalitet_gratisbar')
       .forEach(rule => {
         if (!evaluateRuleNar(rule, context)) return;
         if (!Object.prototype.hasOwnProperty.call(rule, 'varde')) return;
         const value = isTruthyRuleValue(rule?.varde);
-        const mode = normalizeLevelName(rule?.satt || '');
-        if (mode === 'ersatt' || mode === 'satt' || !explicit) {
+        if (getRuleOp(rule) === 'set' || !explicit) {
           gratisbar = value;
         } else {
           // When multiple non-replace rules match, the last matching rule wins.
@@ -6195,6 +6834,7 @@
     getMissingRequirementReasonsForCandidate,
     getRequirementEffectsForCandidate,
     shouldSkipRequirementPopup,
+    getLevelData,
     getRequirementAssistOptions,
     evaluateRequirementAssistState,
     getEntryMaxCount,

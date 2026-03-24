@@ -3604,7 +3604,7 @@ select.level {
 /* ---------- Småskärmar ---------- */
 @media (max-width: 420px) {
   .app-title { font-size: 2rem; }
-  .panel     { padding: 1.6rem 1.2rem; }
+  .panel     { padding: 1rem 0.4rem 1.4rem; }
   .toolbar   { padding: .5rem .6rem; gap: .5rem; }
   .toolbar select, .toolbar input { min-width: 80px; }
 
@@ -3968,6 +3968,23 @@ select.level {
     align-items: start;
   }
 }
+/* Mobile: main panel edge-to-edge */
+@media (max-width: 640px) {
+  .panel {
+    padding: 1.2rem 0.5rem 1.6rem;
+  }
+  .card-list {
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+  .cat-group .card-list {
+    margin-top: 0.35rem;
+  }
+  .summary-section,
+  .info-panel-section {
+    padding: 0.6rem 0.45rem;
+  }
+}
 /* Mobile: make right panels fill ~90% width and full dynamic height */
 @media (max-width: 640px) {
   #filterPanel,
@@ -3977,10 +3994,10 @@ select.level {
   #summarySlidePanel,
   #effectsPanel,
   #conflictPanel {
-    width: 100vw;          /* cover ~100% of the screen width */
-    max-width: 100vw;      /* lift 360px caps on mobile */
-    height: 100dvh;       /* use dynamic viewport height (accounts for bars) */
-    padding: 1.2rem 1rem 2rem;  /* keep your spacing */
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    padding: 1rem 0.5rem 2rem;
     overscroll-behavior: contain;
   }
 }

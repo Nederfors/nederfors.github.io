@@ -4,7 +4,7 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime, timezone
-from data_file_schema import build_payload, load_json, normalize_payload
+from data_file_schema import build_payload, load_json, normalize_payload, validate_catalog_payload
 
 DATA_FILES = [
     # sync-data-manifest:start
@@ -75,6 +75,9 @@ def split_tags(value):
 def get_level_data(tags):
     if not isinstance(tags, dict):
         return {}
+    primary = tags.get('levels')
+    if isinstance(primary, dict):
+        return primary
     primary = tags.get('nivå_data')
     legacy = tags.get('niva_data')
     if isinstance(primary, dict) and isinstance(legacy, dict):
@@ -88,18 +91,34 @@ def get_level_data(tags):
     return {}
 
 
+def get_entry_levels(entry, tags):
+    if isinstance(entry.get('levels'), dict):
+        return entry.get('levels')
+    return get_level_data(tags)
+
+
+def get_entry_tags(entry):
+    tags = entry.get('tags')
+    if isinstance(tags, dict):
+        return tags
+    tags = entry.get('taggar')
+    if not isinstance(tags, dict):
+        return {}
+    return tags
+
+
 def validate_entry_schema(entry, source_file, index, warnings):
     if not isinstance(entry, dict):
         warnings.append(f'{source_file}[{index}] är inte ett objekt.')
         return
 
-    tags = entry.get('taggar') or {}
+    tags = get_entry_tags(entry)
     if not isinstance(tags, dict):
         return
 
-    name = entry.get('namn') or entry.get('id') or f'index {index}'
-    types = split_tags(tags.get('typ'))
-    level_data = get_level_data(tags)
+    name = entry.get('name') or entry.get('namn') or entry.get('id') or f'index {index}'
+    types = split_tags(tags.get('types') or tags.get('typ'))
+    level_data = get_entry_levels(entry, tags)
 
     if 'niva_data' in tags:
         warnings.append(f'{source_file}[{index}] ({name}) använder legacy-fältet "niva_data".')
@@ -107,24 +126,24 @@ def validate_entry_schema(entry, source_file, index, warnings):
     if 'Ritual' in types:
         simple = level_data.get('Enkel')
         if not isinstance(simple, dict):
-            warnings.append(f'{source_file}[{index}] ({name}) ritual saknar nivå_data.Enkel.')
+            warnings.append(f'{source_file}[{index}] ({name}) ritual saknar levels.Enkel.')
         else:
-            handling = str(simple.get('handling') or '').strip()
+            handling = str(simple.get('actions') or simple.get('handling') or '').strip()
             if handling.lower() != 'speciell':
                 warnings.append(f'{source_file}[{index}] ({name}) ritual bör ha handling "Speciell" på nivå Enkel.')
-            tests = simple.get('test')
+            tests = simple.get('tests') or simple.get('test')
             if not isinstance(tests, list):
                 warnings.append(f'{source_file}[{index}] ({name}) ritual bör ha test-lista på nivå Enkel.')
 
     if 'Basförmåga' in types:
         if not level_data:
-            warnings.append(f'{source_file}[{index}] ({name}) basförmåga saknar nivå_data.')
+            warnings.append(f'{source_file}[{index}] ({name}) basförmåga saknar levels.')
         else:
             valid_levels = [lvl for lvl in level_data if lvl in RITUAL_LEVELS]
             if len(valid_levels) == 0:
-                warnings.append(f'{source_file}[{index}] ({name}) basförmåga saknar Enkel/Ordinär/Avancerad i nivå_data.')
+                warnings.append(f'{source_file}[{index}] ({name}) basförmåga saknar Enkel/Ordinär/Avancerad i levels.')
             if len(valid_levels) > 1:
-                warnings.append(f'{source_file}[{index}] ({name}) basförmåga har fler än en nivå i nivå_data ({", ".join(valid_levels)}).')
+                warnings.append(f'{source_file}[{index}] ({name}) basförmåga har fler än en nivå i levels ({", ".join(valid_levels)}).')
 
     if 'Mystisk kraft' in types and level_data:
         invalid = [lvl for lvl in level_data if lvl not in MYSTIC_LEVELS]
@@ -145,12 +164,15 @@ def main():
     sources = []
     source_payloads = []
     warnings = []
+    schema_errors = []
     duplicate_ids = []
     seen_ids = {}
 
     for filename in DATA_FILES:
         source_path = DATA_DIR / filename
         payload = load_json(source_path)
+        current_schema_errors = validate_catalog_payload(payload, source=filename, strict=args.strict)
+        schema_errors.extend(current_schema_errors)
         parsed = normalize_payload(payload, source=filename)
         data = parsed.entries
         for idx, entry in enumerate(data):
@@ -175,6 +197,7 @@ def main():
                 type_rules=parsed.type_rules,
                 extra=parsed.extra,
                 as_object=parsed.is_object_format,
+                schema_version=parsed.schema_version or 3,
             )
         )
 
@@ -203,14 +226,20 @@ def main():
             print(f'  id "{entry_id}" i {prev_file}[{prev_idx}] och {cur_file}[{cur_idx}]')
         if len(duplicate_ids) > 20:
             print(f'  ... samt {len(duplicate_ids) - 20} till.')
+    if schema_errors:
+        print(f'Schemafel: {len(schema_errors)}')
+        for row in schema_errors[:40]:
+            print(f'  - {row}')
+        if len(schema_errors) > 40:
+            print(f'  ... samt {len(schema_errors) - 40} till.')
     if warnings:
-        print(f'Schema-varningar: {len(warnings)}')
+        print(f'Innehållsvarningar: {len(warnings)}')
         for row in warnings[:40]:
             print(f'  - {row}')
         if len(warnings) > 40:
             print(f'  ... samt {len(warnings) - 40} till.')
-        if args.strict:
-            raise SystemExit(1)
+    if args.strict and schema_errors:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

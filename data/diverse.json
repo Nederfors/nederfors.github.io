@@ -1,21 +1,24 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Diverse": {}
   },
   "entries": [
     {
       "id": "di1",
-      "namn": "Bandage",
-      "beskrivning": "Lindor för att stoppa blödningar och skydda sår.",
-      "taggar": {
-        "typ": [
+      "name": "Bandage",
+      "description": "Lindor för att stoppa blödningar och skydda sår.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -23,17 +26,19 @@
     },
     {
       "id": "di2",
-      "namn": "Bläck och fjäder",
-      "beskrivning": "Skrivset för att anteckna eller signera viktiga dokument.",
-      "taggar": {
-        "typ": [
+      "name": "Bläck och fjäder",
+      "description": "Skrivset för att anteckna eller signera viktiga dokument.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -41,17 +46,19 @@
     },
     {
       "id": "di3",
-      "namn": "Dryckeshorn",
-      "beskrivning": "Traditionellt horn att dricka ur vid fest eller resa.",
-      "taggar": {
-        "typ": [
+      "name": "Dryckeshorn",
+      "description": "Traditionellt horn att dricka ur vid fest eller resa.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
@@ -59,17 +66,19 @@
     },
     {
       "id": "di4",
-      "namn": "Dyrkar",
-      "beskrivning": "En uppsättning verktyg för att öppna lås diskret.",
-      "taggar": {
-        "typ": [
+      "name": "Dyrkar",
+      "description": "En uppsättning verktyg för att öppna lås diskret.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -77,17 +86,19 @@
     },
     {
       "id": "di5",
-      "namn": "Fackla",
-      "beskrivning": "Handhållen ljuskälla för att lysa upp mörka platser.",
-      "taggar": {
-        "typ": [
+      "name": "Fackla",
+      "description": "Handhållen ljuskälla för att lysa upp mörka platser.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -95,17 +106,19 @@
     },
     {
       "id": "di6",
-      "namn": "Fickspegel",
-      "beskrivning": "Liten spegel för personlig vård eller signalering.",
-      "taggar": {
-        "typ": [
+      "name": "Fickspegel",
+      "description": "Liten spegel för personlig vård eller signalering.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.15
+      "levels": {},
+      "stats": {
+        "vikt": 0.15,
+        "weight": 0.15
       },
-      "grundpris": {
+      "base_price": {
         "daler": 7,
         "skilling": 0,
         "örtegar": 0
@@ -113,17 +126,19 @@
     },
     {
       "id": "di7",
-      "namn": "Filt",
-      "beskrivning": "Tjock filt som skyddar mot kyla under nattläger.",
-      "taggar": {
-        "typ": [
+      "name": "Filt",
+      "description": "Tjock filt som skyddar mot kyla under nattläger.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
@@ -131,17 +146,19 @@
     },
     {
       "id": "di8",
-      "namn": "Fiskelina och krok",
-      "beskrivning": "Grundläggande utrustning för att fånga fisk i vildmarken.",
-      "taggar": {
-        "typ": [
+      "name": "Fiskelina och krok",
+      "description": "Grundläggande utrustning för att fånga fisk i vildmarken.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.02
+      "levels": {},
+      "stats": {
+        "vikt": 0.02,
+        "weight": 0.02
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 3
@@ -149,17 +166,19 @@
     },
     {
       "id": "di9",
-      "namn": "Fiskenät",
-      "beskrivning": "Ett nät för att fånga större mängder fisk i sjö eller flod.",
-      "taggar": {
-        "typ": [
+      "name": "Fiskenät",
+      "description": "Ett nät för att fånga större mängder fisk i sjö eller flod.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -167,17 +186,19 @@
     },
     {
       "id": "di10",
-      "namn": "Flinta & stål",
-      "beskrivning": "Verktyg för att snabbt tända eld vid lägerplats.",
-      "taggar": {
-        "typ": [
+      "name": "Flinta & stål",
+      "description": "Verktyg för att snabbt tända eld vid lägerplats.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
@@ -185,17 +206,19 @@
     },
     {
       "id": "di11",
-      "namn": "Kokkärl",
-      "beskrivning": "Litet kärl av metall för att laga mat över eld.",
-      "taggar": {
-        "typ": [
+      "name": "Kokkärl",
+      "description": "Litet kärl av metall för att laga mat över eld.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -203,17 +226,19 @@
     },
     {
       "id": "di12",
-      "namn": "Rep, 10 meter",
-      "beskrivning": "Slitstarkt rep om tio meter, användbart för många ändamål.",
-      "taggar": {
-        "typ": [
+      "name": "Rep, 10 meter",
+      "description": "Slitstarkt rep om tio meter, användbart för många ändamål.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -221,17 +246,19 @@
     },
     {
       "id": "di13",
-      "namn": "Sovfäll",
-      "beskrivning": "Mjuk fäll för att sova bekvämt på marken.",
-      "taggar": {
-        "typ": [
+      "name": "Sovfäll",
+      "description": "Mjuk fäll för att sova bekvämt på marken.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.8
+      "levels": {},
+      "stats": {
+        "vikt": 1.8,
+        "weight": 1.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -239,17 +266,19 @@
     },
     {
       "id": "di14",
-      "namn": "Tändved",
-      "beskrivning": "Liten bunt torr ved för att enkelt starta en eld.",
-      "taggar": {
-        "typ": [
+      "name": "Tändved",
+      "description": "Liten bunt torr ved för att enkelt starta en eld.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
@@ -257,17 +286,19 @@
     },
     {
       "id": "di15",
-      "namn": "Vattenskinn",
-      "beskrivning": "Vattentätt skinn att bära dryck i under färd.",
-      "taggar": {
-        "typ": [
+      "name": "Vattenskinn",
+      "description": "Vattentätt skinn att bära dryck i under färd.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -275,17 +306,19 @@
     },
     {
       "id": "di16",
-      "namn": "Kikare",
-      "beskrivning": "Optiskt instrument för att se långt bort på landskapet.",
-      "taggar": {
-        "typ": [
+      "name": "Kikare",
+      "description": "Optiskt instrument för att se långt bort på landskapet.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
@@ -293,17 +326,19 @@
     },
     {
       "id": "di17",
-      "namn": "Klätterutrustning",
-      "beskrivning": "Säker utrustning för att klättra uppför branta ytor.",
-      "taggar": {
-        "typ": [
+      "name": "Klätterutrustning",
+      "description": "Säker utrustning för att klättra uppför branta ytor.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 3.0
+      "levels": {},
+      "stats": {
+        "vikt": 3,
+        "weight": 3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -311,17 +346,19 @@
     },
     {
       "id": "di18",
-      "namn": "Kritor",
-      "beskrivning": "Färgade kritor för att markera eller rita på olika ytor.",
-      "taggar": {
-        "typ": [
+      "name": "Kritor",
+      "description": "Färgade kritor för att markera eller rita på olika ytor.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -329,17 +366,19 @@
     },
     {
       "id": "di19",
-      "namn": "Lampolja",
-      "beskrivning": "Bränsle till lykta eller oljelampa vid mörker.",
-      "taggar": {
-        "typ": [
+      "name": "Lampolja",
+      "description": "Bränsle till lykta eller oljelampa vid mörker.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -347,17 +386,19 @@
     },
     {
       "id": "di20",
-      "namn": "Lykta",
-      "beskrivning": "Skyddad ljuskälla för att lysa upp i mörka miljöer.",
-      "taggar": {
-        "typ": [
+      "name": "Lykta",
+      "description": "Skyddad ljuskälla för att lysa upp i mörka miljöer.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -365,17 +406,19 @@
     },
     {
       "id": "di21",
-      "namn": "Mässingsklocka",
-      "beskrivning": "Liten klocka av mässing som ger ett starkt klang.",
-      "taggar": {
-        "typ": [
+      "name": "Mässingsklocka",
+      "description": "Liten klocka av mässing som ger ett starkt klang.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 6,
         "örtegar": 0
@@ -383,17 +426,19 @@
     },
     {
       "id": "di22",
-      "namn": "Nål och tråd",
-      "beskrivning": "Syredskap för att laga kläder och utrustning.",
-      "taggar": {
-        "typ": [
+      "name": "Nål och tråd",
+      "description": "Syredskap för att laga kläder och utrustning.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.01
+      "levels": {},
+      "stats": {
+        "vikt": 0.01,
+        "weight": 0.01
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -401,17 +446,19 @@
     },
     {
       "id": "di23",
-      "namn": "Papper",
-      "beskrivning": "En bunt tomma ark för skrivande eller teckning.",
-      "taggar": {
-        "typ": [
+      "name": "Papper",
+      "description": "En bunt tomma ark för skrivande eller teckning.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 3
@@ -419,17 +466,19 @@
     },
     {
       "id": "di24",
-      "namn": "Pergament",
-      "beskrivning": "Tunt skinn för viktiga dokument och kartor.",
-      "taggar": {
-        "typ": [
+      "name": "Pergament",
+      "description": "Tunt skinn för viktiga dokument och kartor.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.15
+      "levels": {},
+      "stats": {
+        "vikt": 0.15,
+        "weight": 0.15
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
@@ -437,17 +486,19 @@
     },
     {
       "id": "di25",
-      "namn": "Repstege",
-      "beskrivning": "Flexibel stege som kan hängas över kanter eller murar.",
-      "taggar": {
-        "typ": [
+      "name": "Repstege",
+      "description": "Flexibel stege som kan hängas över kanter eller murar.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.5
+      "levels": {},
+      "stats": {
+        "vikt": 2.5,
+        "weight": 2.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -455,17 +506,19 @@
     },
     {
       "id": "di26",
-      "namn": "Rävsax",
-      "beskrivning": "Fälla avsedd för att fånga mindre djur.",
-      "taggar": {
-        "typ": [
+      "name": "Rävsax",
+      "description": "Fälla avsedd för att fånga mindre djur.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -473,17 +526,19 @@
     },
     {
       "id": "di27",
-      "namn": "Sejdel",
-      "beskrivning": "Robust dryckeskärl för öl eller mjöd.",
-      "taggar": {
-        "typ": [
+      "name": "Sejdel",
+      "description": "Robust dryckeskärl för öl eller mjöd.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -491,17 +546,19 @@
     },
     {
       "id": "di28",
-      "namn": "Slipsten",
-      "beskrivning": "Slitstark sten för att vässa knivar och verktyg.",
-      "taggar": {
-        "typ": [
+      "name": "Slipsten",
+      "description": "Slitstark sten för att vässa knivar och verktyg.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -509,17 +566,19 @@
     },
     {
       "id": "di29",
-      "namn": "Snaror",
-      "beskrivning": "Enkla fällor för att fånga smådjur i skogen.",
-      "taggar": {
-        "typ": [
+      "name": "Snaror",
+      "description": "Enkla fällor för att fånga smådjur i skogen.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -527,17 +586,19 @@
     },
     {
       "id": "di30",
-      "namn": "Snöskor",
-      "beskrivning": "Stora skor som gör det lättare att ta sig fram i snö.",
-      "taggar": {
-        "typ": [
+      "name": "Snöskor",
+      "description": "Stora skor som gör det lättare att ta sig fram i snö.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -545,17 +606,19 @@
     },
     {
       "id": "di31",
-      "namn": "Stege",
-      "beskrivning": "Enkel trästege för att nå höga platser.",
-      "taggar": {
-        "typ": [
+      "name": "Stege",
+      "description": "Enkel trästege för att nå höga platser.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 4.0
+      "levels": {},
+      "stats": {
+        "vikt": 4,
+        "weight": 4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 7
@@ -563,17 +626,19 @@
     },
     {
       "id": "di32",
-      "namn": "Timglas",
-      "beskrivning": "Glasbehållare med sand som mäter tid.",
-      "taggar": {
-        "typ": [
+      "name": "Timglas",
+      "description": "Glasbehållare med sand som mäter tid.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 4,
         "skilling": 0,
         "örtegar": 0
@@ -581,17 +646,19 @@
     },
     {
       "id": "di33",
-      "namn": "Tvål",
-      "beskrivning": "Fast tvål för hygien och rengöring.",
-      "taggar": {
-        "typ": [
+      "name": "Tvål",
+      "description": "Fast tvål för hygien och rengöring.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -599,17 +666,19 @@
     },
     {
       "id": "di34",
-      "namn": "Tält",
-      "beskrivning": "Enkelt tygskydd att sova under utomhus.",
-      "taggar": {
-        "typ": [
+      "name": "Tält",
+      "description": "Enkelt tygskydd att sova under utomhus.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 4.0
+      "levels": {},
+      "stats": {
+        "vikt": 4,
+        "weight": 4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -617,17 +686,19 @@
     },
     {
       "id": "di35",
-      "namn": "Vapenvårdsset",
-      "beskrivning": "Kit med verktyg och olja för vapenunderhåll.",
-      "taggar": {
-        "typ": [
+      "name": "Vapenvårdsset",
+      "description": "Kit med verktyg och olja för vapenunderhåll.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -635,17 +706,19 @@
     },
     {
       "id": "di36",
-      "namn": "Vaxljus",
-      "beskrivning": "Ljus av bivax som brinner länge och stadigt.",
-      "taggar": {
-        "typ": [
+      "name": "Vaxljus",
+      "description": "Ljus av bivax som brinner länge och stadigt.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -653,17 +726,19 @@
     },
     {
       "id": "di37",
-      "namn": "Vissla",
-      "beskrivning": "Liten visselpipa för signalering och larm.",
-      "taggar": {
-        "typ": [
+      "name": "Vissla",
+      "description": "Liten visselpipa för signalering och larm.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.02
+      "levels": {},
+      "stats": {
+        "vikt": 0.02,
+        "weight": 0.02
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 2,
         "örtegar": 0
@@ -671,17 +746,19 @@
     },
     {
       "id": "di38",
-      "namn": "Änterhake",
-      "beskrivning": "Krok med rep för att ta sig uppför murar och hinder.",
-      "taggar": {
-        "typ": [
+      "name": "Änterhake",
+      "description": "Krok med rep för att ta sig uppför murar och hinder.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -689,17 +766,19 @@
     },
     {
       "id": "di39",
-      "namn": "Gruvhacka",
-      "beskrivning": "Robust hacka för att spräcka berg och bryta malm i gruvan.",
-      "taggar": {
-        "typ": [
+      "name": "Gruvhacka",
+      "description": "Robust hacka för att spräcka berg och bryta malm i gruvan.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.0
+      "levels": {},
+      "stats": {
+        "vikt": 2,
+        "weight": 2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -707,17 +786,19 @@
     },
     {
       "id": "di40",
-      "namn": "Hantverksverktyg",
-      "beskrivning": "Allsidigt set med verktyg för snickare, smed eller skomakare.",
-      "taggar": {
-        "typ": [
+      "name": "Hantverksverktyg",
+      "description": "Allsidigt set med verktyg för snickare, smed eller skomakare.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -725,17 +806,19 @@
     },
     {
       "id": "di41",
-      "namn": "Hammare",
-      "beskrivning": "Tung hammare av stål, lämplig för spikning och bearbetning av metall.",
-      "taggar": {
-        "typ": [
+      "name": "Hammare",
+      "description": "Tung hammare av stål, lämplig för spikning och bearbetning av metall.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -743,17 +826,19 @@
     },
     {
       "id": "di42",
-      "namn": "Lie",
-      "beskrivning": "Böjd skärbräda för skörd av sädesslag och gräs.",
-      "taggar": {
-        "typ": [
+      "name": "Lie",
+      "description": "Böjd skärbräda för skörd av sädesslag och gräs.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -761,17 +846,19 @@
     },
     {
       "id": "di43",
-      "namn": "Slägga",
-      "beskrivning": "Massiv slägga som levererar kraftiga slag vid byggnads- och gruvarbete.",
-      "taggar": {
-        "typ": [
+      "name": "Slägga",
+      "description": "Massiv slägga som levererar kraftiga slag vid byggnads- och gruvarbete.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.0
+      "levels": {},
+      "stats": {
+        "vikt": 2,
+        "weight": 2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -779,17 +866,19 @@
     },
     {
       "id": "di44",
-      "namn": "Spade",
-      "beskrivning": "Stark spade för grävning av jord, sand eller grus.",
-      "taggar": {
-        "typ": [
+      "name": "Spade",
+      "description": "Stark spade för grävning av jord, sand eller grus.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -797,17 +886,19 @@
     },
     {
       "id": "di45",
-      "namn": "Kedja",
-      "beskrivning": "Metallkedja för fästning, lyft eller säkring av tunga föremål.",
-      "taggar": {
-        "typ": [
+      "name": "Kedja",
+      "description": "Metallkedja för fästning, lyft eller säkring av tunga föremål.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.0
+      "levels": {},
+      "stats": {
+        "vikt": 2,
+        "weight": 2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -815,17 +906,19 @@
     },
     {
       "id": "di46",
-      "namn": "Bomullstyg, en rulle",
-      "beskrivning": "Mjuk och slitstark bomullsväv i hela rullar – uppskattad för sömnad av vardagskläder och sänglinne.",
-      "taggar": {
-        "typ": [
+      "name": "Bomullstyg, en rulle",
+      "description": "Mjuk och slitstark bomullsväv i hela rullar – uppskattad för sömnad av vardagskläder och sänglinne.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 3.0
+      "levels": {},
+      "stats": {
+        "vikt": 3,
+        "weight": 3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -833,17 +926,19 @@
     },
     {
       "id": "di47",
-      "namn": "Guld, en tacka",
-      "beskrivning": "En tung tacka av rent guld, värdefull för såväl handel som hantverk.",
-      "taggar": {
-        "typ": [
+      "name": "Guld, en tacka",
+      "description": "En tung tacka av rent guld, värdefull för såväl handel som hantverk.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 4.0
+      "levels": {},
+      "stats": {
+        "vikt": 4,
+        "weight": 4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 500,
         "skilling": 0,
         "örtegar": 0
@@ -851,17 +946,19 @@
     },
     {
       "id": "di48",
-      "namn": "Gurkmeja, en ask",
-      "beskrivning": "Starkt gulfärgat pulver, används som krydda och färgämne i matlagning och textiler.",
-      "taggar": {
-        "typ": [
+      "name": "Gurkmeja, en ask",
+      "description": "Starkt gulfärgat pulver, används som krydda och färgämne i matlagning och textiler.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -869,17 +966,19 @@
     },
     {
       "id": "di49",
-      "namn": "Honung, en kruka",
-      "beskrivning": "Söt och gyllene honung i keramikkruka – används både i matlagning och som naturläkemedel.",
-      "taggar": {
-        "typ": [
+      "name": "Honung, en kruka",
+      "description": "Söt och gyllene honung i keramikkruka – används både i matlagning och som naturläkemedel.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -887,17 +986,19 @@
     },
     {
       "id": "di50",
-      "namn": "Ingefära, en ask",
-      "beskrivning": "Stark och värmande krydda, användbar både i mat och som medicinalväxt.",
-      "taggar": {
-        "typ": [
+      "name": "Ingefära, en ask",
+      "description": "Stark och värmande krydda, användbar både i mat och som medicinalväxt.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -905,17 +1006,19 @@
     },
     {
       "id": "di51",
-      "namn": "Järn, en tacka",
-      "beskrivning": "Rektangulär tacka av järn – grund för smide och metallslöjd.",
-      "taggar": {
-        "typ": [
+      "name": "Järn, en tacka",
+      "description": "Rektangulär tacka av järn – grund för smide och metallslöjd.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.5
+      "levels": {},
+      "stats": {
+        "vikt": 2.5,
+        "weight": 2.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -923,17 +1026,19 @@
     },
     {
       "id": "di52",
-      "namn": "Kanel, en ask",
-      "beskrivning": "Sötaktigt, aromatiskt barkpulver som ger värme åt såväl drycker som bakverk.",
-      "taggar": {
-        "typ": [
+      "name": "Kanel, en ask",
+      "description": "Sötaktigt, aromatiskt barkpulver som ger värme åt såväl drycker som bakverk.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -941,17 +1046,19 @@
     },
     {
       "id": "di53",
-      "namn": "Kardemumma, en ask",
-      "beskrivning": "Fröna i denna ask ger en intensiv, blommig kryddsmak till mat, kakor och drycker.",
-      "taggar": {
-        "typ": [
+      "name": "Kardemumma, en ask",
+      "description": "Fröna i denna ask ger en intensiv, blommig kryddsmak till mat, kakor och drycker.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -959,17 +1066,19 @@
     },
     {
       "id": "di54",
-      "namn": "Koppar, en tacka",
-      "beskrivning": "En glänsande tacka av koppar – använd för mynt, smycken och hushållsvara.",
-      "taggar": {
-        "typ": [
+      "name": "Koppar, en tacka",
+      "description": "En glänsande tacka av koppar – använd för mynt, smycken och hushållsvara.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.8
+      "levels": {},
+      "stats": {
+        "vikt": 2.8,
+        "weight": 2.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -977,17 +1086,19 @@
     },
     {
       "id": "di55",
-      "namn": "Kryddnejlika, en ask",
-      "beskrivning": "Torkade blomknoppar med stark, distinkt smak och arom, används till mat och dryck.",
-      "taggar": {
-        "typ": [
+      "name": "Kryddnejlika, en ask",
+      "description": "Torkade blomknoppar med stark, distinkt smak och arom, används till mat och dryck.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 7
@@ -995,17 +1106,19 @@
     },
     {
       "id": "di56",
-      "namn": "Kryddor, en ask",
-      "beskrivning": "En blandning av torkade örter och kryddor för att ge smak åt varje maträtt.",
-      "taggar": {
-        "typ": [
+      "name": "Kryddor, en ask",
+      "description": "En blandning av torkade örter och kryddor för att ge smak åt varje maträtt.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 3
@@ -1013,17 +1126,19 @@
     },
     {
       "id": "di57",
-      "namn": "Kummin, en ask",
-      "beskrivning": "Aromatiska frön med lätt pepprig smak, vanligt i bröd och inläggningar.",
-      "taggar": {
-        "typ": [
+      "name": "Kummin, en ask",
+      "description": "Aromatiska frön med lätt pepprig smak, vanligt i bröd och inläggningar.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -1031,17 +1146,19 @@
     },
     {
       "id": "di58",
-      "namn": "Långpeppar, en ask",
-      "beskrivning": "En mer sällsynt variant av peppar med intensiv hetta och sötma.",
-      "taggar": {
-        "typ": [
+      "name": "Långpeppar, en ask",
+      "description": "En mer sällsynt variant av peppar med intensiv hetta och sötma.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 12
@@ -1049,17 +1166,19 @@
     },
     {
       "id": "di59",
-      "namn": "Mynta, en ask",
-      "beskrivning": "Friska blad med kylande smak, ofta använda i te, desserter och läkekonst.",
-      "taggar": {
-        "typ": [
+      "name": "Mynta, en ask",
+      "description": "Friska blad med kylande smak, ofta använda i te, desserter och läkekonst.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.04
+      "levels": {},
+      "stats": {
+        "vikt": 0.04,
+        "weight": 0.04
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -1067,17 +1186,19 @@
     },
     {
       "id": "di60",
-      "namn": "Olja (vegetabilisk), ett lerkrus",
-      "beskrivning": "Krus med ljus vegetabilisk olja för matlagning, lampor och hudvård.",
-      "taggar": {
-        "typ": [
+      "name": "Olja (vegetabilisk), ett lerkrus",
+      "description": "Krus med ljus vegetabilisk olja för matlagning, lampor och hudvård.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -1085,17 +1206,19 @@
     },
     {
       "id": "di61",
-      "namn": "Saffran, en ask",
-      "beskrivning": "Dyrbara röda pistiller, mycket lite räcker långt och ger både färg och arom.",
-      "taggar": {
-        "typ": [
+      "name": "Saffran, en ask",
+      "description": "Dyrbara röda pistiller, mycket lite räcker långt och ger både färg och arom.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.01
+      "levels": {},
+      "stats": {
+        "vikt": 0.01,
+        "weight": 0.01
       },
-      "grundpris": {
+      "base_price": {
         "daler": 50,
         "skilling": 0,
         "örtegar": 0
@@ -1103,17 +1226,19 @@
     },
     {
       "id": "di62",
-      "namn": "Salt, en säck",
-      "beskrivning": "Säck fylld med vitt salt – avgörande för konservering, bakning och smak.",
-      "taggar": {
-        "typ": [
+      "name": "Salt, en säck",
+      "description": "Säck fylld med vitt salt – avgörande för konservering, bakning och smak.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 4.0
+      "levels": {},
+      "stats": {
+        "vikt": 4,
+        "weight": 4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -1121,17 +1246,19 @@
     },
     {
       "id": "di63",
-      "namn": "Silke, en rulle",
-      "beskrivning": "Glänsande silkesväv, eftertraktad bland både adelsmän och köpmän.",
-      "taggar": {
-        "typ": [
+      "name": "Silke, en rulle",
+      "description": "Glänsande silkesväv, eftertraktad bland både adelsmän och köpmän.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 50,
         "skilling": 0,
         "örtegar": 0
@@ -1139,17 +1266,19 @@
     },
     {
       "id": "di64",
-      "namn": "Silver, en tacka",
-      "beskrivning": "En tung tacka av renaste silver – grund för mynt, smycken och lyxföremål.",
-      "taggar": {
-        "typ": [
+      "name": "Silver, en tacka",
+      "description": "En tung tacka av renaste silver – grund för mynt, smycken och lyxföremål.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 2.2
+      "levels": {},
+      "stats": {
+        "vikt": 2.2,
+        "weight": 2.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 50,
         "skilling": 0,
         "örtegar": 0
@@ -1157,17 +1286,19 @@
     },
     {
       "id": "di65",
-      "namn": "Socker, en säck",
-      "beskrivning": "Vit råsocker i grova kristaller, använd i bakverk, dryck och konservering.",
-      "taggar": {
-        "typ": [
+      "name": "Socker, en säck",
+      "description": "Vit råsocker i grova kristaller, använd i bakverk, dryck och konservering.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 3.0
+      "levels": {},
+      "stats": {
+        "vikt": 3,
+        "weight": 3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -1175,17 +1306,19 @@
     },
     {
       "id": "di66",
-      "namn": "Spannmål, en säck",
-      "beskrivning": "Säck fylld med korn, råg eller vete för gröt, bröd och öl.",
-      "taggar": {
-        "typ": [
+      "name": "Spannmål, en säck",
+      "description": "Säck fylld med korn, råg eller vete för gröt, bröd och öl.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 8.0
+      "levels": {},
+      "stats": {
+        "vikt": 8,
+        "weight": 8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 2,
         "örtegar": 0
@@ -1193,17 +1326,19 @@
     },
     {
       "id": "di67",
-      "namn": "Tjära, en tunna",
-      "beskrivning": "Klibbig svart tjära, nödvändig för båtreparationer och byggnadsvård.",
-      "taggar": {
-        "typ": [
+      "name": "Tjära, en tunna",
+      "description": "Klibbig svart tjära, nödvändig för båtreparationer och byggnadsvård.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 20.0
+      "levels": {},
+      "stats": {
+        "vikt": 20,
+        "weight": 20
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -1211,17 +1346,19 @@
     },
     {
       "id": "di68",
-      "namn": "Vinäger, ett lerkrus",
-      "beskrivning": "Skarpt och syrligt – används till inläggning, matlagning och rengöring.",
-      "taggar": {
-        "typ": [
+      "name": "Vinäger, ett lerkrus",
+      "description": "Skarpt och syrligt – används till inläggning, matlagning och rengöring.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -1229,17 +1366,19 @@
     },
     {
       "id": "di69",
-      "namn": "Frukttobak, en ask",
-      "beskrivning": "Aromatisk tobak med smak av bär och frukter, mild och söt.",
-      "taggar": {
-        "typ": [
+      "name": "Frukttobak, en ask",
+      "description": "Aromatisk tobak med smak av bär och frukter, mild och söt.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -1247,17 +1386,19 @@
     },
     {
       "id": "di70",
-      "namn": "Luktsnus, en ask",
-      "beskrivning": "Finmalt, doftande snus som snusas genom näsan, uppskattat bland överklassen.",
-      "taggar": {
-        "typ": [
+      "name": "Luktsnus, en ask",
+      "description": "Finmalt, doftande snus som snusas genom näsan, uppskattat bland överklassen.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
@@ -1265,17 +1406,19 @@
     },
     {
       "id": "di71",
-      "namn": "Långbottenblad, en ask",
-      "beskrivning": "Starka, solmogna tobaksblad med lång eftersmak – populära bland sjöfolk.",
-      "taggar": {
-        "typ": [
+      "name": "Långbottenblad, en ask",
+      "description": "Starka, solmogna tobaksblad med lång eftersmak – populära bland sjöfolk.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 8,
         "örtegar": 0
@@ -1283,17 +1426,19 @@
     },
     {
       "id": "di72",
-      "namn": "Tuggtobak, en portion",
-      "beskrivning": "Kraftigt tuggbar tobak – för sjömän, gruvarbetare och andra som behöver något att tugga på.",
-      "taggar": {
-        "typ": [
+      "name": "Tuggtobak, en portion",
+      "description": "Kraftigt tuggbar tobak – för sjömän, gruvarbetare och andra som behöver något att tugga på.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.01
+      "levels": {},
+      "stats": {
+        "vikt": 0.01,
+        "weight": 0.01
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -1301,17 +1446,19 @@
     },
     {
       "id": "di73",
-      "namn": "Örttobak, en portion",
-      "beskrivning": "Mild tobak blandad med torkade örter för mjukare smak.",
-      "taggar": {
-        "typ": [
+      "name": "Örttobak, en portion",
+      "description": "Mild tobak blandad med torkade örter för mjukare smak.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.01
+      "levels": {},
+      "stats": {
+        "vikt": 0.01,
+        "weight": 0.01
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
@@ -1319,17 +1466,19 @@
     },
     {
       "id": "di74",
-      "namn": "Kritpipa",
-      "beskrivning": "Enkel pipa av vit krita, bräcklig men billig och lätt att byta ut.",
-      "taggar": {
-        "typ": [
+      "name": "Kritpipa",
+      "description": "Enkel pipa av vit krita, bräcklig men billig och lätt att byta ut.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
@@ -1337,17 +1486,19 @@
     },
     {
       "id": "di75",
-      "namn": "Långskaftat sjöskumspipa",
-      "beskrivning": "Vackert snidad pipa med lång skaft av äkta sjöskum, uppskattad för sval rök och fina motiv.",
-      "taggar": {
-        "typ": [
+      "name": "Långskaftat sjöskumspipa",
+      "description": "Vackert snidad pipa med lång skaft av äkta sjöskum, uppskattad för sval rök och fina motiv.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.08
+      "levels": {},
+      "stats": {
+        "vikt": 0.08,
+        "weight": 0.08
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -1355,17 +1506,19 @@
     },
     {
       "id": "di76",
-      "namn": "Rotvedspipa",
-      "beskrivning": "Robust pipa skuren ur hård rotved, håller värme länge och är slitstark.",
-      "taggar": {
-        "typ": [
+      "name": "Rotvedspipa",
+      "description": "Robust pipa skuren ur hård rotved, håller värme länge och är slitstark.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.08
+      "levels": {},
+      "stats": {
+        "vikt": 0.08,
+        "weight": 0.08
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -1373,17 +1526,19 @@
     },
     {
       "id": "di77",
-      "namn": "Rökrör",
-      "beskrivning": "Rakt rör i lera eller metall, ger rök utan filtrering och är enkel att bära.",
-      "taggar": {
-        "typ": [
+      "name": "Rökrör",
+      "description": "Rakt rör i lera eller metall, ger rök utan filtrering och är enkel att bära.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.08
+      "levels": {},
+      "stats": {
+        "vikt": 0.08,
+        "weight": 0.08
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -1391,17 +1546,19 @@
     },
     {
       "id": "di78",
-      "namn": "Snusdosa",
-      "beskrivning": "Liten, tät dosa av trä eller metall för att hålla snuset färskt och till hands.",
-      "taggar": {
-        "typ": [
+      "name": "Snusdosa",
+      "description": "Liten, tät dosa av trä eller metall för att hålla snuset färskt och till hands.",
+      "tags": {
+        "types": [
           "Diverse"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -1409,50 +1566,53 @@
     },
     {
       "id": "di79",
-      "namn": "Fältutrustning",
-      "beskrivning": "Ett samlat paket med nödvändig utrustning för fältlivet. Paketet innehåller flinta och stål för att göra upp eld, kokkärl för matlagning och uppvärmning av vatten, rep för olika praktiska ändamål, sovfäll för vila och skydd mot markkyla, tändved för att snabbt få igång en brasa samt ett vattenskinn för förvaring och transport av vatten.",
-      "taggar": {
-        "typ": [
+      "name": "Fältutrustning",
+      "description": "Ett samlat paket med nödvändig utrustning för fältlivet. Paketet innehåller flinta och stål för att göra upp eld, kokkärl för matlagning och uppvärmning av vatten, rep för olika praktiska ändamål, sovfäll för vila och skydd mot markkyla, tändved för att snabbt få igång en brasa samt ett vattenskinn för förvaring och transport av vatten.",
+      "tags": {
+        "types": [
           "Diverse"
-        ],
-        "regler": {
-          "ger": [
-            {
-              "mal": "foremal",
-              "foremal": [
-                {
-                  "id": "di10",
-                  "antal": 1
-                },
-                {
-                  "id": "di11",
-                  "antal": 1
-                },
-                {
-                  "id": "di12",
-                  "antal": 1
-                },
-                {
-                  "id": "di13",
-                  "antal": 1
-                },
-                {
-                  "id": "di14",
-                  "antal": 1
-                },
-                {
-                  "id": "di15",
-                  "antal": 1
-                }
-              ]
-            }
-          ]
-        }
+        ]
       },
-      "stat": {
-        "vikt": 4.8
+      "levels": {},
+      "rules": {
+        "grant": [
+          {
+            "rule_id": "entry__di79__top__grant__0",
+            "target": "item",
+            "foremal": [
+              {
+                "id": "di10",
+                "antal": 1
+              },
+              {
+                "id": "di11",
+                "antal": 1
+              },
+              {
+                "id": "di12",
+                "antal": 1
+              },
+              {
+                "id": "di13",
+                "antal": 1
+              },
+              {
+                "id": "di14",
+                "antal": 1
+              },
+              {
+                "id": "di15",
+                "antal": 1
+              }
+            ]
+          }
+        ]
       },
-      "grundpris": {
+      "stats": {
+        "vikt": 4.8,
+        "weight": 4.8
+      },
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0

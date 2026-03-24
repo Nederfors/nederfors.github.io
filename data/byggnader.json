@@ -1,18 +1,20 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Byggnad": {}
   },
   "entries": [
     {
       "id": "b1",
-      "namn": "Torp",
-      "beskrivning": "Enkel bostad med liten tomt, oftast för en familj eller ensam brukare.",
-      "taggar": {
-        "typ": [
+      "name": "Torp",
+      "description": "Enkel bostad med liten tomt, oftast för en familj eller ensam brukare.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
@@ -20,14 +22,15 @@
     },
     {
       "id": "b2",
-      "namn": "Gård",
-      "beskrivning": "Självförsörjande gård med boningshus, ladugård och enklare uthus.",
-      "taggar": {
-        "typ": [
+      "name": "Gård",
+      "description": "Självförsörjande gård med boningshus, ladugård och enklare uthus.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 100,
         "skilling": 0,
         "örtegar": 0
@@ -35,14 +38,15 @@
     },
     {
       "id": "b3",
-      "namn": "Vakttorn, trä",
-      "beskrivning": "Utsiktstorn av trä för spaning och bevakning över landskapet.",
-      "taggar": {
-        "typ": [
+      "name": "Vakttorn, trä",
+      "description": "Utsiktstorn av trä för spaning och bevakning över landskapet.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 100,
         "skilling": 0,
         "örtegar": 0
@@ -50,14 +54,15 @@
     },
     {
       "id": "b4",
-      "namn": "Vakttorn, sten",
-      "beskrivning": "Stabilt torn av sten, byggt för långvarig bevakning och försvar.",
-      "taggar": {
-        "typ": [
+      "name": "Vakttorn, sten",
+      "description": "Stabilt torn av sten, byggt för långvarig bevakning och försvar.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 400,
         "skilling": 0,
         "örtegar": 0
@@ -65,14 +70,15 @@
     },
     {
       "id": "b5",
-      "namn": "Fort, trä",
-      "beskrivning": "Enklare befästning av trä för skydd mot angrepp.",
-      "taggar": {
-        "typ": [
+      "name": "Fort, trä",
+      "description": "Enklare befästning av trä för skydd mot angrepp.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 500,
         "skilling": 0,
         "örtegar": 0
@@ -80,14 +86,15 @@
     },
     {
       "id": "b6",
-      "namn": "Gods",
-      "beskrivning": "Större lantligt säteri med herrgård, ekonomibyggnader och mark.",
-      "taggar": {
-        "typ": [
+      "name": "Gods",
+      "description": "Större lantligt säteri med herrgård, ekonomibyggnader och mark.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 1000,
         "skilling": 0,
         "örtegar": 0
@@ -95,14 +102,15 @@
     },
     {
       "id": "b7",
-      "namn": "Fort, sten",
-      "beskrivning": "Befästning av sten med bastioner, murar och försvarstorn.",
-      "taggar": {
-        "typ": [
+      "name": "Fort, sten",
+      "description": "Befästning av sten med bastioner, murar och försvarstorn.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 2000,
         "skilling": 0,
         "örtegar": 0
@@ -110,14 +118,15 @@
     },
     {
       "id": "b8",
-      "namn": "Borg",
-      "beskrivning": "Stark försvarsanläggning med höga murar och flera torn.",
-      "taggar": {
-        "typ": [
+      "name": "Borg",
+      "description": "Stark försvarsanläggning med höga murar och flera torn.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 5000,
         "skilling": 0,
         "örtegar": 0
@@ -125,14 +134,15 @@
     },
     {
       "id": "b9",
-      "namn": "Slott",
-      "beskrivning": "Praktfull residensbyggnad med stora salar och imponerande försvarsverk.",
-      "taggar": {
-        "typ": [
+      "name": "Slott",
+      "description": "Praktfull residensbyggnad med stora salar och imponerande försvarsverk.",
+      "tags": {
+        "types": [
           "Byggnad"
         ]
       },
-      "grundpris": {
+      "levels": {},
+      "base_price": {
         "daler": 10000,
         "skilling": 0,
         "örtegar": 0

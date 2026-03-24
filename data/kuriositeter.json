@@ -1,12 +1,14 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Kuriositet": {
-      "regler": {
-        "andrar": [
+      "rules": {
+        "modify": [
           {
-            "mal": "Hidden",
-            "satt": "ersatt",
-            "varde": true
+            "rule_id": "entry__type_rule_Kuriositet__top__modify__0",
+            "target": "hidden",
+            "op": "set",
+            "value": true
           }
         ]
       }
@@ -15,17 +17,19 @@
   "entries": [
     {
       "id": "Ku1",
-      "namn": "Läderpung med spelkulor",
-      "beskrivning": "Läderpung innehållande fjorton blanksvarta och åtta benvita stenkulor, att spela med eller använda som slungstenar",
-      "taggar": {
-        "typ": [
+      "name": "Läderpung med spelkulor",
+      "description": "Läderpung innehållande fjorton blanksvarta och åtta benvita stenkulor, att spela med eller använda som slungstenar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -33,17 +37,19 @@
     },
     {
       "id": "Ku2",
-      "namn": "Ornamenterad silverlyra",
-      "beskrivning": "Rikt ornamenterad lyra av silver som kan förses med nya strängar",
-      "taggar": {
-        "typ": [
+      "name": "Ornamenterad silverlyra",
+      "description": "Rikt ornamenterad lyra av silver som kan förses med nya strängar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -51,17 +57,19 @@
     },
     {
       "id": "Ku3",
-      "namn": "Nagelfil med varghuvud",
-      "beskrivning": "Nagelfil med en grov och en finare sida, vars grepp har formen av ett varghuvud i siluett",
-      "taggar": {
-        "typ": [
+      "name": "Nagelfil med varghuvud",
+      "description": "Nagelfil med en grov och en finare sida, vars grepp har formen av ett varghuvud i siluett",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -69,17 +77,19 @@
     },
     {
       "id": "Ku4",
-      "namn": "Ask med kopparklämmor",
-      "beskrivning": "Ask med tjugofyra pappersklämmor av ärgad koppartråd",
-      "taggar": {
-        "typ": [
+      "name": "Ask med kopparklämmor",
+      "description": "Ask med tjugofyra pappersklämmor av ärgad koppartråd",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -87,17 +97,19 @@
     },
     {
       "id": "Ku5",
-      "namn": "Flaska med slottsmodell",
-      "beskrivning": "Vitnad glasflaska innehållande en modell av ett träslott stående i ett hedlandskap",
-      "taggar": {
-        "typ": [
+      "name": "Flaska med slottsmodell",
+      "description": "Vitnad glasflaska innehållande en modell av ett träslott stående i ett hedlandskap",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -105,17 +117,19 @@
     },
     {
       "id": "Ku6",
-      "namn": "Obrännpanna av järn",
-      "beskrivning": "Enkel stekpanna av rostigt järn i vilken ingenting kan bränna fast",
-      "taggar": {
-        "typ": [
+      "name": "Obrännpanna av järn",
+      "description": "Enkel stekpanna av rostigt järn i vilken ingenting kan bränna fast",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.4
+      "levels": {},
+      "stats": {
+        "vikt": 1.4,
+        "weight": 1.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -123,17 +137,19 @@
     },
     {
       "id": "Ku7",
-      "namn": "Knippa med bronsmått",
-      "beskrivning": "Knippa med fem volymmått av brons i olika storlekar",
-      "taggar": {
-        "typ": [
+      "name": "Knippa med bronsmått",
+      "description": "Knippa med fem volymmått av brons i olika storlekar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -141,17 +157,19 @@
     },
     {
       "id": "Ku8",
-      "namn": "Symbariska benplattor i skrin",
-      "beskrivning": "Skrin innehållande trettiosex små, runda benplattor ristade med symbariska kilskriftstecken",
-      "taggar": {
-        "typ": [
+      "name": "Symbariska benplattor i skrin",
+      "description": "Skrin innehållande trettiosex små, runda benplattor ristade med symbariska kilskriftstecken",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -159,17 +177,19 @@
     },
     {
       "id": "Ku9",
-      "namn": "Levande slingerväxtkorg",
-      "beskrivning": "Liten korg flätad av mirakulöst levande slingerväxter, med frisk grön färg och friska blad",
-      "taggar": {
-        "typ": [
+      "name": "Levande slingerväxtkorg",
+      "description": "Liten korg flätad av mirakulöst levande slingerväxter, med frisk grön färg och friska blad",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -177,17 +197,19 @@
     },
     {
       "id": "Ku10",
-      "namn": "Halsband av guldtänder",
-      "beskrivning": "Halsband helt tillverkat av sammanlänkade guldtänder",
-      "taggar": {
-        "typ": [
+      "name": "Halsband av guldtänder",
+      "description": "Halsband helt tillverkat av sammanlänkade guldtänder",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -195,17 +217,19 @@
     },
     {
       "id": "Ku11",
-      "namn": "Gastuv-brosch i silver",
-      "beskrivning": "Silverbrosch föreställande en gastuv, med ringarna runt ögonen av svarta, fasettslipade stenar",
-      "taggar": {
-        "typ": [
+      "name": "Gastuv-brosch i silver",
+      "description": "Silverbrosch föreställande en gastuv, med ringarna runt ögonen av svarta, fasettslipade stenar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -213,17 +237,19 @@
     },
     {
       "id": "Ku12",
-      "namn": "Vitglaserad porslinstallrik",
-      "beskrivning": "Vitglaserad och något sprucken porslinstallrik, målad med ett mattnött motiv föreställande en rakryggad kvinna i långklänning med en pålyxa vilande mot axeln",
-      "taggar": {
-        "typ": [
+      "name": "Vitglaserad porslinstallrik",
+      "description": "Vitglaserad och något sprucken porslinstallrik, målad med ett mattnött motiv föreställande en rakryggad kvinna i långklänning med en pålyxa vilande mot axeln",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -231,17 +257,19 @@
     },
     {
       "id": "Ku13",
-      "namn": "Lindormskam med kilskrift",
-      "beskrivning": "Kam av lindormsben med kilskriftstecken på varje tand, som inte bara reder ut tovor utan även renar håret från smuts och fetter",
-      "taggar": {
-        "typ": [
+      "name": "Lindormskam med kilskrift",
+      "description": "Kam av lindormsben med kilskriftstecken på varje tand, som inte bara reder ut tovor utan även renar håret från smuts och fetter",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -249,17 +277,19 @@
     },
     {
       "id": "Ku14",
-      "namn": "Keramikfat med okända frukter",
-      "beskrivning": "Sprucket fat av glaserad keramik, dekorerat med frukter mot en vit bakgrund – två av frukterna är helt obekanta för nutidens trädgårdsmästare",
-      "taggar": {
-        "typ": [
+      "name": "Keramikfat med okända frukter",
+      "description": "Sprucket fat av glaserad keramik, dekorerat med frukter mot en vit bakgrund – två av frukterna är helt obekanta för nutidens trädgårdsmästare",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -267,17 +297,19 @@
     },
     {
       "id": "Ku15",
-      "namn": "Rosformigt skrin med bladmekanik",
-      "beskrivning": "Skrin i form av en ros med gyllne kronblad; fyra rader om sammanlagt tjugofyra blad måste vikas ut för att blottlägga dess tomma inre",
-      "taggar": {
-        "typ": [
+      "name": "Rosformigt skrin med bladmekanik",
+      "description": "Skrin i form av en ros med gyllne kronblad; fyra rader om sammanlagt tjugofyra blad måste vikas ut för att blottlägga dess tomma inre",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -285,17 +317,19 @@
     },
     {
       "id": "Ku16",
-      "namn": "Outtömlig reservoarpenna",
-      "beskrivning": "Reservoarpenna av silver med gulddetaljer, som aldrig tycks få slut på bläck",
-      "taggar": {
-        "typ": [
+      "name": "Outtömlig reservoarpenna",
+      "description": "Reservoarpenna av silver med gulddetaljer, som aldrig tycks få slut på bläck",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -303,17 +337,19 @@
     },
     {
       "id": "Ku17",
-      "namn": "Brons-skjutmått med okänd skala",
-      "beskrivning": "Skjutmått av brons, markerat med kilskrift enligt okänd måttenhet",
-      "taggar": {
-        "typ": [
+      "name": "Brons-skjutmått med okänd skala",
+      "description": "Skjutmått av brons, markerat med kilskrift enligt okänd måttenhet",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -321,17 +357,19 @@
     },
     {
       "id": "Ku18",
-      "namn": "Daemonisk blomkruka i mörkblått",
-      "beskrivning": "Blomkruka av mörkblå keramik, dekorerad i rött och vitt med motiv av daemoniska par i obscena ställningar",
-      "taggar": {
-        "typ": [
+      "name": "Daemonisk blomkruka i mörkblått",
+      "description": "Blomkruka av mörkblå keramik, dekorerad i rött och vitt med motiv av daemoniska par i obscena ställningar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -339,17 +377,19 @@
     },
     {
       "id": "Ku19",
-      "namn": "Kopparskrin med svartalfsfigurer",
-      "beskrivning": "Kopparskrin innehållande tolv keramikfigurer föreställande ett och samma svartalfshuvud, men med olika ansiktsuttryck",
-      "taggar": {
-        "typ": [
+      "name": "Kopparskrin med svartalfsfigurer",
+      "description": "Kopparskrin innehållande tolv keramikfigurer föreställande ett och samma svartalfshuvud, men med olika ansiktsuttryck",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -357,17 +397,19 @@
     },
     {
       "id": "Ku20",
-      "namn": "Kopparplåt med Noidrecept",
-      "beskrivning": "Ärgat kopparstycke med kilskrift som listar ingredienser och procedur för bryggandet av den alkoholhaltiga honungsdrycken Noid",
-      "taggar": {
-        "typ": [
+      "name": "Kopparplåt med Noidrecept",
+      "description": "Ärgat kopparstycke med kilskrift som listar ingredienser och procedur för bryggandet av den alkoholhaltiga honungsdrycken Noid",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -375,17 +417,19 @@
     },
     {
       "id": "Ku21",
-      "namn": "Dolk med intryckbart blad",
-      "beskrivning": "Vackert ornamenterad dolk med oslipat stålblad som åker in i hjaltet när vapnet trycks mot något",
-      "taggar": {
-        "typ": [
+      "name": "Dolk med intryckbart blad",
+      "description": "Vackert ornamenterad dolk med oslipat stålblad som åker in i hjaltet när vapnet trycks mot något",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -393,17 +437,19 @@
     },
     {
       "id": "Ku22",
-      "namn": "Ugglemask i porslin",
-      "beskrivning": "Vitglaserad porslinsmask som täcker övre delen av ansiktet; formad med ugglenäbb, små grenade horn och rödkantade ögonöppningar",
-      "taggar": {
-        "typ": [
+      "name": "Ugglemask i porslin",
+      "description": "Vitglaserad porslinsmask som täcker övre delen av ansiktet; formad med ugglenäbb, små grenade horn och rödkantade ögonöppningar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -411,17 +457,19 @@
     },
     {
       "id": "Ku23",
-      "namn": "Lackstämpel i guld med Labrys",
-      "beskrivning": "Lackstämpel med grepp av rent guld, vars avtryck representerar den kungliga runan Labrys",
-      "taggar": {
-        "typ": [
+      "name": "Lackstämpel i guld med Labrys",
+      "description": "Lackstämpel med grepp av rent guld, vars avtryck representerar den kungliga runan Labrys",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -429,17 +477,19 @@
     },
     {
       "id": "Ku24",
-      "namn": "Gult rykande talgljus",
-      "beskrivning": "Grovt, sprucket talgljus som om veken antänds avger tjock, mörkgul rök",
-      "taggar": {
-        "typ": [
+      "name": "Gult rykande talgljus",
+      "description": "Grovt, sprucket talgljus som om veken antänds avger tjock, mörkgul rök",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -447,17 +497,19 @@
     },
     {
       "id": "Ku25",
-      "namn": "Grön oljelampa med roterande skärm",
-      "beskrivning": "Oljelampa av grön keramik med skärm av mönstrat glas som långsamt roterar när lampan är tänd",
-      "taggar": {
-        "typ": [
+      "name": "Grön oljelampa med roterande skärm",
+      "description": "Oljelampa av grön keramik med skärm av mönstrat glas som långsamt roterar när lampan är tänd",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -465,17 +517,19 @@
     },
     {
       "id": "Ku26",
-      "namn": "Ädelstensprydd ögonlapp",
-      "beskrivning": "Ögonlapp av brunt läder, utvändigt dekorerad med ädelstenar i formen av ett uppspärrat öga",
-      "taggar": {
-        "typ": [
+      "name": "Ädelstensprydd ögonlapp",
+      "description": "Ögonlapp av brunt läder, utvändigt dekorerad med ädelstenar i formen av ett uppspärrat öga",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -483,17 +537,19 @@
     },
     {
       "id": "Ku27",
-      "namn": "Stenmodell av tvåmastat skepp",
-      "beskrivning": "Stenmodell av ett tvåmastat skepp; akterspegeln kan öppnas och därinne finns sexton tennfigurer fördelade på två däcksplan",
-      "taggar": {
-        "typ": [
+      "name": "Stenmodell av tvåmastat skepp",
+      "description": "Stenmodell av ett tvåmastat skepp; akterspegeln kan öppnas och därinne finns sexton tennfigurer fördelade på två däcksplan",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 2.0
+      "levels": {},
+      "stats": {
+        "vikt": 2,
+        "weight": 2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -501,17 +557,19 @@
     },
     {
       "id": "Ku28",
-      "namn": "Tjurhalsband med koppel och gulnitar",
-      "beskrivning": "Svart läderkoppel som slutar i ett halsband av samma material, stort nog att spänna runt nacken på en tjur och dekorerat med nitar av rent guld",
-      "taggar": {
-        "typ": [
+      "name": "Tjurhalsband med koppel och gulnitar",
+      "description": "Svart läderkoppel som slutar i ett halsband av samma material, stort nog att spänna runt nacken på en tjur och dekorerat med nitar av rent guld",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.6
+      "levels": {},
+      "stats": {
+        "vikt": 1.6,
+        "weight": 1.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -519,17 +577,19 @@
     },
     {
       "id": "Ku29",
-      "namn": "Körsbärskärnor i möglig ask",
-      "beskrivning": "Skadad träask med mögligt tyg inuti; innehåller fem kärnor som om de hanteras på rätt sätt (lyckat Listig med Alkemi) kan växa upp till körsbärsträd med mångfärgade blommor och utsökta frukter",
-      "taggar": {
-        "typ": [
+      "name": "Körsbärskärnor i möglig ask",
+      "description": "Skadad träask med mögligt tyg inuti; innehåller fem kärnor som om de hanteras på rätt sätt (lyckat Listig med Alkemi) kan växa upp till körsbärsträd med mångfärgade blommor och utsökta frukter",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -537,17 +597,19 @@
     },
     {
       "id": "Ku30",
-      "namn": "Kopparpussel i träask",
-      "beskrivning": "Långsmal träask full av olikformade, platta kopparstycken, svårt ansatta av ärg; ett pussel med två saknade bitar; om ärgen tvättas bort framträder motivet av en daemonisk styggelse",
-      "taggar": {
-        "typ": [
+      "name": "Kopparpussel i träask",
+      "description": "Långsmal träask full av olikformade, platta kopparstycken, svårt ansatta av ärg; ett pussel med två saknade bitar; om ärgen tvättas bort framträder motivet av en daemonisk styggelse",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -555,17 +617,19 @@
     },
     {
       "id": "Ku31",
-      "namn": "Runristad svartbenssked",
-      "beskrivning": "Sked av svart ben ristad med runor ifyllda med röd, delvis bortnött färg; ingenting av det som äts med skeden tas upp av kroppen",
-      "taggar": {
-        "typ": [
+      "name": "Runristad svartbenssked",
+      "description": "Sked av svart ben ristad med runor ifyllda med röd, delvis bortnött färg; ingenting av det som äts med skeden tas upp av kroppen",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -573,17 +637,19 @@
     },
     {
       "id": "Ku32",
-      "namn": "Spelbräde av ben, trä och koppar",
-      "beskrivning": "Spelbräde med 12 x 9 olikstora rutor i olika färg/material (vitt ben, svart trä och ärgad koppar), infattade i en ram av mönstrat ädelträ",
-      "taggar": {
-        "typ": [
+      "name": "Spelbräde av ben, trä och koppar",
+      "description": "Spelbräde med 12 x 9 olikstora rutor i olika färg/material (vitt ben, svart trä och ärgad koppar), infattade i en ram av mönstrat ädelträ",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.4
+      "levels": {},
+      "stats": {
+        "vikt": 1.4,
+        "weight": 1.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -591,17 +657,19 @@
     },
     {
       "id": "Ku33",
-      "namn": "Etterkopal-vindspel (tuber och kläpp)",
-      "beskrivning": "Tuberna och kläppen till ett vindspel av välklingande Etterkopal",
-      "taggar": {
-        "typ": [
+      "name": "Etterkopal-vindspel (tuber och kläpp)",
+      "description": "Tuberna och kläppen till ett vindspel av välklingande Etterkopal",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -609,17 +677,19 @@
     },
     {
       "id": "Ku34",
-      "namn": "Magnetisk svartgnistrande sten",
-      "beskrivning": "Knytnävsstor, oregelbunden, svartgnistrande sten med magnetiska egenskaper",
-      "taggar": {
-        "typ": [
+      "name": "Magnetisk svartgnistrande sten",
+      "description": "Knytnävsstor, oregelbunden, svartgnistrande sten med magnetiska egenskaper",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -627,17 +697,19 @@
     },
     {
       "id": "Ku35",
-      "namn": "Silveretui med kritor",
-      "beskrivning": "Silveretui med sexton torkade kritstänger i olika färger, oanvända och möjliga att rita med efter lyckad alkemisk behandling (slag mot Listig med Alkemi)",
-      "taggar": {
-        "typ": [
+      "name": "Silveretui med kritor",
+      "description": "Silveretui med sexton torkade kritstänger i olika färger, oanvända och möjliga att rita med efter lyckad alkemisk behandling (slag mot Listig med Alkemi)",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -645,17 +717,19 @@
     },
     {
       "id": "Ku36",
-      "namn": "Benstaty av andrik",
-      "beskrivning": "Staty av ben föreställande en andrik med sprucken näbb, bärande armborst och bredbladig handyxa",
-      "taggar": {
-        "typ": [
+      "name": "Benstaty av andrik",
+      "description": "Staty av ben föreställande en andrik med sprucken näbb, bärande armborst och bredbladig handyxa",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -663,17 +737,19 @@
     },
     {
       "id": "Ku37",
-      "namn": "Stämgaffel i silver (D)",
-      "beskrivning": "Stämgaffel av silver, stämd i D",
-      "taggar": {
-        "typ": [
+      "name": "Stämgaffel i silver (D)",
+      "description": "Stämgaffel av silver, stämd i D",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -681,17 +757,19 @@
     },
     {
       "id": "Ku38",
-      "namn": "Stylett i grön metall",
-      "beskrivning": "Stylett med vågigt blad av mystisk, grön metall; hjaltet är gjutet i formen av ett människobarn med knäppta händer",
-      "taggar": {
-        "typ": [
+      "name": "Stylett i grön metall",
+      "description": "Stylett med vågigt blad av mystisk, grön metall; hjaltet är gjutet i formen av ett människobarn med knäppta händer",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -699,17 +777,19 @@
     },
     {
       "id": "Ku39",
-      "namn": "Svart stenoxe med vickhorn",
-      "beskrivning": "Statyett av oxe mejslad i svart sten; om man lyfter på svansen vickar hornen",
-      "taggar": {
-        "typ": [
+      "name": "Svart stenoxe med vickhorn",
+      "description": "Statyett av oxe mejslad i svart sten; om man lyfter på svansen vickar hornen",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -717,17 +797,19 @@
     },
     {
       "id": "Ku40",
-      "namn": "Spatserkäpp med pärlknopp",
-      "beskrivning": "Svartnad spatserkäpp av trä, mönstrad som med ormfjäll och med en knytnävsstor pärla som knopp",
-      "taggar": {
-        "typ": [
+      "name": "Spatserkäpp med pärlknopp",
+      "description": "Svartnad spatserkäpp av trä, mönstrad som med ormfjäll och med en knytnävsstor pärla som knopp",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -735,17 +817,19 @@
     },
     {
       "id": "Ku41",
-      "namn": "Cirkulärt spänne i silver och guld",
-      "beskrivning": "Cirkelrunt bältes- eller mantelspänne av silver med detaljer av guld föreställande korslagda pilar.",
-      "taggar": {
-        "typ": [
+      "name": "Cirkulärt spänne i silver och guld",
+      "description": "Cirkelrunt bältes- eller mantelspänne av silver med detaljer av guld föreställande korslagda pilar.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -753,17 +837,19 @@
     },
     {
       "id": "Ku42",
-      "namn": "Koppar-tubkikare med solmönster",
-      "beskrivning": "Tubkikare av koppar med vridbara segment; riktas den mot solen visas färgglada mönster som förändras när segmenten vrids",
-      "taggar": {
-        "typ": [
+      "name": "Koppar-tubkikare med solmönster",
+      "description": "Tubkikare av koppar med vridbara segment; riktas den mot solen visas färgglada mönster som förändras när segmenten vrids",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -771,17 +857,19 @@
     },
     {
       "id": "Ku43",
-      "namn": "Dubbelt timglas i kristall",
-      "beskrivning": "Timglas av vitdimmig kristall infattat i en ställning av blågrå metall, vars sand rinner exakt dubbelt så fort åt ena hållet jämfört med det andra",
-      "taggar": {
-        "typ": [
+      "name": "Dubbelt timglas i kristall",
+      "description": "Timglas av vitdimmig kristall infattat i en ställning av blågrå metall, vars sand rinner exakt dubbelt så fort åt ena hållet jämfört med det andra",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -789,17 +877,19 @@
     },
     {
       "id": "Ku44",
-      "namn": "Silverkanna med brutet pipstycke",
-      "beskrivning": "Vattenkanna i silver vars långsmala pip har brutits av; dekorerad med groteska fågelmotiv",
-      "taggar": {
-        "typ": [
+      "name": "Silverkanna med brutet pipstycke",
+      "description": "Vattenkanna i silver vars långsmala pip har brutits av; dekorerad med groteska fågelmotiv",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -807,17 +897,19 @@
     },
     {
       "id": "Ku45",
-      "namn": "Upphöjd iller (uppstoppad)",
-      "beskrivning": "Uppstoppad och mystiskt bevarad iller som har genomgått en symbarisk upphöjelserit – försedd med rovdjurskäft, långa klor, en krans av horn och vargula ögon",
-      "taggar": {
-        "typ": [
+      "name": "Upphöjd iller (uppstoppad)",
+      "description": "Uppstoppad och mystiskt bevarad iller som har genomgått en symbarisk upphöjelserit – försedd med rovdjurskäft, långa klor, en krans av horn och vargula ögon",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -825,17 +917,19 @@
     },
     {
       "id": "Ku46",
-      "namn": "Runristad benflöjt",
-      "beskrivning": "Handflatslång och lillfingersmal benflöjt med fem hål som kan locka till sig 1T20 småfåglar om den spelas av någon med fördelen Musikant",
-      "taggar": {
-        "typ": [
+      "name": "Runristad benflöjt",
+      "description": "Handflatslång och lillfingersmal benflöjt med fem hål som kan locka till sig 1T20 småfåglar om den spelas av någon med fördelen Musikant",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -843,17 +937,19 @@
     },
     {
       "id": "Ku47",
-      "namn": "Rosaskimrande bärpärla",
-      "beskrivning": "Rödstrimmig rosaskimrande pärla, stor som en ögonglob, som smakar sötsyrlig bärkompott; minskar aldrig i vare sig storlek eller smakstyrka",
-      "taggar": {
-        "typ": [
+      "name": "Rosaskimrande bärpärla",
+      "description": "Rödstrimmig rosaskimrande pärla, stor som en ögonglob, som smakar sötsyrlig bärkompott; minskar aldrig i vare sig storlek eller smakstyrka",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -861,17 +957,19 @@
     },
     {
       "id": "Ku48",
-      "namn": "Trasig drömfångare i metall",
-      "beskrivning": "Trasig drömfångare i metall; kan restaureras med Smideskonst och ett slag mot Listig. Skänker harmoni. Den som är drabbad av nackdelen Mardrömmar får två chanser att lyckas med slag mot Viljestark",
-      "taggar": {
-        "typ": [
+      "name": "Trasig drömfångare i metall",
+      "description": "Trasig drömfångare i metall; kan restaureras med Smideskonst och ett slag mot Listig. Skänker harmoni. Den som är drabbad av nackdelen Mardrömmar får två chanser att lyckas med slag mot Viljestark",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -879,17 +977,19 @@
     },
     {
       "id": "Ku49",
-      "namn": "Lackförseglat årgångsvin",
-      "beskrivning": "Ett lerkrus med lackförseglad kork, märkt med ett livsuppehållande sigill som har hållit innanmätet som nytt genom århundradena – rött vin av utsökt kvalitet och av en extra fin årgång",
-      "taggar": {
-        "typ": [
+      "name": "Lackförseglat årgångsvin",
+      "description": "Ett lerkrus med lackförseglad kork, märkt med ett livsuppehållande sigill som har hållit innanmätet som nytt genom århundradena – rött vin av utsökt kvalitet och av en extra fin årgång",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.3
+      "levels": {},
+      "stats": {
+        "vikt": 1.3,
+        "weight": 1.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -897,17 +997,19 @@
     },
     {
       "id": "Ku50",
-      "namn": "Daemonstaty i mörk sten ”Jeberaja”",
-      "beskrivning": "Underarmshög staty av blank, mörkgrå sten föreställande en daemon. Sockeln bär kilskriftsinskription som kan tydas av en Lärd mästare: ”Jeberaja”",
-      "taggar": {
-        "typ": [
+      "name": "Daemonstaty i mörk sten ”Jeberaja”",
+      "description": "Underarmshög staty av blank, mörkgrå sten föreställande en daemon. Sockeln bär kilskriftsinskription som kan tydas av en Lärd mästare: ”Jeberaja”",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 4.0
+      "levels": {},
+      "stats": {
+        "vikt": 4,
+        "weight": 4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -915,17 +1017,19 @@
     },
     {
       "id": "Ku51",
-      "namn": "Ridstövlar med lönnfack",
-      "beskrivning": "Fina ridstövlar med ett lönnfack i höger klack",
-      "taggar": {
-        "typ": [
+      "name": "Ridstövlar med lönnfack",
+      "description": "Fina ridstövlar med ett lönnfack i höger klack",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -933,17 +1037,19 @@
     },
     {
       "id": "Ku52",
-      "namn": "Sirligt dekorerad stridslur",
-      "beskrivning": "Sirligt dekorerad stridslur",
-      "taggar": {
-        "typ": [
+      "name": "Sirligt dekorerad stridslur",
+      "description": "Sirligt dekorerad stridslur",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.6
+      "levels": {},
+      "stats": {
+        "vikt": 1.6,
+        "weight": 1.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -951,17 +1057,19 @@
     },
     {
       "id": "Ku53",
-      "namn": "Monsterkamskägg",
-      "beskrivning": "Kam i form av en monsterkäft, med ett trettiotal tänder",
-      "taggar": {
-        "typ": [
+      "name": "Monsterkamskägg",
+      "description": "Kam i form av en monsterkäft, med ett trettiotal tänder",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -969,17 +1077,19 @@
     },
     {
       "id": "Ku54",
-      "namn": "Karttub från före kriget",
-      "beskrivning": "Lädertub innehållande ett halvdussin kartor av Alberetor före Det stora kriget",
-      "taggar": {
-        "typ": [
+      "name": "Karttub från före kriget",
+      "description": "Lädertub innehållande ett halvdussin kartor av Alberetor före Det stora kriget",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -987,17 +1097,19 @@
     },
     {
       "id": "Ku55",
-      "namn": "Målat kranium i träkista",
-      "beskrivning": "Träkista med ett lertäckt kranium i, färgglatt målat",
-      "taggar": {
-        "typ": [
+      "name": "Målat kranium i träkista",
+      "description": "Träkista med ett lertäckt kranium i, färgglatt målat",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1005,17 +1117,19 @@
     },
     {
       "id": "Ku56",
-      "namn": "Bronsmått, knippa om fem",
-      "beskrivning": "Knippa med fem volymmått av brons i olika storlekar",
-      "taggar": {
-        "typ": [
+      "name": "Bronsmått, knippa om fem",
+      "description": "Knippa med fem volymmått av brons i olika storlekar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1023,17 +1137,19 @@
     },
     {
       "id": "Ku57",
-      "namn": "Daemonisk bronsmask",
-      "beskrivning": "Ärgad bronsmask föreställande en vrålande daemon, avsedd att fästas på en öppen hjälm",
-      "taggar": {
-        "typ": [
+      "name": "Daemonisk bronsmask",
+      "description": "Ärgad bronsmask föreställande en vrålande daemon, avsedd att fästas på en öppen hjälm",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1041,17 +1157,19 @@
     },
     {
       "id": "Ku58",
-      "namn": "Silverarmring med hälsning",
-      "beskrivning": "Armring i silver, med en kärlekshälsning etsad på insidan",
-      "taggar": {
-        "typ": [
+      "name": "Silverarmring med hälsning",
+      "description": "Armring i silver, med en kärlekshälsning etsad på insidan",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1059,17 +1177,19 @@
     },
     {
       "id": "Ku59",
-      "namn": "Kastdolkar i bencement",
-      "beskrivning": "Tre kastdolkar i ställning av ben",
-      "taggar": {
-        "typ": [
+      "name": "Kastdolkar i bencement",
+      "description": "Tre kastdolkar i ställning av ben",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1077,17 +1197,19 @@
     },
     {
       "id": "Ku60",
-      "namn": "Guldask för skrivdon",
-      "beskrivning": "Guldask med kolstift, pensel och 1T6 pergament",
-      "taggar": {
-        "typ": [
+      "name": "Guldask för skrivdon",
+      "description": "Guldask med kolstift, pensel och 1T6 pergament",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1095,17 +1217,19 @@
     },
     {
       "id": "Ku61",
-      "namn": "Pärlemorskimrande nattkärl",
-      "beskrivning": "Nattkärl i pärlemor och silver",
-      "taggar": {
-        "typ": [
+      "name": "Pärlemorskimrande nattkärl",
+      "description": "Nattkärl i pärlemor och silver",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1113,17 +1237,19 @@
     },
     {
       "id": "Ku62",
-      "namn": "Mineralsamling i ädelträask",
-      "beskrivning": "Mineralsamling från Alberetor och Lyastra i ask av ädelträ",
-      "taggar": {
-        "typ": [
+      "name": "Mineralsamling i ädelträask",
+      "description": "Mineralsamling från Alberetor och Lyastra i ask av ädelträ",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 2.0
+      "levels": {},
+      "stats": {
+        "vikt": 2,
+        "weight": 2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1131,17 +1257,19 @@
     },
     {
       "id": "Ku63",
-      "namn": "Encyklopedi, band III av XXI",
-      "beskrivning": "En del av en encyklopedi, del tre av tjugoen",
-      "taggar": {
-        "typ": [
+      "name": "Encyklopedi, band III av XXI",
+      "description": "En del av en encyklopedi, del tre av tjugoen",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1149,17 +1277,19 @@
     },
     {
       "id": "Ku64",
-      "namn": "Guldbur med förtorkad fågel",
-      "beskrivning": "Fågelbur i guld med sin tidigare fånge död och förtorkad inuti",
-      "taggar": {
-        "typ": [
+      "name": "Guldbur med förtorkad fågel",
+      "description": "Fågelbur i guld med sin tidigare fånge död och förtorkad inuti",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1167,17 +1297,19 @@
     },
     {
       "id": "Ku65",
-      "namn": "Felkalibrerat silverastrolabium",
-      "beskrivning": "Felkalibrerat astrolabium i silver, för att genom himlakropparnas läge på himlen beräkna latituden",
-      "taggar": {
-        "typ": [
+      "name": "Felkalibrerat silverastrolabium",
+      "description": "Felkalibrerat astrolabium i silver, för att genom himlakropparnas läge på himlen beräkna latituden",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1185,17 +1317,19 @@
     },
     {
       "id": "Ku66",
-      "namn": "Familjeporträtt i ebenholts och elfenben",
-      "beskrivning": "En familj avbildad i ebenholts, liggandes i en ask av elfenben",
-      "taggar": {
-        "typ": [
+      "name": "Familjeporträtt i ebenholts och elfenben",
+      "description": "En familj avbildad i ebenholts, liggandes i en ask av elfenben",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1203,17 +1337,19 @@
     },
     {
       "id": "Ku67",
-      "namn": "Avgudabild i vulkanglas",
-      "beskrivning": "En svart avgudabild, i iskallt vulkanglas",
-      "taggar": {
-        "typ": [
+      "name": "Avgudabild i vulkanglas",
+      "description": "En svart avgudabild, i iskallt vulkanglas",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.1
+      "levels": {},
+      "stats": {
+        "vikt": 1.1,
+        "weight": 1.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1221,17 +1357,19 @@
     },
     {
       "id": "Ku68",
-      "namn": "Docka med guldnålar",
-      "beskrivning": "En docka föreställande en okänd man, genomborrad av 1T6 långa guldnålar",
-      "taggar": {
-        "typ": [
+      "name": "Docka med guldnålar",
+      "description": "En docka föreställande en okänd man, genomborrad av 1T6 långa guldnålar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1239,17 +1377,19 @@
     },
     {
       "id": "Ku69",
-      "namn": "Träns med guld och ädelstenar",
-      "beskrivning": "Ett träns dekorerat med guld och ädla stenar",
-      "taggar": {
-        "typ": [
+      "name": "Träns med guld och ädelstenar",
+      "description": "Ett träns dekorerat med guld och ädla stenar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.3
+      "levels": {},
+      "stats": {
+        "vikt": 1.3,
+        "weight": 1.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1257,17 +1397,19 @@
     },
     {
       "id": "Ku70",
-      "namn": "Silverkedja med Dakothnic-medaljong",
-      "beskrivning": "En grov silverkedja med en handflatsstor medaljong av svart glas som innesluter Dakothnics symbol formad av silvertrådar",
-      "taggar": {
-        "typ": [
+      "name": "Silverkedja med Dakothnic-medaljong",
+      "description": "En grov silverkedja med en handflatsstor medaljong av svart glas som innesluter Dakothnics symbol formad av silvertrådar",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1275,17 +1417,19 @@
     },
     {
       "id": "Ku71",
-      "namn": "Benrelief med slitna kiltecken",
-      "beskrivning": "En tunn reliefplatta i mörkt ben där kiltecknen nästan är bortnötta av fingrar och år; lyfts plattan mot ljus anar man ett blekt jaktmotiv under reporna.",
-      "taggar": {
-        "typ": [
+      "name": "Benrelief med slitna kiltecken",
+      "description": "En tunn reliefplatta i mörkt ben där kiltecknen nästan är bortnötta av fingrar och år; lyfts plattan mot ljus anar man ett blekt jaktmotiv under reporna.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1293,17 +1437,19 @@
     },
     {
       "id": "Ku72",
-      "namn": "Porslinsöga med hårfin spricka",
-      "beskrivning": "Ett glaserat porslinsöga där en hårfin spricka ritar en spiral över iris, och där blicken tycks följa den som håller föremålet oavsett vinkel.",
-      "taggar": {
-        "typ": [
+      "name": "Porslinsöga med hårfin spricka",
+      "description": "Ett glaserat porslinsöga där en hårfin spricka ritar en spiral över iris, och där blicken tycks följa den som håller föremålet oavsett vinkel.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1311,17 +1457,19 @@
     },
     {
       "id": "Ku73",
-      "namn": "Kopparhjort med urgröpt bröst",
-      "beskrivning": "En liten hjort i koppar med ett ovalt urtag i bröstet där ett förlorat inlägg en gång suttit, och där kanterna bär gröna spår av gammal ärg.",
-      "taggar": {
-        "typ": [
+      "name": "Kopparhjort med urgröpt bröst",
+      "description": "En liten hjort i koppar med ett ovalt urtag i bröstet där ett förlorat inlägg en gång suttit, och där kanterna bär gröna spår av gammal ärg.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1329,17 +1477,19 @@
     },
     {
       "id": "Ku74",
-      "namn": "Glasbricka med innesluten fjäder",
-      "beskrivning": "En klar, rektangulär glasbricka med en liten fjäder helt innesluten i massan, utan synliga skarvar, och fjädern rör sig inte ens när glaset skakas hårt.",
-      "taggar": {
-        "typ": [
+      "name": "Glasbricka med innesluten fjäder",
+      "description": "En klar, rektangulär glasbricka med en liten fjäder helt innesluten i massan, utan synliga skarvar, och fjädern rör sig inte ens när glaset skakas hårt.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1347,17 +1497,19 @@
     },
     {
       "id": "Ku75",
-      "namn": "Stenkrage med spår av kedja",
-      "beskrivning": "En grovhuggen ring av grå sten med djupa repor på utsidan som antyder att en järnkedja en gång satt där, medan insidan är jämn och blank av lång användning.",
-      "taggar": {
-        "typ": [
+      "name": "Stenkrage med spår av kedja",
+      "description": "En grovhuggen ring av grå sten med djupa repor på utsidan som antyder att en järnkedja en gång satt där, medan insidan är jämn och blank av lång användning.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 1.1
+      "levels": {},
+      "stats": {
+        "vikt": 1.1,
+        "weight": 1.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1365,17 +1517,19 @@
     },
     {
       "id": "Ku76",
-      "namn": "Silverknapp med dubbla öglor",
-      "beskrivning": "En ovanligt tung knapp i silver med två öglor på baksidan, utformad för ett plagg eller sele som inte längre finns kvar och som lämnat små repmärken i metallen.",
-      "taggar": {
-        "typ": [
+      "name": "Silverknapp med dubbla öglor",
+      "description": "En ovanligt tung knapp i silver med två öglor på baksidan, utformad för ett plagg eller sele som inte längre finns kvar och som lämnat små repmärken i metallen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1383,17 +1537,19 @@
     },
     {
       "id": "Ku77",
-      "namn": "Tennsoldat med saknad arm",
-      "beskrivning": "En enkel leksaksgestalt gjuten i tenn där höger arm saknas, och där ytan bär mörka fläckar som spridit sig i små öar över kroppen.",
-      "taggar": {
-        "typ": [
+      "name": "Tennsoldat med saknad arm",
+      "description": "En enkel leksaksgestalt gjuten i tenn där höger arm saknas, och där ytan bär mörka fläckar som spridit sig i små öar över kroppen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1401,17 +1557,19 @@
     },
     {
       "id": "Ku78",
-      "namn": "Trärulle med fasttorkad remsa",
-      "beskrivning": "En kort trärulle där en pergamentremsa torkat fast och spruckit i kanten, med bleka tecken som skymtar under fibrerna och gör läsning omöjlig utan att bryta rullen.",
-      "taggar": {
-        "typ": [
+      "name": "Trärulle med fasttorkad remsa",
+      "description": "En kort trärulle där en pergamentremsa torkat fast och spruckit i kanten, med bleka tecken som skymtar under fibrerna och gör läsning omöjlig utan att bryta rullen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1419,17 +1577,19 @@
     },
     {
       "id": "Ku79",
-      "namn": "Svart järnspegel med matt kant",
-      "beskrivning": "En handhållen spegel av polerat svart järn där mitten ger en klar bild, medan kanten faller i dämpat dunkel som om världen tunnades ut mot ramen.",
-      "taggar": {
-        "typ": [
+      "name": "Svart järnspegel med matt kant",
+      "description": "En handhållen spegel av polerat svart järn där mitten ger en klar bild, medan kanten faller i dämpat dunkel som om världen tunnades ut mot ramen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1437,17 +1597,19 @@
     },
     {
       "id": "Ku80",
-      "namn": "Mässingsdjur med fyra ögon",
-      "beskrivning": "En liten figur i mässing föreställande ett okänt djur, med fyra infällda glasprickar som ögon och ett stelt uttryck som trotsar tolkning.",
-      "taggar": {
-        "typ": [
+      "name": "Mässingsdjur med fyra ögon",
+      "description": "En liten figur i mässing föreställande ett okänt djur, med fyra infällda glasprickar som ögon och ett stelt uttryck som trotsar tolkning.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1455,17 +1617,19 @@
     },
     {
       "id": "Ku81",
-      "namn": "Ädelträask med tre tomma socklar",
-      "beskrivning": "En ask av mörkt ädelträ som öppnas mot tre runda socklar där kulor en gång legat, och i varje hål syns spår av grön patina som vittnar om metalliska original.",
-      "taggar": {
-        "typ": [
+      "name": "Ädelträask med tre tomma socklar",
+      "description": "En ask av mörkt ädelträ som öppnas mot tre runda socklar där kulor en gång legat, och i varje hål syns spår av grön patina som vittnar om metalliska original.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1473,17 +1637,19 @@
     },
     {
       "id": "Ku82",
-      "namn": "Vulkanglasskärva med släta kanter",
-      "beskrivning": "En kall skärva av svart vulkanglas där kanterna slipats ned till mjuka rundningar, som om den förts mellan händer under lång tid och blivit len som stenvatten.",
-      "taggar": {
-        "typ": [
+      "name": "Vulkanglasskärva med släta kanter",
+      "description": "En kall skärva av svart vulkanglas där kanterna slipats ned till mjuka rundningar, som om den förts mellan händer under lång tid och blivit len som stenvatten.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1491,17 +1657,19 @@
     },
     {
       "id": "Ku83",
-      "namn": "Lertavla med rutnät och märken",
-      "beskrivning": "En tung lertavla ristad med ett rutnät om nio gånger nio, där vissa rutor bär återkommande markeringar som påminner om ett spel eller ett försök till räkning.",
-      "taggar": {
-        "typ": [
+      "name": "Lertavla med rutnät och märken",
+      "description": "En tung lertavla ristad med ett rutnät om nio gånger nio, där vissa rutor bär återkommande markeringar som påminner om ett spel eller ett försök till räkning.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1509,17 +1677,19 @@
     },
     {
       "id": "Ku84",
-      "namn": "Silverspira i miniatyr",
-      "beskrivning": "En prydnadsspira i miniatyr, hög som ett finger och gjord i silver, där toppen bär en liten kronform och där skaftet visar spår efter återkommande grepp.",
-      "taggar": {
-        "typ": [
+      "name": "Silverspira i miniatyr",
+      "description": "En prydnadsspira i miniatyr, hög som ett finger och gjord i silver, där toppen bär en liten kronform och där skaftet visar spår efter återkommande grepp.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1527,17 +1697,19 @@
     },
     {
       "id": "Ku85",
-      "namn": "Stenhjul med mittspår",
-      "beskrivning": "En ringformad skiva av hård skiffer med ett jämnt spår längs hela innerkanten, som om en tråd eller lina en gång legat sträckt genom öppningen.",
-      "taggar": {
-        "typ": [
+      "name": "Stenhjul med mittspår",
+      "description": "En ringformad skiva av hård skiffer med ett jämnt spår längs hela innerkanten, som om en tråd eller lina en gång legat sträckt genom öppningen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1545,17 +1717,19 @@
     },
     {
       "id": "Ku86",
-      "namn": "Blyplatta med hundra kryss",
-      "beskrivning": "En tät blyplatta där någon metodiskt ristat hundra små kryss i raka rader, utan rubrik eller märkning som förklarar räkningen.",
-      "taggar": {
-        "typ": [
+      "name": "Blyplatta med hundra kryss",
+      "description": "En tät blyplatta där någon metodiskt ristat hundra små kryss i raka rader, utan rubrik eller märkning som förklarar räkningen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1563,17 +1737,19 @@
     },
     {
       "id": "Ku87",
-      "namn": "Benklubba i halvskala",
-      "beskrivning": "En ceremoniell klubba i ben gjord i halv storlek, med ett grepp som är tydligt nött och ett huvud som blivit blankt av upprepad beröring.",
-      "taggar": {
-        "typ": [
+      "name": "Benklubba i halvskala",
+      "description": "En ceremoniell klubba i ben gjord i halv storlek, med ett grepp som är tydligt nött och ett huvud som blivit blankt av upprepad beröring.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1581,17 +1757,19 @@
     },
     {
       "id": "Ku88",
-      "namn": "Skiffertavla med fastnade ritsar",
-      "beskrivning": "En mörk skiffertavla där vita ritsar sitter fast i ytan som om de bränts in, och där linjerna bildar ett motiv som aldrig riktigt träder fram.",
-      "taggar": {
-        "typ": [
+      "name": "Skiffertavla med fastnade ritsar",
+      "description": "En mörk skiffertavla där vita ritsar sitter fast i ytan som om de bränts in, och där linjerna bildar ett motiv som aldrig riktigt träder fram.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1599,17 +1777,19 @@
     },
     {
       "id": "Ku89",
-      "namn": "Pärlemorägg i mässingsnät",
-      "beskrivning": "Ett äggformat skal i pärlemor som hålls samman av ett finmaskigt mässingsnät, låst av en mikroskopisk skruv utan spår för mejsel eller nyckel.",
-      "taggar": {
-        "typ": [
+      "name": "Pärlemorägg i mässingsnät",
+      "description": "Ett äggformat skal i pärlemor som hålls samman av ett finmaskigt mässingsnät, låst av en mikroskopisk skruv utan spår för mejsel eller nyckel.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1617,17 +1797,19 @@
     },
     {
       "id": "Ku90",
-      "namn": "Kedjfragment av svartbränt stål",
-      "beskrivning": "Tre sammanvuxna länkar i svartbränt stål där varje länk bär en enda liten stanspunkt placerad på olika ställen, som om någon fört bok över något bortglömt.",
-      "taggar": {
-        "typ": [
+      "name": "Kedjfragment av svartbränt stål",
+      "description": "Tre sammanvuxna länkar i svartbränt stål där varje länk bär en enda liten stanspunkt placerad på olika ställen, som om någon fört bok över något bortglömt.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1635,17 +1817,19 @@
     },
     {
       "id": "Ku91",
-      "namn": "Svartglaserad fågelmask utan band",
-      "beskrivning": "En halv mask i svartglaserat porslin, formad som en smal näbb; sprucken vid ena ögonkanten och med avbrutna fästen där band en gång suttit.",
-      "taggar": {
-        "typ": [
+      "name": "Svartglaserad fågelmask utan band",
+      "description": "En halv mask i svartglaserat porslin, formad som en smal näbb; sprucken vid ena ögonkanten och med avbrutna fästen där band en gång suttit.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1653,17 +1837,19 @@
     },
     {
       "id": "Ku92",
-      "namn": "Kopparsked med tre hål i skålen",
-      "beskrivning": "En långskaftad sked i koppar vars skål är genombruten av tre symmetriska hål; kanterna bär tunn ärg och greppet är polerat av användning.",
-      "taggar": {
-        "typ": [
+      "name": "Kopparsked med tre hål i skålen",
+      "description": "En långskaftad sked i koppar vars skål är genombruten av tre symmetriska hål; kanterna bär tunn ärg och greppet är polerat av användning.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.15
+      "levels": {},
+      "stats": {
+        "vikt": 0.15,
+        "weight": 0.15
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1671,17 +1857,19 @@
     },
     {
       "id": "Ku93",
-      "namn": "Benlås utan mekanik",
-      "beskrivning": "Ett låsformat stycke skuret i blekt ben med en ren nyckelöppning, men utan fjädrar, sprintar eller rörliga delar bakom fronten.",
-      "taggar": {
-        "typ": [
+      "name": "Benlås utan mekanik",
+      "description": "Ett låsformat stycke skuret i blekt ben med en ren nyckelöppning, men utan fjädrar, sprintar eller rörliga delar bakom fronten.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1689,17 +1877,19 @@
     },
     {
       "id": "Ku94",
-      "namn": "Obsidianpärla med mjölkfläck",
-      "beskrivning": "En liten rund pärla i svart obsidian med en mjölkvit oval innesluten i glaset; ytan är slät och kyler huden vid beröring.",
-      "taggar": {
-        "typ": [
+      "name": "Obsidianpärla med mjölkfläck",
+      "description": "En liten rund pärla i svart obsidian med en mjölkvit oval innesluten i glaset; ytan är slät och kyler huden vid beröring.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1707,17 +1897,19 @@
     },
     {
       "id": "Ku95",
-      "namn": "Tennplakett med blank fläck",
-      "beskrivning": "En rektangulär bricka i tenn, matt och repad utom en rund, speglande fläck mitt på som vägrar ta emot oxidering.",
-      "taggar": {
-        "typ": [
+      "name": "Tennplakett med blank fläck",
+      "description": "En rektangulär bricka i tenn, matt och repad utom en rund, speglande fläck mitt på som vägrar ta emot oxidering.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1725,17 +1917,19 @@
     },
     {
       "id": "Ku96",
-      "namn": "Träspole genomstungen av spik",
-      "beskrivning": "En mörknad trådspole i hårt trä där en gammal järnspik trängts rakt igenom kärnan och låst spolen för alltid i ett stilla läge.",
-      "taggar": {
-        "typ": [
+      "name": "Träspole genomstungen av spik",
+      "description": "En mörknad trådspole i hårt trä där en gammal järnspik trängts rakt igenom kärnan och låst spolen för alltid i ett stilla läge.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.25
+      "levels": {},
+      "stats": {
+        "vikt": 0.25,
+        "weight": 0.25
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1743,17 +1937,19 @@
     },
     {
       "id": "Ku97",
-      "namn": "Stenfigur med fyrdelad rygg",
-      "beskrivning": "En liten idol i grå sten där ryggen är skrovligt delad av fyra parallella kammar; ansiktet är endast antytt med två gropar för ögon.",
-      "taggar": {
-        "typ": [
+      "name": "Stenfigur med fyrdelad rygg",
+      "description": "En liten idol i grå sten där ryggen är skrovligt delad av fyra parallella kammar; ansiktet är endast antytt med två gropar för ögon.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1761,17 +1957,19 @@
     },
     {
       "id": "Ku98",
-      "namn": "Silverkam med stumma tänder",
-      "beskrivning": "En kort kam i silver där tänderna är avrundade och nästan släta; insidan av ryggen bär en rad svaga ritsar utan tydligt mönster.",
-      "taggar": {
-        "typ": [
+      "name": "Silverkam med stumma tänder",
+      "description": "En kort kam i silver där tänderna är avrundade och nästan släta; insidan av ryggen bär en rad svaga ritsar utan tydligt mönster.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.08
+      "levels": {},
+      "stats": {
+        "vikt": 0.08,
+        "weight": 0.08
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1779,17 +1977,19 @@
     },
     {
       "id": "Ku99",
-      "namn": "Stålring med instansad sifferrad",
-      "beskrivning": "En bred ring i mörkt stål med tre samma tal upprepade runt hela kanten; inlagan är grund och lätt att följa med fingertoppen.",
-      "taggar": {
-        "typ": [
+      "name": "Stålring med instansad sifferrad",
+      "description": "En bred ring i mörkt stål med tre samma tal upprepade runt hela kanten; inlagan är grund och lätt att följa med fingertoppen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1797,17 +1997,19 @@
     },
     {
       "id": "Ku100",
-      "namn": "Ebenholtsask utan lock",
-      "beskrivning": "En låg ask i ebenholts med slät botten och innerväggar tätt repade av sneda ritsar; locket saknas och gångjärnen är bortbrutna.",
-      "taggar": {
-        "typ": [
+      "name": "Ebenholtsask utan lock",
+      "description": "En låg ask i ebenholts med slät botten och innerväggar tätt repade av sneda ritsar; locket saknas och gångjärnen är bortbrutna.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1815,17 +2017,19 @@
     },
     {
       "id": "Ku101",
-      "namn": "Lerskål med litet fotspår",
-      "beskrivning": "En grunt drejad skål i röd lera där ett litet barfotavtryck syns i godset, pressat innan bränning och nu fruset för alltid i glasyren.",
-      "taggar": {
-        "typ": [
+      "name": "Lerskål med litet fotspår",
+      "description": "En grunt drejad skål i röd lera där ett litet barfotavtryck syns i godset, pressat innan bränning och nu fruset för alltid i glasyren.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.35
+      "levels": {},
+      "stats": {
+        "vikt": 0.35,
+        "weight": 0.35
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1833,17 +2037,19 @@
     },
     {
       "id": "Ku102",
-      "namn": "Vitt glasägg med grön strimma",
-      "beskrivning": "Ett ovalt stycke i mjölkglas där en tunn grön tråd skär snett genom kroppen; ytan är hel och utan fogar eller öppningar.",
-      "taggar": {
-        "typ": [
+      "name": "Vitt glasägg med grön strimma",
+      "description": "Ett ovalt stycke i mjölkglas där en tunn grön tråd skär snett genom kroppen; ytan är hel och utan fogar eller öppningar.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.25
+      "levels": {},
+      "stats": {
+        "vikt": 0.25,
+        "weight": 0.25
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1851,17 +2057,19 @@
     },
     {
       "id": "Ku103",
-      "namn": "Mässingsnål i hård spiral",
-      "beskrivning": "En spiralformad nål i mässing där både spets och öga gått förlorade inuti snurren; metallen är nedmattad och fingertorr.",
-      "taggar": {
-        "typ": [
+      "name": "Mässingsnål i hård spiral",
+      "description": "En spiralformad nål i mässing där både spets och öga gått förlorade inuti snurren; metallen är nedmattad och fingertorr.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1869,17 +2077,19 @@
     },
     {
       "id": "Ku104",
-      "namn": "Svart järnros med fem blad",
-      "beskrivning": "En pressad blomma i svart järn med fem flisade blad; stjälken saknas och baksidan bär spår av en bruten nit eller tapp.",
-      "taggar": {
-        "typ": [
+      "name": "Svart järnros med fem blad",
+      "description": "En pressad blomma i svart järn med fem flisade blad; stjälken saknas och baksidan bär spår av en bruten nit eller tapp.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1887,17 +2097,19 @@
     },
     {
       "id": "Ku105",
-      "namn": "Skifferkors med nötta armar",
-      "beskrivning": "Ett platt kors i mörk skiffer där armarna rundats av otaliga fingrar; mitten är lätt fördjupad som av lång press mot hud.",
-      "taggar": {
-        "typ": [
+      "name": "Skifferkors med nötta armar",
+      "description": "Ett platt kors i mörk skiffer där armarna rundats av otaliga fingrar; mitten är lätt fördjupad som av lång press mot hud.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1905,17 +2117,19 @@
     },
     {
       "id": "Ku106",
-      "namn": "Lerkranium med skruvfäste",
-      "beskrivning": "Ett litet terrakottahuvud där nacken rymmer en gängad metallinsats; leran är krackelerad och färgstänk i rött sitter kvar i ögonhålorna.",
-      "taggar": {
-        "typ": [
+      "name": "Lerkranium med skruvfäste",
+      "description": "Ett litet terrakottahuvud där nacken rymmer en gängad metallinsats; leran är krackelerad och färgstänk i rött sitter kvar i ögonhålorna.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.45
+      "levels": {},
+      "stats": {
+        "vikt": 0.45,
+        "weight": 0.45
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1923,17 +2137,19 @@
     },
     {
       "id": "Ku107",
-      "namn": "Benrör med två fasta pluggar",
-      "beskrivning": "Ett smalt rör i ljus ben, tätt förslutet av två limmade tappar; mellan dem hörs ingenting skramla hur man än skakar det.",
-      "taggar": {
-        "typ": [
+      "name": "Benrör med två fasta pluggar",
+      "description": "Ett smalt rör i ljus ben, tätt förslutet av två limmade tappar; mellan dem hörs ingenting skramla hur man än skakar det.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1941,17 +2157,19 @@
     },
     {
       "id": "Ku108",
-      "namn": "Kopparring med utskjutande tapp",
-      "beskrivning": "En bred ring i koppar där en ensam tapp sticker ut från kanten utan motsvarighet; tapparnas fot är hårt nitad genom godset.",
-      "taggar": {
-        "typ": [
+      "name": "Kopparring med utskjutande tapp",
+      "description": "En bred ring i koppar där en ensam tapp sticker ut från kanten utan motsvarighet; tapparnas fot är hårt nitad genom godset.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.06
+      "levels": {},
+      "stats": {
+        "vikt": 0.06,
+        "weight": 0.06
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1959,17 +2177,19 @@
     },
     {
       "id": "Ku109",
-      "namn": "Elfenbenspärlstav med brända prickar",
-      "beskrivning": "En kort, cylindrisk stav i elfenben där små bruna prickar bränts in i regelbundna rader längs längden; ändarna är släta och rundade.",
-      "taggar": {
-        "typ": [
+      "name": "Elfenbenspärlstav med brända prickar",
+      "description": "En kort, cylindrisk stav i elfenben där små bruna prickar bränts in i regelbundna rader längs längden; ändarna är släta och rundade.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.07
+      "levels": {},
+      "stats": {
+        "vikt": 0.07,
+        "weight": 0.07
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1977,17 +2197,19 @@
     },
     {
       "id": "Ku110",
-      "namn": "Stenruta med infattad blå skärva",
-      "beskrivning": "En kvadratisk stenplatta där ett hörn håller en kilformad bit blått glas i en tät infattning; inlägget går inte att rubba med handkraft.",
-      "taggar": {
-        "typ": [
+      "name": "Stenruta med infattad blå skärva",
+      "description": "En kvadratisk stenplatta där ett hörn håller en kilformad bit blått glas i en tät infattning; inlägget går inte att rubba med handkraft.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -1995,17 +2217,19 @@
     },
     {
       "id": "Ku111",
-      "namn": "Skuggvisare i rökt glas",
-      "beskrivning": "En liten bit rökt glas slipad som en tunn platta; vänds en kant mot bar sten blir just den kanten aningen mörkare än övriga ytan.",
-      "taggar": {
-        "typ": [
+      "name": "Skuggvisare i rökt glas",
+      "description": "En liten bit rökt glas slipad som en tunn platta; vänds en kant mot bar sten blir just den kanten aningen mörkare än övriga ytan.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2013,17 +2237,19 @@
     },
     {
       "id": "Ku112",
-      "namn": "Ljudlös bjällra i bleck",
-      "beskrivning": "En liten bjällra i bleck där kulan rör sig fritt men ingen klang uppstår; skakar man den känns bara ett lätt durr i handen.",
-      "taggar": {
-        "typ": [
+      "name": "Ljudlös bjällra i bleck",
+      "description": "En liten bjällra i bleck där kulan rör sig fritt men ingen klang uppstår; skakar man den känns bara ett lätt durr i handen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2031,17 +2257,19 @@
     },
     {
       "id": "Ku113",
-      "namn": "Silverklämma som inte mörknar",
-      "beskrivning": "En enkel pappers- eller tygklämma i silver som behåller sin lyster även i fukt och kyla; små repor mattas men blir aldrig svarta.",
-      "taggar": {
-        "typ": [
+      "name": "Silverklämma som inte mörknar",
+      "description": "En enkel pappers- eller tygklämma i silver som behåller sin lyster även i fukt och kyla; små repor mattas men blir aldrig svarta.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2049,17 +2277,19 @@
     },
     {
       "id": "Ku114",
-      "namn": "Benmynt som står på kant en hjärtslag",
-      "beskrivning": "Ett runt mynt skuret ur ben som, släppt från låg höjd, hinner stanna på kant ett kort ögonblick innan det lägger sig platt.",
-      "taggar": {
-        "typ": [
+      "name": "Benmynt som står på kant en hjärtslag",
+      "description": "Ett runt mynt skuret ur ben som, släppt från låg höjd, hinner stanna på kant ett kort ögonblick innan det lägger sig platt.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2067,17 +2297,19 @@
     },
     {
       "id": "Ku115",
-      "namn": "Mässingsspegel som jämnar spegling",
-      "beskrivning": "En liten handmirror i matt mässing där ansiktets finrynkighet mjukas i spegelbilden; effekten syns endast i spegelytan, inte i verkligheten.",
-      "taggar": {
-        "typ": [
+      "name": "Mässingsspegel som jämnar spegling",
+      "description": "En liten handmirror i matt mässing där ansiktets finrynkighet mjukas i spegelbilden; effekten syns endast i spegelytan, inte i verkligheten.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2085,17 +2317,19 @@
     },
     {
       "id": "Ku116",
-      "namn": "Järnask som doftar åska vid regn",
-      "beskrivning": "En liten ask i mörkt järn som vid fuktig väderlek sprider en svag lukt av ozon och blöt sten när locket lyfts någon centimeter.",
-      "taggar": {
-        "typ": [
+      "name": "Järnask som doftar åska vid regn",
+      "description": "En liten ask i mörkt järn som vid fuktig väderlek sprider en svag lukt av ozon och blöt sten när locket lyfts någon centimeter.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2103,17 +2337,19 @@
     },
     {
       "id": "Ku117",
-      "namn": "Stenpärla som rullar trögt åt öster",
-      "beskrivning": "En liten kulformad stenpärla som på slät skiva tycks ta ett aningen kortare varv när den knuffas i östlig riktning jämfört med andra håll.",
-      "taggar": {
-        "typ": [
+      "name": "Stenpärla som rullar trögt åt öster",
+      "description": "En liten kulformad stenpärla som på slät skiva tycks ta ett aningen kortare varv när den knuffas i östlig riktning jämfört med andra håll.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2121,17 +2357,19 @@
     },
     {
       "id": "Ku118",
-      "namn": "Träkub som svalnar vid skymning",
-      "beskrivning": "En liten kub i mörkt trä vars yta blir märkbart svalare just när dagsljuset falnar; efter några minuter känns den som vanligt igen.",
-      "taggar": {
-        "typ": [
+      "name": "Träkub som svalnar vid skymning",
+      "description": "En liten kub i mörkt trä vars yta blir märkbart svalare just när dagsljuset falnar; efter några minuter känns den som vanligt igen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.15
+      "levels": {},
+      "stats": {
+        "vikt": 0.15,
+        "weight": 0.15
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2139,17 +2377,19 @@
     },
     {
       "id": "Ku119",
-      "namn": "Kopparring med torr gnista",
-      "beskrivning": "En smal ring i koppar som i riktigt torr luft kan ge en lätt stickning när den vidrörs; ingen synlig gnista och inget märke efteråt.",
-      "taggar": {
-        "typ": [
+      "name": "Kopparring med torr gnista",
+      "description": "En smal ring i koppar som i riktigt torr luft kan ge en lätt stickning när den vidrörs; ingen synlig gnista och inget märke efteråt.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2157,17 +2397,19 @@
     },
     {
       "id": "Ku120",
-      "namn": "Glasflisa som skärper skuggkanter",
-      "beskrivning": "En tunn, triangulär glasflisa som, hållen framför ögat, gör skuggors kanter aningen skarpare; effekten försvinner när flisan sänks.",
-      "taggar": {
-        "typ": [
+      "name": "Glasflisa som skärper skuggkanter",
+      "description": "En tunn, triangulär glasflisa som, hållen framför ögat, gör skuggors kanter aningen skarpare; effekten försvinner när flisan sänks.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2175,17 +2417,19 @@
     },
     {
       "id": "Ku121",
-      "namn": "Pärlemoskiva som skiftar svagt",
-      "beskrivning": "En tunn, rund skiva i pärlemor som i skugga drar svagt åt grönt och i starkt ljus återgår till blekt vitt utan att skenet fäster vid omgivningen.",
-      "taggar": {
-        "typ": [
+      "name": "Pärlemoskiva som skiftar svagt",
+      "description": "En tunn, rund skiva i pärlemor som i skugga drar svagt åt grönt och i starkt ljus återgår till blekt vitt utan att skenet fäster vid omgivningen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2193,17 +2437,19 @@
     },
     {
       "id": "Ku122",
-      "namn": "Blyring som faller tyst på trä",
-      "beskrivning": "En massiv ring i bly som tappad på träytor nästan inte låter alls, men på sten och metall låter den som vilken ring som helst.",
-      "taggar": {
-        "typ": [
+      "name": "Blyring som faller tyst på trä",
+      "description": "En massiv ring i bly som tappad på träytor nästan inte låter alls, men på sten och metall låter den som vilken ring som helst.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.08
+      "levels": {},
+      "stats": {
+        "vikt": 0.08,
+        "weight": 0.08
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2211,17 +2457,19 @@
     },
     {
       "id": "Ku123",
-      "namn": "Benbit som drar lätt damm",
-      "beskrivning": "En liten, slipad benbit som efter gnugg på tyg får fint ludd och damm att fästa i några andetag innan ytan blir neutral igen.",
-      "taggar": {
-        "typ": [
+      "name": "Benbit som drar lätt damm",
+      "description": "En liten, slipad benbit som efter gnugg på tyg får fint ludd och damm att fästa i några andetag innan ytan blir neutral igen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.03
+      "levels": {},
+      "stats": {
+        "vikt": 0.03,
+        "weight": 0.03
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2229,17 +2477,19 @@
     },
     {
       "id": "Ku124",
-      "namn": "Smalt rör som knäpper vid väderomslag",
-      "beskrivning": "Ett smalt metallrör med förslutna ändar som ibland ger ifrån sig ett svagt knäpp när lufttrycket förändras hastigt i omgivningen.",
-      "taggar": {
-        "typ": [
+      "name": "Smalt rör som knäpper vid väderomslag",
+      "description": "Ett smalt metallrör med förslutna ändar som ibland ger ifrån sig ett svagt knäpp när lufttrycket förändras hastigt i omgivningen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.06
+      "levels": {},
+      "stats": {
+        "vikt": 0.06,
+        "weight": 0.06
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2247,17 +2497,19 @@
     },
     {
       "id": "Ku125",
-      "namn": "Glasögla med nästan omärkbar förstoring",
-      "beskrivning": "En liten, klar glasögla som hålls över små tecken gör linjerna knappt märkbart tydligare, för tunt för att kallas lupp.",
-      "taggar": {
-        "typ": [
+      "name": "Glasögla med nästan omärkbar förstoring",
+      "description": "En liten, klar glasögla som hålls över små tecken gör linjerna knappt märkbart tydligare, för tunt för att kallas lupp.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.04
+      "levels": {},
+      "stats": {
+        "vikt": 0.04,
+        "weight": 0.04
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2265,17 +2517,19 @@
     },
     {
       "id": "Ku126",
-      "namn": "Kopparbricka som alltid vilar med samma sida upp",
-      "beskrivning": "En tunn bricka i koppar som när den släpps på plan yta nästan alltid landar med den märkta sidan upp, utan synlig tyngdförskjutning.",
-      "taggar": {
-        "typ": [
+      "name": "Kopparbricka som alltid vilar med samma sida upp",
+      "description": "En tunn bricka i koppar som när den släpps på plan yta nästan alltid landar med den märkta sidan upp, utan synlig tyngdförskjutning.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.12
+      "levels": {},
+      "stats": {
+        "vikt": 0.12,
+        "weight": 0.12
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2283,17 +2537,19 @@
     },
     {
       "id": "Ku127",
-      "namn": "Stenkula som bromsar mot tegel",
-      "beskrivning": "En liten kula i hård sten som rullad över tegel golv tappar farten strax före stilla läge, som om sista biten höll emot en aning.",
-      "taggar": {
-        "typ": [
+      "name": "Stenkula som bromsar mot tegel",
+      "description": "En liten kula i hård sten som rullad över tegel golv tappar farten strax före stilla läge, som om sista biten höll emot en aning.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.09
+      "levels": {},
+      "stats": {
+        "vikt": 0.09,
+        "weight": 0.09
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2301,17 +2557,19 @@
     },
     {
       "id": "Ku128",
-      "namn": "Järnnål som inte rostar",
-      "beskrivning": "En smal järnnål som med tiden mattas till grått men aldrig får rödbruna rosthinnor, oavsett fukt och kyla.",
-      "taggar": {
-        "typ": [
+      "name": "Järnnål som inte rostar",
+      "description": "En smal järnnål som med tiden mattas till grått men aldrig får rödbruna rosthinnor, oavsett fukt och kyla.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.02
+      "levels": {},
+      "stats": {
+        "vikt": 0.02,
+        "weight": 0.02
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2319,17 +2577,19 @@
     },
     {
       "id": "Ku129",
-      "namn": "Träfigur som doftar svagt av kåda i värme",
-      "beskrivning": "En liten figur i mörkt barrträ som värmd i hand ger ifrån sig en diskret ton av kåda under några sekunder innan lukten tonar ut.",
-      "taggar": {
-        "typ": [
+      "name": "Träfigur som doftar svagt av kåda i värme",
+      "description": "En liten figur i mörkt barrträ som värmd i hand ger ifrån sig en diskret ton av kåda under några sekunder innan lukten tonar ut.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.15
+      "levels": {},
+      "stats": {
+        "vikt": 0.15,
+        "weight": 0.15
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2337,17 +2597,19 @@
     },
     {
       "id": "Ku130",
-      "namn": "Tennremsa som rätar svaga veck",
-      "beskrivning": "En smal remsa i tenn som dragen mellan fingrarna tillfälligt jämnar ut lätta bucklor i sig själv, varefter ytan långsamt återtar sin form.",
-      "taggar": {
-        "typ": [
+      "name": "Tennremsa som rätar svaga veck",
+      "description": "En smal remsa i tenn som dragen mellan fingrarna tillfälligt jämnar ut lätta bucklor i sig själv, varefter ytan långsamt återtar sin form.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.07
+      "levels": {},
+      "stats": {
+        "vikt": 0.07,
+        "weight": 0.07
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2355,17 +2617,19 @@
     },
     {
       "id": "Ku131",
-      "namn": "Benstift med tvärgående ränder",
-      "beskrivning": "Ett smalt stift i blekt ben, tätt ringat av tvärgående ränder som inte bildar något tydligt mönster och vars spets är ofarligt rundad.",
-      "taggar": {
-        "typ": [
+      "name": "Benstift med tvärgående ränder",
+      "description": "Ett smalt stift i blekt ben, tätt ringat av tvärgående ränder som inte bildar något tydligt mönster och vars spets är ofarligt rundad.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.02
+      "levels": {},
+      "stats": {
+        "vikt": 0.02,
+        "weight": 0.02
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2373,17 +2637,19 @@
     },
     {
       "id": "Ku132",
-      "namn": "Kopparskiva med stjärnhål",
-      "beskrivning": "En tunn, rund skiva i koppar där fem små genombrutna hål bildar en skev stjärna; kanterna är svagt ärgbitna.",
-      "taggar": {
-        "typ": [
+      "name": "Kopparskiva med stjärnhål",
+      "description": "En tunn, rund skiva i koppar där fem små genombrutna hål bildar en skev stjärna; kanterna är svagt ärgbitna.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2391,17 +2657,19 @@
     },
     {
       "id": "Ku133",
-      "namn": "Porslinsplugg med blå prick",
-      "beskrivning": "En konisk plugg i vitglaserat porslin med en ensam koboltblå prick på toppen; undersidan är rå och obearbetad.",
-      "taggar": {
-        "typ": [
+      "name": "Porslinsplugg med blå prick",
+      "description": "En konisk plugg i vitglaserat porslin med en ensam koboltblå prick på toppen; undersidan är rå och obearbetad.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.05
+      "levels": {},
+      "stats": {
+        "vikt": 0.05,
+        "weight": 0.05
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2409,17 +2677,19 @@
     },
     {
       "id": "Ku134",
-      "namn": "Skiffertriangel med nött spets",
-      "beskrivning": "En liten triangulär bit skiffer vars ena spets är rundslipad som av lång fickförvaring; ytan är matt med spridda ljusa korn.",
-      "taggar": {
-        "typ": [
+      "name": "Skiffertriangel med nött spets",
+      "description": "En liten triangulär bit skiffer vars ena spets är rundslipad som av lång fickförvaring; ytan är matt med spridda ljusa korn.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2427,17 +2697,19 @@
     },
     {
       "id": "Ku135",
-      "namn": "Silverbuckla med tre nitar",
-      "beskrivning": "En liten, lätt skålformad prydnad i silver där tre nitar sitter kvar utan spår av rem eller tyg och baksidan är märkt av gamla repor.",
-      "taggar": {
-        "typ": [
+      "name": "Silverbuckla med tre nitar",
+      "description": "En liten, lätt skålformad prydnad i silver där tre nitar sitter kvar utan spår av rem eller tyg och baksidan är märkt av gamla repor.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.12
+      "levels": {},
+      "stats": {
+        "vikt": 0.12,
+        "weight": 0.12
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2445,17 +2717,19 @@
     },
     {
       "id": "Ku136",
-      "namn": "Stenfigur av sovande hund",
-      "beskrivning": "En grovhuggen miniatyr i grå sten som föreställer en liggande hund med slutna ögon antydda som två grunda streck över nosryggen.",
-      "taggar": {
-        "typ": [
+      "name": "Stenfigur av sovande hund",
+      "description": "En grovhuggen miniatyr i grå sten som föreställer en liggande hund med slutna ögon antydda som två grunda streck över nosryggen.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.35
+      "levels": {},
+      "stats": {
+        "vikt": 0.35,
+        "weight": 0.35
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2463,17 +2737,19 @@
     },
     {
       "id": "Ku137",
-      "namn": "Glasrulle med innestängd bubbla",
-      "beskrivning": "En kort, klar glasrulle med en ensam luftbubbla som vilar mitt i materialet; inga fogar eller sprickor går att upptäcka.",
-      "taggar": {
-        "typ": [
+      "name": "Glasrulle med innestängd bubbla",
+      "description": "En kort, klar glasrulle med en ensam luftbubbla som vilar mitt i materialet; inga fogar eller sprickor går att upptäcka.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.18
+      "levels": {},
+      "stats": {
+        "vikt": 0.18,
+        "weight": 0.18
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2481,17 +2757,19 @@
     },
     {
       "id": "Ku138",
-      "namn": "Järnspik med dubbla huvuden",
-      "beskrivning": "En handsmidd spik med ett huvud i vardera änden och ett lätt böjt skaft; järnet är mörkt och bär märken efter hammarslag.",
-      "taggar": {
-        "typ": [
+      "name": "Järnspik med dubbla huvuden",
+      "description": "En handsmidd spik med ett huvud i vardera änden och ett lätt böjt skaft; järnet är mörkt och bär märken efter hammarslag.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.15
+      "levels": {},
+      "stats": {
+        "vikt": 0.15,
+        "weight": 0.15
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2499,17 +2777,19 @@
     },
     {
       "id": "Ku139",
-      "namn": "Träklots med instansad krona",
-      "beskrivning": "En liten klots i mörkt trä där en enkel kronsymbol stansats djupt på en sida; övriga sidor är släta och kantade av småslag.",
-      "taggar": {
-        "typ": [
+      "name": "Träklots med instansad krona",
+      "description": "En liten klots i mörkt trä där en enkel kronsymbol stansats djupt på en sida; övriga sidor är släta och kantade av småslag.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.25
+      "levels": {},
+      "stats": {
+        "vikt": 0.25,
+        "weight": 0.25
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0
@@ -2517,17 +2797,19 @@
     },
     {
       "id": "Ku140",
-      "namn": "Lersigill med suddig symbol",
-      "beskrivning": "En sprucken sigillplatta i rödbrun lera där motivet är utsmetat som om stämpeln glidit; baksidan visar spår av avdraget snöre.",
-      "taggar": {
-        "typ": [
+      "name": "Lersigill med suddig symbol",
+      "description": "En sprucken sigillplatta i rödbrun lera där motivet är utsmetat som om stämpeln glidit; baksidan visar spår av avdraget snöre.",
+      "tags": {
+        "types": [
           "Kuriositet"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 0

@@ -4,7 +4,7 @@ import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from data_file_schema import load_json, normalize_payload
+from data_file_schema import load_json, normalize_payload, validate_catalog_payload
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -42,6 +42,16 @@ def split_tags(value):
     return out
 
 
+def get_entry_tags(entry):
+    tags = entry.get('tags')
+    if isinstance(tags, dict):
+        return tags
+    tags = entry.get('taggar')
+    if isinstance(tags, dict):
+        return tags
+    return {}
+
+
 def discover_data_files():
     if MANIFEST_FILE.exists():
         manifest = load_json(MANIFEST_FILE)
@@ -71,7 +81,14 @@ def build_structure(max_examples, strict=False):
 
     for path in discover_data_files():
         try:
-            payload = normalize_payload(load_json(path), source=path.name)
+            raw_payload = load_json(path)
+            errors = validate_catalog_payload(raw_payload, source=path.name, strict=strict)
+            if errors:
+                if strict:
+                    raise ValueError("; ".join(errors))
+                skipped_files.extend(errors)
+                continue
+            payload = normalize_payload(raw_payload, source=path.name)
         except ValueError as err:
             msg = str(err)
             if strict:
@@ -84,8 +101,8 @@ def build_structure(max_examples, strict=False):
         for entry in payload.entries:
             if not isinstance(entry, dict):
                 continue
-            tags = entry.get('taggar') or {}
-            entry_types = split_tags(tags.get('typ') if isinstance(tags, dict) else [])
+            tags = get_entry_tags(entry)
+            entry_types = split_tags(tags.get('types') or tags.get('typ'))
             if not entry_types:
                 continue
             for entry_type in entry_types:

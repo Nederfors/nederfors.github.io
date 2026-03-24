@@ -1,246 +1,273 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Förvaring": {}
   },
   "entries": [
     {
-      "namn": "Bältesväska",
-      "beskrivning": "Liten läderväska som bärs i bältet för småsaker och mynt.",
-      "taggar": {
-        "typ": [
+      "id": "forv1",
+      "name": "Bältesväska",
+      "description": "Liten läderväska som bärs i bältet för småsaker och mynt.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
-      },
-      "id": "forv1"
+      }
     },
     {
-      "namn": "Glasflaska",
-      "beskrivning": "Tålig flaska av glas för att förvara vätskor och tinkturer.",
-      "taggar": {
-        "typ": [
+      "id": "forv2",
+      "name": "Glasflaska",
+      "description": "Tålig flaska av glas för att förvara vätskor och tinkturer.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
-      },
-      "id": "forv2"
+      }
     },
     {
-      "namn": "Kista, liten",
-      "beskrivning": "Liten kista av trä med lås för värdesaker eller dokument.",
-      "taggar": {
-        "typ": [
+      "id": "forv3",
+      "name": "Kista, liten",
+      "description": "Liten kista av trä med lås för värdesaker eller dokument.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 2.0
+      "levels": {},
+      "stats": {
+        "vikt": 2,
+        "weight": 2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 3,
         "örtegar": 0
-      },
-      "id": "forv3"
+      }
     },
     {
-      "namn": "Kista, stor",
-      "beskrivning": "Rymlig kista av kraftigt trä för förvaring av utrustning och kläder.",
-      "taggar": {
-        "typ": [
+      "id": "forv4",
+      "name": "Kista, stor",
+      "description": "Rymlig kista av kraftigt trä för förvaring av utrustning och kläder.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 6.0
+      "levels": {},
+      "stats": {
+        "vikt": 6,
+        "weight": 6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "forv4"
+      }
     },
     {
-      "namn": "Koger",
-      "beskrivning": "Behållare av läder eller trä för pilar eller armborstbultar.",
-      "taggar": {
-        "typ": [
+      "id": "forv5",
+      "name": "Koger",
+      "description": "Behållare av läder eller trä för pilar eller armborstbultar.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
-      },
-      "id": "forv5"
+      }
     },
     {
-      "namn": "Korg",
-      "beskrivning": "Flätad korg av vide eller halm, används för att bära matvaror eller småting.",
-      "taggar": {
-        "typ": [
+      "id": "forv6",
+      "name": "Korg",
+      "description": "Flätad korg av vide eller halm, används för att bära matvaror eller småting.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
-      },
-      "id": "forv6"
+      }
     },
     {
-      "namn": "Lerkrus",
-      "beskrivning": "Krus av bränd lera, passar för mat, dryck eller örter.",
-      "taggar": {
-        "typ": [
+      "id": "forv7",
+      "name": "Lerkrus",
+      "description": "Krus av bränd lera, passar för mat, dryck eller örter.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
-      },
-      "id": "forv7"
+      }
     },
     {
-      "namn": "Penningpung",
-      "beskrivning": "Liten pung med snodd, särskilt avsedd för förvaring av mynt.",
-      "taggar": {
-        "typ": [
+      "id": "forv8",
+      "name": "Penningpung",
+      "description": "Liten pung med snodd, särskilt avsedd för förvaring av mynt.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 3
-      },
-      "id": "forv8"
+      }
     },
     {
-      "namn": "Ryggsäck",
-      "beskrivning": "Robust säck med remmar, bekväm att bära på ryggen under längre färder.",
-      "taggar": {
-        "typ": [
+      "id": "forv9",
+      "name": "Ryggsäck",
+      "description": "Robust säck med remmar, bekväm att bära på ryggen under längre färder.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "forv9"
+      }
     },
     {
-      "namn": "Ränsel",
-      "beskrivning": "Mindre väska som bärs över axeln, rymmer mat och småredskap.",
-      "taggar": {
-        "typ": [
+      "id": "forv10",
+      "name": "Ränsel",
+      "description": "Mindre väska som bärs över axeln, rymmer mat och småredskap.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
-      },
-      "id": "forv10"
+      }
     },
     {
-      "namn": "Smyckat skrin",
-      "beskrivning": "Vackert dekorerad ask, används för smycken och dyrbarheter. Priset varierar beroende på utsmyckning.",
-      "taggar": {
-        "typ": [
+      "id": "forv11",
+      "name": "Smyckat skrin",
+      "description": "Vackert dekorerad ask, används för smycken och dyrbarheter. Priset varierar beroende på utsmyckning.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.8
+      "levels": {},
+      "stats": {
+        "vikt": 0.8,
+        "weight": 0.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 2,
         "skilling": 0,
         "örtegar": 0
       },
-      "maxpris": {
+      "max_price": {
         "daler": 5,
         "skilling": 0,
         "örtegar": 0
-      },
-      "id": "forv11"
+      }
     },
     {
-      "namn": "Säck",
-      "beskrivning": "Tygsäck för spannmål, potatis eller annat större innehåll.",
-      "taggar": {
-        "typ": [
+      "id": "forv12",
+      "name": "Säck",
+      "description": "Tygsäck för spannmål, potatis eller annat större innehåll.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
-      },
-      "id": "forv12"
+      }
     },
     {
-      "namn": "Tunna",
-      "beskrivning": "Större träfat för lagring av vätska eller spannmål med en totalvolym på 50 liter.",
-      "taggar": {
-        "typ": [
+      "id": "forv13",
+      "name": "Tunna",
+      "description": "Större träfat för lagring av vätska eller spannmål med en totalvolym på 50 liter.",
+      "tags": {
+        "types": [
           "Förvaring"
         ]
       },
-      "stat": {
-        "vikt": 7.0
+      "levels": {},
+      "stats": {
+        "vikt": 7,
+        "weight": 7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
-      },
-      "id": "forv13"
+      }
     }
   ]
 }

@@ -1,21 +1,24 @@
 {
-  "typ_regler": {
+  "schema_version": 3,
+  "type_rules": {
     "Kläder": {}
   },
   "entries": [
     {
       "id": "kl1",
-      "namn": "Fattiga trasor",
-      "beskrivning": "Ensamling slitna och lappade kläder, bärs av de allra fattigaste.",
-      "taggar": {
-        "typ": [
+      "name": "Fattiga trasor",
+      "description": "Ensamling slitna och lappade kläder, bärs av de allra fattigaste.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.6
+      "levels": {},
+      "stats": {
+        "vikt": 0.6,
+        "weight": 0.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -23,17 +26,19 @@
     },
     {
       "id": "kl2",
-      "namn": "Enkel dräkt",
-      "beskrivning": "Enkla vardagskläder för allmoge eller tjänstefolk.",
-      "taggar": {
-        "typ": [
+      "name": "Enkel dräkt",
+      "description": "Enkla vardagskläder för allmoge eller tjänstefolk.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -41,17 +46,19 @@
     },
     {
       "id": "kl3",
-      "namn": "Hantverksklädnad",
-      "beskrivning": "Kläder anpassade för arbete, ofta slitstarka och smutsavvisande.",
-      "taggar": {
-        "typ": [
+      "name": "Hantverksklädnad",
+      "description": "Kläder anpassade för arbete, ofta slitstarka och smutsavvisande.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -59,17 +66,19 @@
     },
     {
       "id": "kl4",
-      "namn": "Borgarstass",
-      "beskrivning": "Välskräddad dräkt för stadens välbärgade borgare.",
-      "taggar": {
-        "typ": [
+      "name": "Borgarstass",
+      "description": "Välskräddad dräkt för stadens välbärgade borgare.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.1
+      "levels": {},
+      "stats": {
+        "vikt": 1.1,
+        "weight": 1.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 1,
         "skilling": 0,
         "örtegar": 0
@@ -77,22 +86,24 @@
     },
     {
       "id": "kl5",
-      "namn": "Ädlings ekipering",
-      "beskrivning": "Praktfull och dyrbar klädsel för adelsmän och högreståndspersoner. Priset varierar med tygets och sömnadens kvalitet.",
-      "taggar": {
-        "typ": [
+      "name": "Ädlings ekipering",
+      "description": "Praktfull och dyrbar klädsel för adelsmän och högreståndspersoner. Priset varierar med tygets och sömnadens kvalitet.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.5
+      "levels": {},
+      "stats": {
+        "vikt": 1.5,
+        "weight": 1.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 10,
         "skilling": 0,
         "örtegar": 0
       },
-      "maxpris": {
+      "max_price": {
         "daler": 100,
         "skilling": 0,
         "örtegar": 0
@@ -100,22 +111,24 @@
     },
     {
       "id": "kl6",
-      "namn": "Byxor",
-      "beskrivning": "Enkla benkläder i tyg eller ylle. Priset varierar beroende på material och kvalitet.",
-      "taggar": {
-        "typ": [
+      "name": "Byxor",
+      "description": "Enkla benkläder i tyg eller ylle. Priset varierar beroende på material och kvalitet.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -123,22 +136,24 @@
     },
     {
       "id": "kl7",
-      "namn": "Halsduk",
-      "beskrivning": "Värmande tygstycke för halsen, kan vara enkel eller dekorerad.",
-      "taggar": {
-        "typ": [
+      "name": "Halsduk",
+      "description": "Värmande tygstycke för halsen, kan vara enkel eller dekorerad.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
@@ -146,22 +161,24 @@
     },
     {
       "id": "kl8",
-      "namn": "Hatt",
-      "beskrivning": "Huvudbonad som skyddar mot väder eller visar status. Pris varierar med snitt och dekoration.",
-      "taggar": {
-        "typ": [
+      "name": "Hatt",
+      "description": "Huvudbonad som skyddar mot väder eller visar status. Pris varierar med snitt och dekoration.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.2
+      "levels": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -169,22 +186,24 @@
     },
     {
       "id": "kl9",
-      "namn": "Kappa",
-      "beskrivning": "Varm ytterrock med långa ärmar, bärs över andra plagg. Priset beror på materialets värde.",
-      "taggar": {
-        "typ": [
+      "name": "Kappa",
+      "description": "Varm ytterrock med långa ärmar, bärs över andra plagg. Priset beror på materialets värde.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.8
+      "levels": {},
+      "stats": {
+        "vikt": 1.8,
+        "weight": 1.8
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 10
@@ -192,22 +211,24 @@
     },
     {
       "id": "kl10",
-      "namn": "Kjol",
-      "beskrivning": "Tygstycke som bärs från midjan och nedåt. Kan vara enkel eller vackert dekorerad.",
-      "taggar": {
-        "typ": [
+      "name": "Kjol",
+      "description": "Tygstycke som bärs från midjan och nedåt. Kan vara enkel eller vackert dekorerad.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.5
+      "levels": {},
+      "stats": {
+        "vikt": 0.5,
+        "weight": 0.5
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 10
@@ -215,22 +236,24 @@
     },
     {
       "id": "kl11",
-      "namn": "Klänning",
-      "beskrivning": "Helkroppsplagg för kvinnor, från enkel vardagsklänning till praktfulla festplagg.",
-      "taggar": {
-        "typ": [
+      "name": "Klänning",
+      "description": "Helkroppsplagg för kvinnor, från enkel vardagsklänning till praktfulla festplagg.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.9
+      "levels": {},
+      "stats": {
+        "vikt": 0.9,
+        "weight": 0.9
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 10,
         "örtegar": 0
@@ -238,22 +261,24 @@
     },
     {
       "id": "kl12",
-      "namn": "Kåpa",
-      "beskrivning": "Vid mantel med huva, bärs över kläder för värme och skydd.",
-      "taggar": {
-        "typ": [
+      "name": "Kåpa",
+      "description": "Vid mantel med huva, bärs över kläder för värme och skydd.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.2
+      "levels": {},
+      "stats": {
+        "vikt": 1.2,
+        "weight": 1.2
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 5,
         "örtegar": 0
@@ -261,22 +286,24 @@
     },
     {
       "id": "kl13",
-      "namn": "Mantel",
-      "beskrivning": "Stort ytterplagg utan ärmar, bärs som skydd mot vind och regn.",
-      "taggar": {
-        "typ": [
+      "name": "Mantel",
+      "description": "Stort ytterplagg utan ärmar, bärs som skydd mot vind och regn.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.0
+      "levels": {},
+      "stats": {
+        "vikt": 1,
+        "weight": 1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 6
@@ -284,22 +311,24 @@
     },
     {
       "id": "kl14",
-      "namn": "Mask",
-      "beskrivning": "Ansiktstäckande tillbehör för högtider, skådespel eller maskerad.",
-      "taggar": {
-        "typ": [
+      "name": "Mask",
+      "description": "Ansiktstäckande tillbehör för högtider, skådespel eller maskerad.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 10
@@ -307,22 +336,24 @@
     },
     {
       "id": "kl15",
-      "namn": "Mössa",
-      "beskrivning": "Värmande huvudbonad av tyg eller ull, bärs för att skydda mot kyla.",
-      "taggar": {
-        "typ": [
+      "name": "Mössa",
+      "description": "Värmande huvudbonad av tyg eller ull, bärs för att skydda mot kyla.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.1
+      "levels": {},
+      "stats": {
+        "vikt": 0.1,
+        "weight": 0.1
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -330,22 +361,24 @@
     },
     {
       "id": "kl16",
-      "namn": "Skjorta",
-      "beskrivning": "Långärmat plagg av linne eller bomull, används under väst eller livplagg.",
-      "taggar": {
-        "typ": [
+      "name": "Skjorta",
+      "description": "Långärmat plagg av linne eller bomull, används under väst eller livplagg.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.3
+      "levels": {},
+      "stats": {
+        "vikt": 0.3,
+        "weight": 0.3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 4
@@ -353,17 +386,19 @@
     },
     {
       "id": "kl17",
-      "namn": "Stövlar",
-      "beskrivning": "Slitstarka läderstövlar för vandring, ridning eller arbete.",
-      "taggar": {
-        "typ": [
+      "name": "Stövlar",
+      "description": "Slitstarka läderstövlar för vandring, ridning eller arbete.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 1.6
+      "levels": {},
+      "stats": {
+        "vikt": 1.6,
+        "weight": 1.6
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 1,
         "örtegar": 0
@@ -371,22 +406,24 @@
     },
     {
       "id": "kl18",
-      "namn": "Särk",
-      "beskrivning": "Underplagg i linne eller bomull, används närmast kroppen.",
-      "taggar": {
-        "typ": [
+      "name": "Särk",
+      "description": "Underplagg i linne eller bomull, används närmast kroppen.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.4
+      "levels": {},
+      "stats": {
+        "vikt": 0.4,
+        "weight": 0.4
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 1
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 5
@@ -394,22 +431,24 @@
     },
     {
       "id": "kl19",
-      "namn": "Tunika",
-      "beskrivning": "Bekvämt och löst sittande överplagg, bärs av både kvinnor och män.",
-      "taggar": {
-        "typ": [
+      "name": "Tunika",
+      "description": "Bekvämt och löst sittande överplagg, bärs av både kvinnor och män.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 0.7
+      "levels": {},
+      "stats": {
+        "vikt": 0.7,
+        "weight": 0.7
       },
-      "grundpris": {
+      "base_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 2
       },
-      "maxpris": {
+      "max_price": {
         "daler": 0,
         "skilling": 0,
         "örtegar": 7
@@ -417,17 +456,19 @@
     },
     {
       "id": "kl20",
-      "namn": "Vinterkläder",
-      "beskrivning": "Tjock uppsättning för kyla: fodrad kappa, ylletröja, vadderade byxor, vantar, mössa och halsduk. Gjord för långvarigt uteliv i snö och vind.",
-      "taggar": {
-        "typ": [
+      "name": "Vinterkläder",
+      "description": "Tjock uppsättning för kyla: fodrad kappa, ylletröja, vadderade byxor, vantar, mössa och halsduk. Gjord för långvarigt uteliv i snö och vind.",
+      "tags": {
+        "types": [
           "Kläder"
         ]
       },
-      "stat": {
-        "vikt": 3.0
+      "levels": {},
+      "stats": {
+        "vikt": 3,
+        "weight": 3
       },
-      "grundpris": {
+      "base_price": {
         "daler": 20,
         "skilling": 0,
         "örtegar": 0
