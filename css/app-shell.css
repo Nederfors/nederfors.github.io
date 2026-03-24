@@ -264,19 +264,15 @@ textarea:focus,
     0 1px 0 rgba(245, 230, 208, 0.05) inset;
 }
 
-.entry-row-actions .entry-action-qualities .tags {
+.entry-action-qualities .tags {
   padding: 0.34rem 0.42rem;
-  border: 1px solid rgba(245, 230, 208, 0.08);
-  border-radius: 0.78rem;
-  background:
-    linear-gradient(180deg, rgba(30, 22, 16, 0.985), rgba(22, 16, 12, 0.992)),
-    linear-gradient(180deg, rgba(245, 230, 208, 0.03), rgba(245, 230, 208, 0));
-  box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(245, 230, 208, 0.03);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.entry-row-actions .entry-action-qualities .tag {
+.entry-action-qualities .tag {
   padding: 0.18rem 0.48rem;
   background:
     linear-gradient(180deg, rgba(245, 230, 208, 0.08), rgba(245, 230, 208, 0)),
@@ -290,6 +286,13 @@ textarea:focus,
 .card .tags .tag.neutral,   .db-card .tags .tag.neutral    { border: 1.5px solid var(--neutral); }
 .card .tags .tag.negative,  .db-card .tags .tag.negative   { border: 1.5px solid var(--negative); }
 .card .tags .tag.unbound,   .db-card .tags .tag.unbound    { border: 1.5px solid #e68181; }
+
+/* Free quality tags — filled with their quality colour */
+.card .tags .tag.quality.free,  .db-card .tags .tag.quality.free  { background: var(--quality); color: #1a1410; }
+.card .tags .tag.mystic.free,   .db-card .tags .tag.mystic.free   { background: var(--mystic);  color: #1a1410; }
+.card .tags .tag.neutral.free,  .db-card .tags .tag.neutral.free  { background: var(--neutral); color: #1a1410; }
+.card .tags .tag.negative.free, .db-card .tags .tag.negative.free { background: var(--negative); color: #f5e6d0; }
+.card .tags .tag.unbound.free,  .db-card .tags .tag.unbound.free  { background: #e68181; color: #1a1410; }
 
 .entry-level-control select.level,
 select.level {
@@ -454,19 +457,7 @@ select.level {
 
 @media (max-width: 640px) {
   body.app-shell {
-    padding-inline: 0;
-  }
-
-  .app-title,
-  #activeFilters,
-  .panel {
-    width: 100%;
-    max-width: 100%;
     padding-inline: 0.5rem;
-  }
-
-  .app-title {
-    padding-inline: 0.6rem;
   }
 
   .cat-group > .db-accordion__item[open] {

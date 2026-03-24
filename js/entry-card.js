@@ -245,7 +245,7 @@
     actionsRow.classList.toggle('only-standard', !hasDynamic && hasStandard && !hasLevel);
   };
 
-  const INTERACTIVE_SELECTOR = 'button, a, select, input, textarea, [contenteditable="true"], [role="button"], .filter-tag';
+  const INTERACTIVE_SELECTOR = 'button, a, select, input, textarea, [contenteditable="true"], [role="button"], .filter-tag, .tag.removable';
   let collapseHandlerBound = false;
 
   const handleGlobalClick = e => {
@@ -370,18 +370,16 @@
       : '';
     const actionRowClasses = ['entry-row', 'entry-row-actions'];
     if (!hasDynamic && hasStandard && !levelControlBlock) actionRowClasses.push('only-standard');
-    const actionRowContent = [qualitiesBlock, controlsBlock]
+    const actionRowContent = [controlsBlock]
       .filter(Boolean)
       .join('');
     const actionsRowHtml = actionRowContent
       ? `<div class="${actionRowClasses.join(' ')}">${actionRowContent}</div>`
       : '';
 
-    const summaryHtml = `<div class="db-card__header entry-card-summary card-header">${joinParts([headerRowHtml, infoRowHtml])}</div>`;
+    const summaryHtml = `<div class="db-card__header entry-card-summary card-header">${joinParts([headerRowHtml, infoRowHtml, qualitiesBlock, actionsRowHtml])}</div>`;
 
-    const bodyHtml = actionsRowHtml
-      ? `<div class="db-card__body">${actionsRowHtml}</div>`
-      : '';
+    const bodyHtml = '';
 
     const detailSections = [];
     if (descHtml) detailSections.push(descHtml);

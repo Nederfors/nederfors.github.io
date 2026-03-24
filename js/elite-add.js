@@ -569,17 +569,32 @@
     return entryHasType(entry, 'Elityrke');
   }
 
+  const VALFRITT_XP_TYPES = ['mystisk kraft', 'förmåga', 'basförmåga', 'särdrag', 'monstruöst särdrag', 'ritual'];
+
+  function hasPositiveXPType(entry) {
+    const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
+    return types.some(t => VALFRITT_XP_TYPES.includes(t));
+  }
+
+  let _valfrittCache = null;
+
   function resolveValfrittCandidateNames() {
+    if (_valfrittCache) return _valfrittCache;
     const db = toArray(getLookupOptions().dbList);
     const names = db
       .filter(entry => entry && typeof entry === 'object')
       .filter(entry => !isEliteSkillEntry(entry))
       .filter(entry => !isElityrkeEntry(entry))
       .filter(entry => !entryHasType(entry, 'Fördel') && !entryHasType(entry, 'Nackdel'))
-      .filter(entry => calcItemXP(entry, [entry]) > 0)
+      .filter(entry => hasPositiveXPType(entry))
       .map(entry => String(entry?.namn || '').trim())
       .filter(Boolean);
-    return uniqueNames(names).sort((a, b) => a.localeCompare(b, 'sv'));
+    _valfrittCache = uniqueNames(names).sort((a, b) => a.localeCompare(b, 'sv'));
+    return _valfrittCache;
+  }
+
+  function clearValfrittCache() {
+    _valfrittCache = null;
   }
 
   const TAG_TYPE_META = Object.freeze([
@@ -867,6 +882,14 @@
     const extraSlotCount = Math.max(1, extraNames.length || 1);
     let ownerByName = new Map();
 
+    const entryCache = new Map();
+    function cachedFindEntry(name) {
+      if (entryCache.has(name)) return entryCache.get(name);
+      const result = findEntry(name);
+      entryCache.set(name, result);
+      return result;
+    }
+
     const models = groups.map((group, idx) => {
       const source = groupSource(group);
       const names = uniqueNames(candidateNamesForGroup(group));
@@ -877,7 +900,7 @@
       const isPrimaryTag = source.startsWith('valfri_inom_tagg');
       const isTagBased = minErf > 0 && isPrimaryTag;
       const hasBenefitQty = source === 'specifika_fordelar' || source === 'specifika_nackdelar';
-      const repeatableNames = new Set(names.filter(name => canStackRequirementEntry(findEntry(name))));
+      const repeatableNames = new Set(names.filter(name => canStackRequirementEntry(cachedFindEntry(name))));
       const allowRepeat = Boolean(group?.allow_repeat) || repeatableNames.size > 0;
       const benefitPlan = hasBenefitQty ? buildBenefitCountPlan(names, minCount) : null;
       const minSlots = minCount > 0 ? minCount : (minErf > 0 ? 1 : 0);
@@ -903,7 +926,7 @@
         : TAG_TYPE_META.slice();
       const typeBuckets = typeMeta.reduce((acc, row) => ({ ...acc, [row.key]: [] }), {});
       names.forEach(name => {
-        const entry = findEntry(name);
+        const entry = cachedFindEntry(name);
         const key = typeKeyForEntry(entry);
         if (!key || !typeBuckets[key]) return;
         typeBuckets[key].push(name);
@@ -1163,6 +1186,7 @@
     function closeInternal(){
       if (cleaned) return;
       cleaned = true;
+      clearValfrittCache();
       pop.classList.remove('open');
       box.innerHTML = '';
       add.removeEventListener('click', onAdd);

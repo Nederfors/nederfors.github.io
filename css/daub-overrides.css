@@ -164,6 +164,17 @@
   width: 1.4rem;
   height: 1.4rem;
 }
+/* Action-row buttons use --entry-card-action-size; re-assert after generic override */
+.entry-card .entry-row-actions .control-buttons .db-btn {
+  width: var(--entry-card-action-size);
+  min-width: var(--entry-card-action-size);
+  height: var(--entry-card-action-size);
+  padding: 0;
+}
+.entry-card .entry-row-actions .control-buttons .db-btn .btn-icon {
+  width: calc(var(--entry-card-action-size) - 12px);
+  height: calc(var(--entry-card-action-size) - 12px);
+}
 
 /* ── DAUB component refinements for Symbapedia ──────── */
 

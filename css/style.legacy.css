@@ -2161,7 +2161,6 @@ body[data-role="summary"] .summary-value.neg {
 /* .panel surface now handled by db-card — keep layout only */
 .panel {
   width: 100%;
-  max-width: 520px;
   padding: 2rem 1.6rem;
 }
 
@@ -2451,14 +2450,14 @@ input:focus, select:focus, textarea:focus {
   gap: .35rem;
   justify-content: flex-end;
   align-items: center;
+  margin-top: -.35rem;
 }
 
-.entry-row-actions .entry-action-qualities {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin-right: auto;
+.entry-action-qualities {
   display: flex;
   align-items: center;
+  padding: 0;
+  margin: -.45rem 0 -.3rem;
 }
 
 .entry-row-actions .entry-action-controls {
@@ -2471,7 +2470,7 @@ input:focus, select:focus, textarea:focus {
   gap: .35rem;
 }
 
-.entry-row-actions .entry-action-qualities .tags {
+.entry-action-qualities .tags {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -2480,14 +2479,17 @@ input:focus, select:focus, textarea:focus {
   line-height: 1.1;
   white-space: nowrap;
   overflow-x: auto;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   scrollbar-width: none;
 }
 
-.entry-row-actions .entry-action-qualities .tags::-webkit-scrollbar {
+.entry-action-qualities .tags::-webkit-scrollbar {
   display: none;
 }
 
-.entry-row-actions .entry-action-qualities .tag {
+.entry-action-qualities .tag {
   font-size: inherit;
   padding: .08rem .35rem;
   white-space: nowrap;
@@ -2790,14 +2792,16 @@ input:focus, select:focus, textarea:focus {
 }
 
 .entry-row-actions .control-buttons .entry-standard-action,
-.entry-row-actions .control-buttons .char-btn {
+.entry-row-actions .control-buttons .char-btn,
+.entry-row-actions .control-buttons .db-btn {
   width: var(--entry-card-action-size);
   min-width: var(--entry-card-action-size);
   height: var(--entry-card-action-size);
   padding: 0;
 }
 
-.entry-row-actions .control-buttons .entry-standard-action .btn-icon {
+.entry-row-actions .control-buttons .entry-standard-action .btn-icon,
+.entry-row-actions .control-buttons .db-btn .btn-icon {
   width: calc(var(--entry-card-action-size) - 12px);
   height: calc(var(--entry-card-action-size) - 12px);
 }
