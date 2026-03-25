@@ -28,7 +28,7 @@
   --db-color-accent:          #c45a2a;
   --db-color-accent-hover:    #e07838;
   --db-color-accent-rgb:      196, 90, 42;
-  --db-accent-dark:           #a04420;
+  --db-accent-dark:           #B97A52;
   --db-accent-light:          #e07838;
   --db-accent-hover:          #e07838;
   --db-accent-pressed:        #8a3618;
@@ -364,9 +364,14 @@
 }
 
 /* ── Bridge: DAUB chip inheriting tag colour semantics ─ */
-.db-chip.quality   { border: 1.5px solid var(--quality); }
-.db-chip.mystic    { border: 1.5px solid var(--mystic); }
-.db-chip.neutral   { border: 1.5px solid var(--neutral); }
-.db-chip.negative  { border: 1.5px solid var(--negative); }
-.db-chip.unbound   { border: 1.5px solid #e68181; }
-.db-chip.free      { background: var(--db-color-accent); color: #fff; }
+.db-chip.quality   { background: color-mix(in srgb, var(--quality) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--quality) 50%, transparent); color: var(--quality); }
+.db-chip.mystic    { background: color-mix(in srgb, var(--mystic) 22%, transparent);  border: 1.5px solid color-mix(in srgb, var(--mystic) 50%, transparent);  color: var(--mystic); }
+.db-chip.neutral   { background: color-mix(in srgb, var(--neutral) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--neutral) 50%, transparent); color: var(--neutral); }
+.db-chip.negative  { background: color-mix(in srgb, var(--negative) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--negative) 50%, transparent); color: var(--negative); }
+.db-chip.unbound   { background: rgba(232, 129, 129, 0.18); border: 1.5px solid rgba(232, 129, 129, 0.5); color: #e68181; }
+
+/* Free quality glow */
+.db-chip.quality.free   { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--quality) 55%, transparent); }
+.db-chip.mystic.free    { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mystic) 55%, transparent); }
+.db-chip.neutral.free   { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--neutral) 55%, transparent); }
+.db-chip.negative.free  { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--negative) 55%, transparent); }

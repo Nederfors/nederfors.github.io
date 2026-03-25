@@ -294,6 +294,16 @@ textarea:focus,
 .card .tags .tag.negative.free, .db-card .tags .tag.negative.free { background: var(--negative); color: #f5e6d0; }
 .card .tags .tag.unbound.free,  .db-card .tags .tag.unbound.free  { background: #e68181; color: #1a1410; }
 
+/* Quality db-chips in card context — filled style with glow on free */
+.card .tags .db-chip.quality,  .db-card .tags .db-chip.quality  { background: color-mix(in srgb, var(--quality) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--quality) 50%, transparent); color: var(--quality); }
+.card .tags .db-chip.mystic,   .db-card .tags .db-chip.mystic   { background: color-mix(in srgb, var(--mystic) 22%, transparent);  border: 1.5px solid color-mix(in srgb, var(--mystic) 50%, transparent);  color: var(--mystic); }
+.card .tags .db-chip.neutral,  .db-card .tags .db-chip.neutral  { background: color-mix(in srgb, var(--neutral) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--neutral) 50%, transparent); color: var(--neutral); }
+.card .tags .db-chip.negative, .db-card .tags .db-chip.negative { background: color-mix(in srgb, var(--negative) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--negative) 50%, transparent); color: var(--negative); }
+.card .tags .db-chip.quality.free  { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--quality) 55%, transparent); }
+.card .tags .db-chip.mystic.free   { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mystic) 55%, transparent); }
+.card .tags .db-chip.neutral.free  { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--neutral) 55%, transparent); }
+.card .tags .db-chip.negative.free { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--negative) 55%, transparent); }
+
 .entry-level-control select.level,
 select.level {
   border-color: rgba(196, 130, 80, 0.14);

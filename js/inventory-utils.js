@@ -5236,7 +5236,7 @@
     if (all.length) {
       const qhtml = all.map(obj => {
         const q = obj.q;
-        const cls = `tag removable quality${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
+        const cls = `db-chip removable quality${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
         const baseAttr = obj.base ? ' data-base="1"' : '';
         return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
       }).join('');

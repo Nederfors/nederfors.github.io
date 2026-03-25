@@ -61,10 +61,10 @@
   --subtxt: var(--db-color-text-secondary, #c4a882);
   --accent: var(--db-color-accent, #c45a2a);
   --mystic: #a88fcc;
-  --quality: #d4a237;
-  --neutral: #7daa6e;
+  --quality: #6b9e5b;
+  --neutral: #5b8ab5;
   --hilight: #e0783840;
-  --negative: #8b4513;
+  --negative: #8b6540;
   --danger: var(--db-color-error, #e85c4a);
   --danger-bg: #3a1812;
   --shadow: var(--db-shadow-2, 0 18px 38px rgba(0, 0, 0, 0.38));

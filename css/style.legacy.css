@@ -33,10 +33,10 @@
 
   /* Semantiska färger i samma tonvärld */
   --mystic:      #A88FCC;   /* nedtonad lila, passar brun bas */
-  --quality:     #C2A36A;   /* varm guldbetonad status */
-  --neutral:     #9CB69A;   /* mild grön för neutralt/ok */
+  --quality:     #6b9e5b;   /* grön för positiv kvalitet */
+  --neutral:     #5b8ab5;   /* blå för neutral kvalitet */
   --hilight:     #57ff4b75;   /* mild grön för highlightande av knappar */
-  --negative:    #8B4513;   /* bränd sienna */
+  --negative:    #8b6540;   /* brun för negativ kvalitet */
 
   /* Fara / CTA */
   --danger:      #ee6b61;
