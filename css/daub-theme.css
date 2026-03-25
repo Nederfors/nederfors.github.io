@@ -1,5 +1,57 @@
+/*
+ * Symbapedia DAUB Theme Configuration
+ * ====================================
+ *
+ * HOW TO CHANGE THEME / TEXTURE:
+ *
+ * 1) Open index.html and change the attributes on <html>:
+ *
+ *    <html lang="sv" data-theme="ember-dark" data-db-texture="wood">
+ *
+ * 2) Available themes (set via data-theme):
+ *      default, dark
+ *      grunge-light, grunge-dark
+ *      solarized, solarized-dark
+ *      ink, ink-light
+ *      ember, ember-light
+ *      bone, bone-dark
+ *      dracula, dracula-light
+ *      nord, nord-light
+ *      one-dark, one-dark-light
+ *      monokai, monokai-light
+ *      gruvbox, gruvbox-light
+ *      night-owl, night-owl-light
+ *      github, github-dark
+ *      catppuccin, catppuccin-dark
+ *      tokyo-night, tokyo-night-light
+ *      material, material-light
+ *      synthwave, synthwave-light
+ *      shades-of-purple, shades-of-purple-light
+ *      ayu, ayu-dark
+ *      horizon, horizon-light
+ *
+ *    "ember-dark" is Symbapedia's custom dark-fantasy variant
+ *    (defined in daub-overrides.css).
+ *
+ * 3) Available textures (set via data-db-texture):
+ *      (none)  — default fractal noise
+ *      paper   — soft fibrous texture
+ *      metal   — brushed aluminum
+ *      wood    — wavy horizontal grain
+ *      glass   — frosted translucency (no background noise)
+ *      none    — no texture at all
+ *
+ * 4) Noise level — adjust --db-noise below (0 = none, 1 = heavy):
+ *
+ * 5) Temperature — adjust --db-temperature (-1 cool … 0 neutral … +1 warm):
+ */
+
 :root {
-  /* Legacy palette — bridged to DAUB grain-wood / ember tokens */
+  /* -- Noise & temperature --------------------------------- */
+  --db-noise: 1;
+  --db-temperature: 0;
+
+  /* -- Legacy palette — bridged to DAUB tokens ------------- */
   --bg: var(--db-color-bg-alt, #261c16);
   --panel: var(--db-color-surface, #2a1f18);
   --border: var(--db-color-border, #4a3628);
@@ -26,8 +78,6 @@
   --shell-width: min(1120px, calc(100vw - 1.6rem));
   --shell-edge: var(--db-color-border, rgba(245, 230, 208, 0.08));
   --shell-highlight: rgba(245, 230, 208, 0.14);
-  --db-layout-texture-base: url('../icons/wood-grain.svg');
-  --db-layout-texture-overlay: url('../icons/wood-grain.svg');
 }
 
 html,
@@ -43,51 +93,11 @@ html {
   scrollbar-gutter: stable;
 }
 
-html[data-db-texture="grain"] {
-  --db-layout-texture-base: url('../icons/grain.svg');
-  --db-layout-texture-overlay: url('../icons/grain.svg');
-}
-
-html[data-db-texture="wood"] {
-  --db-layout-texture-base: url('../icons/wood-grain.svg');
-  --db-layout-texture-overlay: url('../icons/wood-grain.svg');
-}
-
-html::before,
-html::after {
-  content: '';
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-}
-
 body.app-shell {
   min-height: 100vh;
   position: relative;
   font-family: var(--db-font-ui, var(--ui-font));
-  background: transparent;
   isolation: isolate;
-}
-
-html::before {
-  background:
-    linear-gradient(180deg, rgba(10, 6, 3, 0.30), rgba(10, 6, 3, 0.55)),
-    radial-gradient(ellipse at 20% 80%, rgba(196, 90, 42, 0.12), transparent 35%),
-    radial-gradient(ellipse at 75% 15%, rgba(224, 120, 56, 0.10), transparent 30%),
-    radial-gradient(circle at 50% 0%, rgba(160, 68, 32, 0.14), transparent 45%),
-    linear-gradient(160deg, #2a1c12 0%, #140e09 100%),
-    url('../icons/background.svg') center top / cover no-repeat,
-    var(--db-layout-texture-base) center / 320px repeat;
-  opacity: 0.78;
-}
-
-html::after {
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0.24)),
-    var(--db-layout-texture-overlay) center / 240px repeat;
-  opacity: 0.07;
-  mix-blend-mode: soft-light;
 }
 
 body.app-shell > * {

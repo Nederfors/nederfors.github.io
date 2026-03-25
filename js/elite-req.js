@@ -83,12 +83,12 @@
     return entryHasType(item, wanted);
   }
 
-  function calcItemXP(item, list) {
+  function calcItemXP(item, list, grantMaps) {
     if (!item || typeof item !== 'object') return 0;
     const helper = window.storeHelper;
     if (helper && typeof helper.calcEntryXP === 'function') {
       try {
-        const value = Number(helper.calcEntryXP(item, list));
+        const value = Number(helper.calcEntryXP(item, list, grantMaps ? { grantMaps } : undefined));
         if (Number.isFinite(value)) return Math.max(0, value);
       } catch {}
     }
@@ -103,6 +103,9 @@
 
   function buildTokens(list) {
     const sourceList = toArray(list);
+    const grantMaps = (window.storeHelper && typeof window.storeHelper.buildGrantMaps === 'function')
+      ? window.storeHelper.buildGrantMaps(sourceList)
+      : null;
     return sourceList
       .map((item, idx) => {
         const name = itemName(item);
@@ -113,7 +116,7 @@
           item,
           name,
           key: normalizeKey(name),
-          xp: calcItemXP(item, sourceList),
+          xp: calcItemXP(item, sourceList, grantMaps),
           isBenefit: isBenefit(item),
           isDrawback: isDrawback(item),
           sourceHint: tokenSourceHint(item)

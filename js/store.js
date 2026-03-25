@@ -3990,9 +3990,9 @@ function defaultTraits() {
     return { key, count, effectiveCount };
   }
 
-  function calcEntryXP(entry, list) {
+  function calcEntryXP(entry, list, options) {
     const entries = Array.isArray(list) ? list : [];
-    const { grantCounts, grantConstraints, grantIgnoreCounts } = buildGrantMaps(entries);
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = (options && options.grantMaps) || buildGrantMaps(entries);
     if (isRuleGrantedEntry(entry, entries, { grantCounts, grantConstraints })) return 0;
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) {

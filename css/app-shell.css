@@ -333,10 +333,8 @@ select.level {
 .card button:not(.entry-collapse-btn),
 .traits-tab {
   border: 1px solid rgba(245, 230, 208, 0.12);
-  background:
-    linear-gradient(180deg, rgba(245, 230, 208, 0.14), rgba(245, 230, 208, 0)),
-    linear-gradient(180deg, var(--db-accent-dark, #a04420), var(--db-accent-pressed, #8a3618) 62%, #6e2a12);
-  box-shadow: var(--db-shadow-1, 0 12px 20px rgba(0, 0, 0, 0.22));
+  background: var(--db-accent-dark, #a04420);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   font-family: var(--db-font-ui, var(--ui-font));
   font-weight: 600;
   transition:
@@ -348,9 +346,7 @@ select.level {
 .char-btn.danger,
 .db-btn--danger,
 .card button.danger {
-  background:
-    linear-gradient(180deg, rgba(245, 230, 208, 0.10), rgba(245, 230, 208, 0)),
-    linear-gradient(180deg, #a83830, #6e2018 62%, #521510);
+  background: #a83830;
 }
 
 .party-toggle.active,
@@ -358,15 +354,9 @@ select.level {
 .char-btn[aria-pressed='true'],
 .toolbar button[aria-pressed='true'] {
   border-color: rgba(221, 225, 186, 0.34);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
-    linear-gradient(180deg, #8ea283, #6e805f 62%, #59694d);
+  background: #7a9470;
   color: #192013;
-  box-shadow:
-    0 2px 0 rgba(34, 42, 27, 0.88),
-    0 12px 20px rgba(0, 0, 0, 0.16),
-    0 1px 0 rgba(255, 255, 255, 0.16) inset,
-    0 -1px 0 rgba(44, 56, 37, 0.26) inset;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   text-shadow: none;
 }
 
@@ -377,14 +367,9 @@ select.level {
 .party-toggle:hover,
 .card button:not(.entry-collapse-btn):hover,
 .traits-tab:hover {
-  filter: brightness(1.05);
+  filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow:
-    0 2px 0 rgba(30, 14, 8, 0.90),
-    0 8px 16px rgba(0, 0, 0, 0.18),
-    0 0 6px rgba(196, 90, 42, 0.08),
-    0 1px 0 rgba(245, 230, 208, 0.08) inset,
-    0 -1px 0 rgba(68, 32, 18, 0.36) inset;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
 }
 
 .char-btn:active,
