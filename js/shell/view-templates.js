@@ -217,14 +217,15 @@ export const VIEW_TEMPLATES = Object.freeze({
       <div class="header-actions"></div>
     </div>
 
-    <nav class="traits-tabs" aria-label="Egenskapsnavigering" role="tablist">
-      <a id="traitsTabTraits" class="traits-tab active" href="#tab-traits" data-traits-tab="traits" role="tab" aria-controls="traitsTabPanel" aria-selected="true" aria-current="page">Karaktärsdrag</a>
-      <a id="traitsTabSummary" class="traits-tab" href="#tab-summary" data-traits-tab="summary" role="tab" aria-controls="summaryTabPanel" aria-selected="false" tabindex="-1">Översikt</a>
-      <a id="traitsTabEffects" class="traits-tab" href="#tab-effects" data-traits-tab="effects" role="tab" aria-controls="effectsTabPanel" aria-selected="false" tabindex="-1">Effekter</a>
-    </nav>
+    <div class="db-tabs traits-tabs-shell">
+      <nav class="db-tabs__list traits-tabs" aria-label="Egenskapsnavigering" role="tablist">
+        <a id="traitsTabTraits" class="db-tabs__tab traits-tab active" href="#tab-traits" data-traits-tab="traits" role="tab" aria-controls="traitsTabPanel" aria-selected="true" aria-current="page">Karaktärsdrag</a>
+        <a id="traitsTabSummary" class="db-tabs__tab traits-tab" href="#tab-summary" data-traits-tab="summary" role="tab" aria-controls="summaryTabPanel" aria-selected="false" tabindex="-1">Översikt</a>
+        <a id="traitsTabEffects" class="db-tabs__tab traits-tab" href="#tab-effects" data-traits-tab="effects" role="tab" aria-controls="effectsTabPanel" aria-selected="false" tabindex="-1">Effekter</a>
+      </nav>
 
-    <div class="db-card__body traits-tab-panels">
-      <section id="traitsTabPanel" class="traits-tab-panel traits-content summary-content active" data-tab-panel="traits" role="tabpanel" aria-labelledby="traitsTabTraits">
+      <div class="db-card__body traits-tab-panels">
+        <section id="traitsTabPanel" class="db-tabs__panel traits-tab-panel traits-content summary-content active" data-tab-panel="traits" role="tabpanel" aria-labelledby="traitsTabTraits">
         <section class="summary-section trait-xp-section">
           <div id="xpSummary" class="trait-xp-summary">
             <div class="trait-xp-header">
@@ -274,15 +275,16 @@ export const VIEW_TEMPLATES = Object.freeze({
           </div>
           <div id="traits" class="traits-grid traits"></div>
         </section>
-      </section>
+        </section>
 
-      <section id="summaryTabPanel" class="traits-tab-panel summary-panel summary-content" data-tab-panel="summary" role="tabpanel" aria-labelledby="traitsTabSummary" hidden>
-        <div id="summaryContent" class="summary-content"></div>
-      </section>
+        <section id="summaryTabPanel" class="db-tabs__panel traits-tab-panel summary-panel summary-content" data-tab-panel="summary" role="tabpanel" aria-labelledby="traitsTabSummary" hidden>
+          <div id="summaryContent" class="summary-content"></div>
+        </section>
 
-      <section id="effectsTabPanel" class="traits-tab-panel effects-panel summary-content" data-tab-panel="effects" role="tabpanel" aria-labelledby="traitsTabEffects" hidden>
-        <div id="effectsContent" class="summary-content"></div>
-      </section>
+        <section id="effectsTabPanel" class="db-tabs__panel traits-tab-panel effects-panel summary-content" data-tab-panel="effects" role="tabpanel" aria-labelledby="traitsTabEffects" hidden>
+          <div id="effectsContent" class="summary-content"></div>
+        </section>
+      </div>
     </div>
   </div>
 `

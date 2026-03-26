@@ -20,6 +20,16 @@
     return String(value);
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
   function normalizeOptionKey(value) {
     const token = normalizeText(normalizeValue(value));
     return token || CHOICE_EMPTY_VALUE_KEY;
@@ -27,35 +37,30 @@
 
   function createPopup() {
     if (document.getElementById('choicePopup')) return;
-    const useDaub = typeof DAUB !== 'undefined' && DAUB.openModal;
+    const renderCloseButton = window.popupUi?.renderCloseButton;
     const div = document.createElement('div');
     div.id = 'choicePopup';
-
-    if (useDaub) {
-      div.className = 'db-modal-overlay popup';
-      div.setAttribute('aria-hidden', 'true');
-      div.innerHTML = `<div class="db-modal">
-        <div class="db-modal__header">
-          <h2 id="choiceTitle" class="db-modal__title">Välj alternativ</h2>
-          <button id="choiceClose" class="db-modal__close" type="button" aria-label="Stäng">&times;</button>
-        </div>
-        <div class="db-modal__body">
-          <p id="choiceSubtitle" class="picker-popup-subtitle" hidden></p>
-          <label id="choiceSearchLabel" for="choiceSearch" class="picker-popup-search-label" hidden>Sök</label>
-          <input id="choiceSearch" class="db-input picker-popup-search-input" type="search" placeholder="Sök..." autocomplete="off" spellcheck="false" hidden>
-          <div id="choiceOpts" class="picker-popup-options"></div>
-          <p id="choiceEmpty" class="picker-popup-empty" hidden>Inga alternativ matchar sökningen.</p>
-        </div>
-        <div class="db-modal__footer">
-          <button id="choiceCancel" class="db-btn db-btn--danger" type="button">Avbryt</button>
-        </div>
-      </div>`;
-    } else {
-      div.className = 'popup picker-popup';
-      div.innerHTML = `<div class="popup-inner picker-popup-ui"><header class="picker-popup-header"><h3 id="choiceTitle" class="picker-popup-title">Välj alternativ</h3><button id="choiceClose" class="char-btn icon picker-popup-close" type="button" title="Stäng">✕</button></header><p id="choiceSubtitle" class="picker-popup-subtitle" hidden></p><label id="choiceSearchLabel" for="choiceSearch" class="picker-popup-search-label" hidden>Sök</label><input id="choiceSearch" class="picker-popup-search-input" type="search" placeholder="Sök..." autocomplete="off" spellcheck="false" hidden><div id="choiceOpts" class="picker-popup-options"></div><p id="choiceEmpty" class="picker-popup-empty" hidden>Inga alternativ matchar sökningen.</p><div class="picker-popup-actions"><button id="choiceCancel" class="char-btn danger" type="button">Avbryt</button></div></div>`;
-    }
+    div.className = 'db-modal-overlay popup picker-popup';
+    div.setAttribute('aria-hidden', 'true');
+    div.innerHTML = `<div class="db-modal popup-inner picker-popup-ui">
+      <div class="db-modal__header picker-popup-header">
+        <h2 id="choiceTitle" class="db-modal__title picker-popup-title">Välj alternativ</h2>
+        ${renderCloseButton
+          ? renderCloseButton({ id: 'choiceClose', className: 'picker-popup-close', title: 'Stäng' })
+          : '<button id="choiceClose" class="db-modal__close picker-popup-close" type="button" aria-label="Stäng">&times;</button>'}
+      </div>
+      <div class="db-modal__body picker-popup-body">
+        <p id="choiceSubtitle" class="picker-popup-subtitle" hidden></p>
+        <label id="choiceSearchLabel" for="choiceSearch" class="picker-popup-search-label" hidden>Sök</label>
+        <input id="choiceSearch" class="db-input picker-popup-search-input" type="search" placeholder="Sök..." autocomplete="off" spellcheck="false" hidden>
+        <div id="choiceOpts" class="picker-popup-options"></div>
+        <p id="choiceEmpty" class="picker-popup-empty" hidden>Inga alternativ matchar sökningen.</p>
+      </div>
+    </div>`;
     document.body.appendChild(div);
+    window.popupUi?.normalizeModal?.(div);
     window.registerOverlayElement?.(div);
+    window.DAUB?.init?.(div);
   }
 
   function normalizeOption(raw, index) {
@@ -182,7 +187,6 @@
   function open(config = {}) {
     createPopup();
     const pop = document.getElementById('choicePopup');
-    const useDaub = pop.classList.contains('db-modal-overlay') && typeof DAUB !== 'undefined';
     const inner = pop.querySelector('.popup-inner') || pop.querySelector('.db-modal__body');
     const titleEl = pop.querySelector('#choiceTitle');
     const subtitleEl = pop.querySelector('#choiceSubtitle');
@@ -190,11 +194,7 @@
     const searchInput = pop.querySelector('#choiceSearch');
     const box = pop.querySelector('#choiceOpts');
     const emptyEl = pop.querySelector('#choiceEmpty');
-    const cancelBtn = pop.querySelector('#choiceCancel');
     const closeBtn = pop.querySelector('#choiceClose');
-
-    const btnCls = useDaub ? 'db-btn' : 'char-btn';
-    const btnClsDisabled = useDaub ? 'db-btn db-btn--disabled' : 'char-btn disabled';
 
     const title = String(config.title || 'Välj alternativ').trim();
     const subtitle = String(config.subtitle || '').trim();
@@ -227,14 +227,28 @@
       const term = searchEnabled ? normalizeText(searchInput.value) : '';
       shown = allOptions.filter(option => !term || option.searchText.includes(term));
       box.innerHTML = shown.length
-        ? shown.map((option, idx) => {
+        ? `<div class="db-radio-group choice-popup-radio-list">${shown.map((option, idx) => {
+          const disabledClass = option.disabled ? ' is-disabled' : '';
+          const titleAttr = option.disabledReason ? ` title="${escapeHtml(option.disabledReason)}"` : '';
+          if (typeof window.renderDaubRadioRow === 'function') {
+            return window.renderDaubRadioRow({
+              rowClass: `choice-popup-option${disabledClass}`,
+              labelAttrs: ` data-i="${idx}" data-aa-key="choice:${normalizeOptionKey(option.value)}"${titleAttr}`,
+              copyHtml: `<span class="choice-popup-option-copy">${escapeHtml(option.label)}</span>`,
+              inputAttrs: ` name="choicePopupOption" value="${escapeHtml(option.value)}" data-i="${idx}"`,
+              disabled: option.disabled
+            });
+          }
           const disabled = option.disabled ? ' disabled aria-disabled="true"' : '';
-          const titleAttr = option.disabledReason ? ` title="${option.disabledReason.replace(/"/g, '&quot;')}"` : '';
-          const cls = option.disabled ? btnClsDisabled : btnCls;
-          return `<button data-i="${idx}" data-aa-key="choice:${normalizeOptionKey(option.value)}" class="${cls}" type="button"${disabled}${titleAttr}>${option.label}</button>`;
-        }).join('')
-        : `<button class="${btnCls}" type="button" disabled>Inga val kvar</button>`;
+          return `<label data-i="${idx}" data-aa-key="choice:${normalizeOptionKey(option.value)}" class="db-radio popup-radio-option choice-popup-option${disabledClass}"${titleAttr}>
+            <input class="db-radio__input" type="radio" name="choicePopupOption" value="${escapeHtml(option.value)}" data-i="${idx}"${disabled}>
+            <span class="db-radio__circle"></span>
+            <span class="choice-popup-option-copy">${escapeHtml(option.label)}</span>
+          </label>`;
+        }).join('')}</div>`
+        : '';
       emptyEl.hidden = shown.length !== 0;
+      window.DAUB?.init?.(box);
     }
 
     let popupSession = null;
@@ -243,9 +257,8 @@
     function cleanup() {
       box.innerHTML = '';
       if (searchEnabled) searchInput.value = '';
-      box.removeEventListener('click', onClick);
-      cancelBtn.removeEventListener('click', onCancel);
-      closeBtn.removeEventListener('click', onCancel);
+      box.removeEventListener('change', onChange);
+      closeBtn?.removeEventListener('click', onCancel);
       if (!usingManager) pop.removeEventListener('click', onOutside);
       if (searchEnabled) searchInput.removeEventListener('input', onSearch);
     }
@@ -258,15 +271,16 @@
         popupSession.close(reason);
       } else {
         pop.classList.remove('open');
+        pop.setAttribute('aria-hidden', 'true');
         cleanup();
         resolvePromise(currentResult);
       }
     }
 
-    function onClick(e) {
-      const btn = e.target.closest('button[data-i]');
-      if (!btn || btn.disabled) return;
-      const idx = Number(btn.dataset.i);
+    function onChange(e) {
+      const input = e.target instanceof HTMLInputElement ? e.target : null;
+      if (!input || input.disabled) return;
+      const idx = Number(input.dataset.i);
       const option = shown[idx];
       if (!option) return;
       resolver(option.value);
@@ -305,6 +319,7 @@
         }
       });
     } else {
+      pop.setAttribute('aria-hidden', 'false');
       pop.classList.add('open');
     }
     if (inner) inner.scrollTop = 0;
@@ -317,9 +332,8 @@
       resolver = (value) => {
         finish(value, value === null ? 'cancel' : 'select');
       };
-      box.addEventListener('click', onClick);
-      cancelBtn.addEventListener('click', onCancel);
-      closeBtn.addEventListener('click', onCancel);
+      box.addEventListener('change', onChange);
+      closeBtn?.addEventListener('click', onCancel);
       if (!usingManager) pop.addEventListener('click', onOutside);
       if (searchEnabled) searchInput.addEventListener('input', onSearch);
     });

@@ -30,8 +30,8 @@
  *      ayu, ayu-dark
  *      horizon, horizon-light
  *
- *    "ember" is Symbapedia's custom dark-fantasy variant
- *    (DAUB tokens + legacy aliases defined in daub-overrides.css).
+ *    "ember" is Symbapedia's active custom dark-fantasy variant.
+ *    DAUB tokens and compatibility aliases are defined in daub-bridges.css.
  *
  * 3) Available textures (set via data-db-texture):
  *      (none)  — default fractal noise

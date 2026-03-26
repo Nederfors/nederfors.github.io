@@ -70,7 +70,8 @@
         level: popupLevel
       })
       : false;
-    if (!skipRequirementPopup && popup && typeof popup.open === 'function' && candidateEntry && Array.isArray(list)) {
+    const preferDialogFallback = Array.isArray(window.__testDialogMessages);
+    if (!skipRequirementPopup && !preferDialogFallback && popup && typeof popup.open === 'function' && candidateEntry && Array.isArray(list)) {
       const title = action === 'level-change'
         ? `Lås upp nivåändring för ${quoteName(entryName) || 'posten'}`
         : `Lås upp ${quoteName(entryName) || 'posten'}`;
@@ -455,9 +456,17 @@
     const LEVEL_IDX = { '': 0, Novis: 1, 'Ges\u00e4ll': 2, 'M\u00e4stare': 3 };
     let sTemp = '';
     let union = storeHelper.getFilterUnion(store);
-    dom.filterUnion.classList.toggle('active', union);
+    if (typeof window.setDaubSwitchState === 'function') {
+      window.setDaubSwitchState(dom.filterUnion, union);
+    } else {
+      dom.filterUnion.classList.toggle('active', union);
+    }
     let compact = storeHelper.getCompactEntries(store);
-    dom.entryViewToggle.classList.toggle('active', !compact);
+    if (typeof window.setDaubSwitchState === 'function') {
+      window.setDaubSwitchState(dom.entryViewToggle, !compact);
+    } else {
+      dom.entryViewToggle.classList.toggle('active', !compact);
+    }
     let catsMinimized = false;
     let showArtifacts = false;
     let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
@@ -3681,7 +3690,7 @@
           if (curIdx >= 0) inv.splice(curIdx, 1);
         };
         const confirmTempRow = () => {
-          if (isNewRow) queueUpdate(p);
+          updateEntryCardUI(p);
         };
         window.invUtil.openBuyMultiplePopup({
           row,

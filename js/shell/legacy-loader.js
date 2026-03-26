@@ -9,6 +9,7 @@ const PRELOAD_SCRIPTS = [
 
 const CORE_SCRIPTS = [
   'js/snapshot-helper.js',
+  'js/popup-ui.js',
   'js/inventory-utils.js',
   'js/traits-utils.js',
   'js/popup-manager.js',

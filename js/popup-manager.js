@@ -328,6 +328,13 @@
     if (!pop) return;
 
     const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    const closeButton = Array.isArray(path)
+      ? path.find(node => node instanceof Element && node.matches?.('.db-modal__close, [data-popup-close]'))
+      : null;
+    if (closeButton) {
+      close(top.id, 'close-button');
+      return;
+    }
     const inner = pop.querySelector('.popup-inner') || pop.querySelector('.db-modal');
     const clickedInner = inner
       ? (pathContains(path, inner) || (event.target instanceof Node && inner.contains(event.target)))

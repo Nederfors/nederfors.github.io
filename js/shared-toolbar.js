@@ -26,6 +26,80 @@ const removeToolbarUiPref = (key) => {
 };
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+const LEVEL_OPTION_SPECS = Object.freeze([
+  { value: '', label: 'Ingen', hint: 'Stäng av bonusen från partyt.' },
+  { value: 'Novis', label: 'Novis', hint: 'Grundnivå för hantverket.' },
+  { value: 'Gesäll', label: 'Gesäll', hint: 'Mellanläge för bättre stöd.' },
+  { value: 'Mästare', label: 'Mästare', hint: 'Högsta nivån för partystöd.' }
+]);
+const SORT_OPTION_SPECS = Object.freeze([
+  { value: 'alpha-asc', label: 'Alfabetisk (A → Ö)', hint: 'Standardordning' },
+  { value: 'alpha-desc', label: 'Alfabetisk (Ö → A)', hint: 'Omvänd alfabetisk ordning' },
+  { value: 'newest', label: 'Nyast först', hint: 'Senast tillagda hamnar överst' },
+  { value: 'oldest', label: 'Äldst först', hint: 'Äldre poster visas före nya' },
+  { value: 'test', label: 'Efter test', hint: 'Sorterar på test-taggen' },
+  { value: 'ark', label: 'Efter arketyp', hint: 'Sorterar på arketyp/tradition' }
+]);
+const renderFilterSwitchRow = ({ id, label, note, title, iconName, fallback = '' }) => `
+  <li>
+    <button id="${id}" class="db-switch filter-setting-switch" type="button" title="${title || label}" aria-checked="false">
+      <span class="filter-setting-switch-main">
+        <span class="filter-setting-switch-icon" aria-hidden="true">${icon(iconName, { className: 'btn-icon', alt: label }) || fallback}</span>
+        <span class="toggle-desc">
+          <span class="toggle-question">${label}</span>
+          ${note ? `<span class="toggle-note">${note}</span>` : ''}
+        </span>
+      </span>
+      <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
+    </button>
+  </li>
+`.trim();
+const renderLevelRadioOptions = (groupName) => `
+  <div class="db-radio-group popup-radio-list">
+    ${LEVEL_OPTION_SPECS.map(option => (
+      window.renderDaubRadioRow
+        ? window.renderDaubRadioRow({
+          rowClass: 'popup-radio-option',
+          labelAttrs: ` data-level="${option.value}"`,
+          copyHtml: `<span class="popup-radio-copy"><span class="popup-radio-title">${option.label}</span><span class="popup-radio-hint">${option.hint}</span></span>`,
+          inputAttrs: ` name="${groupName}" value="${option.value}"`
+        })
+        : `
+      <label class="db-radio popup-choice-row popup-radio-option" data-level="${option.value}">
+        <input class="db-radio__input" type="radio" name="${groupName}" value="${option.value}">
+        <span class="db-radio__circle"></span>
+        <span class="popup-radio-copy">
+          <span class="popup-radio-title">${option.label}</span>
+          <span class="popup-radio-hint">${option.hint}</span>
+        </span>
+      </label>
+    `
+    )).join('')}
+  </div>
+`.trim();
+const renderSortRadioOptions = () => `
+  <div class="db-radio-group sort-option-list">
+    ${SORT_OPTION_SPECS.map(option => (
+      window.renderDaubRadioRow
+        ? window.renderDaubRadioRow({
+          rowClass: 'popup-radio-option sort-option',
+          labelAttrs: ` data-mode="${option.value}"`,
+          copyHtml: `<span class="popup-radio-copy sort-option-copy"><span class="popup-radio-title sort-option-title">${icon('sort', { className: 'btn-icon', alt: 'Sortering' })}<span>${option.label}</span></span><span class="popup-radio-hint">${option.hint}</span></span>`,
+          inputAttrs: ` name="entrySortMode" value="${option.value}"`
+        })
+        : `
+      <label class="db-radio popup-choice-row popup-radio-option sort-option" data-mode="${option.value}">
+        <input class="db-radio__input" type="radio" name="entrySortMode" value="${option.value}">
+        <span class="db-radio__circle"></span>
+        <span class="popup-radio-copy sort-option-copy">
+          <span class="popup-radio-title sort-option-title">${icon('sort', { className: 'btn-icon', alt: 'Sortering' })}<span>${option.label}</span></span>
+          <span class="popup-radio-hint">${option.hint}</span>
+        </span>
+      </label>
+    `
+    )).join('')}
+  </div>
+`.trim();
 const POPUP_TYPE_BY_ID = Object.freeze({
   qualPopup: 'picker',
   inventoryItemsPopup: 'hub',
@@ -77,6 +151,8 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   connectedCallback() {
     this.render();
+    window.popupUi?.normalizeTree?.(this.shadowRoot);
+    window.DAUB?.init?.(this.shadowRoot);
     window.autoResizeAll?.(this.shadowRoot);
     this.bindPopupManager();
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
@@ -641,6 +717,62 @@ class SharedToolbar extends HTMLElement {
           width: 1.85rem;
           height: 1.85rem;
         }
+        .filter-setting-switch {
+          width: 100%;
+          justify-content: space-between;
+          padding: .65rem .8rem;
+          border-radius: .8rem;
+          border: 1px solid rgba(255, 255, 255, .08);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(0, 0, 0, .08)),
+            rgba(18, 15, 13, .68);
+          color: var(--txt);
+          box-shadow: none;
+        }
+        .filter-setting-switch:hover {
+          filter: none;
+          transform: translateY(-1px);
+          border-color: rgba(185, 122, 82, .45);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+        }
+        .filter-setting-switch:active {
+          transform: translateY(0);
+        }
+        .filter-setting-switch-main {
+          display: flex;
+          align-items: center;
+          gap: .75rem;
+          min-width: 0;
+          flex: 1;
+        }
+        .filter-setting-switch-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 2.2rem;
+          height: 2.2rem;
+          border-radius: .7rem;
+          background: rgba(255, 255, 255, .05);
+          border: 1px solid rgba(255, 255, 255, .08);
+          flex-shrink: 0;
+        }
+        .filter-setting-switch-icon .btn-icon {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+        .filter-setting-switch .toggle-desc {
+          margin-right: 0;
+          min-width: 0;
+        }
+        .filter-setting-switch .toggle-question {
+          color: var(--txt);
+        }
+        .filter-setting-switch .toggle-note {
+          color: var(--txt-muted, var(--txt));
+          font-size: .84rem;
+          line-height: 1.35;
+          margin-top: .14rem;
+        }
         .button-row .nav-link.active {
           background: var(--neutral);
           color: #1d2118;
@@ -705,28 +837,33 @@ class SharedToolbar extends HTMLElement {
           align-items: stretch;
           text-align: left;
         }
-        .sort-grid {
+        .sort-option-list,
+        .popup-radio-list {
           display: flex;
           flex-direction: column;
           gap: .5rem;
           margin-bottom: .2rem;
         }
-        .sort-btn {
+        .popup-radio-option {
           display: flex;
-          align-items: center;
-          justify-content: space-between;
+          align-items: flex-start;
+          justify-content: flex-start;
           gap: .75rem;
-          padding: .9rem 1rem;
+          padding: .72rem .82rem;
           width: 100%;
-          background: var(--card);
-          color: var(--txt);
-          border-radius: .8rem;
-          border: 2px solid var(--card-border);
+          background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+          color: var(--db-color-text, var(--txt));
+          border-radius: var(--db-radius-2, .8rem);
+          border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
           cursor: pointer;
           text-align: left;
-          transition: background .14s ease, transform .08s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease;
+          transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
         }
-        .sort-btn .sort-label-wrap {
+        .popup-radio-option .db-radio__circle {
+          flex-shrink: 0;
+          margin-top: .05rem;
+        }
+        .popup-radio-copy {
           display: flex;
           flex-direction: column;
           gap: .2rem;
@@ -734,57 +871,40 @@ class SharedToolbar extends HTMLElement {
           min-width: 0;
           flex: 1;
         }
-        .sort-btn .sort-label {
+        .popup-radio-title {
           display: flex;
           align-items: center;
           gap: .65rem;
           font-weight: 700;
         }
-        .sort-btn .sort-label .btn-icon {
+        .sort-option-title .btn-icon {
           width: 1.45rem;
           height: 1.45rem;
           flex-shrink: 0;
         }
-        .sort-btn .sort-hint {
+        .popup-radio-hint {
           color: var(--txt-muted, var(--txt));
           font-size: .92rem;
         }
-        .sort-btn .sort-check {
-          width: 1.2rem;
-          height: 1.2rem;
-          border-radius: .35rem;
-          border: 2px solid var(--card-border);
-          display: grid;
-          place-items: center;
-          background: var(--bg);
-          color: transparent;
-          flex-shrink: 0;
-          box-shadow: 0 2px 6px rgba(0,0,0,.12) inset;
+        .popup-radio-option:hover {
+          border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.52);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.16);
         }
-        .sort-btn:hover {
-          border-color: var(--accent);
-          box-shadow: 0 10px 24px rgba(0,0,0,.18);
+        .popup-radio-option:focus-within {
+          border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.52);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.16);
+          outline: none;
         }
-        .sort-btn:focus-visible {
-          outline: 2px solid var(--accent);
-          outline-offset: 2px;
+        .popup-radio-option.is-selected {
+          background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+          border-color: var(--db-color-accent, var(--accent));
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.24);
         }
-        .sort-btn.active {
-          background: var(--accent);
-          border-color: var(--accent);
-          color: #fff;
+        .popup-radio-option.is-selected .popup-radio-hint {
+          color: var(--txt-muted, var(--txt));
         }
-        .sort-btn.active .sort-hint {
-          color: rgba(255,255,255,.85);
-        }
-        .sort-btn.active .sort-check {
-          background: #fff;
-          border-color: #fff;
-          color: var(--accent);
-        }
-        .sort-btn.active .sort-check::after {
-          content: '✓';
-          font-weight: 800;
+        .popup-radio-option.is-selected .popup-radio-title {
+          color: inherit;
         }
         .sort-meta {
           color: var(--txt-muted, var(--txt));
@@ -823,7 +943,6 @@ class SharedToolbar extends HTMLElement {
           margin: 0 .25em 0 0;
         }
       </style>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daub-ui@latest/daub.css">
       <link rel="stylesheet" href="css/style.css">
 
       <!-- ---------- Verktygsrad ---------- -->
@@ -915,18 +1034,22 @@ class SharedToolbar extends HTMLElement {
                     </span>
                     <button id="partyArtefacter" class="party-toggle icon-only">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
                   </li>
-                  <li>
-                    <span class="toggle-desc">
-                      <span class="toggle-question">Utvidgad sökning?</span>
-                    </span>
-                    <button id="filterUnion" class="party-toggle icon-only" title="Matcha någon tag (OR)">${icon('extend') || '<span class="emoji-fallback">🔭</span>'}</button>
-                  </li>
-                  <li>
-                    <span class="toggle-desc">
-                      <span class="toggle-question">Expandera vy?</span>
-                    </span>
-                    <button id="entryViewToggle" class="party-toggle icon-only" title="Expandera vy">${icon('expand') || '<span class="emoji-fallback">↕️</span>'}</button>
-                  </li>
+                  ${renderFilterSwitchRow({
+                    id: 'filterUnion',
+                    label: 'Utvidgad sökning',
+                    note: 'Matcha någon tagg (OR) i stället för alla.',
+                    title: 'Matcha någon tag (OR)',
+                    iconName: 'extend',
+                    fallback: '<span class="emoji-fallback">🔭</span>'
+                  })}
+                  ${renderFilterSwitchRow({
+                    id: 'entryViewToggle',
+                    label: 'Expandera vy',
+                    note: 'Visa poster i expanderad standardvy.',
+                    title: 'Expandera vy',
+                    iconName: 'expand',
+                    fallback: '<span class="emoji-fallback">↕️</span>'
+                  })}
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Utrustning & strid?</span>
@@ -1548,12 +1671,8 @@ class SharedToolbar extends HTMLElement {
       <div id="alcPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
         <div class="db-modal popup-inner">
           <h3>Alkemistniv\u00e5</h3>
-          <div id="alcOptions">
-            <button data-level="" class="db-btn">Ingen</button>
-            <button data-level="Novis" class="db-btn">Novis</button>
-            <button data-level="Ges\u00e4ll" class="db-btn">Ges\u00e4ll</button>
-            <button data-level="M\u00e4stare" class="db-btn">M\u00e4stare</button>
-          </div>
+          <p class="popup-desc">Välj exakt en nivå för partiets alkemist.</p>
+          <div id="alcOptions">${renderLevelRadioOptions('party-alchemist-level')}</div>
           <button id="alcCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
@@ -1562,12 +1681,8 @@ class SharedToolbar extends HTMLElement {
       <div id="smithPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
         <div class="db-modal popup-inner">
           <h3>Smedsniv\u00e5</h3>
-          <div id="smithOptions">
-            <button data-level="" class="db-btn">Ingen</button>
-            <button data-level="Novis" class="db-btn">Novis</button>
-            <button data-level="Ges\u00e4ll" class="db-btn">Ges\u00e4ll</button>
-            <button data-level="M\u00e4stare" class="db-btn">M\u00e4stare</button>
-          </div>
+          <p class="popup-desc">Välj exakt en nivå för partiets smed.</p>
+          <div id="smithOptions">${renderLevelRadioOptions('party-smith-level')}</div>
           <button id="smithCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
@@ -1576,12 +1691,8 @@ class SharedToolbar extends HTMLElement {
       <div id="artPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
         <div class="db-modal popup-inner">
           <h3>Artefaktmakarniv\u00e5</h3>
-          <div id="artOptions">
-            <button data-level="" class="db-btn">Ingen</button>
-            <button data-level="Novis" class="db-btn">Novis</button>
-            <button data-level="Ges\u00e4ll" class="db-btn">Ges\u00e4ll</button>
-            <button data-level="M\u00e4stare" class="db-btn">M\u00e4stare</button>
-          </div>
+          <p class="popup-desc">Välj exakt en nivå för partiets artefaktmakare.</p>
+          <div id="artOptions">${renderLevelRadioOptions('party-artificer-level')}</div>
         <button id="artCancel" class="db-btn db-btn--danger">Avbryt</button>
       </div>
       </div>
@@ -1591,50 +1702,7 @@ class SharedToolbar extends HTMLElement {
         <div class="db-modal popup-inner">
           <h3>Sortera poster</h3>
           <p class="popup-desc">Välj hur posterna i varje kategori ska ordnas.</p>
-          <div id="entrySortOptions" class="sort-grid">
-            <button class="sort-btn" type="button" data-mode="alpha-asc">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Alfabetisk (A → Ö)</span>
-                <span class="sort-hint">Standardordning</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="alpha-desc">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Alfabetisk (Ö → A)</span>
-                <span class="sort-hint">Omvänd alfabetisk ordning</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="newest">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Nyast först</span>
-                <span class="sort-hint">Senast tillagda hamnar överst</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="oldest">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Äldst först</span>
-                <span class="sort-hint">Äldre poster visas före nya</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="test">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Efter test</span>
-                <span class="sort-hint">Sorterar på test-taggen</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="ark">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Efter arketyp</span>
-                <span class="sort-hint">Sorterar på arketyp/tradition</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-          </div>
+          <div id="entrySortOptions">${renderSortRadioOptions()}</div>
           <p class="sort-meta">Standard: Alfabetisk (A → Ö)</p>
           <button id="entrySortSave" class="db-btn">Spara</button>
           <button id="entrySortCancel" class="db-btn db-btn--danger">Avbryt</button>
@@ -2409,9 +2477,6 @@ class SharedToolbar extends HTMLElement {
       if (extraText) {
         footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="extra">${extraText}</button>`;
       }
-      if (cancel) {
-        footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="cancel">${cancelText}</button>`;
-      }
       footerHtml += `<button class="db-btn db-btn--primary" data-dialog-action="ok">${okText}</button>`;
 
       // Ensure modal element exists
@@ -2436,6 +2501,7 @@ class SharedToolbar extends HTMLElement {
       const footerEl = overlay.querySelector('.db-modal__footer');
       bodyEl.textContent = message;
       footerEl.innerHTML = footerHtml;
+      footerEl.hidden = !footerHtml.trim();
 
       let pendingResult = false;
       const popupManager = window.popupManager;
@@ -2467,7 +2533,6 @@ class SharedToolbar extends HTMLElement {
         if (!btn) return;
         const action = btn.dataset.dialogAction;
         if (action === 'ok') finish(true);
-        else if (action === 'cancel') finish(false);
         else if (action === 'extra') finish('extra');
       };
       footerEl.addEventListener('click', onClick);

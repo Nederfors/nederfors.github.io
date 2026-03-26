@@ -1,4 +1,4 @@
-const SW_VERSION = 'symbaroum-pwa-v24';
+const SW_VERSION = 'symbaroum-pwa-v25';
 const CORE_CACHE = `${SW_VERSION}-core`;
 const JSON_CACHE = `${SW_VERSION}-json`;
 const STATIC_CACHE = `${SW_VERSION}-static`;

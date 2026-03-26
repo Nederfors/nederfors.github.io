@@ -1085,6 +1085,34 @@
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[m]);
+  const renderDaubCheckboxRow = window.renderDaubCheckboxRow || (({
+    rowClass = '',
+    labelAttrs = '',
+    copyHtml = '',
+    inputAttrs = '',
+    checked = false,
+    disabled = false
+  } = {}) => `
+    <label class="db-checkbox popup-choice-row ${String(rowClass || '').trim()}"${labelAttrs}>
+      ${copyHtml}
+      <input class="db-checkbox__input" type="checkbox"${inputAttrs}${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}>
+      <span class="db-checkbox__box" aria-hidden="true">${window.DAUB_CHECK_ICON || ''}</span>
+    </label>
+  `.trim());
+  const renderDaubRadioRow = window.renderDaubRadioRow || (({
+    rowClass = '',
+    labelAttrs = '',
+    copyHtml = '',
+    inputAttrs = '',
+    checked = false,
+    disabled = false
+  } = {}) => `
+    <label class="db-radio popup-choice-row popup-radio-option ${String(rowClass || '').trim()}"${labelAttrs}>
+      <input class="db-radio__input" type="radio"${inputAttrs}${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}>
+      <span class="db-radio__circle"></span>
+      ${copyHtml}
+    </label>
+  `.trim());
 
   function renderActiveFilters() {
     if (!dom.active) return;
@@ -2169,15 +2197,16 @@
   function buildInventoryBatchCheckboxRow(label, path, meta = '') {
     const safeLabel = escapeHtml(label || 'Okänt föremål');
     const safeMeta = meta ? `<span class="inventory-batch-item-meta">${escapeHtml(meta)}</span>` : '';
-    return `
-      <label class="price-item inventory-batch-item">
+    return renderDaubCheckboxRow({
+      rowClass: 'price-item inventory-batch-item',
+      copyHtml: `
         <span class="inventory-batch-item-copy">
           <span class="inventory-batch-item-label">${safeLabel}</span>
           ${safeMeta}
         </span>
-        <input type="checkbox" data-path="${path}">
-      </label>
-    `;
+      `,
+      inputAttrs: ` data-path="${escapeHtml(path)}"`
+    });
   }
 
   function buildInventoryBatchActionRow(label, actionLabel, path, meta = '') {
@@ -2334,7 +2363,6 @@
     if (!root) return;
     const pop  = root.getElementById('qualPopup');
     const box  = root.getElementById('qualOptions');
-    const cls  = root.getElementById('qualCancel');
     const closeBtn = root.getElementById('qualClose');
     const applyBtn = root.getElementById('qualApply');
     const titleEl = root.getElementById('qualTitle');
@@ -2343,7 +2371,7 @@
     const searchEl = root.getElementById('qualSearch');
     const countEl = root.getElementById('qualCount');
     const emptyEl = root.getElementById('qualEmpty');
-    if (!pop || !box || !cls || !searchEl || !countEl || !emptyEl || !applyBtn) return;
+    if (!pop || !box || !closeBtn || !searchEl || !countEl || !emptyEl || !applyBtn) return;
 
     const done = typeof callback === 'function' ? callback : () => {};
     const nameMap = makeNameMap(storeHelper.getInventory(store));
@@ -2378,17 +2406,16 @@
         const base = String(item?.namn || item?.name || '');
         const label = nameMap.get(item) || base;
         const types = Array.isArray(item?.taggar?.typ) ? item.taggar.typ.join(' ') : '';
-        let btnClass = 'char-btn';
+        let controlClass = qualMode ? 'qual-popup-choice quality-option' : 'qual-popup-radio-option popup-radio-option';
         if (qualMode) {
-          btnClass += ' quality';
-          if (isNegativeQual(base)) btnClass += ' negative';
-          else if (isNeutralQual(base)) btnClass += ' neutral';
-          if (isMysticQual(base)) btnClass += ' mystic';
+          if (isNegativeQual(base)) controlClass += ' negative';
+          else if (isNeutralQual(base)) controlClass += ' neutral';
+          if (isMysticQual(base)) controlClass += ' mystic';
         }
         return {
           idx,
           label,
-          btnClass,
+          controlClass,
           category: qualMode ? qualityCategory(base) : 'all',
           searchKey: normalizeText(`${label} ${base} ${types}`)
         };
@@ -2403,7 +2430,7 @@
         ? 'Välj en eller flera kvaliteter att lägga på föremålet.'
         : 'Välj vilket föremål som ska få kvaliteten.';
     }
-    if (legendEl) legendEl.hidden = !qualMode;
+    if (legendEl) legendEl.hidden = true;
     searchEl.placeholder = qualMode ? 'Sök kvalitet...' : 'Sök föremål...';
     searchEl.value = '';
     applyBtn.hidden = !qualMode;
@@ -2429,12 +2456,13 @@
             <span class="qual-popup-group-count">${group.rows.length}</span>
           </header>
           <div class="qual-popup-group-list">
-            ${group.rows.map(it => {
-              const isSelected = selected.has(it.idx);
-              const stateCls = isSelected ? ' is-selected' : '';
-              const ariaPressed = isSelected ? 'true' : 'false';
-              return `<button data-i="${it.idx}" data-aa-key="qual:${it.idx}" class="${it.btnClass}${stateCls}" type="button" aria-pressed="${ariaPressed}">${escapeHtml(it.label)}</button>`;
-            }).join('')}
+            ${group.rows.map(it => renderDaubCheckboxRow({
+              rowClass: `${it.controlClass}${selected.has(it.idx) ? ' is-selected' : ''}`,
+              labelAttrs: ` data-i="${it.idx}" data-aa-key="qual:${it.idx}"`,
+              copyHtml: `<span class="qual-popup-option-copy">${escapeHtml(it.label)}</span>`,
+              inputAttrs: ` data-i="${it.idx}"`,
+              checked: selected.has(it.idx)
+            })).join('')}
           </div>
         </section>
       `).join('');
@@ -2447,10 +2475,16 @@
       if (qualMode) {
         box.innerHTML = renderGroups(filtered);
       } else {
-        box.innerHTML = filtered
-          .map(it => `<button data-i="${it.idx}" data-aa-key="qual:${it.idx}" class="${it.btnClass}" type="button">${escapeHtml(it.label)}</button>`)
-          .join('');
+        box.innerHTML = filtered.length
+          ? `<div class="db-radio-group qual-popup-radio-list">${filtered.map(it => renderDaubRadioRow({
+            rowClass: it.controlClass,
+            labelAttrs: ` data-i="${it.idx}" data-aa-key="qual:${it.idx}"`,
+            copyHtml: `<span class="qual-popup-option-copy">${escapeHtml(it.label)}</span>`,
+            inputAttrs: ` name="qualPopupSingleChoice" value="${it.idx}" data-i="${it.idx}"`
+          })).join('')}</div>`
+          : '';
       }
+      window.DAUB?.init?.(box);
       if (qualMode) {
         const selectedTxt = `${selected.size} valda`;
         countEl.textContent = term
@@ -2490,9 +2524,8 @@
     const cleanup = () => {
       if (closed) return;
       closed = true;
-      box.removeEventListener('click', onBtn);
-      cls.removeEventListener('click', onCancel);
-      if (closeBtn) closeBtn.removeEventListener('click', onCancel);
+      box.removeEventListener('change', onInputChange);
+      closeBtn.removeEventListener('click', onCancel);
       applyBtn.removeEventListener('click', onApply);
       searchEl.removeEventListener('input', onSearch);
       searchEl.removeEventListener('keydown', onSearchKeydown);
@@ -2509,15 +2542,14 @@
     const close = (reason = 'cancel') => {
       popupSession?.close(reason);
     };
-    const onBtn = e => {
-      const b = e.target.closest('button[data-i]');
-      if (!b) return;
-      e.stopPropagation();
-      const idx = Number(b.dataset.i);
+    const onInputChange = e => {
+      const input = e.target instanceof HTMLInputElement ? e.target : null;
+      if (!input) return;
+      const idx = Number(input.dataset.i);
       if (!Number.isInteger(idx)) return;
       if (qualMode) {
-        if (selected.has(idx)) selected.delete(idx);
-        else selected.add(idx);
+        if (input.checked) selected.add(idx);
+        else selected.delete(idx);
         render();
         return;
       }
@@ -2566,9 +2598,8 @@
         try { searchEl.focus({ preventScroll: true }); } catch { searchEl.focus(); }
       }
     });
-    box.addEventListener('click', onBtn);
-    cls.addEventListener('click', onCancel);
-    if (closeBtn) closeBtn.addEventListener('click', onCancel);
+    box.addEventListener('change', onInputChange);
+    closeBtn.addEventListener('click', onCancel);
     applyBtn.addEventListener('click', onApply);
     searchEl.addEventListener('input', onSearch);
     searchEl.addEventListener('keydown', onSearchKeydown);
@@ -3377,6 +3408,7 @@
       }));
     });
     list.innerHTML = sections.join('') || '<p class="inventory-batch-empty">Det finns inga poster att mängdköpa just nu.</p>';
+    window.DAUB?.init?.(list);
     const sectionInner = section?.querySelector('.popup-inner');
     if (sectionInner) {
       sectionInner.scrollTop = 0;
@@ -3952,6 +3984,7 @@
       }));
     });
     list.innerHTML = sections.join('') || '<p class="inventory-batch-empty">Det finns inga poster att prisjustera.</p>';
+    window.DAUB?.init?.(list);
     const sectionInner = section?.querySelector('.popup-inner');
     if (sectionInner) {
       sectionInner.scrollTop = 0;
@@ -4509,6 +4542,7 @@
       [...list.querySelectorAll('input[type="checkbox"][data-path]')]
         .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
     }
+    window.DAUB?.init?.(list);
     const sectionInner = section?.querySelector('.popup-inner');
     if (sectionInner) {
       sectionInner.scrollTop = 0;
@@ -4690,6 +4724,7 @@
         [...list.querySelectorAll('input[type="checkbox"][data-path]')]
           .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
       }
+      window.DAUB?.init?.(list);
       [...list.querySelectorAll('.vehicle-money-action[data-path]')].forEach(btn => {
         btn.addEventListener('click', async () => {
           const path = btn.dataset.path?.split('.').map(Number);
@@ -5537,14 +5572,13 @@
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
     const liveToggleHtml = `
       <div class="inv-live-toggle">
-        <label class="toggle-switch">
-          <input id="inventoryLiveToggle" type="checkbox" aria-label="Slå på eller av live-läge"${liveModeEnabled ? ' checked' : ''}>
-          <span class="toggle-switch-track" aria-hidden="true"></span>
-          <div class="toggle-switch-copy">
-            <span class="toggle-switch-title">Live-läge</span>
-            <span class="toggle-switch-sub">Dra pengar direkt och markera inköp som gratis</span>
-          </div>
-        </label>
+        <button id="inventoryLiveToggle" class="db-switch inventory-live-switch" type="button" aria-label="Slå på eller av live-läge" aria-checked="${liveModeEnabled ? 'true' : 'false'}">
+          <span class="inventory-live-switch-copy">
+            <span class="inventory-live-switch-title">Live-läge</span>
+            <span class="inventory-live-switch-sub">Dra pengar direkt och markera inköp som gratis</span>
+          </span>
+          <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
+        </button>
       </div>`;
     const functionsCard = createEntryCard({
       compact: !functionsOpen,
@@ -6944,13 +6978,24 @@
     const liveToggle = getEl('inventoryLiveToggle');
     if (liveToggle) {
       const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
-      liveToggle.checked = Boolean(current);
-      liveToggle.onchange = () => {
-        if (typeof storeHelper?.setLiveMode === 'function') {
-          storeHelper.setLiveMode(store, Boolean(liveToggle.checked));
-          renderInventory();
-        }
-      };
+      if (typeof window.setDaubSwitchState === 'function') {
+        window.setDaubSwitchState(liveToggle, current);
+      } else {
+        liveToggle.setAttribute('aria-checked', current ? 'true' : 'false');
+      }
+      window.DAUB?.init?.(liveToggle.getRootNode?.() || document);
+      if (liveToggle.dataset.boundLiveToggle !== '1') {
+        liveToggle.dataset.boundLiveToggle = '1';
+        liveToggle.addEventListener('db:change', (event) => {
+          const checked = typeof event.detail?.checked === 'boolean'
+            ? event.detail.checked
+            : liveToggle.getAttribute('aria-checked') === 'true';
+          if (typeof storeHelper?.setLiveMode === 'function') {
+            storeHelper.setLiveMode(store, Boolean(checked));
+            renderInventory();
+          }
+        });
+      }
     }
   }
 

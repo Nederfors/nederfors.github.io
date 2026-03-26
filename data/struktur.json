@@ -3,7 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-26T07:06:23.662119+00:00",
+      "genererad": "2026-03-26T11:07:09.667032+00:00",
       "antal_typer_hittade": 58,
       "källfiler": [
         "data/diverse.json",

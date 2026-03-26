@@ -3162,12 +3162,17 @@ input:focus, select:focus, textarea:focus {
   color: var(--txt);
 }
 
+.traits-tabs-shell {
+  min-width: 0;
+}
+
 .traits-tabs {
   display: flex;
   gap: .45rem;
   width: 100%;
   margin: 0 0 1.45rem;
   padding: .4rem;
+  border-bottom: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .015));
   border: 1px solid rgba(255, 255, 255, .08);
@@ -3192,6 +3197,7 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   font-weight: 700;
   letter-spacing: .03em;
+  margin-bottom: 0;
   transition: background .18s ease, color .18s ease, transform .12s ease, box-shadow .18s ease, border-color .18s ease;
   border: 1px solid transparent;
 }
@@ -3221,6 +3227,7 @@ input:focus, select:focus, textarea:focus {
 .traits-tab-panel {
   display: none;
   min-width: 0;
+  padding: 0;
   animation: traits-tab-panel-in .18s ease;
 }
 
@@ -5131,8 +5138,6 @@ select.level {
     grid-template-columns: 1fr;
   }
 }
-#masterPopup #masterBtns button { width: 100%; }
-#masterPopup .popup-inner button { width: 100%; }
 
 /* ---------- Popup för eget föremål ---------- */
 /* ---------- Inventariehubb ---------- */
@@ -6875,16 +6880,12 @@ select.level {
   gap: .45rem;
   flex-shrink: 0;
 }
-#pdfPopup .pdf-actions .char-btn.small {
+#pdfPopup .pdf-actions .pdf-action-btn {
   width: auto;
   padding: .45rem .7rem;
   font-size: .92rem;
   height: auto;
 }
-#pdfPopup .pdf-actions .pdf-download-btn {
-  background: var(--button-standard);
-}
-
 @media (max-width: 560px) {
   #pdfPopup .pdf-item {
     flex-direction: column;
@@ -6893,7 +6894,7 @@ select.level {
   #pdfPopup .pdf-actions {
     width: 100%;
   }
-  #pdfPopup .pdf-actions .char-btn.small {
+  #pdfPopup .pdf-actions .pdf-action-btn {
     flex: 1 1 0;
     width: 100%;
   }
@@ -6933,12 +6934,18 @@ select.level {
   gap: .6rem;
 }
 #exportPopup .row-actions .char-btn,
-#driveStoragePopup .row-actions .char-btn { width: 100%; }
+#exportPopup .row-actions .db-btn,
+#driveStoragePopup .row-actions .char-btn,
+#driveStoragePopup .row-actions .db-btn { width: 100%; }
 #exportPopup #exportCancel { width: 100%; }
 #exportPopup .char-btn.primary,
-#driveStoragePopup .char-btn.primary { width: 100%; }
+#exportPopup .db-btn--primary,
+#driveStoragePopup .char-btn.primary,
+#driveStoragePopup .db-btn--primary { width: 100%; }
 #exportPopup .char-btn:disabled,
-#driveStoragePopup .char-btn:disabled { opacity: .5; cursor: not-allowed; }
+#exportPopup .db-btn:disabled,
+#driveStoragePopup .char-btn:disabled,
+#driveStoragePopup .db-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Grouped layout for Export */
 #exportPopup .export-card,
@@ -6967,7 +6974,9 @@ select.level {
   align-items: stretch;
 }
 #exportPopup .row-actions .char-btn,
-#driveStoragePopup .row-actions .char-btn {
+#exportPopup .row-actions .db-btn,
+#driveStoragePopup .row-actions .char-btn,
+#driveStoragePopup .row-actions .db-btn {
   padding: .45rem .6rem;
   font-size: .9rem;
   /* Uniform height and prevent label wrapping from stretching rows unevenly */
@@ -6993,9 +7002,9 @@ select.level {
   #driveStoragePopup .group-list { grid-template-columns: 1fr 1fr; }
 }
 #exportPopup .group-list .char-btn.small,
-#driveStoragePopup .group-list .char-btn.small { padding: .45rem .7rem; font-size: .95rem; height: 100%; }
-#exportPopup .char-btn.primary,
-#driveStoragePopup .char-btn.primary { background: var(--accent); }
+#exportPopup .group-list .db-btn,
+#driveStoragePopup .group-list .char-btn.small,
+#driveStoragePopup .group-list .db-btn { padding: .45rem .7rem; font-size: .95rem; height: 100%; }
 
 /* ---------- Drivelagring-popup layout ---------- */
 #driveStoragePopup .popup-inner {
@@ -7017,17 +7026,20 @@ select.level {
 #driveStoragePopup #driveStorageCancel {
   margin-top: .1rem;
 }
-#driveStoragePopup .storage-tabs {
+#driveStoragePopup .db-tabs__list.storage-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: .4rem;
   margin: .05rem 0 .15rem;
+  padding: 0;
+  border-bottom: 0;
 }
 #driveStoragePopup .storage-tab {
   min-height: 2.3rem;
   padding: .42rem .55rem;
   font-size: .9rem;
   font-weight: 700;
+  margin-bottom: 0;
   background: rgba(255, 255, 255, .06);
   color: var(--txt);
   border: 1px solid var(--border);
@@ -7036,6 +7048,7 @@ select.level {
   opacity: 1;
   border-color: var(--toolborder);
 }
+#driveStoragePopup .storage-tab[aria-selected="true"],
 #driveStoragePopup .storage-tab.active {
   background: var(--accent);
   border-color: var(--accent);
@@ -7047,6 +7060,7 @@ select.level {
 }
 #driveStoragePopup .storage-panel {
   display: none;
+  padding: .75rem 0 0;
 }
 #driveStoragePopup .storage-panel.active {
   display: block;
@@ -7113,25 +7127,13 @@ select.level {
 #driveStoragePopup .drive-folder-select,
 #driveStoragePopup .drive-search-input {
   width: 100%;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--border);
-  border-radius: .6rem;
-  color: var(--txt);
-  padding: .48rem .6rem;
-  font-size: .95rem;
-}
-#driveStoragePopup .drive-folder-select:focus,
-#driveStoragePopup .drive-search-input:focus {
-  border-color: var(--accent);
+  min-width: 0;
 }
 #driveStoragePopup .drive-primary-action,
 #driveStoragePopup .drive-secondary-action {
   width: 100%;
   min-height: 2.45rem;
   font-weight: 700;
-}
-#driveStoragePopup .drive-secondary-action {
-  background: var(--button-standard);
 }
 #driveStoragePopup .drive-select-panel {
   border: 1px solid var(--border);
@@ -7156,7 +7158,7 @@ select.level {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: .36rem;
 }
-#driveStoragePopup .drive-export-actions .char-btn {
+#driveStoragePopup .drive-export-actions .db-btn {
   min-height: 2.15rem;
   padding: .36rem .45rem;
   font-size: .84rem;
@@ -7165,7 +7167,7 @@ select.level {
 #driveStoragePopup .export-mode-block .drive-list-header {
   margin-bottom: .05rem;
 }
-#driveStoragePopup .drive-action-row .char-btn {
+#driveStoragePopup .drive-action-row .db-btn {
   min-height: 2.35rem;
 }
 #driveStoragePopup .drive-inline-meta {
@@ -7184,18 +7186,11 @@ select.level {
   border-radius: .6rem;
   padding: .4rem .6rem;
 }
-#driveStoragePopup .import-check input[type="checkbox"] {
-  appearance: none;
-  width: 1.1rem;
-  height: 1.1rem;
-  border: 2px solid var(--card-border);
-  border-radius: .25rem;
-  background: var(--bg);
-  cursor: pointer;
+#driveStoragePopup .import-check .db-checkbox__box {
+  flex-shrink: 0;
 }
-#driveStoragePopup .import-check input[type="checkbox"]:checked {
-  background: var(--accent);
-  border-color: var(--accent);
+#driveStoragePopup .import-check .import-check-label {
+  line-height: 1.35;
 }
 #driveStoragePopup .drive-list-header {
   display: flex;
@@ -7303,16 +7298,19 @@ select.level {
 #characterToolsPopup #characterToolsCancel {
   margin-top: .1rem;
 }
-#characterToolsPopup .tools-tabs {
+#characterToolsPopup .db-tabs__list.tools-tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: .4rem;
+  padding: 0;
+  border-bottom: 0;
 }
 #characterToolsPopup .tools-tab {
   min-height: 2.3rem;
   padding: .42rem .55rem;
   font-size: .88rem;
   font-weight: 700;
+  margin-bottom: 0;
   background: rgba(255, 255, 255, .06);
   color: var(--txt);
   border: 1px solid var(--border);
@@ -7321,6 +7319,7 @@ select.level {
   opacity: 1;
   border-color: var(--toolborder);
 }
+#characterToolsPopup .tools-tab[aria-selected="true"],
 #characterToolsPopup .tools-tab.active {
   background: var(--accent);
   border-color: var(--accent);
@@ -7332,6 +7331,7 @@ select.level {
 }
 #characterToolsPopup .tools-panel {
   display: none;
+  padding: .75rem 0 0;
 }
 #characterToolsPopup .tools-panel.active {
   display: block;
@@ -7374,21 +7374,11 @@ select.level {
   letter-spacing: .08em;
   font-weight: 700;
 }
-#characterToolsPopup .tools-field input,
-#characterToolsPopup .tools-field select,
+#characterToolsPopup .tools-field .db-input,
+#characterToolsPopup .tools-field .db-select__input,
 #characterToolsPopup .tools-inline-input {
   width: 100%;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--border);
-  border-radius: .6rem;
-  color: var(--txt);
-  padding: .48rem .6rem;
-  font-size: .95rem;
-}
-#characterToolsPopup .tools-field input:focus,
-#characterToolsPopup .tools-field select:focus,
-#characterToolsPopup .tools-inline-input:focus {
-  border-color: var(--accent);
+  min-width: 0;
 }
 #characterToolsPopup .tools-card-title {
   font-size: 1.04rem;
@@ -7491,12 +7481,6 @@ select.level {
 #characterToolsPopup .tools-folder-input {
   min-width: 0;
   width: min(220px, 56vw);
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--border);
-  border-radius: .55rem;
-  color: var(--txt);
-  padding: .34rem .45rem;
-  font-size: .92rem;
 }
 #characterToolsPopup .tools-folder-actions {
   display: inline-flex;
@@ -7505,22 +7489,9 @@ select.level {
   justify-content: flex-end;
 }
 #characterToolsPopup .tools-mini-btn {
-  appearance: none;
-  border: none;
-  border-radius: .55rem;
-  padding: .33rem .5rem;
-  background: var(--button-standard);
-  color: var(--txt);
-  cursor: pointer;
+  width: auto;
   font-size: .8rem;
   line-height: 1.15;
-}
-#characterToolsPopup .tools-mini-btn.danger {
-  background: var(--danger);
-}
-#characterToolsPopup .tools-mini-btn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
 }
 #characterToolsPopup .tools-empty {
   margin: 0;
@@ -7533,7 +7504,7 @@ select.level {
     width: calc(100% - 1rem);
     padding: 1rem .9rem .9rem;
   }
-  #characterToolsPopup .tools-tabs {
+  #characterToolsPopup .db-tabs__list.tools-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   #characterToolsPopup .tools-grid.two-col {
@@ -7675,7 +7646,8 @@ select.level {
   gap: .6rem;
 }
 #charPopup .button-row button {
-  flex: 1;
+  flex: 0 0 auto;
+  width: auto;
 }
 #charPopupContent {
   display: flex;
@@ -7893,7 +7865,7 @@ select.level {
 }
 
 /* ---------- Generell popup-stil ---------- */
-/* Overlay visibility handled by daub-overrides.css bridge for db-modal-overlay.popup */
+/* Overlay visibility handled by the canonical DAUB bridge for db-modal-overlay.popup */
 .popup:not(.db-modal-overlay) {
   position: fixed;
   inset: 0;
@@ -7913,7 +7885,7 @@ select.level {
   padding: 1.5rem 1.4rem 2rem;
   width: 90%;
   max-width: 420px;
-  text-align: center;
+  text-align: left;
   transform: scale(.8);
   transition: transform .25s ease;
   display: flex;
@@ -7923,18 +7895,7 @@ select.level {
 }
 .popup.open .popup-inner,
 .popup.open .db-modal { transform: scale(1); }
-.popup .popup-inner button,
-.popup .db-modal button { width: 100%; }
-.popup-bottom { align-items: center !important; }
-.popup-bottom .popup-inner,
-.popup-bottom .db-modal {
-  border-radius: var(--db-radius-3, 1.2rem) !important;
-  width: 90% !important;
-  transform: scale(.8) !important;
-  transition: transform .25s ease !important;
-}
-.popup-bottom.open .popup-inner,
-.popup-bottom.open .db-modal { transform: scale(1) !important; }
+.popup-bottom { align-items: center; }
 
 /* Toast — now handled by DAUB.toast(), legacy class kept for compat */
 
@@ -8633,7 +8594,7 @@ textarea.auto-resize {
   box-shadow: 0 24px 70px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .04);
   text-align: left;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: .55rem;
   transform: scale(.94) translateY(10px);
   transition: transform .22s ease;
@@ -8671,20 +8632,15 @@ textarea.auto-resize {
   letter-spacing: .02em;
 }
 
-.popup.picker-popup .picker-popup-search-input {
-  width: 100%;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--border);
-  border-radius: .6rem;
-  color: var(--txt);
-  padding: .48rem .62rem;
-  font-size: .95rem;
+.popup.picker-popup .picker-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  min-height: 0;
 }
 
-.popup.picker-popup .picker-popup-search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(185, 122, 82, .22);
+.popup.picker-popup .picker-popup-search-input {
+  width: 100%;
 }
 
 .popup.picker-popup .picker-popup-options {
@@ -8703,14 +8659,14 @@ textarea.auto-resize {
   display: none;
 }
 
-.popup.picker-popup .picker-popup-options .char-btn {
+.popup.picker-popup .picker-popup-options .db-btn {
   min-height: 2.45rem;
   text-align: left;
   justify-content: flex-start;
   padding: .5rem .72rem;
 }
 
-.popup.picker-popup .picker-popup-options .char-btn:disabled {
+.popup.picker-popup .picker-popup-options .db-btn:disabled {
   cursor: default;
   pointer-events: none;
   transform: none;
@@ -8748,7 +8704,8 @@ textarea.auto-resize {
   gap: .55rem;
 }
 
-.popup.picker-popup .button-list .char-btn.active {
+.popup.picker-popup .button-list .db-btn.active,
+.popup.picker-popup .button-list .db-btn[aria-pressed="true"] {
   box-shadow: inset 0 0 0 2px rgba(19, 13, 9, .45), 0 0 0 1px rgba(255, 255, 255, .08);
 }
 
@@ -9134,7 +9091,7 @@ textarea.auto-resize {
 
 /* =============================================================
    App Shell — layout, inputs, buttons, panels, cards, toolbar
-   (merged from app-shell.css)
+   (merged into the canonical component bundle)
    ============================================================= */
 
 body.app-shell {
@@ -9597,4 +9554,274 @@ select.level {
     margin-bottom: 0.45rem;
     padding: 0.6rem 0.65rem;
   }
+}
+
+/* ---------- Unified popup shells ---------- */
+.popup[data-popup-unified='true'] {
+  background: var(--db-color-overlay, rgba(7, 6, 5, 0.72));
+  backdrop-filter: blur(10px);
+}
+
+.popup[data-popup-unified='true'] .popup-modal-header .db-modal__title {
+  margin: 0;
+  color: var(--db-color-text, var(--txt));
+  font-size: 1.08rem;
+  line-height: 1.3;
+}
+
+.popup[data-popup-unified='true'] .popup-modal-header p,
+.popup[data-popup-unified='true'] .popup-modal-header .popup-desc,
+.popup[data-popup-unified='true'] .popup-modal-body > p,
+.popup[data-popup-unified='true'] .popup-modal-body > label {
+  margin: 0;
+  color: var(--db-color-text-secondary, var(--subtxt));
+}
+
+.popup[data-popup-unified='true'] .popup-modal-body :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  width: 100%;
+}
+
+.popup[data-popup-unified='true'] .popup-modal-footer .db-btn,
+.popup[data-popup-unified='true'] .popup-modal-footer button {
+  width: auto !important;
+}
+
+.popup[data-popup-unified='true'] .db-modal__close:hover,
+.popup[data-popup-unified='true'] .db-modal__close:focus-visible {
+  border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.65);
+  color: var(--db-color-text, var(--txt));
+  background: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.08);
+  outline: none;
+}
+
+.popup[data-popup-unified='true'] .db-modal__close .btn-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+#choicePopup[data-popup-unified='true'] .popup-inner.picker-popup-ui,
+#requirementPopup[data-popup-unified='true'] .popup-inner.requirement-popup-ui,
+#qualPopup[data-popup-unified='true'] .popup-inner.qual-popup-ui,
+#tabellPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#customPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#moneyPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#manualAdjustPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#saveFreePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#advMoneyPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#qtyPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#buyMultiplePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#liveBuyPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#pricePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#rowPricePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#vehiclePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#vehicleRemovePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#vehicleQtyPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#vehicleMoneyPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#defenseCalcPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#deleteContainerPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#alcPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#smithPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#artPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#entrySortPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#pdfPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#driveStoragePopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#characterToolsPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#folderManagerPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#renameFolderPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#newCharPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#generatorPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#dupCharPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#renameCharPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#dialogPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#nilasPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#masterPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub,
+#charPopup[data-popup-unified='true'] .popup-inner.popup-shell--daub {
+  background: var(--db-color-surface, rgba(49, 36, 26, 0.998));
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  box-shadow: var(--db-shadow-3, 0 28px 48px rgba(0, 0, 0, 0.3));
+  text-align: left;
+}
+
+#tabellPopup[data-popup-unified='true'] .popup-header,
+#tabellPopup[data-popup-unified='true'] .popup-inner.has-table-view .popup-header {
+  background: var(--db-color-surface, rgba(49, 36, 26, 0.998));
+  border-bottom: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  box-shadow: none;
+}
+
+#tabellPopup[data-popup-unified='true'] .tabell-pill,
+#tabellPopup[data-popup-unified='true'] .tabell-table-shell,
+#tabellPopup[data-popup-unified='true'] .tabell-card,
+#tabellPopup[data-popup-unified='true'] .table-notes,
+#rowPricePopup[data-popup-unified='true'] .export-card {
+  background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+  border-color: var(--db-color-border, rgba(255, 243, 228, 0.08));
+  box-shadow: none;
+}
+
+#choicePopup[data-popup-unified='true'] .picker-popup-options,
+#qualPopup[data-popup-unified='true'] #qualOptions.qual-popup-options,
+#requirementPopup[data-popup-unified='true'] .requirement-popup-options {
+  background: rgba(var(--db-color-bg-rgb, 26, 19, 16), 0.56);
+  border-color: rgba(var(--db-color-border-rgb, 74, 54, 40), 0.7);
+  box-shadow: none;
+}
+
+#qualPopup[data-popup-unified='true'] .qual-popup-legend {
+  display: none !important;
+}
+
+#qualPopup[data-popup-unified='true'] .qual-popup-actions,
+#requirementPopup[data-popup-unified='true'] .requirement-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+#qualPopup[data-popup-unified='true'] .qual-popup-actions button,
+#requirementPopup[data-popup-unified='true'] .requirement-popup-actions button {
+  width: auto !important;
+}
+
+#requirementPopup[data-popup-unified='true'] .requirement-popup-status {
+  background: rgba(var(--db-color-bg-rgb, 26, 19, 16), 0.52);
+  border-color: rgba(var(--db-color-border-rgb, 74, 54, 40), 0.7);
+}
+
+#requirementPopup[data-popup-unified='true'] .requirement-option {
+  border-color: var(--db-color-border, rgba(255, 243, 228, 0.08));
+  background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+  box-shadow: none;
+}
+
+#requirementPopup[data-popup-unified='true'] .requirement-option:hover,
+#requirementPopup[data-popup-unified='true'] .requirement-option:focus-visible {
+  border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.52);
+  outline: none;
+}
+
+#requirementPopup[data-popup-unified='true'] .requirement-option.is-selected {
+  border-color: var(--db-color-accent, var(--accent));
+  background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+  box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.24);
+}
+
+#requirementPopup[data-popup-unified='true'] .requirement-option.is-locked,
+#requirementPopup[data-popup-unified='true'] .requirement-option.is-conflict,
+#requirementPopup[data-popup-unified='true'] .requirement-option.is-blocked {
+  background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+}
+
+#requirementPopup[data-popup-unified='true'] .requirement-option.is-disabled,
+#requirementPopup[data-popup-unified='true'] .requirement-option:disabled {
+  opacity: 0.68;
+}
+
+/* ---------- DAUB control bridges ---------- */
+.popup-choice-row.db-radio,
+.popup-choice-row.db-checkbox,
+.inventory-live-switch {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-radius: var(--db-radius-2, 0.8rem);
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+  color: var(--db-color-text, var(--txt));
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.popup-choice-row.db-radio,
+.popup-choice-row.db-checkbox {
+  padding: 0.72rem 0.82rem;
+}
+
+.popup-choice-row.db-radio:hover,
+.popup-choice-row.db-radio:focus-within,
+.popup-choice-row.db-checkbox:hover,
+.popup-choice-row.db-checkbox:focus-within,
+.inventory-live-switch:hover,
+.inventory-live-switch:focus-visible {
+  border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.52);
+  box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.16);
+}
+
+.popup-choice-row.db-radio:has(.db-radio__input:checked),
+.popup-choice-row.db-checkbox.is-selected,
+.popup-choice-row.db-checkbox:has(.db-checkbox__input:checked) {
+  border-color: var(--db-color-accent, var(--accent));
+  box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.24);
+}
+
+.popup-choice-row.db-radio .db-radio__circle,
+.popup-choice-row.db-checkbox .db-checkbox__box {
+  flex: none;
+  margin-top: 0.05rem;
+}
+
+.popup-choice-row.db-checkbox .db-checkbox__box {
+  margin-left: auto;
+}
+
+.popup-choice-row.is-disabled,
+#choicePopup .choice-popup-option.is-disabled {
+  opacity: 0.56;
+  cursor: default;
+}
+
+.inventory-batch-item-action .db-btn {
+  width: auto !important;
+  min-width: 8.5rem;
+  flex: none;
+}
+
+#characterToolsPopup .tools-check-copy,
+#folderManagerPopup .folder-char-copy,
+#qualPopup .qual-popup-option-copy,
+#choicePopup .choice-popup-option-copy,
+.inventory-live-switch-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+#choicePopup .choice-popup-radio-list,
+#qualPopup .qual-popup-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+#defenseCalcPopup .defense-item.db-checkbox {
+  justify-content: space-between;
+}
+
+#qualPopup[data-popup-unified='true'] .qual-popup-choice.quality-option,
+#qualPopup[data-popup-unified='true'] .qual-popup-choice.quality-option.neutral,
+#qualPopup[data-popup-unified='true'] .qual-popup-choice.quality-option.negative,
+#qualPopup[data-popup-unified='true'] .qual-popup-choice.quality-option.mystic {
+  box-shadow: none;
+}
+
+.inventory-live-switch {
+  justify-content: space-between;
+  padding: 0.72rem 0.82rem;
+}
+
+.inventory-live-switch-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  text-align: left;
+}
+
+.inventory-live-switch-title {
+  font-weight: 700;
+}
+
+.inventory-live-switch-sub {
+  color: var(--db-color-text-secondary, var(--subtxt));
+  font-size: 0.82rem;
+  line-height: 1.35;
 }

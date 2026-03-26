@@ -1139,6 +1139,7 @@
   };
 
   const initUnifiedTraitsPage = () => {
+    window.DAUB?.init?.();
     window.symbaroumViewBridge?.registerViewHooks('traits', {
       refreshTraits: () => {
         if (typeof window.renderTraits === 'function') {

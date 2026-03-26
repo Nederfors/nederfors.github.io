@@ -51,14 +51,14 @@ const createPdfItem = item => {
 
   const openButton = document.createElement('button');
   openButton.type = 'button';
-  openButton.className = 'char-btn small';
+  openButton.className = 'db-btn db-btn--sm pdf-action-btn';
   openButton.dataset.href = encodeURI(item.file);
   openButton.dataset.action = 'open';
   openButton.textContent = 'Öppna';
 
   const downloadButton = document.createElement('button');
   downloadButton.type = 'button';
-  downloadButton.className = 'char-btn small pdf-download-btn';
+  downloadButton.className = 'db-btn db-btn--sm db-btn--secondary pdf-action-btn pdf-download-btn';
   downloadButton.dataset.href = encodeURI(item.file);
   downloadButton.dataset.action = 'download';
   downloadButton.textContent = 'Hämta';

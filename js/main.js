@@ -87,6 +87,8 @@ function syncCharacterPanels(options = {}) {
     if (dom.forgeBtn) dom.forgeBtn.classList.toggle('active', Boolean(storeHelper.getPartySmith(store)));
     if (dom.alcBtn)   dom.alcBtn.classList.toggle('active',   Boolean(storeHelper.getPartyAlchemist(store)));
     if (dom.artBtn)   dom.artBtn.classList.toggle('active',   Boolean(storeHelper.getPartyArtefacter(store)));
+    setDaubSwitchState(dom.filterUnion, storeHelper.getFilterUnion(store));
+    setDaubSwitchState(dom.entryViewToggle, !storeHelper.getCompactEntries(store));
     syncDefenseButtons();
     updateCharacterIconVariant();
   }
@@ -644,6 +646,43 @@ function ensureEntryMetaList(list) {
 
 window.ensureEntryMeta = ensureEntryMeta;
 window.ensureEntryMetaList = ensureEntryMetaList;
+
+const escapeDaubHtml = window.escapeDaubHtml || ((value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+}[ch])));
+const buildDaubCheckboxRow = window.renderDaubCheckboxRow || (({
+  rowClass = '',
+  copyHtml = '',
+  inputAttrs = '',
+  checked = false,
+  disabled = false
+} = {}) => `
+  <label class="db-checkbox popup-choice-row ${String(rowClass || '').trim()}">
+    ${copyHtml}
+    <input class="db-checkbox__input" type="checkbox"${inputAttrs}${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}>
+    <span class="db-checkbox__box" aria-hidden="true">${window.DAUB_CHECK_ICON || ''}</span>
+  </label>
+`.trim());
+const setDaubSwitchState = window.setDaubSwitchState || ((el, checked) => {
+  if (!el) return;
+  const isChecked = Boolean(checked);
+  el.setAttribute('aria-checked', isChecked ? 'true' : 'false');
+  el.classList.toggle('active', isChecked);
+});
+const syncDaubRadioSelection = window.syncDaubRadioSelection || ((root, value) => {
+  if (!root) return;
+  const expected = String(value ?? '');
+  root.querySelectorAll('.popup-radio-option').forEach(option => {
+    const input = option.querySelector('.db-radio__input');
+    const isSelected = Boolean(input) && String(input.value ?? '') === expected;
+    if (input) input.checked = isSelected;
+    option.classList.toggle('is-selected', isSelected);
+  });
+});
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
@@ -2858,17 +2897,23 @@ function bindToolbar() {
     });
   }
   if (dom.filterUnion) {
-    if (storeHelper.getFilterUnion(store)) dom.filterUnion.classList.add('active');
-    dom.filterUnion.addEventListener('click', () => {
-      const val = dom.filterUnion.classList.toggle('active');
-      storeHelper.setFilterUnion(store, val);
+    setDaubSwitchState(dom.filterUnion, storeHelper.getFilterUnion(store));
+    dom.filterUnion.addEventListener('db:change', (event) => {
+      const val = typeof event.detail?.checked === 'boolean'
+        ? event.detail.checked
+        : dom.filterUnion.getAttribute('aria-checked') === 'true';
+      setDaubSwitchState(dom.filterUnion, val);
+      storeHelper.setFilterUnion(store, Boolean(val));
       refreshCurrentView();
     });
   }
   if (dom.entryViewToggle) {
-    if (!storeHelper.getCompactEntries(store)) dom.entryViewToggle.classList.add('active');
-    dom.entryViewToggle.addEventListener('click', () => {
-      const val = dom.entryViewToggle.classList.toggle('active');
+    setDaubSwitchState(dom.entryViewToggle, !storeHelper.getCompactEntries(store));
+    dom.entryViewToggle.addEventListener('db:change', (event) => {
+      const val = typeof event.detail?.checked === 'boolean'
+        ? event.detail.checked
+        : dom.entryViewToggle.getAttribute('aria-checked') === 'true';
+      setDaubSwitchState(dom.entryViewToggle, val);
       // "active" betyder nu expanderad/vanlig vy; compact = !active
       storeHelper.setCompactEntries(store, !val);
       refreshCurrentView();
@@ -3042,6 +3087,14 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       if (text != null) el.textContent = text;
       return el;
     };
+    const decorateInput = input => {
+      input.classList.add('db-input');
+      return input;
+    };
+    const decorateSelect = select => {
+      select.classList.add('db-select__input');
+      return select;
+    };
     const escapeHtml = s => String(s || '').replace(/[&<>"]/g, m => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -3138,10 +3191,13 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       { id: 'rename', label: 'Byt namn' },
       { id: 'folders', label: 'Mappar' }
     ];
-    const tabsEl = make('div', 'tools-tabs');
+    const tabsEl = make('div', 'db-tabs character-tools-tabs');
+    const tabListEl = make('div', 'db-tabs__list tools-tabs');
     const panelsEl = make('div', 'tools-panels');
     const tabButtons = new Map();
     const tabPanels = new Map();
+    tabsEl.appendChild(tabListEl);
+    tabsEl.appendChild(panelsEl);
 
     const refreshers = new Set();
     const registerRefresh = fn => {
@@ -3155,7 +3211,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
     const buildGeneratePanel = root => {
       const wrap = make('div', 'tools-sections');
-      const card = make('div', 'card tools-card');
+      const card = make('div', 'db-card tools-card');
       card.appendChild(make('div', 'card-title tools-card-title', 'Generera rollperson'));
       card.appendChild(make('p', 'tools-intro', 'Skapa rollperson direkt här med namn, mapp, erfarenhet, ras, yrke och elityrke.'));
 
@@ -3167,7 +3223,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       const topGrid = make('div', 'tools-grid two-col');
       const nameWrap = make('label', 'tools-field');
       nameWrap.appendChild(make('span', 'tools-label', 'Namn'));
-      const nameIn = document.createElement('input');
+      const nameIn = decorateInput(document.createElement('input'));
       nameIn.type = 'text';
       nameIn.placeholder = 'Rollpersonens namn';
       nameIn.autocomplete = 'off';
@@ -3176,7 +3232,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const folderWrap = make('label', 'tools-field');
       folderWrap.appendChild(make('span', 'tools-label', 'Mapp'));
-      const folderSel = document.createElement('select');
+      const folderSel = decorateSelect(document.createElement('select'));
       folderWrap.appendChild(folderSel);
       topGrid.appendChild(folderWrap);
       form.appendChild(topGrid);
@@ -3184,7 +3240,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       const xpGrid = make('div', 'tools-grid two-col');
       const xpWrap = make('label', 'tools-field');
       xpWrap.appendChild(make('span', 'tools-label', 'Erfarenhetspoäng'));
-      const xpIn = document.createElement('input');
+      const xpIn = decorateInput(document.createElement('input'));
       xpIn.type = 'number';
       xpIn.min = '0';
       xpIn.step = '10';
@@ -3194,7 +3250,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const attrWrap = make('label', 'tools-field');
       attrWrap.appendChild(make('span', 'tools-label', 'Karaktärsdrag'));
-      const attrSel = document.createElement('select');
+      const attrSel = decorateSelect(document.createElement('select'));
       attrSel.innerHTML = [
         '<option value="">Balanserade (slump)</option>',
         '<option value="specialist">Spetskompetens (ett drag pressas till 15)</option>',
@@ -3206,27 +3262,27 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const traitWrap = make('label', 'tools-field');
       traitWrap.appendChild(make('span', 'tools-label', 'Fokusera drag'));
-      const traitSel = document.createElement('select');
+      const traitSel = decorateSelect(document.createElement('select'));
       traitWrap.appendChild(traitSel);
       form.appendChild(traitWrap);
 
       const entryGrid = make('div', 'tools-grid two-col');
       const raceWrap = make('label', 'tools-field');
       raceWrap.appendChild(make('span', 'tools-label', 'Ras'));
-      const raceSel = document.createElement('select');
+      const raceSel = decorateSelect(document.createElement('select'));
       raceWrap.appendChild(raceSel);
       entryGrid.appendChild(raceWrap);
 
       const yrkeWrap = make('label', 'tools-field');
       yrkeWrap.appendChild(make('span', 'tools-label', 'Yrke'));
-      const yrkeSel = document.createElement('select');
+      const yrkeSel = decorateSelect(document.createElement('select'));
       yrkeWrap.appendChild(yrkeSel);
       entryGrid.appendChild(yrkeWrap);
       form.appendChild(entryGrid);
 
       const eliteWrap = make('label', 'tools-field');
       eliteWrap.appendChild(make('span', 'tools-label', 'Elityrke'));
-      const eliteSel = document.createElement('select');
+      const eliteSel = decorateSelect(document.createElement('select'));
       eliteWrap.appendChild(eliteSel);
       const eliteHint = make('p', 'tools-meta', 'Elityrket lägger in krav och minst en elityrkesförmåga.');
       eliteWrap.appendChild(eliteHint);
@@ -3235,7 +3291,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       const warning = make('p', 'tools-meta tools-warning', 'Databasen laddas fortfarande. Vänta tills listorna är tillgängliga.');
       form.appendChild(warning);
 
-      const submitBtn = make('button', 'char-btn tools-action', 'Generera rollperson');
+      const submitBtn = make('button', 'db-btn db-btn--primary tools-action', 'Generera rollperson');
       form.appendChild(submitBtn);
       card.appendChild(form);
       wrap.appendChild(card);
@@ -3330,7 +3386,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
     const buildDuplicatePanel = root => {
       const wrap = make('div', 'tools-sections');
-      const card = make('div', 'card tools-card');
+      const card = make('div', 'db-card tools-card');
       card.appendChild(make('div', 'card-title tools-card-title', 'Kopiera rollperson'));
       card.appendChild(make('p', 'tools-intro', 'Välj vilken rollperson som ska kopieras, nytt namn och målmapp.'));
 
@@ -3338,13 +3394,13 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const sourceWrap = make('label', 'tools-field');
       sourceWrap.appendChild(make('span', 'tools-label', 'Kopiera från'));
-      const sourceSel = document.createElement('select');
+      const sourceSel = decorateSelect(document.createElement('select'));
       sourceWrap.appendChild(sourceSel);
       form.appendChild(sourceWrap);
 
       const nameWrap = make('label', 'tools-field');
       nameWrap.appendChild(make('span', 'tools-label', 'Namn på kopia'));
-      const nameIn = document.createElement('input');
+      const nameIn = decorateInput(document.createElement('input'));
       nameIn.type = 'text';
       nameIn.autocomplete = 'off';
       nameWrap.appendChild(nameIn);
@@ -3352,11 +3408,11 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const folderWrap = make('label', 'tools-field');
       folderWrap.appendChild(make('span', 'tools-label', 'Målmapp'));
-      const folderSel = document.createElement('select');
+      const folderSel = decorateSelect(document.createElement('select'));
       folderWrap.appendChild(folderSel);
       form.appendChild(folderWrap);
 
-      const submitBtn = make('button', 'char-btn tools-action', 'Kopiera rollperson');
+      const submitBtn = make('button', 'db-btn db-btn--primary tools-action', 'Kopiera rollperson');
       form.appendChild(submitBtn);
       card.appendChild(form);
       wrap.appendChild(card);
@@ -3408,7 +3464,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
     const buildRenamePanel = root => {
       const wrap = make('div', 'tools-sections');
-      const card = make('div', 'card tools-card');
+      const card = make('div', 'db-card tools-card');
       card.appendChild(make('div', 'card-title tools-card-title', 'Byt namn / flytta rollperson'));
       card.appendChild(make('p', 'tools-intro', 'Välj rollperson, ange nytt namn och valfri målmapp.'));
 
@@ -3416,13 +3472,13 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const sourceWrap = make('label', 'tools-field');
       sourceWrap.appendChild(make('span', 'tools-label', 'Rollperson'));
-      const sourceSel = document.createElement('select');
+      const sourceSel = decorateSelect(document.createElement('select'));
       sourceWrap.appendChild(sourceSel);
       form.appendChild(sourceWrap);
 
       const nameWrap = make('label', 'tools-field');
       nameWrap.appendChild(make('span', 'tools-label', 'Nytt namn'));
-      const nameIn = document.createElement('input');
+      const nameIn = decorateInput(document.createElement('input'));
       nameIn.type = 'text';
       nameIn.autocomplete = 'off';
       nameWrap.appendChild(nameIn);
@@ -3430,11 +3486,11 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
       const folderWrap = make('label', 'tools-field');
       folderWrap.appendChild(make('span', 'tools-label', 'Målmapp'));
-      const folderSel = document.createElement('select');
+      const folderSel = decorateSelect(document.createElement('select'));
       folderWrap.appendChild(folderSel);
       form.appendChild(folderWrap);
 
-      const submitBtn = make('button', 'char-btn tools-action', 'Spara ändringar');
+      const submitBtn = make('button', 'db-btn db-btn--primary tools-action', 'Spara ändringar');
       form.appendChild(submitBtn);
       card.appendChild(form);
       wrap.appendChild(card);
@@ -3485,19 +3541,19 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
     const buildFoldersPanel = root => {
       const wrap = make('div', 'tools-sections');
-      const card = make('div', 'card tools-card');
+      const card = make('div', 'db-card tools-card');
       card.appendChild(make('div', 'card-title tools-card-title', 'Mapphantering'));
       card.appendChild(make('p', 'tools-intro', 'Skapa mappar, flytta rollpersoner mellan mappar och hantera ordning direkt här.'));
 
       const form = make('div', 'tools-form');
 
       const addRow = make('div', 'tools-inline-row');
-      const addInput = document.createElement('input');
+      const addInput = decorateInput(document.createElement('input'));
       addInput.type = 'text';
       addInput.placeholder = 'Ny mapp...';
       addInput.autocomplete = 'off';
-      addInput.className = 'tools-inline-input';
-      const addBtn = make('button', 'char-btn tools-inline-btn', 'Lägg till');
+      addInput.classList.add('tools-inline-input');
+      const addBtn = make('button', 'db-btn db-btn--secondary tools-inline-btn', 'Lägg till');
       addRow.appendChild(addInput);
       addRow.appendChild(addBtn);
       form.appendChild(addRow);
@@ -3508,9 +3564,9 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       form.appendChild(charList);
 
       const moveRow = make('div', 'tools-inline-row');
-      const moveSel = document.createElement('select');
-      moveSel.className = 'tools-inline-input';
-      const moveBtn = make('button', 'char-btn tools-inline-btn', 'Flytta');
+      const moveSel = decorateSelect(document.createElement('select'));
+      moveSel.classList.add('tools-inline-input');
+      const moveBtn = make('button', 'db-btn db-btn--secondary tools-inline-btn', 'Flytta');
       moveRow.appendChild(moveSel);
       moveRow.appendChild(moveBtn);
       form.appendChild(moveRow);
@@ -3539,12 +3595,17 @@ function openCharacterToolsPopup(initialTab = 'generate') {
           charList.innerHTML = '<p class="tools-empty">Inga rollpersoner att flytta.</p>';
         } else {
           charList.innerHTML = [
-            '<label class="tools-check-item"><span>Välj alla</span><input type="checkbox" data-action="select-all"></label>',
+            buildDaubCheckboxRow({
+              rowClass: 'tools-check-item',
+              copyHtml: '<span class="tools-check-copy"><span>Välj alla</span></span>',
+              inputAttrs: ' data-action="select-all"'
+            }),
             ...chars.map(c => (
-              `<label class="tools-check-item">
-                <span>${escapeHtml(c.name)} <span class="tools-sub">(${escapeHtml(c.folderName)})</span></span>
-                <input type="checkbox" data-charid="${escapeHtml(c.id)}">
-              </label>`
+              buildDaubCheckboxRow({
+                rowClass: 'tools-check-item',
+                copyHtml: `<span class="tools-check-copy"><span>${escapeHtml(c.name)} <span class="tools-sub">(${escapeHtml(c.folderName)})</span></span></span>`,
+                inputAttrs: ` data-charid="${escapeHtml(c.id)}"`
+              })
             ))
           ].join('');
         }
@@ -3555,6 +3616,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 
         if (!folders.length) {
           folderList.innerHTML = '<p class="tools-empty">Inga mappar ännu.</p>';
+          window.DAUB?.init?.(root);
           return;
         }
 
@@ -3564,12 +3626,12 @@ function openCharacterToolsPopup(initialTab = 'generate') {
             return (
               `<div class="tools-folder-row" data-id="${escapeHtml(f.id)}">
                 <div class="tools-folder-name">
-                  <input class="tools-folder-input" data-action="rename-input" type="text" value="${escapeHtml(f.name || '')}">
+                  <input class="db-input tools-folder-input" data-action="rename-input" type="text" value="${escapeHtml(f.name || '')}">
                   <span class="count-badge">${cnt}</span>
                 </div>
                 <div class="tools-folder-actions">
-                  <button class="tools-mini-btn" data-action="rename-save">Spara</button>
-                  <button class="tools-mini-btn" data-action="rename-cancel">Avbryt</button>
+                  <button class="db-btn db-btn--sm tools-mini-btn" type="button" data-action="rename-save">Spara</button>
+                  <button class="db-btn db-btn--sm db-btn--secondary tools-mini-btn" type="button" data-action="rename-cancel">Avbryt</button>
                 </div>
               </div>`
             );
@@ -3578,20 +3640,21 @@ function openCharacterToolsPopup(initialTab = 'generate') {
           const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
           const delBtn = f.system
             ? ''
-            : '<button class="tools-mini-btn danger" data-action="delete">Ta bort</button>';
+            : '<button class="db-btn db-btn--sm db-btn--danger tools-mini-btn" type="button" data-action="delete">Ta bort</button>';
           return (
             `<div class="tools-folder-row" data-id="${escapeHtml(f.id)}">
               <div class="tools-folder-name">${escapeHtml(f.name)} <span class="count-badge">${cnt}</span></div>
               <div class="tools-folder-actions">
-                <button class="tools-mini-btn" data-action="move-up"${upDisabled}>▲</button>
-                <button class="tools-mini-btn" data-action="move-down"${downDisabled}>▼</button>
-                <button class="tools-mini-btn" data-action="rename">Byt namn</button>
-                <button class="tools-mini-btn danger" data-action="clear">Töm</button>
+                <button class="db-btn db-btn--sm tools-mini-btn" type="button" data-action="move-up"${upDisabled}>▲</button>
+                <button class="db-btn db-btn--sm tools-mini-btn" type="button" data-action="move-down"${downDisabled}>▼</button>
+                <button class="db-btn db-btn--sm db-btn--secondary tools-mini-btn" type="button" data-action="rename">Byt namn</button>
+                <button class="db-btn db-btn--sm db-btn--danger tools-mini-btn" type="button" data-action="clear">Töm</button>
                 ${delBtn}
               </div>
             </div>`
           );
         }).join('');
+        window.DAUB?.init?.(root);
       };
 
       addBtn.addEventListener('click', () => {
@@ -3731,14 +3794,17 @@ function openCharacterToolsPopup(initialTab = 'generate') {
     };
 
     tabs.forEach(tab => {
-      const btn = make('button', 'char-btn tools-tab', tab.label);
+      const btn = make('button', 'db-tabs__tab tools-tab', tab.label);
       btn.type = 'button';
       btn.dataset.tab = tab.id;
-      tabsEl.appendChild(btn);
+      btn.setAttribute('aria-selected', 'false');
+      btn.tabIndex = -1;
+      tabListEl.appendChild(btn);
       tabButtons.set(tab.id, btn);
 
-      const panel = make('section', 'tools-panel');
+      const panel = make('section', 'db-tabs__panel tools-panel');
       panel.dataset.tab = tab.id;
+      panel.hidden = true;
       panelsEl.appendChild(panel);
       tabPanels.set(tab.id, panel);
     });
@@ -3753,9 +3819,14 @@ function openCharacterToolsPopup(initialTab = 'generate') {
         const active = id === tabId;
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        btn.tabIndex = active ? 0 : -1;
+        if (active) btn.setAttribute('aria-current', 'page');
+        else btn.removeAttribute('aria-current');
       });
       tabPanels.forEach((panel, id) => {
         panel.classList.toggle('active', id === tabId);
+        panel.hidden = id !== tabId;
       });
     };
 
@@ -3766,7 +3837,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
     const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'generate';
     setActiveTab(wantedTab);
     opts.appendChild(tabsEl);
-    opts.appendChild(panelsEl);
+    window.DAUB?.init?.(opts.getRootNode?.() || opts);
   }, () => {}, {
     popupId: 'characterToolsPopup',
     optsId: 'characterToolsOptions',
@@ -3778,7 +3849,6 @@ function openCharacterToolsPopup(initialTab = 'generate') {
 function openFolderManagerPopup() {
   const pop  = bar.shadowRoot.getElementById('folderManagerPopup');
   const list = bar.shadowRoot.getElementById('folderList');
-  const closeBtn = bar.shadowRoot.getElementById('folderManagerDone');
   const closeX   = bar.shadowRoot.getElementById('folderManagerCloseX');
   const addBtn = bar.shadowRoot.getElementById('addFolderBtn');
   const nameIn = bar.shadowRoot.getElementById('newFolderName');
@@ -3821,13 +3891,21 @@ function openFolderManagerPopup() {
         return fa.localeCompare(fb,'sv') || String(a.name||'').localeCompare(String(b.name||''),'sv');
       });
     if (charList) {
-      const selectAll = '<label class="price-item"><span>Välj alla</span><input type="checkbox" data-action="select-all"></label>';
+      const selectAll = buildDaubCheckboxRow({
+        rowClass: 'price-item folder-char-item',
+        copyHtml: '<span class="folder-char-copy"><span>Välj alla</span></span>',
+        inputAttrs: ' data-action="select-all"'
+      });
       charList.innerHTML = selectAll + chars.map(c => {
         const fid = c.folderId || '';
         const fname = fid ? ((store.folders||[]).find(f=>f.id===fid)?.name || '') : '';
         const suffix = fname ? ` <span class="sub">(${escapeHtml(fname)})</span>` : '';
         // Ingen karaktär ska vara förvald i Mappar-menyn
-        return `<label class="price-item"><span>${escapeHtml(c.name)}${suffix}</span><input type="checkbox" data-charid="${c.id}"></label>`;
+        return buildDaubCheckboxRow({
+          rowClass: 'price-item folder-char-item',
+          copyHtml: `<span class="folder-char-copy"><span>${escapeHtml(c.name)}${suffix}</span></span>`,
+          inputAttrs: ` data-charid="${escapeDaubHtml(c.id)}"`
+        });
       }).join('');
     }
     // Destination folder select
@@ -3837,6 +3915,7 @@ function openFolderManagerPopup() {
     }
     if (!folders.length) {
       list.innerHTML = '<p>Inga mappar ännu.</p>';
+      window.DAUB?.init?.(pop);
       return;
     }
     list.innerHTML = folders.map((f, idx) => {
@@ -3858,6 +3937,7 @@ function openFolderManagerPopup() {
         </div>`
       );
     }).join('');
+    window.DAUB?.init?.(pop);
   }
 
   async function showRenamePopup(currentName) {
@@ -3975,7 +4055,6 @@ function openFolderManagerPopup() {
 
   function cleanup() {
     list.removeEventListener('click', onListClick);
-    closeBtn?.removeEventListener('click', onClose);
     closeX?.removeEventListener('click', onClose);
     addBtn.removeEventListener('click', onAdd);
     moveApply?.removeEventListener('click', onMoveApply);
@@ -4025,89 +4104,68 @@ function openFolderManagerPopup() {
   popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
   pop.querySelector('.popup-inner').scrollTop = 0;
   list.addEventListener('click', onListClick);
-  closeBtn?.addEventListener('click', onClose);
   closeX?.addEventListener('click', onClose);
   addBtn.addEventListener('click', onAdd);
   moveApply?.addEventListener('click', onMoveApply);
   charList?.addEventListener('change', onCharListChange);
 }
 
-function openAlchemistPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('alcPopup');
-  const box  = bar.shadowRoot.getElementById('alcOptions');
-  const cls  = bar.shadowRoot.getElementById('alcCancel');
+function openCraftLevelPopup(config, cb) {
+  const pop = bar.shadowRoot.getElementById(config.popupId);
+  const box = bar.shadowRoot.getElementById(config.optionsId);
+  const cls = bar.shadowRoot.getElementById(config.cancelId);
+  if (!pop || !box || !cls) return;
+  const currentLevel = String(config.currentLevel || '');
   let popupSession = null;
+
   const cleanup = () => {
-    box.removeEventListener('click', onBtn);
+    box.removeEventListener('change', onChange);
     cls.removeEventListener('click', onCancel);
   };
   const close = (result, reason = 'cancel') => {
     cb(result);
     popupSession?.close(reason);
   };
+  const onChange = (e) => {
+    const input = e.target instanceof HTMLInputElement ? e.target : null;
+    if (!input || input.type !== 'radio') return;
+    syncDaubRadioSelection(box, input.value);
+    close(input.value, 'select');
+  };
+  const onCancel = () => { close(null, 'cancel'); };
+
+  syncDaubRadioSelection(box, currentLevel);
   popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
   pop.querySelector('.popup-inner').scrollTop = 0;
-  function onBtn(e) {
-    const b = e.target.closest('button[data-level]');
-    if (!b) return;
-    const lvl = b.dataset.level;
-    close(lvl, 'select');
-  }
-  function onCancel() { close(null, 'cancel'); }
-  box.addEventListener('click', onBtn);
+  box.addEventListener('change', onChange);
   cls.addEventListener('click', onCancel);
+}
+
+function openAlchemistPopup(cb) {
+  openCraftLevelPopup({
+    popupId: 'alcPopup',
+    optionsId: 'alcOptions',
+    cancelId: 'alcCancel',
+    currentLevel: storeHelper.getPartyAlchemist(store) || ''
+  }, cb);
 }
 
 function openSmithPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('smithPopup');
-  const box  = bar.shadowRoot.getElementById('smithOptions');
-  const cls  = bar.shadowRoot.getElementById('smithCancel');
-  let popupSession = null;
-  const cleanup = () => {
-    box.removeEventListener('click', onBtn);
-    cls.removeEventListener('click', onCancel);
-  };
-  const close = (result, reason = 'cancel') => {
-    cb(result);
-    popupSession?.close(reason);
-  };
-  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function onBtn(e) {
-    const b = e.target.closest('button[data-level]');
-    if (!b) return;
-    const lvl = b.dataset.level;
-    close(lvl, 'select');
-  }
-  function onCancel() { close(null, 'cancel'); }
-  box.addEventListener('click', onBtn);
-  cls.addEventListener('click', onCancel);
+  openCraftLevelPopup({
+    popupId: 'smithPopup',
+    optionsId: 'smithOptions',
+    cancelId: 'smithCancel',
+    currentLevel: storeHelper.getPartySmith(store) || ''
+  }, cb);
 }
 
 function openArtefacterPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('artPopup');
-  const box  = bar.shadowRoot.getElementById('artOptions');
-  const cls  = bar.shadowRoot.getElementById('artCancel');
-  let popupSession = null;
-  const cleanup = () => {
-    box.removeEventListener('click', onBtn);
-    cls.removeEventListener('click', onCancel);
-  };
-  const close = (result, reason = 'cancel') => {
-    cb(result);
-    popupSession?.close(reason);
-  };
-  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function onBtn(e) {
-    const b = e.target.closest('button[data-level]');
-    if (!b) return;
-    const lvl = b.dataset.level;
-    close(lvl, 'select');
-  }
-  function onCancel() { close(null, 'cancel'); }
-  box.addEventListener('click', onBtn);
-  cls.addEventListener('click', onCancel);
+  openCraftLevelPopup({
+    popupId: 'artPopup',
+    optionsId: 'artOptions',
+    cancelId: 'artCancel',
+    currentLevel: storeHelper.getPartyArtefacter(store) || ''
+  }, cb);
 }
 
 function openDefenseCalcPopup() {
@@ -4124,7 +4182,6 @@ function openDefenseCalcPopup() {
   const emptyMsg = root.getElementById('defenseCalcEmpty');
   const extraEmptyMsg = root.getElementById('defenseCalcExtraEmpty');
   const applyBtn = root.getElementById('defenseCalcApply');
-  const cancelBtn = root.getElementById('defenseCalcCancel');
   const closeBtn = root.getElementById('defenseCalcCloseX');
   const resetBtn = root.getElementById('defenseCalcReset');
   const statusEl = root.getElementById('defenseCalcStatus');
@@ -4133,7 +4190,7 @@ function openDefenseCalcPopup() {
   const accuracySummaryEl = root.getElementById('defenseCalcAccuracySummary');
   const dancingSummaryEl = root.getElementById('defenseCalcDancingSummary');
   const inner = pop?.querySelector('.popup-inner');
-  if (!pop || !traitSel || !attackTraitSel || !armorSel || !weaponList || !extraItemsEl || !applyBtn || !cancelBtn || !closeBtn || !resetBtn || !inner) return;
+  if (!pop || !traitSel || !attackTraitSel || !armorSel || !weaponList || !extraItemsEl || !applyBtn || !closeBtn || !resetBtn || !inner) return;
 
   const list = typeof storeHelper.getCurrentList === 'function'
     ? storeHelper.getCurrentList(store)
@@ -4322,7 +4379,6 @@ function openDefenseCalcPopup() {
       const isArmMountedShield = types.includes('Sköld') && quals.some(isArmMountedShieldQuality);
       const isTwoHandedWeapon = !types.includes('Sköld') && types.some(isTwoHandedWeaponType);
       const metaHtml = chips.length ? `<span class="defense-item-meta">${chips.join('')}</span>` : '';
-      const checked = selectedWeaponPaths.has(value) ? ' checked' : '';
       weaponMeta.set(value, {
         path: obj.path,
         id: obj.row.id,
@@ -4333,7 +4389,12 @@ function openDefenseCalcPopup() {
         isArmMountedShield,
         isTwoHandedWeapon
       });
-      return `<label class="price-item defense-item"><span class="defense-item-copy"><span class="defense-item-name">${escapeText(name)}</span>${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(value)}"${checked}></label>`;
+      return buildDaubCheckboxRow({
+        rowClass: 'price-item defense-item',
+        copyHtml: `<span class="defense-item-copy"><span class="defense-item-name">${escapeText(name)}</span>${metaHtml}</span>`,
+        inputAttrs: ` data-path="${escapeAttrLocal(value)}"`,
+        checked: selectedWeaponPaths.has(value)
+      });
     })
     .filter(Boolean)
     .join('');
@@ -4630,7 +4691,11 @@ function openDefenseCalcPopup() {
           if (qualities.includes('L\u00e5ngt')) chips.push('<span class="defense-chip long">Långt</span>');
           if (isShield) chips.push('<span class="defense-chip shield">Sköld</span>');
           const metaHtml = chips.length ? `<span class="defense-item-meta">${chips.join('')}</span>` : '';
-          return `<label class="price-item defense-item"><span class="defense-item-copy"><span class="defense-item-name">${escapeText(meta.name || pathStr)}</span>${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(pathStr)}" data-rule-source="${escapeAttrLocal(rule.sourceEntryId)}"></label>`;
+          return buildDaubCheckboxRow({
+            rowClass: 'price-item defense-item',
+            copyHtml: `<span class="defense-item-copy"><span class="defense-item-name">${escapeText(meta.name || pathStr)}</span>${metaHtml}</span>`,
+            inputAttrs: ` data-path="${escapeAttrLocal(pathStr)}" data-rule-source="${escapeAttrLocal(rule.sourceEntryId)}"`
+          });
         }).join('');
       const emptyHtml = itemsHtml ? '' : '<p class="defense-calc-empty">Inga vapen i inventariet</p>';
       return `<div class="defense-calc-field" data-source-entry-id="${escapeAttrLocal(rule.sourceEntryId)}" data-max-weapons="${maxWeapons}"><label>${lbl}</label><div class="defense-item-list">${itemsHtml}${emptyHtml}</div></div>`;
@@ -4643,6 +4708,7 @@ function openDefenseCalcPopup() {
       separateWeaponCheckboxes.set(rule.sourceEntryId, { els, maxCount });
     });
   }
+  window.DAUB?.init?.(pop);
   // Set initial values from stored separateWeapons
   separateWeaponCheckboxes.forEach(({ els, maxCount }, sourceEntryId) => {
     const storedRefs = initialSeparateWeapons[sourceEntryId];
@@ -4705,7 +4771,6 @@ function openDefenseCalcPopup() {
 
   const cleanup = () => {
     applyBtn.removeEventListener('click', onApply);
-    cancelBtn.removeEventListener('click', onCancel);
     closeBtn.removeEventListener('click', onCancel);
     resetBtn.removeEventListener('click', onReset);
     inner.removeEventListener('keydown', onKey);
@@ -4807,7 +4872,6 @@ function openDefenseCalcPopup() {
   popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
   inner.scrollTop = 0;
   applyBtn.addEventListener('click', onApply);
-  cancelBtn.addEventListener('click', onCancel);
   closeBtn.addEventListener('click', onCancel);
   resetBtn.addEventListener('click', onReset);
   inner.addEventListener('keydown', onKey);
@@ -4817,7 +4881,7 @@ function openEntrySortPopup(cb) {
   const pop = bar.shadowRoot?.getElementById('entrySortPopup');
   if (!pop) return;
   const inner = pop.querySelector('.popup-inner');
-  const buttons = [...pop.querySelectorAll('.sort-btn[data-mode]')];
+  const optionRoot = pop.querySelector('#entrySortOptions');
   const saveBtn = pop.querySelector('#entrySortSave');
   const cancelBtn = pop.querySelector('#entrySortCancel');
   const current = storeHelper.getEntrySort ? storeHelper.getEntrySort(store) : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
@@ -4825,27 +4889,23 @@ function openEntrySortPopup(cb) {
 
   const setActive = (mode) => {
     selected = mode;
-    buttons.forEach(btn => {
-      const isActive = btn.dataset.mode === mode;
-      btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
+    syncDaubRadioSelection(optionRoot, mode);
   };
 
   setActive(current);
   let popupSession = null;
 
   const cleanup = () => {
-    buttons.forEach(btn => btn.removeEventListener('click', onSelect));
+    optionRoot?.removeEventListener('change', onSelect);
     saveBtn?.removeEventListener('click', onSave);
     cancelBtn?.removeEventListener('click', onCancel);
   };
   const close = (reason = 'cancel') => popupSession?.close(reason);
 
   const onSelect = (e) => {
-    const btn = e.currentTarget;
-    if (!btn) return;
-    setActive(btn.dataset.mode);
+    const input = e.target instanceof HTMLInputElement ? e.target : null;
+    if (!input || input.type !== 'radio') return;
+    setActive(input.value);
   };
 
   const onSave = () => {
@@ -4857,7 +4917,7 @@ function openEntrySortPopup(cb) {
 
   popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
   if (inner) inner.scrollTop = 0;
-  buttons.forEach(btn => btn.addEventListener('click', onSelect));
+  optionRoot?.addEventListener('change', onSelect);
   saveBtn?.addEventListener('click', onSave);
   cancelBtn?.addEventListener('click', onCancel);
 }
@@ -5656,6 +5716,26 @@ function openDriveStoragePopup(initialTab = 'drive') {
       if (text != null) el.textContent = text;
       return el;
     };
+    const decorateInput = input => {
+      input.classList.add('db-input');
+      return input;
+    };
+    const decorateSelect = selectEl => {
+      selectEl.classList.add('db-select__input');
+      return selectEl;
+    };
+    const createCheckboxRow = labelText => {
+      const label = make('label', 'db-checkbox import-check');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.className = 'db-checkbox__input';
+      const box = make('span', 'db-checkbox__box');
+      box.innerHTML = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 10.5L8.3 13.8L15 7" /></svg>';
+      label.appendChild(input);
+      label.appendChild(box);
+      label.appendChild(make('span', 'import-check-label', labelText));
+      return { label, input };
+    };
     const normalize = value => String(value || '').toLocaleLowerCase('sv');
 
     const buildDrivePanel = (root, choose) => {
@@ -5670,7 +5750,7 @@ function openDriveStoragePopup(initialTab = 'drive') {
       hero.appendChild(make('div', 'drive-storage-meta', `${characterCount} rollpersoner • ${folderCount} mappar`));
       wrap.appendChild(hero);
 
-      const saveCard = make('div', 'card export-card');
+      const saveCard = make('div', 'db-card export-card');
       saveCard.appendChild(make('div', 'card-title drive-card-title', 'Spara till Google Drive'));
       const saveSection = make('div', 'export-section');
       saveSection.appendChild(make('p', 'drive-section-intro', 'Välj Drive-mapp och spara alla eller enskilda rollpersoner.'));
@@ -5680,9 +5760,9 @@ function openDriveStoragePopup(initialTab = 'drive') {
       saveLabel.setAttribute('for', 'driveExportFolderSelect');
       saveFolderWrap.appendChild(saveLabel);
 
-      const saveFolderSelect = document.createElement('select');
+      const saveFolderSelect = decorateSelect(document.createElement('select'));
       saveFolderSelect.id = 'driveExportFolderSelect';
-      saveFolderSelect.className = 'drive-folder-select';
+      saveFolderSelect.className = 'db-select__input drive-folder-select';
       DRIVE_CONFIG.subfolders.forEach(name => {
         const opt = document.createElement('option');
         opt.value = name;
@@ -5697,7 +5777,7 @@ function openDriveStoragePopup(initialTab = 'drive') {
       saveFolderWrap.appendChild(saveFolderSelect);
       saveSection.appendChild(saveFolderWrap);
 
-      const saveAllBtn = make('button', 'char-btn drive-primary-action', 'Spara alla (separata filer)');
+      const saveAllBtn = make('button', 'db-btn db-btn--primary drive-primary-action', 'Spara alla (separata filer)');
       saveAllBtn.addEventListener('click', async () => {
         if (!store.characters?.length) {
           await alertPopup('Inga rollpersoner att spara.');
@@ -5746,19 +5826,19 @@ function openDriveStoragePopup(initialTab = 'drive') {
 
       const saveSingleWrap = make('div', 'drive-select-panel');
       const saveSearchWrap = make('div', 'drive-search');
-      const saveSearch = document.createElement('input');
+      const saveSearch = decorateInput(document.createElement('input'));
       saveSearch.type = 'text';
-      saveSearch.className = 'drive-search-input';
+      saveSearch.className = 'db-input drive-search-input';
       saveSearch.placeholder = 'Filtrera rollperson…';
       saveSearch.autocomplete = 'off';
       saveSearchWrap.appendChild(saveSearch);
       saveSingleWrap.appendChild(saveSearchWrap);
 
-      const saveCharSelect = document.createElement('select');
-      saveCharSelect.className = 'drive-folder-select drive-char-select';
+      const saveCharSelect = decorateSelect(document.createElement('select'));
+      saveCharSelect.className = 'db-select__input drive-folder-select drive-char-select';
       saveSingleWrap.appendChild(saveCharSelect);
 
-      const saveSingleBtn = make('button', 'char-btn drive-secondary-action', 'Spara vald rollperson');
+      const saveSingleBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Spara vald rollperson');
       saveSingleWrap.appendChild(saveSingleBtn);
       const saveMeta = make('div', 'drive-inline-meta');
       saveSingleWrap.appendChild(saveMeta);
@@ -5840,7 +5920,7 @@ function openDriveStoragePopup(initialTab = 'drive') {
       saveCard.appendChild(saveSection);
       wrap.appendChild(saveCard);
 
-      const importCard = make('div', 'card export-card');
+      const importCard = make('div', 'db-card export-card');
       importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från Google Drive'));
       const importSection = make('div', 'export-section');
       importSection.appendChild(make('p', 'drive-section-intro', 'Läs filer från vald Drive-mapp och importera vald fil eller alla på en gång.'));
@@ -5850,9 +5930,9 @@ function openDriveStoragePopup(initialTab = 'drive') {
       importLabel.setAttribute('for', 'driveImportFolderSelect');
       importFolderWrap.appendChild(importLabel);
 
-      importFolderSelect = document.createElement('select');
+      importFolderSelect = decorateSelect(document.createElement('select'));
       importFolderSelect.id = 'driveImportFolderSelect';
-      importFolderSelect.className = 'drive-folder-select';
+      importFolderSelect.className = 'db-select__input drive-folder-select';
       DRIVE_CONFIG.subfolders.forEach(name => {
         const opt = document.createElement('option');
         opt.value = name;
@@ -5867,13 +5947,13 @@ function openDriveStoragePopup(initialTab = 'drive') {
       importFolderWrap.appendChild(importFolderSelect);
       importSection.appendChild(importFolderWrap);
 
-      const loadBtn = make('button', 'char-btn drive-secondary-action', 'Hämta fillista');
+      const loadBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Hämta fillista');
       importSection.appendChild(loadBtn);
 
       const searchWrap = make('div', 'drive-search');
-      const search = document.createElement('input');
+      const search = decorateInput(document.createElement('input'));
       search.type = 'text';
-      search.className = 'drive-search-input';
+      search.className = 'db-input drive-search-input';
       search.placeholder = 'Filtrera namn…';
       search.autocomplete = 'off';
       searchWrap.appendChild(search);
@@ -5886,13 +5966,13 @@ function openDriveStoragePopup(initialTab = 'drive') {
       importSection.appendChild(importListHeader);
 
       const importSelectPanel = make('div', 'drive-select-panel');
-      const importFileSelect = document.createElement('select');
-      importFileSelect.className = 'drive-folder-select drive-file-select';
+      const importFileSelect = decorateSelect(document.createElement('select'));
+      importFileSelect.className = 'db-select__input drive-folder-select drive-file-select';
       importSelectPanel.appendChild(importFileSelect);
 
       const importActionRow = make('div', 'drive-action-row');
-      const importSelectedBtn = make('button', 'char-btn drive-primary-action', 'Importera vald fil');
-      const importAllBtn = make('button', 'char-btn drive-secondary-action', 'Importera alla filer i mapp');
+      const importSelectedBtn = make('button', 'db-btn db-btn--primary drive-primary-action', 'Importera vald fil');
+      const importAllBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Importera alla filer i mapp');
       importActionRow.appendChild(importSelectedBtn);
       importActionRow.appendChild(importAllBtn);
       importSelectPanel.appendChild(importActionRow);
@@ -5995,7 +6075,7 @@ function openDriveStoragePopup(initialTab = 'drive') {
     const buildExportPanel = (root, choose) => {
       const wrap = make('div', 'export-sections drive-storage-sections');
 
-      const backupsCard = make('div', 'card export-card');
+      const backupsCard = make('div', 'db-card export-card');
       backupsCard.appendChild(make('div', 'card-title drive-card-title', 'Säkerhetskopior'));
       const backups = make('div', 'export-section');
       backups.appendChild(make('p', 'drive-section-intro', 'Exportera alla rollpersoner eller aktiv mapp i valt format.'));
@@ -6007,11 +6087,11 @@ function openDriveStoragePopup(initialTab = 'drive') {
         block.appendChild(header);
 
         const actions = make('div', 'drive-export-actions');
-        const oneBtn = make('button', 'char-btn drive-secondary-action', 'En fil');
+        const oneBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'En fil');
         oneBtn.addEventListener('click', () => choose({ mode: 'export', action: values.one }));
-        const splitBtn = make('button', 'char-btn drive-secondary-action', 'Isär');
+        const splitBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Isär');
         splitBtn.addEventListener('click', () => choose({ mode: 'export', action: values.split }));
-        const zipBtn = make('button', 'char-btn drive-secondary-action', 'Zip');
+        const zipBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Zip');
         zipBtn.addEventListener('click', () => choose({ mode: 'export', action: values.zip }));
         actions.appendChild(oneBtn);
         actions.appendChild(splitBtn);
@@ -6044,7 +6124,7 @@ function openDriveStoragePopup(initialTab = 'drive') {
       backupsCard.appendChild(backups);
       wrap.appendChild(backupsCard);
 
-      const singlesCard = make('div', 'card export-card');
+      const singlesCard = make('div', 'db-card export-card');
       singlesCard.appendChild(make('div', 'card-title drive-card-title', 'Enskild rollperson'));
       const singles = make('div', 'export-section');
       singles.appendChild(make('p', 'drive-section-intro', 'Filtrera och exportera en vald rollperson.'));
@@ -6065,19 +6145,19 @@ function openDriveStoragePopup(initialTab = 'drive') {
 
       const panel = make('div', 'drive-select-panel');
       const searchWrap = make('div', 'drive-search');
-      const search = document.createElement('input');
+      const search = decorateInput(document.createElement('input'));
       search.type = 'text';
-      search.className = 'drive-search-input';
+      search.className = 'db-input drive-search-input';
       search.placeholder = 'Sök rollperson eller mapp…';
       search.autocomplete = 'off';
       searchWrap.appendChild(search);
       panel.appendChild(searchWrap);
 
-      const charSelect = document.createElement('select');
-      charSelect.className = 'drive-folder-select drive-char-select';
+      const charSelect = decorateSelect(document.createElement('select'));
+      charSelect.className = 'db-select__input drive-folder-select drive-char-select';
       panel.appendChild(charSelect);
 
-      const exportBtn = make('button', 'char-btn drive-primary-action', 'Exportera rollperson');
+      const exportBtn = make('button', 'db-btn db-btn--primary drive-primary-action', 'Exportera rollperson');
       panel.appendChild(exportBtn);
       const meta = make('div', 'drive-inline-meta');
       panel.appendChild(meta);
@@ -6149,15 +6229,15 @@ function openDriveStoragePopup(initialTab = 'drive') {
 
     const buildLocalImportPanel = (root, choose) => {
       const wrap = make('div', 'export-sections drive-storage-sections');
-      const importCard = make('div', 'card export-card');
+      const importCard = make('div', 'db-card export-card');
       importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från fil'));
       const importSection = make('div', 'export-section');
       importSection.appendChild(make('p', 'drive-section-intro', 'Importera lokala JSON-filer till vald mapp eller enligt mappinformation i filerna.'));
 
       const folders = (storeHelper.getFolders(store) || []).slice()
         .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-      const folderSelect = document.createElement('select');
-      folderSelect.className = 'drive-folder-select';
+      const folderSelect = decorateSelect(document.createElement('select'));
+      folderSelect.className = 'db-select__input drive-folder-select';
       folderSelect.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
       let activeId = 'ALL';
@@ -6171,14 +6251,11 @@ function openDriveStoragePopup(initialTab = 'drive') {
       importSection.appendChild(chooseLabel);
       importSection.appendChild(folderSelect);
 
-      const makeActiveChoose = make('label', 'price-item import-check');
-      const chooseCheck = document.createElement('input');
-      chooseCheck.type = 'checkbox';
-      makeActiveChoose.appendChild(chooseCheck);
-      makeActiveChoose.appendChild(make('span', null, 'Gör målmappen aktiv efter import'));
-      importSection.appendChild(makeActiveChoose);
+      const chooseRow = createCheckboxRow('Gör målmappen aktiv efter import');
+      const chooseCheck = chooseRow.input;
+      importSection.appendChild(chooseRow.label);
 
-      const chooseBtn = make('button', 'char-btn drive-primary-action', 'Importera till vald mapp');
+      const chooseBtn = make('button', 'db-btn db-btn--primary drive-primary-action', 'Importera till vald mapp');
       chooseBtn.addEventListener('click', () => {
         const folderId = folderSelect.value || '';
         if (!folderId) return;
@@ -6194,14 +6271,11 @@ function openDriveStoragePopup(initialTab = 'drive') {
       importSection.appendChild(chooseBtn);
 
       importSection.appendChild(make('p', 'drive-section-intro', 'Eller använd mapparna som finns definierade i filerna.'));
-      const makeActiveFrom = make('label', 'price-item import-check');
-      const fromCheck = document.createElement('input');
-      fromCheck.type = 'checkbox';
-      makeActiveFrom.appendChild(fromCheck);
-      makeActiveFrom.appendChild(make('span', null, 'Gör målmapp aktiv när exakt en mapp importeras'));
-      importSection.appendChild(makeActiveFrom);
+      const fromRow = createCheckboxRow('Gör målmapp aktiv när exakt en mapp importeras');
+      const fromCheck = fromRow.input;
+      importSection.appendChild(fromRow.label);
 
-      const fromBtn = make('button', 'char-btn drive-secondary-action', 'Importera enligt filens mappar');
+      const fromBtn = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Importera enligt filens mappar');
       fromBtn.addEventListener('click', () => {
         choose({
           mode: 'local-import',
@@ -6223,20 +6297,26 @@ function openDriveStoragePopup(initialTab = 'drive') {
       { id: 'export', label: 'Export' },
       { id: 'import', label: 'Import' }
     ];
-    const tabsEl = make('div', 'storage-tabs');
+    const tabsEl = make('div', 'db-tabs drive-storage-tabs');
+    const tabListEl = make('div', 'db-tabs__list storage-tabs');
     const panelsEl = make('div', 'storage-panels');
     const tabButtons = new Map();
     const tabPanels = new Map();
+    tabsEl.appendChild(tabListEl);
+    tabsEl.appendChild(panelsEl);
 
     tabs.forEach(tab => {
-      const btn = make('button', 'char-btn storage-tab', tab.label);
+      const btn = make('button', 'db-tabs__tab storage-tab', tab.label);
       btn.type = 'button';
       btn.dataset.tab = tab.id;
-      tabsEl.appendChild(btn);
+      btn.setAttribute('aria-selected', 'false');
+      btn.tabIndex = -1;
+      tabListEl.appendChild(btn);
       tabButtons.set(tab.id, btn);
 
-      const panel = make('section', 'storage-panel');
+      const panel = make('section', 'db-tabs__panel storage-panel');
       panel.dataset.tab = tab.id;
+      panel.hidden = true;
       panelsEl.appendChild(panel);
       tabPanels.set(tab.id, panel);
     });
@@ -6250,9 +6330,14 @@ function openDriveStoragePopup(initialTab = 'drive') {
         const active = id === tabId;
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        btn.tabIndex = active ? 0 : -1;
+        if (active) btn.setAttribute('aria-current', 'page');
+        else btn.removeAttribute('aria-current');
       });
       tabPanels.forEach((panel, id) => {
         panel.classList.toggle('active', id === tabId);
+        panel.hidden = id !== tabId;
       });
     };
 
@@ -6263,7 +6348,7 @@ function openDriveStoragePopup(initialTab = 'drive') {
     const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'drive';
     setActiveTab(wantedTab);
     opts.appendChild(tabsEl);
-    opts.appendChild(panelsEl);
+    window.DAUB?.init?.(opts.getRootNode?.() || opts);
   }, async choice => {
     if (!choice) return;
 
@@ -7208,6 +7293,7 @@ async function requireCharacter() {
         </div>
       </div>`;
     document.body.appendChild(pop);
+    window.popupUi?.normalizeModal?.(pop, { titleText: 'Aktiv karaktar kravs' });
   }
 
   const wrap   = pop.querySelector('#charPopupContent');

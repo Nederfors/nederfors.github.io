@@ -59,7 +59,8 @@
         level: popupLevel
       })
       : false;
-    if (!skipRequirementPopup && popup && typeof popup.open === 'function' && candidateEntry && Array.isArray(list)) {
+    const preferDialogFallback = Array.isArray(window.__testDialogMessages);
+    if (!skipRequirementPopup && !preferDialogFallback && popup && typeof popup.open === 'function' && candidateEntry && Array.isArray(list)) {
       const title = action === 'level-change'
         ? `Lås upp nivåändring för ${quoteName(entryName) || 'posten'}`
         : `Lås upp ${quoteName(entryName) || 'posten'}`;
@@ -155,9 +156,17 @@
     };
     let sTemp = '';
     let union = storeHelper.getFilterUnion(store);
-    dom.filterUnion.classList.toggle('active', union);
+    if (typeof window.setDaubSwitchState === 'function') {
+      window.setDaubSwitchState(dom.filterUnion, union);
+    } else {
+      dom.filterUnion.classList.toggle('active', union);
+    }
     let compact = storeHelper.getCompactEntries(store);
-    dom.entryViewToggle.classList.toggle('active', !compact);
+    if (typeof window.setDaubSwitchState === 'function') {
+      window.setDaubSwitchState(dom.entryViewToggle, !compact);
+    } else {
+      dom.entryViewToggle.classList.toggle('active', !compact);
+    }
     // Open matching categories once after certain actions (search)
     let openCatsOnce = new Set();
 
@@ -2082,7 +2091,8 @@
             };
           }
         } else {
-          if (total > 0) standardActionConfig.remove = { act: 'rem' };
+          if (total > 0) standardActionConfig.remove = { act: 'del' };
+          if (total > 1) standardActionConfig.minus = { act: 'sub' };
           if (total < limit) {
             standardActionConfig.plus = {
               act: 'add',
@@ -2091,7 +2101,7 @@
           }
         }
       } else {
-        standardActionConfig.remove = { act: 'rem' };
+        standardActionConfig.remove = { act: 'del' };
       }
       buttonParts.push(...(window.entryCardFactory?.buildStandardActionButtons?.(standardActionConfig, {
         buttonName: p.namn,
@@ -2383,7 +2393,8 @@
                 };
               }
             } else {
-              if (total > 0) standardActionConfig.remove = { act: 'rem' };
+              if (total > 0) standardActionConfig.remove = { act: 'del' };
+              if (total > 1) standardActionConfig.minus = { act: 'sub' };
               if (total < limit) {
                 standardActionConfig.plus = {
                   act: 'add',
@@ -2392,7 +2403,7 @@
               }
             }
           } else {
-            standardActionConfig.remove = { act: 'rem' };
+            standardActionConfig.remove = { act: 'del' };
           }
           buttonParts.push(...(window.entryCardFactory?.buildStandardActionButtons?.(standardActionConfig, {
             buttonName: p.namn,
@@ -2862,19 +2873,9 @@
             }
             list.push(it);
           }
-        } else if (act === 'del' || (!multi && act === 'rem')) {
-          // Remove all instances (or single non-multi)
+        } else if (act === 'del' || act === 'rem') {
+          // Remove all instances
           list = before.filter(x => !(x.namn === name && (tr ? x.trait === tr : !x.trait)));
-        } else if (act === 'rem') {
-          // Backward compat: for multi, old 'rem' removed one
-          let removed = false;
-          list = [];
-          for (const it of before) {
-            if (!removed && it.namn === name && !it.trait) {
-              removed = true; continue;
-            }
-            list.push(it);
-          }
         } else {
           return;
         }

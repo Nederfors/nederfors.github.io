@@ -33,67 +33,36 @@
 
   function createPopup() {
     if (document.getElementById('requirementPopup')) return;
-
-    const useDaub = typeof DAUB !== 'undefined' && DAUB.openModal;
     const div = document.createElement('div');
     div.id = 'requirementPopup';
-
-    if (useDaub) {
-      div.className = 'db-modal-overlay popup';
-      div.setAttribute('aria-hidden', 'true');
-      div.innerHTML = `
-        <div class="db-modal requirement-popup-ui">
-          <div class="db-modal__header requirement-popup-header">
-            <div class="requirement-popup-copy">
-              <div class="requirement-popup-kicker">Kravspärr</div>
-              <h2 id="requirementTitle" class="requirement-popup-title">Lås upp krav</h2>
-              <p id="requirementSubtitle" class="requirement-popup-subtitle"></p>
-            </div>
-            <button id="requirementClose" class="db-btn db-btn--icon requirement-popup-close" type="button" aria-label="Stäng">✕</button>
+    div.className = 'db-modal-overlay popup requirement-popup';
+    div.setAttribute('aria-hidden', 'true');
+    div.innerHTML = `
+      <div class="db-modal popup-inner requirement-popup-ui">
+        <div class="db-modal__header requirement-popup-header">
+          <div class="requirement-popup-copy">
+            <div class="requirement-popup-kicker">Kravspärr</div>
+            <h2 id="requirementTitle" class="requirement-popup-title">Lås upp krav</h2>
+            <p id="requirementSubtitle" class="requirement-popup-subtitle"></p>
           </div>
-          <div class="db-modal__body requirement-popup-body">
-            <label id="requirementSearchLabel" for="requirementSearch" class="requirement-popup-search-label" hidden>Sök</label>
-            <input id="requirementSearch" class="db-input requirement-popup-search-input" type="search" placeholder="Sök krav..." autocomplete="off" spellcheck="false" hidden>
-            <div id="requirementStatus" class="requirement-popup-status" role="status" aria-live="polite"></div>
-            <div id="requirementOptions" class="requirement-popup-options"></div>
-            <p id="requirementEmpty" class="requirement-popup-empty" hidden>Inga krav matchar sökningen.</p>
-          </div>
-          <div class="db-modal__footer requirement-popup-actions">
-            <button id="requirementApply" class="db-btn" type="button">Lägg till valda krav</button>
-            <button id="requirementOverride" class="db-btn db-btn--danger" type="button">Lägg till ändå</button>
-            <button id="requirementCancel" class="db-btn" type="button">Avbryt</button>
-          </div>
+          <button id="requirementClose" class="db-modal__close requirement-popup-close" type="button" aria-label="Stäng">&times;</button>
         </div>
-      `;
-    } else {
-      div.className = 'popup requirement-popup';
-      div.innerHTML = `
-        <div class="popup-inner requirement-popup-ui">
-          <header class="requirement-popup-header">
-            <div class="requirement-popup-copy">
-              <div class="requirement-popup-kicker">Kravspärr</div>
-              <h3 id="requirementTitle" class="requirement-popup-title">Lås upp krav</h3>
-              <p id="requirementSubtitle" class="requirement-popup-subtitle"></p>
-            </div>
-            <button id="requirementClose" class="char-btn icon requirement-popup-close" type="button" title="Stäng">✕</button>
-          </header>
-          <div class="requirement-popup-body">
-            <label id="requirementSearchLabel" for="requirementSearch" class="requirement-popup-search-label" hidden>Sök</label>
-            <input id="requirementSearch" class="requirement-popup-search-input" type="search" placeholder="Sök krav..." autocomplete="off" spellcheck="false" hidden>
-            <div id="requirementStatus" class="requirement-popup-status" role="status" aria-live="polite"></div>
-            <div id="requirementOptions" class="requirement-popup-options"></div>
-            <p id="requirementEmpty" class="requirement-popup-empty" hidden>Inga krav matchar sökningen.</p>
-          </div>
-          <div class="requirement-popup-actions">
-            <button id="requirementApply" class="char-btn" type="button">Lägg till valda krav</button>
-            <button id="requirementOverride" class="char-btn danger" type="button">Lägg till ändå</button>
-            <button id="requirementCancel" class="char-btn" type="button">Avbryt</button>
-          </div>
+        <div class="db-modal__body requirement-popup-body">
+          <label id="requirementSearchLabel" for="requirementSearch" class="requirement-popup-search-label" hidden>Sök</label>
+          <input id="requirementSearch" class="db-input requirement-popup-search-input" type="search" placeholder="Sök krav..." autocomplete="off" spellcheck="false" hidden>
+          <div id="requirementStatus" class="requirement-popup-status" role="status" aria-live="polite"></div>
+          <div id="requirementOptions" class="requirement-popup-options"></div>
+          <p id="requirementEmpty" class="requirement-popup-empty" hidden>Inga krav matchar sökningen.</p>
         </div>
-      `;
-    }
+        <div class="db-modal__footer requirement-popup-actions">
+          <button id="requirementApply" class="db-btn" type="button">Lägg till valda krav</button>
+          <button id="requirementOverride" class="db-btn db-btn--danger" type="button">Lägg till ändå</button>
+        </div>
+      </div>
+    `;
 
     document.body.appendChild(div);
+    window.popupUi?.normalizeModal?.(div);
     window.registerOverlayElement?.(div);
   }
 
@@ -116,13 +85,13 @@
     ].join(' '));
   }
 
-  function renderOption(option, useDaub) {
+  function renderOption(option) {
     const key = String(option?.key || '').trim();
     if (!key) return '';
 
     const selected = Boolean(option?.selected);
     const disabled = Boolean(option?.disabled) && !selected;
-    const buttonClass = useDaub ? 'db-btn requirement-option' : 'char-btn requirement-option';
+    const buttonClass = 'db-btn requirement-option';
     const stateClass = getSectionKey(option);
     const className = [
       buttonClass,
@@ -165,7 +134,7 @@
     `;
   }
 
-  function renderSection(sectionKey, options, useDaub) {
+  function renderSection(sectionKey, options) {
     const rows = Array.isArray(options) ? options : [];
     if (!rows.length) return '';
     const label = SECTION_LABELS[sectionKey] || sectionKey;
@@ -176,7 +145,7 @@
           <span class="requirement-popup-group-count">${rows.length}</span>
         </header>
         <div class="requirement-popup-group-list">
-          ${rows.map(option => renderOption(option, useDaub)).join('')}
+          ${rows.map(option => renderOption(option)).join('')}
         </div>
       </section>
     `;
@@ -227,7 +196,6 @@
     const optionSpecs = helper.getRequirementAssistOptions(candidate, baseList, assistOptions);
 
     const pop = document.getElementById('requirementPopup');
-    const useDaub = pop.classList.contains('db-modal-overlay') && typeof DAUB !== 'undefined';
     const inner = pop.querySelector('.popup-inner') || pop.querySelector('.db-modal');
     const titleEl = pop.querySelector('#requirementTitle');
     const subtitleEl = pop.querySelector('#requirementSubtitle');
@@ -238,7 +206,6 @@
     const emptyEl = pop.querySelector('#requirementEmpty');
     const applyBtn = pop.querySelector('#requirementApply');
     const overrideBtn = pop.querySelector('#requirementOverride');
-    const cancelBtn = pop.querySelector('#requirementCancel');
     const closeBtn = pop.querySelector('#requirementClose');
 
     const title = String(config?.title || `Lås upp ${candidate?.namn || 'krav'}`).trim();
@@ -285,7 +252,7 @@
           ? (searchTerm.trim() ? `Inga träffar för "${searchTerm.trim()}".` : 'Inga krav matchar sökningen.')
           : 'Det finns inga krav som kan läggas till automatiskt här.';
       } else {
-        box.innerHTML = grouped.map(group => renderSection(group.key, group.rows, useDaub)).join('');
+        box.innerHTML = grouped.map(group => renderSection(group.key, group.rows)).join('');
         emptyEl.hidden = true;
       }
     }
@@ -297,10 +264,9 @@
       box.removeEventListener('click', onOptionClick);
       applyBtn.removeEventListener('click', onApply);
       overrideBtn.removeEventListener('click', onOverride);
-      cancelBtn.removeEventListener('click', onCancel);
-      closeBtn.removeEventListener('click', onCancel);
+      closeBtn?.removeEventListener('click', onCancel);
       searchInput.removeEventListener('input', onSearch);
-      if (!useDaub) {
+      if (!usingManager) {
         pop.removeEventListener('click', onOutside);
         document.removeEventListener('keydown', onKeyDown);
       }
@@ -314,6 +280,7 @@
         popupSession.close(reason);
       } else {
         pop.classList.remove('open');
+        pop.setAttribute('aria-hidden', 'true');
         cleanup();
         resolvePromise(currentResult);
       }
@@ -398,6 +365,7 @@
         }
       });
     } else {
+      pop.setAttribute('aria-hidden', 'false');
       pop.classList.add('open');
     }
 
@@ -409,10 +377,9 @@
       box.addEventListener('click', onOptionClick);
       applyBtn.addEventListener('click', onApply);
       overrideBtn.addEventListener('click', onOverride);
-      cancelBtn.addEventListener('click', onCancel);
-      closeBtn.addEventListener('click', onCancel);
+      closeBtn?.addEventListener('click', onCancel);
       searchInput.addEventListener('input', onSearch);
-      if (!useDaub) {
+      if (!usingManager) {
         pop.addEventListener('click', onOutside);
         document.addEventListener('keydown', onKeyDown);
       }

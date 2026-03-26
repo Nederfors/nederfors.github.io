@@ -8,9 +8,13 @@
         close: (reason = 'programmatic') => window.popupManager.close(pop, reason)
       };
     }
+    pop?.setAttribute?.('aria-hidden', 'false');
     pop?.classList.add('open');
     return {
-      close: () => pop?.classList.remove('open')
+      close: () => {
+        pop?.classList.remove('open');
+        pop?.setAttribute?.('aria-hidden', 'true');
+      }
     };
   }
 
@@ -29,9 +33,10 @@
     if(document.getElementById('tabellPopup')) return;
     const wrap = document.createElement('div');
     wrap.id = 'tabellPopup';
-    wrap.className = 'popup';
+    wrap.className = 'db-modal-overlay popup';
+    wrap.setAttribute('aria-hidden', 'true');
     wrap.innerHTML = `
-      <div class="popup-inner">
+      <div class="db-modal popup-inner">
         <div class="popup-header">
           <h2 id="tabellTitle"></h2>
           <div class="header-actions" id="tabellActions">
@@ -42,6 +47,7 @@
       </div>
     `;
     document.body.appendChild(wrap);
+    window.popupUi?.normalizeModal?.(wrap);
     window.registerOverlayElement?.(wrap);
     wrap.querySelector('#tabellClose').addEventListener('click', close);
     wrap.addEventListener('click', e => {
@@ -86,6 +92,7 @@
         if (!window.popupManager?.close) activeSession = null;
       } else {
         p.classList.remove('open');
+        p.setAttribute('aria-hidden', 'true');
         p.classList.remove('has-table-view');
         p.querySelector('.popup-inner')?.classList.remove('has-table-view');
         window.updateScrollLock?.();

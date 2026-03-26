@@ -542,6 +542,7 @@
       </div>
     `;
     document.body.appendChild(div);
+    window.popupUi?.normalizeModal?.(div);
   }
 
   function buildLevelOptions(minLevel, options = {}){

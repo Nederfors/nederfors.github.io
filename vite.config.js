@@ -27,6 +27,10 @@ export default defineConfig(({ mode }) => {
           globIgnores: [
             '**/pdf/**',
             '**/data/all.json',
+            '**/css/app-shell.css',
+            '**/css/style.legacy.css',
+            '**/css/daub-theme.css',
+            '**/css/daub-overrides.css',
             '**/assets/background-*.svg',
             '**/assets/grain-*.svg',
             '**/icons/background.svg',

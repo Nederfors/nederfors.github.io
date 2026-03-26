@@ -37,23 +37,30 @@ test('elite requirement button opens the elite builder popup', async ({ page }) 
   await page.goto('/#/index');
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
 
-  const popupState = await page.evaluate(async () => {
+  await page.evaluate(async () => {
     const button = document.querySelector('button[data-elite-req="Järnsvuren"]');
     if (!button) {
       throw new Error('Missing elite requirement button for Järnsvuren.');
     }
     button.click();
     await new Promise(resolve => setTimeout(resolve, 50));
-    return {
-      masterOpen: Boolean(document.getElementById('masterPopup')?.classList.contains('open')),
-      charOpen: Boolean(document.getElementById('charPopup')?.classList.contains('open')),
-      topPopupId: window.popupManager?.peekTop?.()?.id || null,
-      popupGroups: document.querySelectorAll('#masterPopup .master-group').length
-    };
   });
+
+  const popupState = await page.evaluate(() => ({
+    masterOpen: Boolean(document.getElementById('masterPopup')?.classList.contains('open')),
+    charOpen: Boolean(document.getElementById('charPopup')?.classList.contains('open')),
+    topPopupId: window.popupManager?.peekTop?.()?.id || null,
+    popupGroups: document.querySelectorAll('#masterPopup .master-group').length
+  }));
 
   expect(popupState.masterOpen).toBe(true);
   expect(popupState.charOpen).toBe(false);
   expect(popupState.topPopupId).toBe('masterPopup');
   expect(popupState.popupGroups).toBeGreaterThan(0);
+
+  const masterPopup = page.locator('#masterPopup');
+  await expect(masterPopup.locator('.db-modal__header .db-modal__close#masterCancel')).toHaveCount(1);
+  await expect(masterPopup.locator('.db-modal__footer #masterCancel')).toHaveCount(0);
+  await masterPopup.click({ position: { x: 5, y: 5 } });
+  await expect(masterPopup).toBeHidden();
 });

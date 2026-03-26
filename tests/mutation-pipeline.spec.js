@@ -260,6 +260,17 @@ async function choosePopupOption(page, label) {
     const popup = document.getElementById('choicePopup');
     if (!popup) return false;
     const optionRoot = popup.querySelector('#choiceOpts') || popup;
+    const radio = [...optionRoot.querySelectorAll('.db-radio')]
+      .find((candidate) => String(candidate.textContent || '').trim() === String(label || '').trim()) || null;
+    if (radio) {
+      const input = radio.querySelector('input[type="radio"]');
+      if (!input || input.disabled) return false;
+      input.checked = true;
+      input.click();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    }
     const button = [...optionRoot.querySelectorAll('button')]
       .find((candidate) => !candidate.disabled && String(candidate.textContent || '').trim() === String(label || '').trim()) || null;
     if (!button) return false;
@@ -274,8 +285,8 @@ async function cancelChoicePopup(page) {
   await page.locator('#choicePopup').waitFor({ state: 'visible' });
   await page.evaluate(() => {
     const popup = document.getElementById('choicePopup');
-    const button = popup?.querySelector('#choiceCancel');
-    if (!button) throw new Error('Missing choice popup cancel button.');
+    const button = popup?.querySelector('#choiceClose');
+    if (!button) throw new Error('Missing choice popup close button.');
     button.click();
   });
 }
@@ -374,10 +385,17 @@ test('choice-popup add with replace_existing upgrades the existing Exceptionellt
   await choosePopupOption(page, 'Diskret');
   await readLatestScenario(page, 'add-item-to-character');
 
-  const entries = await readListEntries(page, 'Exceptionellt karaktärsdrag');
-  const matches = entries.filter((entry) => entry.trait === 'Diskret');
-  expect(matches).toHaveLength(1);
-  expect(matches[0]?.level).toBe('Gesäll');
+  await expect.poll(async () => {
+    const entries = await readListEntries(page, 'Exceptionellt karaktärsdrag');
+    const matches = entries.filter((entry) => entry.trait === 'Diskret');
+    return {
+      count: matches.length,
+      level: matches[0]?.level || ''
+    };
+  }).toEqual({
+    count: 1,
+    level: 'Gesäll'
+  });
 });
 
 test('choice-popup add reports no-options when all Monsterlärd specializations are already used', async ({ page }) => {

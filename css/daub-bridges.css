@@ -1,7 +1,7 @@
 /*
- * DAUB theme overrides — maps DAUB semantic tokens to Symbapedia's
- * medieval dark-fantasy palette.  Loaded AFTER all legacy CSS so that
- * DAUB components rendered later pick up these values.
+ * DAUB theme bridge — maps DAUB semantic tokens to Symbapedia's
+ * medieval dark-fantasy palette and exposes the canonical compatibility
+ * aliases used by the current app stylesheet.
  */
 
 [data-theme="ember"] {
