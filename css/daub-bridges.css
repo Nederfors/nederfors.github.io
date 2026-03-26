@@ -4,7 +4,7 @@
  * DAUB components rendered later pick up these values.
  */
 
-[data-theme="ember-dark"] {
+[data-theme="ember"] {
   /* ── Backgrounds (charred wood) ────────────────────── */
   --db-color-bg:              #1a1310;
   --db-color-bg-alt:          #261c16;
@@ -363,7 +363,6 @@
 }
 
 /* Compact chips inside cards */
-.card .tags .db-chip,
 .db-card .tags .db-chip {
   font-size: 0.78rem;
   padding: 0.15rem 0.5rem;

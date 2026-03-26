@@ -857,7 +857,7 @@ class SharedToolbar extends HTMLElement {
         <div class="filter-panel-content info-panel-content summary-content">
           <div class="filter-panel-stack">
         <ul class="card-list filter-card-list">
-          <li class="card" data-special="__formal__" id="filterFormalCard">
+          <li class="db-card" data-special="__formal__" id="filterFormalCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Verktyg ${icon('tool-box', { className: 'title-icon', alt: 'Verktyg' })}</span></div>
             <div class="card-desc">
               <!-- Välj rollperson och Aktiv mapp -->
@@ -891,7 +891,7 @@ class SharedToolbar extends HTMLElement {
               </div>
             </div>
           </li>
-          <li class="card" data-special="__formal__" id="filterSettingsCard">
+          <li class="db-card" data-special="__formal__" id="filterSettingsCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Inställningar ${icon('lamp', { className: 'title-icon', alt: 'Inställningar' })}</span></div>
             <div class="card-desc">
               <!-- Grupp med partymedlemmar och vy-knappar -->
@@ -953,7 +953,7 @@ class SharedToolbar extends HTMLElement {
           </li>
         </ul>
         <!-- Sökfilter-kort som samlar relaterade dropdowns -->
-        <div class="card filter-panel-static-card" id="searchFiltersCard">
+        <div class="db-card filter-panel-static-card" id="searchFiltersCard">
           <div class="card-title">Sökfilter</div>
           <div class="card-desc">
             <div class="filter-group">
@@ -971,7 +971,7 @@ class SharedToolbar extends HTMLElement {
           </div>
         </div>
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
-        <div class="card help-card filter-panel-static-card">
+        <div class="db-card help-card filter-panel-static-card">
           <div class="card-title">Hjälp</div>
           <div class="card-desc">
             <div class="filter-group party-toggles">
@@ -1186,7 +1186,7 @@ class SharedToolbar extends HTMLElement {
         <div class="db-modal popup-inner">
           <h3>Saldo</h3>
           <div class="money-wrapper">
-            <section class="money-section card money-section-balance">
+            <section class="money-section db-card money-section-balance">
               <header class="money-header">
                 <h4>Saldo</h4>
                 <p>Justera kontanterna när ditt lager har ändrats.</p>
@@ -1214,7 +1214,7 @@ class SharedToolbar extends HTMLElement {
           <h3>Manuella justeringar</h3>
           <p class="manual-adjust-hint">Använd knapparna för att lägga till eller ta bort manuella ändringar. Erf påverkar endast spenderad erfarenhet.</p>
           <div class="manual-adjust-groups" id="manualAdjustGroups">
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Korruption</span>
                 <span id="manualCorruptionDisplay" class="manual-adjust-current">0</span>
@@ -1224,7 +1224,7 @@ class SharedToolbar extends HTMLElement {
                 <button class="db-btn" type="button" data-type="corruption" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Spenderad erf</span>
                 <span id="manualXpDisplay" class="manual-adjust-current">0</span>
@@ -1234,7 +1234,7 @@ class SharedToolbar extends HTMLElement {
                 <button class="db-btn" type="button" data-type="xp" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Tålighet</span>
                 <span id="manualToughnessDisplay" class="manual-adjust-current">0</span>
@@ -1244,7 +1244,7 @@ class SharedToolbar extends HTMLElement {
                 <button class="db-btn" type="button" data-type="toughness" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Smärtgräns</span>
                 <span id="manualPainDisplay" class="manual-adjust-current">0</span>
@@ -1254,7 +1254,7 @@ class SharedToolbar extends HTMLElement {
                 <button class="db-btn" type="button" data-type="pain" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Bärkapacitet</span>
                 <span id="manualCapacityDisplay" class="manual-adjust-current">0</span>
@@ -1358,7 +1358,7 @@ class SharedToolbar extends HTMLElement {
         <div class="db-modal popup-inner">
           <h3>Snabb prisjustering</h3>
           <div class="export-sections">
-            <div class="card export-card">
+            <div class="db-card export-card">
               <div class="card-title">Multiplicera pris</div>
               <div class="card-desc">
                 <div class="price-custom-row">
@@ -1372,7 +1372,7 @@ class SharedToolbar extends HTMLElement {
                 </div>
               </div>
             </div>
-            <div class="card export-card">
+            <div class="db-card export-card">
               <div class="card-title">Sätt nytt grundpris</div>
               <div class="card-desc">
                 <label for="rowBaseDaler">Pris</label>
@@ -1470,7 +1470,7 @@ class SharedToolbar extends HTMLElement {
             </div>
           </div>
           <div class="defense-calc-sections">
-            <section class="card defense-calc-card">
+            <section class="db-card defense-calc-card">
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
                   <div class="defense-calc-step">1. Grund</div>
@@ -1493,7 +1493,7 @@ class SharedToolbar extends HTMLElement {
                 </div>
               </div>
             </section>
-            <section class="card defense-calc-card defense-calc-group">
+            <section class="db-card defense-calc-card defense-calc-group">
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
                   <div class="defense-calc-step">2. Utrustning</div>
@@ -1504,7 +1504,7 @@ class SharedToolbar extends HTMLElement {
               <p id="defenseCalcEmpty" class="defense-calc-empty" hidden></p>
               <div id="defenseCalcWeaponList" class="defense-item-list"></div>
             </section>
-            <section class="card defense-calc-card defense-calc-group">
+            <section class="db-card defense-calc-card defense-calc-group">
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
                   <div class="defense-calc-step">3. Utrustning</div>
@@ -1515,7 +1515,7 @@ class SharedToolbar extends HTMLElement {
               <p id="defenseCalcExtraEmpty" class="defense-calc-empty" hidden></p>
               <div id="defenseCalcExtraItems" class="defense-item-list defense-item-list-equipment"></div>
             </section>
-            <section id="defenseCalcDancingCard" class="card defense-calc-card defense-calc-card-dancing">
+            <section id="defenseCalcDancingCard" class="db-card defense-calc-card defense-calc-card-dancing">
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
                   <div class="defense-calc-step">4. Specialfall</div>
@@ -1950,7 +1950,7 @@ class SharedToolbar extends HTMLElement {
 
   updateFilterCollapseBtn() {
     if (!this.filterCollapseBtn) return;
-    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
+    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(.help-card)')];
     const allCollapsed = cards.every(c => c.classList.contains('compact'));
     { const ci = this.filterCollapseBtn.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     this.filterCollapseBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
@@ -2021,7 +2021,7 @@ class SharedToolbar extends HTMLElement {
       // Support toggling special cards in Filter via title click
       const title = e.target.closest('#filterPanel .card-title');
       if (title) {
-        const card = title.closest('.card, .db-card');
+        const card = title.closest('.db-card');
         const key = FILTER_CARD_KEY_MAP[card?.id];
         if (card) {
           const isCompact = card.classList.toggle('compact');
@@ -2156,7 +2156,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     if (btn.id === 'collapseAllFilters') {
-      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
+      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
@@ -2178,7 +2178,7 @@ class SharedToolbar extends HTMLElement {
 
     // Collapse/expand specialkorten i filterpanelen
     if (btn.classList.contains('collapse-btn')) {
-      const card = btn.closest('#filterPanel .card');
+      const card = btn.closest('#filterPanel .db-card');
       const key = FILTER_CARD_KEY_MAP[card?.id];
       if (card) {
         const isCompact = card.classList.toggle('compact');

@@ -1,5 +1,5 @@
-@import url('./daub-theme.css');
-@import url('./style.legacy.css');
-@import url('./app-shell.css');
+@import url('../node_modules/daub-ui/daub.css') layer(daub);
+@import url('./theme.css');
+@import url('./components.css');
+@import url('./daub-bridges.css');
 @import url('./motion.css');
-@import url('./daub-overrides.css');

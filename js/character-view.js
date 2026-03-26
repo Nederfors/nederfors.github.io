@@ -1327,7 +1327,7 @@
       const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
         ? `${p.namn}: ${handlingName(p, p.nivå)}`
         : p.namn;
-      return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
+      return `<li class="db-card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
     }
 
     const charCategory = (entry, { allowFallback = true } = {}) => {
@@ -1363,7 +1363,7 @@
 
     function buildConflictsHtml(list, { wrap = true } = {}) {
       if (!list.length) {
-        const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
+        const emptyLi = '<li class="db-card entry-card">Inga konflikter.</li>';
         return wrap
           ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
           : emptyLi;
@@ -2207,7 +2207,7 @@
           .map(d => d.dataset.cat)
       );
       dom.valda.innerHTML = '';
-      if (!groups.length) { dom.valda.innerHTML = '<li class="card entry-card">Inga träffar.</li>'; return; }
+      if (!groups.length) { dom.valda.innerHTML = '<li class="db-card entry-card">Inga träffar.</li>'; return; }
       const cats = {};
       const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
         .map(t => searchNormalize(t.toLowerCase()));

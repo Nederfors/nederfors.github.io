@@ -297,7 +297,7 @@
     } = options;
 
     const li = document.createElement('li');
-    const classNames = ['card', 'db-card', 'db-card--interactive', 'entry-card'];
+    const classNames = ['db-card', 'db-card--interactive', 'entry-card'];
     if (compact) classNames.push('compact');
     classNames.push(...normalizeClasses(classes));
     if (hasLevels) classNames.push('has-levels');

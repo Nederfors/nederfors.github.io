@@ -6,7 +6,7 @@
  *
  * 1) Open index.html and change the attributes on <html>:
  *
- *    <html lang="sv" data-theme="ember-dark" data-db-texture="wood">
+ *    <html lang="sv" data-theme="ember" data-db-texture="glass">
  *
  * 2) Available themes (set via data-theme):
  *      default, dark
@@ -30,7 +30,7 @@
  *      ayu, ayu-dark
  *      horizon, horizon-light
  *
- *    "ember-dark" is Symbapedia's custom dark-fantasy variant
+ *    "ember" is Symbapedia's custom dark-fantasy variant
  *    (DAUB tokens + legacy aliases defined in daub-overrides.css).
  *
  * 3) Available textures (set via data-db-texture):

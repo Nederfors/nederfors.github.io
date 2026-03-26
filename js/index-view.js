@@ -355,12 +355,12 @@
     const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
       ? `${p.namn}: ${handlingName(p, p.nivå)}`
       : p.namn;
-    return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
+    return `<li class="db-card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
   }
 
   function buildConflictsHtml(list, { wrap = true } = {}) {
     if (!list.length) {
-      const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
+      const emptyLi = '<li class="db-card entry-card">Inga konflikter.</li>';
       return wrap
         ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
         : emptyLi;

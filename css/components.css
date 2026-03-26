@@ -4,8 +4,8 @@
    Optimerad 2025-06-19
    =========================================================== */
 
-/* Colors, layout vars, and game-semantic vars are now in daub-theme.css.
-   The ember-dark theme + legacy aliases are in daub-overrides.css. */
+/* Colors, layout vars, and game-semantic vars are now in theme.css.
+   The ember theme + legacy aliases are in daub-bridges.css. */
 
 /* ---------- Reset & grund ---------- */
 * { box-sizing: border-box; }
@@ -28,7 +28,7 @@ mark {
   box-shadow: inset 0 0 0 1px rgba(255, 229, 138, .36);
 }
 /* Keep it cohesive in key surfaces */
-.card mark,
+.db-card mark,
 .db-card mark,
 #yrkePanel mark,
 #infoPanel mark,
@@ -2192,8 +2192,8 @@ input:focus, select:focus, textarea:focus {
 .cat-group .card-list {
   margin-top: .6rem;
 }
-/* .card base surface now handled by db-card — keep layout only */
-.card,
+/* .db-card base surface now handled by db-card — keep layout only */
+.db-card,
 .db-card.entry-card {
   display: flex;
   flex-direction: column;
@@ -2458,19 +2458,19 @@ input:focus, select:focus, textarea:focus {
   gap: .55rem;
 }
 
-.card.vehicle-over,
+.db-card.vehicle-over,
 .db-card.vehicle-over {
   background: var(--danger-bg);
 }
 
 /* särställ "Formaliteter"-kort (inkl. uppdelade) */
-.card[data-special="__formal__"],
 .db-card[data-special="__formal__"],
-.card[data-special="__tools__"],
+.db-card[data-special="__formal__"],
 .db-card[data-special="__tools__"],
-.card[data-special="__invfunc__"],
+.db-card[data-special="__tools__"],
 .db-card[data-special="__invfunc__"],
-.card[data-special="__info__"],
+.db-card[data-special="__invfunc__"],
+.db-card[data-special="__info__"],
 .db-card[data-special="__info__"] {
   border: 2px solid var(--toolborder);
 }
@@ -2534,11 +2534,11 @@ input:focus, select:focus, textarea:focus {
   transform: rotate(45deg);
   transition: transform .2s ease;
 }
-.card.compact .card-title .collapse-btn::before,
+.db-card.compact .card-title .collapse-btn::before,
 .db-card.compact .card-title .collapse-btn::before {
   transform: rotate(-45deg);
 }
-#filterPanel .card.compact .card-desc,
+#filterPanel .db-card.compact .card-desc,
 #filterPanel .db-card.compact .card-desc {
   display: none;
 }
@@ -2694,7 +2694,7 @@ input:focus, select:focus, textarea:focus {
 .entry-card.compact:not(.empty) {
   min-height: 0;
 }
-.card.compact .entry-card-details,
+.db-card.compact .entry-card-details,
 .db-card.compact .entry-card-details,
 .db-card.compact .db-card__footer { display: none; }
 
@@ -2866,7 +2866,7 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
-.card button {
+.db-card button {
   align-self: flex-end;
   background: var(--accent);
   border: none;
@@ -2878,14 +2878,14 @@ input:focus, select:focus, textarea:focus {
   cursor: pointer;
   transition: transform .1s ease, opacity .1s ease;
 }
-.card .entry-collapse-btn {
+.db-card .entry-collapse-btn {
   background: none;
   color: var(--txt);
   padding: 0;
 }
-.card button:hover  { opacity: .85; }
-.card button:active { transform: scale(.97); opacity: .7; }
-.card button.danger { background: var(--danger); }
+.db-card button:hover  { opacity: .85; }
+.db-card button:active { transform: scale(.97); opacity: .7; }
+.db-card button.danger { background: var(--danger); }
 
 
 .entry-tags {
@@ -2932,7 +2932,6 @@ input:focus, select:focus, textarea:focus {
   display: none;
 }
 .entry-tags .tag,
-.card .tags .tag,
 .db-card .tags .tag {
   font-size: .78rem;
   padding: .12rem .5rem;
@@ -2942,7 +2941,6 @@ input:focus, select:focus, textarea:focus {
 .entry-tags .tag {
   white-space: nowrap;
 }
-.card .tags,
 .db-card .tags {
   gap: .35rem;
 }
@@ -3796,7 +3794,7 @@ select.level {
   gap: .95rem;
 }
 
-#filterPanel .card {
+#filterPanel .db-card {
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -3820,7 +3818,7 @@ select.level {
     linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .01));
 }
 
-#filterPanel .card:not(.compact) .card-title {
+#filterPanel .db-card:not(.compact) .card-title {
   border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 
@@ -5559,7 +5557,7 @@ select.level {
   font-size: .82rem;
   font-weight: 700;
 }
-.vehicle-items > li.card {
+.vehicle-items > li.db-card {
   border-left: 3px solid rgba(185, 122, 82, .35);
 }
 
@@ -9131,5 +9129,472 @@ textarea.auto-resize {
   .inventory-hub-popup .inventory-hub-section .popup-inner,
   .inventory-hub-popup .inventory-hub-static-card {
     padding: .85rem !important;
+  }
+}
+
+/* =============================================================
+   App Shell — layout, inputs, buttons, panels, cards, toolbar
+   (merged from app-shell.css)
+   ============================================================= */
+
+body.app-shell {
+  gap: 0.55rem;
+  padding-inline: 0.8rem;
+}
+
+shared-toolbar {
+  position: relative;
+  z-index: 4;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display-font);
+  letter-spacing: 0.02em;
+}
+
+.app-title {
+  width: var(--shell-width);
+  margin: 1.25rem auto 0.35rem;
+  color: #f6ead9;
+  font-size: clamp(2.1rem, 4vw, 3.3rem);
+  letter-spacing: 0.08em;
+  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+#activeFilters {
+  width: var(--shell-width);
+  max-width: var(--shell-width);
+  margin-bottom: 0.6rem;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+select,
+textarea,
+.readonly-field {
+  border-color: var(--db-color-border, rgba(255, 243, 228, 0.12));
+  border-radius: var(--db-radius-2, 0.85rem);
+  background: var(--db-color-surface, rgba(36, 33, 31, 0.96));
+  box-shadow: var(--db-shadow-inset, inset 0 2px 5px rgba(0, 0, 0, 0.42));
+  color: var(--db-color-text, var(--txt));
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color'])::placeholder,
+textarea::placeholder {
+  color: rgba(255, 243, 228, 0.46);
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):focus,
+select:focus,
+textarea:focus,
+.readonly-field:focus-within {
+  border-color: var(--db-color-accent, rgba(206, 157, 116, 0.72));
+  box-shadow:
+    var(--db-shadow-inset, inset 0 2px 6px rgba(0, 0, 0, 0.46)),
+    0 0 0 2px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.2);
+}
+
+.toolbar-top .search-wrap {
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.12));
+  border-radius: var(--db-radius-2, 0.95rem);
+  background: var(--db-color-bg, rgba(34, 31, 30, 0.97));
+  box-shadow: var(--db-shadow-inset, inset 0 2px 6px rgba(0, 0, 0, 0.44));
+}
+
+.toolbar-top .search-wrap input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.toolbar-top .search-wrap input:focus {
+  box-shadow: none;
+}
+
+.toolbar-top .search-wrap:focus-within {
+  border-color: var(--db-color-accent, rgba(206, 157, 116, 0.76));
+  box-shadow:
+    var(--db-shadow-inset, inset 0 2px 6px rgba(0, 0, 0, 0.44)),
+    0 0 0 2px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.2);
+}
+
+.toolbar-top .suggestions {
+  border-color: var(--db-color-border, rgba(255, 243, 228, 0.14));
+  background: var(--db-color-surface, rgba(22, 20, 19, 0.985));
+  box-shadow: var(--db-shadow-2, 0 18px 30px rgba(0, 0, 0, 0.3));
+  backdrop-filter: blur(12px);
+}
+
+.toolbar-top .suggestions .item:hover,
+.toolbar-top .suggestions .item.active {
+  background: var(--db-color-bg-alt, rgba(92, 71, 58, 0.76));
+}
+
+/* Panel surface now handled by db-card — keep layout */
+.panel {
+  width: var(--shell-width);
+  max-width: var(--shell-width);
+}
+
+.panel-header {
+  border-bottom: 1px solid var(--db-color-border, rgba(245, 230, 208, 0.08));
+  background: var(--db-color-bg-alt, rgba(46, 34, 24, 0.92));
+}
+
+.traits-panel,
+.traits-hub-panel,
+.summary-panel,
+.effects-panel {
+  border-radius: var(--db-radius-3, 1.35rem);
+  box-shadow: var(--db-shadow-2, 0 26px 54px rgba(0, 0, 0, 0.28));
+}
+
+.cat-group > .db-accordion__item {
+  border-top: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  padding-top: 0.3rem;
+}
+
+.cat-group > .db-accordion__item > .db-accordion__trigger {
+  padding: 0.58rem 0.4rem;
+  border-radius: var(--db-radius-2, 0.82rem);
+  color: var(--db-color-text, #f4e8d9);
+  letter-spacing: 0.01em;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.cat-group > .db-accordion__item:not([open]) > .db-accordion__trigger {
+  border: 1px solid transparent;
+  background: var(--db-color-bg-alt, rgba(38, 28, 22, 0.78));
+}
+
+.cat-group > .db-accordion__item[open] {
+  margin-top: 0.35rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.16);
+  border-radius: var(--db-radius-3, 1.1rem);
+  background: var(--db-color-surface, rgba(42, 31, 24, 0.992));
+  box-shadow: var(--db-shadow-1, 0 16px 26px rgba(0, 0, 0, 0.24));
+}
+
+.cat-group > .db-accordion__item[open] > .db-accordion__trigger {
+  margin-bottom: 0.65rem;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid var(--db-color-border, rgba(196, 130, 80, 0.14));
+  background: var(--db-color-bg-alt, rgba(56, 40, 28, 0.92));
+  box-shadow: var(--db-shadow-1, 0 10px 18px rgba(0, 0, 0, 0.18));
+}
+
+.summary-section,
+.info-panel-section,
+.inventory-hub-panel,
+.popup .popup-inner,
+.offcanvas {
+  border-color: var(--db-color-border, rgba(255, 243, 228, 0.08));
+}
+
+/* Base .db-card styles now handled by DAUB db-card component */
+
+.card-title {
+  color: var(--db-color-text, #fff4e7);
+}
+
+/* Entry card refinements — surface handled by db-card */
+.entry-card {
+  overflow: hidden;
+}
+
+.entry-card-summary {
+  position: relative;
+  z-index: 1;
+  gap: 0.6rem;
+}
+
+.entry-row-header {
+  gap: 0.65rem;
+}
+
+.entry-header-main .card-title {
+  font-size: clamp(1.1rem, 1.02rem + 0.25vw, 1.34rem);
+  font-weight: 700;
+}
+
+.entry-collapse-btn {
+  color: #f5e7d4;
+}
+
+.entry-collapse-btn:hover {
+  color: #fff8ef;
+}
+
+.card-info-box,
+.summary-section,
+.info-panel-section,
+.inventory-hub-panel {
+  background: var(--db-color-bg-alt, rgba(38, 28, 22, 0.985));
+  box-shadow: var(--db-shadow-inset, inset 0 1px 0 rgba(245, 230, 208, 0.04));
+}
+
+.card-info-tags,
+.card-info-inline .card-info-tags,
+.db-card .tags,
+.entry-tags,
+.readonly-field {
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  border-radius: var(--db-radius-2, 0.8rem);
+  background: var(--db-color-bg, rgba(29, 22, 18, 0.99));
+  box-shadow: var(--db-shadow-inset, inset 0 2px 5px rgba(0, 0, 0, 0.36));
+}
+
+.card-info-tags,
+.card-info-inline .card-info-tags,
+.db-card .tags,
+.entry-tags {
+  padding: 0.35rem 0.45rem;
+}
+
+.db-card .tags .tag,
+.tag {
+  border-radius: 999px;
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.1));
+  background: var(--db-color-bg-alt, rgba(99, 73, 53, 0.98));
+}
+.db-chip {
+  border-radius: 999px;
+}
+
+.tag.price-mult,
+.db-chip.price-mult {
+  background: var(--db-color-surface, rgba(116, 84, 57, 0.985));
+}
+
+.card-info-tags .tags {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.entry-header-xp .entry-xp-value,
+.xp-cost {
+  border-color: rgba(196, 130, 80, 0.18);
+  background:
+    linear-gradient(180deg, rgba(245, 230, 208, 0.10), rgba(245, 230, 208, 0)),
+    rgba(58, 40, 28, 0.985);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.entry-header-actions .info-btn {
+  border-color: rgba(196, 130, 80, 0.12);
+  background:
+    linear-gradient(180deg, rgba(245, 230, 208, 0.08), rgba(245, 230, 208, 0)),
+    rgba(62, 44, 30, 0.97);
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.20),
+    0 1px 0 rgba(245, 230, 208, 0.05) inset;
+}
+
+.entry-action-qualities .tags {
+  padding: 0.34rem 0.42rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.entry-action-qualities .tag {
+  padding: 0.18rem 0.48rem;
+  background:
+    linear-gradient(180deg, rgba(245, 230, 208, 0.08), rgba(245, 230, 208, 0)),
+    rgba(58, 42, 30, 0.985);
+}
+
+/* Quality-type colour borders */
+.db-card .tags .tag.quality   { border: 1.5px solid var(--quality); }
+.db-card .tags .tag.mystic    { border: 1.5px solid var(--mystic); }
+.db-card .tags .tag.neutral   { border: 1.5px solid var(--neutral); }
+.db-card .tags .tag.negative  { border: 1.5px solid var(--negative); }
+.db-card .tags .tag.unbound   { border: 1.5px solid #e68181; }
+
+/* Free quality tags — filled with their quality colour */
+.db-card .tags .tag.quality.free  { background: var(--quality); color: #1a1410; }
+.db-card .tags .tag.mystic.free   { background: var(--mystic);  color: #1a1410; }
+.db-card .tags .tag.neutral.free  { background: var(--neutral); color: #1a1410; }
+.db-card .tags .tag.negative.free { background: var(--negative); color: #f5e6d0; }
+.db-card .tags .tag.unbound.free  { background: #e68181; color: #1a1410; }
+
+/* Quality db-chips in card context — filled style with glow on free */
+.db-card .tags .db-chip.quality  { background: color-mix(in srgb, var(--quality) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--quality) 50%, transparent); color: var(--quality); }
+.db-card .tags .db-chip.mystic   { background: color-mix(in srgb, var(--mystic) 22%, transparent);  border: 1.5px solid color-mix(in srgb, var(--mystic) 50%, transparent);  color: var(--mystic); }
+.db-card .tags .db-chip.neutral  { background: color-mix(in srgb, var(--neutral) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--neutral) 50%, transparent); color: var(--neutral); }
+.db-card .tags .db-chip.negative { background: color-mix(in srgb, var(--negative) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--negative) 50%, transparent); color: var(--negative); }
+.db-card .tags .db-chip.quality.free  { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--quality) 55%, transparent); }
+.db-card .tags .db-chip.mystic.free   { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mystic) 55%, transparent); }
+.db-card .tags .db-chip.neutral.free  { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--neutral) 55%, transparent); }
+.db-card .tags .db-chip.negative.free { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--negative) 55%, transparent); }
+
+.entry-level-control select.level,
+select.level {
+  border-color: rgba(196, 130, 80, 0.14);
+  border-radius: 0.82rem;
+  background:
+    linear-gradient(180deg, rgba(30, 22, 16, 0.99), rgba(22, 16, 12, 0.996)),
+    linear-gradient(180deg, rgba(245, 230, 208, 0.04), rgba(245, 230, 208, 0));
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(245, 230, 208, 0.04),
+    0 1px 0 rgba(245, 230, 208, 0.02);
+  color: #f5e6d0;
+}
+
+.entry-card-details {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.7rem;
+}
+
+.level-block {
+  border-color: var(--db-color-border, rgba(245, 230, 208, 0.08));
+  border-radius: var(--db-radius-2, 0.95rem);
+  background: var(--db-color-bg-alt, rgba(38, 28, 22, 0.985));
+  box-shadow: var(--db-shadow-1, 0 12px 22px rgba(0, 0, 0, 0.16));
+}
+
+.level-block summary {
+  padding: 0.78rem 1rem 0.78rem 1.15rem;
+}
+
+.char-btn,
+.db-btn,
+.toolbar button,
+.toolbar a,
+.party-toggle,
+.db-card button:not(.entry-collapse-btn),
+.traits-tab {
+  border: 1px solid rgba(245, 230, 208, 0.12);
+  background: var(--db-accent-dark, #a04420);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  font-family: var(--db-font-ui, var(--ui-font));
+  font-weight: 600;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    filter 0.14s ease;
+}
+
+.char-btn.danger,
+.db-btn--danger,
+.db-card button.danger {
+  background: #a83830;
+}
+
+.party-toggle.active,
+.button-row .nav-link.active,
+.char-btn[aria-pressed='true'],
+.toolbar button[aria-pressed='true'] {
+  border-color: rgba(221, 225, 186, 0.34);
+  background: #7a9470;
+  color: #192013;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  text-shadow: none;
+}
+
+.char-btn:hover,
+.db-btn:hover,
+.toolbar button:hover,
+.toolbar a:hover,
+.party-toggle:hover,
+.db-card button:not(.entry-collapse-btn):hover,
+.traits-tab:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.char-btn:active,
+.db-btn:active,
+.toolbar button:active,
+.toolbar a:active,
+.party-toggle:active,
+.db-card button:not(.entry-collapse-btn):active,
+.traits-tab:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 rgba(44, 27, 21, 0.96),
+    0 6px 12px rgba(0, 0, 0, 0.16),
+    0 1px 0 rgba(255, 243, 228, 0.06) inset,
+    0 -1px 0 rgba(68, 39, 28, 0.42) inset;
+}
+
+.toolbar {
+  border-top: 1px solid var(--db-color-border, rgba(245, 230, 208, 0.08));
+  background: var(--db-color-bg-alt, rgba(38, 28, 22, 0.97));
+  box-shadow: var(--db-shadow-1, 0 -16px 28px rgba(0, 0, 0, 0.22));
+  backdrop-filter: blur(18px);
+}
+
+.traits-tabs {
+  gap: 0.6rem;
+  padding: 0.55rem;
+  border: 1px solid var(--db-color-border, rgba(245, 230, 208, 0.08));
+  border-radius: var(--db-radius-3, 1.15rem);
+  background: var(--db-color-surface, rgba(52, 38, 28, 0.96));
+  box-shadow: var(--db-shadow-1, 0 14px 24px rgba(0, 0, 0, 0.16));
+}
+
+.traits-tab {
+  border: 1px solid var(--db-color-border, rgba(245, 230, 208, 0.10));
+  border-radius: var(--db-radius-2, 0.95rem);
+  background: var(--db-color-bg-alt, rgba(74, 54, 38, 0.97));
+  color: var(--db-color-text, #f5e6d0);
+}
+
+.traits-tab[aria-selected='true'],
+.traits-tab[aria-current='page'],
+.traits-tab.active {
+  background: var(--db-color-accent, #c45a2a);
+  color: #fff7ee;
+}
+
+.popup {
+  background: var(--db-color-overlay, rgba(7, 6, 5, 0.72));
+  backdrop-filter: blur(8px);
+}
+
+/* Popup inner and offcanvas surface */
+.popup .popup-inner,
+.popup .db-modal,
+.offcanvas {
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  background: var(--db-color-surface, rgba(49, 36, 26, 0.998));
+  box-shadow: var(--db-shadow-3, 0 28px 48px rgba(0, 0, 0, 0.3));
+}
+
+.popup .popup-inner,
+.popup .db-modal {
+  border-radius: var(--db-radius-3, 1rem);
+}
+
+.offcanvas {
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 640px) {
+  body.app-shell {
+    padding-inline: 0.5rem;
+  }
+
+  .cat-group > .db-accordion__item[open] {
+    padding: 0.3rem;
+  }
+  .cat-group > .db-accordion__item[open] > .db-accordion__trigger {
+    margin-bottom: 0.45rem;
+    padding: 0.6rem 0.65rem;
   }
 }
