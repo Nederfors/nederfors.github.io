@@ -1149,6 +1149,7 @@ class SharedToolbar extends HTMLElement {
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
+        #invSpendCard.compact .card-desc { display: block !important; }
         /* Inline ikoner i hjälplistan så de inte bryter rader */
         .help-content .btn-icon {
           display: inline-block;
@@ -1290,7 +1291,7 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
         </ul>
-        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
+        <!-- Sökfilter-kort som samlar relaterade dropdowns (hidden on inventory view) -->
         <div class="db-card filter-panel-static-card" id="searchFiltersCard">
           <div class="card-title">Sökfilter</div>
           <div class="card-desc">
@@ -1306,6 +1307,13 @@ class SharedToolbar extends HTMLElement {
               <label for="testFilter">Karaktärsdrag</label>
               <select id="testFilter"></select>
             </div>
+          </div>
+        </div>
+        <!-- Snabbspendera-kort (visible only on inventory view, replaces Sökfilter) -->
+        <div class="db-card filter-panel-static-card" id="invSpendCard" hidden>
+          <div class="card-title">Snabbspendera</div>
+          <div class="card-desc">
+            <div id="invSpendInner"></div>
           </div>
         </div>
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
@@ -1824,6 +1832,20 @@ class SharedToolbar extends HTMLElement {
         </div>
       </aside>
 
+      <!-- ---------- Inventarie Dashboard (KPI sidebar) ---------- -->
+      <aside id="invDashPanel" class="db-drawer offcanvas inv-dash-drawer" data-touch-profile="panel-right">
+        <header class="inv-header">
+          <h2>Inventarie</h2>
+          <div class="inv-actions">
+            <button class="db-btn db-btn--icon" data-close="invDashPanel">✕</button>
+          </div>
+        </header>
+        <div class="inv-dash-panel-content">
+          <div id="invDashInner"></div>
+        </div>
+      </aside>
+
+
     `;
   }
 
@@ -1833,7 +1855,8 @@ class SharedToolbar extends HTMLElement {
     this.panels = {
       filterPanel: $('filterPanel'),
       infoPanel: $('infoPanel'),
-      summarySlidePanel: $('summarySlidePanel')
+      summarySlidePanel: $('summarySlidePanel'),
+      invDashPanel: $('invDashPanel')
     };
     this.entryViewToggle = $('entryViewToggle');
     this.filterCollapseBtn = $('collapseAllFilters');
@@ -1865,7 +1888,7 @@ class SharedToolbar extends HTMLElement {
 
   updateFilterCollapseBtn() {
     if (!this.filterCollapseBtn) return;
-    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(.help-card)')];
+    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(#invSpendCard):not(.help-card)')];
     const allCollapsed = cards.every(c => c.classList.contains('compact'));
     { const ci = this.filterCollapseBtn.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     this.filterCollapseBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
@@ -1967,6 +1990,7 @@ class SharedToolbar extends HTMLElement {
     /* öppna/stäng (toggle) */
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     if (btn.id === 'infoToggle') return this.toggle('infoPanel');
+    if (btn.id === 'invDashToggle') return this.toggle('invDashPanel');
     if (btn.id === 'xpToggle') {
       void this.openSummarySlide();
       return;
@@ -2071,7 +2095,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     if (btn.id === 'collapseAllFilters') {
-      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(.help-card)')];
+      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(#invSpendCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
@@ -2082,7 +2106,7 @@ class SharedToolbar extends HTMLElement {
         window.entryCardFactory?.syncCollapse?.(c);
       });
       // Ensure non-collapsible cards remain open
-      const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, .help-card');
+      const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, #invSpendCard, .help-card');
       alwaysOpen.forEach(c => {
         c.classList.remove('compact');
         window.entryCardFactory?.syncCollapse?.(c);
@@ -2481,6 +2505,27 @@ class SharedToolbar extends HTMLElement {
     setLinkState('inventoryLink', '#/inventory', ['inventory']);
     setLinkState('indexLink', '#/index', ['index']);
     setLinkState('characterLink', '#/character', ['character', 'notes']);
+
+    // Swap searchFilters ↔ snabbspendera card based on inventory view
+    const searchCard = this.shadowRoot.getElementById('searchFiltersCard');
+    const spendCard = this.shadowRoot.getElementById('invSpendCard');
+    if (searchCard) searchCard.hidden = role === 'inventory';
+    if (spendCard) spendCard.hidden = role !== 'inventory';
+
+    // Close inventory panels when leaving inventory view
+    if (role !== 'inventory') {
+      this.close('invDashPanel');
+    }
+  }
+
+  updateInvDash(html) {
+    const el = this.shadowRoot.getElementById('invDashInner');
+    if (el) el.innerHTML = html;
+  }
+
+  updateInvSpend(html) {
+    const el = this.shadowRoot.getElementById('invSpendInner');
+    if (el) el.innerHTML = html;
   }
 }
 

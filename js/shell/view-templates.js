@@ -120,6 +120,10 @@ export const VIEW_TEMPLATES = Object.freeze({
       <ul id="invList" class="db-list db-accordion card-list entry-card-list" data-entry-page="inventory"></ul>
     </div>
   </div>
+
+  <button id="invDashFloatBtn" class="db-btn inv-dash-float-btn" type="button" title="Visa inventarieöversikt" aria-label="Visa inventarieöversikt">
+    <svg class="inv-dash-float-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
+  </button>
 `,
 
   notes: `

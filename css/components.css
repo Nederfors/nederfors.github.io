@@ -7296,13 +7296,60 @@ textarea.auto-resize {
   margin-top: 0;
 }
 
+/* ---------- Floating inventory dashboard button ---------- */
+.inv-dash-float-btn {
+  position: fixed;
+  top: var(--db-space-4, 1rem);
+  right: var(--db-space-4, 1rem);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 2.75rem;
+  border-radius: var(--db-radius-lg, .75rem);
+  border: 2px solid var(--db-color-accent, #c4825080);
+  background: var(--db-color-surface-accent, rgba(140, 80, 40, .85));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s, border-color .15s;
+  padding: 0;
+  color: var(--db-color-text, #fff4e7);
+  box-shadow: var(--db-shadow-2, 0 4px 12px rgba(0,0,0,.3));
+}
+.inv-dash-float-btn:hover,
+.inv-dash-float-btn:focus-visible {
+  background: var(--db-color-surface-accent-hover, rgba(160, 95, 50, .95));
+  border-color: var(--db-color-accent-hover, #d4956080);
+  box-shadow: var(--db-shadow-3, 0 6px 18px rgba(0,0,0,.35));
+}
+.inv-dash-float-btn .btn-icon,
+.inv-dash-float-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  filter: brightness(1.3);
+}
+
+/* ---------- Inventory dashboard sidebar panel ---------- */
+.inv-dash-panel-content {
+  padding: var(--db-space-3, .75rem);
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ---------- Inventory spend card (in filter panel) ---------- */
+.inv-spend-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--db-space-2, .5rem);
+}
+
 /* ---------- Formal dashboard (inventory stats & controls) ---------- */
-.formal-dashboard { margin-bottom: var(--db-space-2, .5rem); }
 .formal-dashboard-content {
   display: flex;
   flex-direction: column;
   gap: var(--db-space-4, 1rem);
-  padding: var(--db-space-3, .75rem);
 }
 
 /* --- KPI row: 4 stat cards --- */
@@ -7475,6 +7522,15 @@ textarea.auto-resize {
 }
 @media (max-width: 400px) {
   .dash-kpi-row {
+    grid-template-columns: 1fr;
+  }
+}
+/* Inside sidebar the KPI row should always stack 2-col or 1-col */
+.inv-dash-panel-content .dash-kpi-row {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 400px) {
+  .inv-dash-panel-content .dash-kpi-row {
     grid-template-columns: 1fr;
   }
 }

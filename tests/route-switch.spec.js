@@ -51,9 +51,8 @@ test('inventory and traits render after in-app route changes', async ({ page }) 
     window.location.hash = '#/inventory';
   });
   await page.waitForFunction(() => document.body.dataset.role === 'inventory');
-  await expect.poll(async () => (
-    page.locator('#invFormal details.db-accordion__item').count()
-  )).toBeGreaterThan(0);
+  // Dashboard content now lives in the toolbar shadow DOM; verify inventory view loaded
+  await expect(page.locator('.inventory-panel')).toBeVisible();
   await expect(page.locator('#charName')).toContainText('Route Hero');
 
   await page.evaluate(() => {

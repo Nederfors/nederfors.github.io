@@ -5666,76 +5666,7 @@
             .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
         : []
     );
-    if (dom.invFormal) {
-      dom.invFormal.onclick = async e => {
-        // Delegate trigger buttons to their real targets
-        const trigger = e.target.closest('button[data-dash-trigger]');
-        if (trigger) {
-          const target = getEl(trigger.dataset.dashTrigger);
-          if (target) target.click();
-          return;
-        }
-        // Handle money +/- inside formal dashboard
-        const btn = e.target.closest('button[data-act]');
-        if (!btn) return;
-        const act = btn.dataset.act;
-        if (act === 'moneyPlus' || act === 'moneyMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyPlus' ? 1 : -1;
-          const newD = (cur.daler || 0) + delta;
-          if (newD < 0) {
-            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, daler: newD });
-          }
-          renderInventory();
-          scheduleMoneyMutationRefresh({
-            source: 'inventory-formal-money-daler'
-          });
-          return;
-        }
-        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneySkillingPlus' ? 1 : -1;
-          const newS = (cur.skilling || 0) + delta;
-          if (newS < 0) {
-            const newD = Math.max(0, (cur.daler || 0) - 1);
-            const newSkilling = 3 + newS;
-            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
-          } else if (newS >= 4) {
-            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, skilling: newS });
-          }
-          renderInventory();
-          scheduleMoneyMutationRefresh({
-            source: 'inventory-formal-money-skilling'
-          });
-          return;
-        }
-        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
-          const newO = (cur['örtegar'] || 0) + delta;
-          if (newO < 0) {
-            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
-            const newOrtegar = 8 + newO;
-            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
-            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
-          } else if (newO >= 8) {
-            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
-          }
-          renderInventory();
-          scheduleMoneyMutationRefresh({
-            source: 'inventory-formal-money-ortegar'
-          });
-          return;
-        }
-      };
-
-    }
+    // (Dashboard click handlers moved to bindDashPanel below)
 
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
@@ -5882,10 +5813,6 @@
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
-    const dashOpen = getUiPref('invDashOpen');
-    const isDashOpen = dashOpen === null ? true : dashOpen === '1';
-    if (dashOpen === null) setUiPref('invDashOpen', '1');
-
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
 
     // --- Weight-by-category breakdown ---
@@ -5938,97 +5865,94 @@
     const capNote = `${capPct}% full`;
 
 
-    const formalHtml = `
-      <details class="db-accordion__item formal-dashboard" ${isDashOpen ? 'open' : ''} data-special="__dashboard__">
-        <summary class="db-accordion__trigger">Inventarie</summary>
-        <div class="db-accordion__content formal-dashboard-content">
-
-          <!-- KPI row -->
-          <div class="dash-kpi-row">
-            <div class="db-card dash-kpi">
-              <div class="db-stat">
-                <div class="db-stat__label">Kontant
-                  <span class="dash-kpi-actions">
-                    <button data-act="moneyMinus" class="dash-money-btn" aria-label="Minska mynt" title="Minska mynt">&minus;</button>
-                    <button data-act="moneyPlus" class="dash-money-btn" aria-label="Öka mynt" title="Öka mynt">&plus;</button>
-                  </span>
-                </div>
-                <div class="db-stat__value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</div>
-                ${moneyWeightNote ? `<div class="db-caption db-text-muted">${moneyWeightNote}</div>` : ''}
+    // --- Dashboard HTML for KPI sidebar panel (shadow DOM) ---
+    const dashPanelHtml = `
+      <div class="formal-dashboard-content">
+        <!-- KPI row -->
+        <div class="dash-kpi-row">
+          <div class="db-card dash-kpi">
+            <div class="db-stat">
+              <div class="db-stat__label">Kontant
+                <span class="dash-kpi-actions">
+                  <button data-act="moneyMinus" class="dash-money-btn" aria-label="Minska mynt" title="Minska mynt">&minus;</button>
+                  <button data-act="moneyPlus" class="dash-money-btn" aria-label="Öka mynt" title="Öka mynt">&plus;</button>
+                </span>
               </div>
-              <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageEconomyBtn" type="button">Hantera ekonomi</button>
+              <div class="db-stat__value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</div>
+              ${moneyWeightNote ? `<div class="db-caption db-text-muted">${moneyWeightNote}</div>` : ''}
             </div>
-
-            <div class="db-card dash-kpi">
-              <div class="db-stat">
-                <div class="db-stat__label">Oanvänt</div>
-                <div class="db-stat__value" id="unusedOut">0D 0S 0Ö</div>
-              </div>
-              ${vehicleStatHtml ? `<div class="dash-kpi-extra">${vehicleStatHtml}</div>` : ''}
-            </div>
-
-            <div class="db-card dash-kpi ${charCapClass}">
-              <div class="db-stat">
-                <div class="db-stat__label">Kapacitet</div>
-                <div class="db-stat__value">${capStatusText}</div>
-              </div>
-              <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageItemsBtn" type="button">Hantera föremål</button>
-            </div>
-
-            <div class="db-card dash-kpi dash-kpi-live-card">
-              <div class="db-stat__label">Dra pengar vid inköp</div>
-              <div class="dash-live-inline">
-                <div class="db-stat__value">${liveModeEnabled ? 'På' : 'Av'}</div>
-                <button id="inventoryLiveToggle" class="db-switch inventory-live-switch dash-live-switch" type="button" role="switch"
-                        aria-label="Slå på eller av live-läge" aria-checked="${liveModeEnabled ? 'true' : 'false'}">
-                  <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
-                </button>
-              </div>
-            </div>
+            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageEconomyBtn" type="button">Hantera ekonomi</button>
           </div>
 
-          <!-- Hero capacity card -->
-          <div class="db-card dash-hero-cap ${charCapClass}">
-            <div class="db-card__header dash-hero-header">
-              <h3 class="db-card__title">Bärkapacitet</h3>
-              <span class="db-badge${foodCount === 0 ? ' db-badge--warning' : ''}">${foodNote}</span>
+          <div class="db-card dash-kpi">
+            <div class="db-stat">
+              <div class="db-stat__label">Oanvänt</div>
+              <div class="db-stat__value dash-unused-out">0D 0S 0Ö</div>
             </div>
-            <div class="db-card__body dash-hero-body">
-              <div class="dash-cap-meter">
-                <div class="db-progress${isOverCap ? ' dash-progress-danger' : ''}">
-                  <div class="db-progress__bar" style="--db-progress:${capProgressPct}%"></div>
-                </div>
-                <div class="dash-cap-labels">
-                  <span>${formatWeight(usedWeight)} / ${formatWeight(maxCapacity)}</span>
-                  <span>${capPct}%</span>
-                </div>
-              </div>
-              ${isOverCap ? `<div class="db-alert db-alert--error dash-cap-alert"><div class="db-alert__content">Över kapacitet med <strong>${formatWeight(Math.abs(remainingCap))}</strong></div></div>` : ''}
-              ${chartBarsHtml ? `
-                <div class="dash-weight-chart">
-                  <div class="db-caption db-text-muted dash-chart-title">Vikt per kategori</div>
-                  ${chartBarsHtml}
-                </div>
-              ` : ''}
-            </div>
+            ${vehicleStatHtml ? `<div class="dash-kpi-extra">${vehicleStatHtml}</div>` : ''}
           </div>
 
-          <!-- Actions row -->
-          <div class="db-card dash-actions-card">
-            <div class="db-card__body">
-              <h4 class="db-h4">Snabbspendera</h4>
-              <p class="db-caption db-text-muted">Betala direkt utan att spara köpet som inventariepost</p>
-              <div class="formal-spend-row">
-                <input id="inventoryQuickSpendDaler" class="db-input db-input--sm" type="number" min="0" step="1" placeholder="Daler" aria-label="Snabbspendera daler">
-                <input id="inventoryQuickSpendSkilling" class="db-input db-input--sm" type="number" min="0" step="1" placeholder="Skilling" aria-label="Snabbspendera skilling">
-                <input id="inventoryQuickSpendOrtegar" class="db-input db-input--sm" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Snabbspendera örtegar">
-                <button id="inventoryQuickSpendBtn" class="db-btn db-btn--primary db-btn--sm" type="button">Betala</button>
-              </div>
+          <div class="db-card dash-kpi ${charCapClass}">
+            <div class="db-stat">
+              <div class="db-stat__label">Kapacitet</div>
+              <div class="db-stat__value">${capStatusText}</div>
             </div>
+            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageItemsBtn" type="button">Hantera föremål</button>
           </div>
 
+          <div class="db-card dash-kpi dash-kpi-live-card">
+            <div class="db-stat__label">Dra pengar vid inköp</div>
+            <div class="dash-live-inline">
+              <div class="db-stat__value">${liveModeEnabled ? 'På' : 'Av'}</div>
+              <button class="db-switch inventory-live-switch dash-live-switch dash-live-toggle" type="button" role="switch"
+                      aria-label="Slå på eller av live-läge" aria-checked="${liveModeEnabled ? 'true' : 'false'}">
+                <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
+              </button>
+            </div>
+          </div>
         </div>
-      </details>`;
+
+        <!-- Hero capacity card -->
+        <div class="db-card dash-hero-cap ${charCapClass}">
+          <div class="db-card__header dash-hero-header">
+            <h3 class="db-card__title">Bärkapacitet</h3>
+            <span class="db-badge${foodCount === 0 ? ' db-badge--warning' : ''}">${foodNote}</span>
+          </div>
+          <div class="db-card__body dash-hero-body">
+            <div class="dash-cap-meter">
+              <div class="db-progress${isOverCap ? ' dash-progress-danger' : ''}">
+                <div class="db-progress__bar" style="--db-progress:${capProgressPct}%"></div>
+              </div>
+              <div class="dash-cap-labels">
+                <span>${formatWeight(usedWeight)} / ${formatWeight(maxCapacity)}</span>
+                <span>${capPct}%</span>
+              </div>
+            </div>
+            ${isOverCap ? `<div class="db-alert db-alert--error dash-cap-alert"><div class="db-alert__content">Över kapacitet med <strong>${formatWeight(Math.abs(remainingCap))}</strong></div></div>` : ''}
+            ${chartBarsHtml ? `
+              <div class="dash-weight-chart">
+                <div class="db-caption db-text-muted dash-chart-title">Vikt per kategori</div>
+                ${chartBarsHtml}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>`;
+
+    // --- Snabbspendera HTML for bottom drawer (shadow DOM) ---
+    const spendPanelHtml = `
+      <div class="inv-spend-content">
+        <p class="db-caption db-text-muted">Betala direkt utan att spara köpet som inventariepost</p>
+        <div class="formal-spend-row">
+          <input class="db-input db-input--sm dash-spend-daler" type="number" min="0" step="1" placeholder="Daler" aria-label="Snabbspendera daler">
+          <input class="db-input db-input--sm dash-spend-skilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Snabbspendera skilling">
+          <input class="db-input db-input--sm dash-spend-ortegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Snabbspendera örtegar">
+          <button class="db-btn db-btn--primary db-btn--sm dash-spend-btn" type="button">Betala</button>
+        </div>
+      </div>`;
+
+    // No inline dashboard in invFormal anymore — content lives in sidebar/drawer panels
+    const formalHtml = '';
 
     const buildInventoryStandardActionConfig = ({
       qty = 0,
@@ -6415,16 +6339,15 @@
     }
 
     timeActiveMutationStage('dom-patch', () => {
+      // Inject dashboard content into toolbar shadow DOM panels
+      const toolbar = document.querySelector('shared-toolbar');
+      if (toolbar) {
+        if (typeof toolbar.updateInvDash === 'function') toolbar.updateInvDash(dashPanelHtml);
+        if (typeof toolbar.updateInvSpend === 'function') toolbar.updateInvSpend(spendPanelHtml);
+      }
+
       if (dom.invFormal) {
         dom.invFormal.innerHTML = formalHtml;
-        const dashDetails = dom.invFormal.querySelector('details');
-        if (dashDetails) {
-          dashDetails.addEventListener('toggle', ev => {
-            if (!ev.isTrusted) return;
-            setUiPref('invDashOpen', dashDetails.open ? '1' : '0');
-            updateCollapseBtnState();
-          });
-        }
       }
 
       if (listEl) {
@@ -6488,8 +6411,10 @@
 
       if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
       if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-      dom.unusedOut = getEl('unusedOut');
-      if (dom.unusedOut) dom.unusedOut.textContent = diffText;
+      // Update unusedOut inside shadow DOM
+      const tbRoot = getToolbarRoot();
+      const unusedEl = tbRoot?.querySelector('.dash-unused-out');
+      if (unusedEl) unusedEl.textContent = diffText;
       bindInv();
       bindMoney();
     }, {
@@ -6505,10 +6430,9 @@
 
   function updateCollapseBtnState() {
     if (!dom.collapseAllBtn) return;
-    const dash = dom.invFormal?.querySelector('details');
     const cards = getInvCards();
-    if (!dash && !cards.length) return;
-    const allCollapsed = (!dash || !dash.open) && cards.every(li => li.classList.contains('compact'));
+    if (!cards.length) return;
+    const allCollapsed = cards.every(li => li.classList.contains('compact'));
     { const ci = dom.collapseAllBtn.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     dom.collapseAllBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
   }
@@ -6572,13 +6496,8 @@
     }
     if (dom.collapseAllBtn) {
       dom.collapseAllBtn.onclick = () => {
-        const dash = dom.invFormal?.querySelector('details');
         const cards = getInvCards();
-        const anyOpen = (dash && dash.open) || cards.some(li => !li.classList.contains('compact'));
-        if (dash) {
-          dash.open = !anyOpen;
-          setUiPref('invDashOpen', !anyOpen ? '1' : '0');
-        }
+        const anyOpen = cards.some(li => !li.classList.contains('compact'));
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
           window.entryCardFactory?.syncCollapse?.(li);
@@ -7246,117 +7165,157 @@
     };
     }
 
-    // Bind clicks within the formal dashboard
-    if (dom.invFormal) {
-      dom.invFormal.onclick = async e => {
-        // Delegate trigger buttons to their real targets
+    // Dashboard click handlers now bound via bindDashPanel
+
+  }
+
+  function bindDashPanel() {
+    const tbRoot = getToolbarRoot();
+    if (!tbRoot) return;
+
+    // --- KPI sidebar: money +/-, trigger delegation, live toggle ---
+    const dashInner = tbRoot.querySelector('#invDashInner');
+    if (dashInner && dashInner.dataset.dashBound !== '1') {
+      dashInner.dataset.dashBound = '1';
+      dashInner.addEventListener('click', e => {
+        // Delegate trigger buttons to their real targets (outside shadow DOM)
         const trigger = e.target.closest('button[data-dash-trigger]');
         if (trigger) {
           const target = getEl(trigger.dataset.dashTrigger);
           if (target) target.click();
           return;
         }
-        // Handle money +/- inside formal dashboard
         const btn = e.target.closest('button[data-act]');
         if (!btn) return;
         const act = btn.dataset.act;
-        if (act === 'moneyPlus' || act === 'moneyMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyPlus' ? 1 : -1;
-          const newD = (cur.daler || 0) + delta;
-          if (newD < 0) {
-            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, daler: newD });
-          }
-          renderInventory();
-          scheduleMoneyMutationRefresh({
-            source: 'inventory-info-money-daler'
-          });
-          return;
-        }
-        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneySkillingPlus' ? 1 : -1;
-          const newS = (cur.skilling || 0) + delta;
-          if (newS < 0) {
-            const newD = Math.max(0, (cur.daler || 0) - 1);
-            const newSkilling = 3 + newS;
-            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
-          } else if (newS >= 4) {
-            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, skilling: newS });
-          }
-          renderInventory();
-          scheduleMoneyMutationRefresh({
-            source: 'inventory-info-money-skilling'
-          });
-          return;
-        }
-        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
-          const newO = (cur['örtegar'] || 0) + delta;
-          if (newO < 0) {
-            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
-            const newOrtegar = 8 + newO;
-            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
-            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
-          } else if (newO >= 8) {
-            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
-          }
-          renderInventory();
-          scheduleMoneyMutationRefresh({
-            source: 'inventory-info-money-ortegar'
-          });
-          return;
-        }
-      };
-
+        handleDashMoneyClick(act);
+      });
     }
 
+    // Live toggle inside shadow DOM
+    const liveToggle = tbRoot.querySelector('.dash-live-toggle');
+    if (liveToggle && liveToggle.dataset.boundLiveToggle !== '1') {
+      liveToggle.dataset.boundLiveToggle = '1';
+      const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+      if (typeof window.setDaubSwitchState === 'function') {
+        window.setDaubSwitchState(liveToggle, current);
+      } else {
+        liveToggle.setAttribute('aria-checked', current ? 'true' : 'false');
+      }
+      window.DAUB?.init?.(tbRoot);
+      liveToggle.addEventListener('db:change', (event) => {
+        const checked = typeof event.detail?.checked === 'boolean'
+          ? event.detail.checked
+          : liveToggle.getAttribute('aria-checked') === 'true';
+        if (typeof storeHelper?.setLiveMode === 'function') {
+          storeHelper.setLiveMode(store, Boolean(checked));
+          renderInventory();
+        }
+      });
+    }
+
+    // --- Snabbspendera drawer ---
+    const spendInner = tbRoot.querySelector('#invSpendInner');
+    if (spendInner) {
+      const quickSpendDaler = spendInner.querySelector('.dash-spend-daler');
+      const quickSpendSkilling = spendInner.querySelector('.dash-spend-skilling');
+      const quickSpendOrtegar = spendInner.querySelector('.dash-spend-ortegar');
+      const quickSpendBtn = spendInner.querySelector('.dash-spend-btn');
+      const runQuickSpend = () => {
+        const spendMoney = {
+          daler: Number(quickSpendDaler?.value) || 0,
+          skilling: Number(quickSpendSkilling?.value) || 0,
+          'örtegar': Number(quickSpendOrtegar?.value) || 0
+        };
+        const spendO = moneyToO(storeHelper.normalizeMoney(spendMoney));
+        if (spendO <= 0) {
+          quickSpendDaler?.focus();
+          return;
+        }
+        spendInventoryMoney(spendMoney, {
+          onComplete: () => {
+            [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
+              if (input) input.value = '';
+            });
+          }
+        });
+      };
+      if (quickSpendBtn) quickSpendBtn.onclick = runQuickSpend;
+      [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
+        if (!input) return;
+        input.onkeydown = e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            runQuickSpend();
+          }
+        };
+      });
+    }
+
+    // --- Floating button ---
+    const floatBtn = getEl('invDashFloatBtn');
+    if (floatBtn && floatBtn.dataset.dashBound !== '1') {
+      floatBtn.dataset.dashBound = '1';
+      floatBtn.addEventListener('click', () => {
+        const toolbar = document.querySelector('shared-toolbar');
+        if (toolbar) toolbar.toggle('invDashPanel');
+      });
+    }
+  }
+
+  function handleDashMoneyClick(act) {
+    if (act === 'moneyPlus' || act === 'moneyMinus') {
+      const cur = storeHelper.getMoney(store);
+      const delta = act === 'moneyPlus' ? 1 : -1;
+      const newD = (cur.daler || 0) + delta;
+      if (newD < 0) {
+        storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+      } else {
+        storeHelper.setMoney(store, { ...cur, daler: newD });
+      }
+      renderInventory();
+      scheduleMoneyMutationRefresh({ source: 'inventory-dash-money-daler' });
+      return;
+    }
+    if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
+      const cur = storeHelper.getMoney(store);
+      const delta = act === 'moneySkillingPlus' ? 1 : -1;
+      const newS = (cur.skilling || 0) + delta;
+      if (newS < 0) {
+        const newD = Math.max(0, (cur.daler || 0) - 1);
+        storeHelper.setMoney(store, { daler: newD, skilling: 3 + newS, 'örtegar': 0 });
+      } else if (newS >= 4) {
+        storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
+      } else {
+        storeHelper.setMoney(store, { ...cur, skilling: newS });
+      }
+      renderInventory();
+      scheduleMoneyMutationRefresh({ source: 'inventory-dash-money-skilling' });
+      return;
+    }
+    if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
+      const cur = storeHelper.getMoney(store);
+      const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
+      const newO = (cur['örtegar'] || 0) + delta;
+      if (newO < 0) {
+        const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
+        const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
+        storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': 8 + newO });
+      } else if (newO >= 8) {
+        storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
+      } else {
+        storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
+      }
+      renderInventory();
+      scheduleMoneyMutationRefresh({ source: 'inventory-dash-money-ortegar' });
+      return;
+    }
   }
 
   function bindMoney() {
-    const quickSpendBtn = getEl('inventoryQuickSpendBtn');
-    const quickSpendDaler = getEl('inventoryQuickSpendDaler');
-    const quickSpendSkilling = getEl('inventoryQuickSpendSkilling');
-    const quickSpendOrtegar = getEl('inventoryQuickSpendOrtegar');
     const resetBtn  = getEl('moneyResetBtn');
     const clearBtn  = getEl('clearInvBtn');
     const saveFreeBtn = getEl('inventoryEconomySaveFreeBtn');
-    const runQuickSpend = () => {
-      const spendMoney = {
-        daler: Number(quickSpendDaler?.value) || 0,
-        skilling: Number(quickSpendSkilling?.value) || 0,
-        'örtegar': Number(quickSpendOrtegar?.value) || 0
-      };
-      const spendO = moneyToO(storeHelper.normalizeMoney(spendMoney));
-      if (spendO <= 0) {
-        quickSpendDaler?.focus();
-        return;
-      }
-      spendInventoryMoney(spendMoney, {
-        onComplete: () => {
-          [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
-            if (input) input.value = '';
-          });
-        }
-      });
-    };
-    if (quickSpendBtn) quickSpendBtn.onclick = runQuickSpend;
-    [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
-      if (!input) return;
-      input.onkeydown = e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          runQuickSpend();
-        }
-      };
-    });
     if (resetBtn) resetBtn.onclick = () => {
       const doReset = () => {
         storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
@@ -7382,28 +7341,8 @@
       }
     };
 
-    const liveToggle = getEl('inventoryLiveToggle');
-    if (liveToggle) {
-      const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
-      if (typeof window.setDaubSwitchState === 'function') {
-        window.setDaubSwitchState(liveToggle, current);
-      } else {
-        liveToggle.setAttribute('aria-checked', current ? 'true' : 'false');
-      }
-      window.DAUB?.init?.(liveToggle.getRootNode?.() || document);
-      if (liveToggle.dataset.boundLiveToggle !== '1') {
-        liveToggle.dataset.boundLiveToggle = '1';
-        liveToggle.addEventListener('db:change', (event) => {
-          const checked = typeof event.detail?.checked === 'boolean'
-            ? event.detail.checked
-            : liveToggle.getAttribute('aria-checked') === 'true';
-          if (typeof storeHelper?.setLiveMode === 'function') {
-            storeHelper.setLiveMode(store, Boolean(checked));
-            renderInventory();
-          }
-        });
-      }
-    }
+    // Bind shadow DOM dashboard panels
+    bindDashPanel();
   }
 
   window.invUtil = {
