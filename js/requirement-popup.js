@@ -62,7 +62,15 @@
     `;
 
     document.body.appendChild(div);
-    window.popupUi?.normalizeModal?.(div);
+    const popupMeta = {
+      type: 'picker',
+      size: 'lg',
+      layoutFamily: 'manager-lg',
+      mobileMode: 'center',
+      touchProfile: 'none'
+    };
+    window.popupUi?.normalizeModal?.(div, popupMeta);
+    window.popupManager?.register?.(div, popupMeta);
     window.registerOverlayElement?.(div);
   }
 

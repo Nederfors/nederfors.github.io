@@ -5346,7 +5346,7 @@ select.level {
 }
 
 /* ---------- Popup Custom ---------- */
-#customPopup {
+#customPopup.popup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -5357,8 +5357,8 @@ select.level {
   background: var(--popup-backdrop-shade);
   z-index: 3000;
 }
-#customPopup.open { display: flex; }
-#customPopup .popup-inner {
+#customPopup.popup.open { display: flex; }
+#customPopup.popup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -5378,38 +5378,38 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#customPopup.open .popup-inner { transform: translateY(0); }
-#customPopup .popup-inner > button { width: 100%; }
-#customPopup .popup-inner input,
-#customPopup .popup-inner select,
-#customPopup .popup-inner textarea {
+#customPopup.popup.open .popup-inner { transform: translateY(0); }
+#customPopup.popup .popup-inner > button { width: 100%; }
+#customPopup.popup .popup-inner input,
+#customPopup.popup .popup-inner select,
+#customPopup.popup .popup-inner textarea {
   width: 100%;
 }
-#customPopup .popup-inner .filter-group {
+#customPopup.popup .popup-inner .filter-group {
   display: flex;
   flex-direction: column;
   gap: .5rem;
   text-align: left;
 }
-#customPopup .popup-inner .custom-type-row,
-#customPopup .popup-inner .money-row {
+#customPopup.popup .popup-inner .custom-type-row,
+#customPopup.popup .popup-inner .money-row {
   display: flex;
   gap: .6rem;
   align-items: center;
   flex-wrap: wrap;
 }
-#customPopup .popup-inner .custom-type-row select {
+#customPopup.popup .popup-inner .custom-type-row select {
   flex: 1 1 220px;
   min-width: 0;
 }
-#customPopup .popup-inner .money-row input {
+#customPopup.popup .popup-inner .money-row input {
   flex: 1;
   min-width: 0;
 }
-#customPopup .popup-inner .filter-group .char-btn {
+#customPopup.popup .popup-inner .filter-group .char-btn {
   align-self: flex-start;
 }
-#customPopup .popup-inner .custom-type-row .char-btn {
+#customPopup.popup .popup-inner .custom-type-row .char-btn {
   width: auto;
   flex: 0 0 auto;
   padding-top: .65rem;
@@ -5419,10 +5419,10 @@ select.level {
   border: 1.5px solid transparent; /* match select height incl. border */
   border-radius: .6rem;             /* match control rounding */
 }
-#customPopup .popup-inner #customTypeTags {
+#customPopup.popup .popup-inner #customTypeTags {
   justify-content: flex-start;
 }
-#customPopup .popup-inner #customPowerList {
+#customPopup.popup .popup-inner #customPowerList {
   display: flex;
   flex-direction: column;
   gap: .4rem;
@@ -5430,7 +5430,7 @@ select.level {
 }
 
 /* ---------- Popup för pengar ---------- */
-#moneyPopup {
+#moneyPopup.popup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -5441,8 +5441,8 @@ select.level {
   background: var(--popup-backdrop-shade);
   z-index: 3000;
 }
-#moneyPopup.open { display: flex; }
-#moneyPopup .popup-inner {
+#moneyPopup.popup.open { display: flex; }
+#moneyPopup.popup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -5457,65 +5457,65 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#moneyPopup.open .popup-inner { transform: translateY(0); }
-#moneyPopup .popup-inner button { width: 100%; }
-#moneyPopup .money-wrapper {
+#moneyPopup.popup.open .popup-inner { transform: translateY(0); }
+#moneyPopup.popup .popup-inner button { width: 100%; }
+#moneyPopup.popup .money-wrapper {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   flex: 1;
   min-height: 0;
 }
-#moneyPopup .money-section {
+#moneyPopup.popup .money-section {
   display: flex;
   flex-direction: column;
   gap: .8rem;
 }
-#moneyPopup .money-section .money-row {
+#moneyPopup.popup .money-section .money-row {
   display: flex;
   gap: .6rem;
   flex-wrap: wrap;
 }
-#moneyPopup .money-section .money-row input {
+#moneyPopup.popup .money-section .money-row input {
   flex: 1 1 90px;
   min-width: 90px;
 }
-#moneyPopup .money-header {
+#moneyPopup.popup .money-header {
   display: flex;
   flex-direction: column;
   gap: .25rem;
   text-align: left;
 }
-#moneyPopup .money-header h4 {
+#moneyPopup.popup .money-header h4 {
   margin: 0;
   font-size: 1.05rem;
   letter-spacing: .01em;
 }
-#moneyPopup .money-header p {
+#moneyPopup.popup .money-header p {
   margin: 0;
   font-size: .85rem;
   color: var(--subtxt);
 }
-#moneyPopup .money-button-row {
+#moneyPopup.popup .money-button-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .6rem;
 }
-#moneyPopup .money-button-row button {
+#moneyPopup.popup .money-button-row button {
   min-width: 0;
   min-height: 2.75rem;
   white-space: nowrap;
 }
-#moneyPopup .money-status {
+#moneyPopup.popup .money-status {
   margin: -.2rem 0 0;
   font-size: .9rem;
   color: var(--subtxt);
   text-align: left;
 }
-#moneyPopup .money-section-balance button.char-btn.danger {
+#moneyPopup.popup .money-section-balance button.char-btn.danger {
   align-self: flex-start;
 }
-#moneyPopup #moneyCancel {
+#moneyPopup.popup #moneyCancel {
   margin-top: auto;
   align-self: stretch;
   width: 100%;
@@ -5601,7 +5601,7 @@ select.level {
   width: 100%;
 }
 @media (max-width: 640px) {
-  #moneyPopup .money-button-row {
+  #moneyPopup.popup .money-button-row {
     grid-template-columns: 1fr;
   }
   .inventory-quick-spend-row {
@@ -5812,7 +5812,7 @@ select.level {
 }
 
 /* ---------- Popup för antal / köp flera ---------- */
-#qtyPopup,
+#qtyPopup.popup,
 #buyMultiplePopup {
   position: fixed;
   inset: 0;
@@ -5824,9 +5824,9 @@ select.level {
   background: var(--popup-backdrop-shade);
   z-index: 3000;
 }
-#qtyPopup.open,
+#qtyPopup.popup.open,
 #buyMultiplePopup.open { display: flex; }
-#qtyPopup .popup-inner,
+#qtyPopup.popup .popup-inner,
 #buyMultiplePopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
@@ -5842,9 +5842,9 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#qtyPopup.open .popup-inner,
+#qtyPopup.popup.open .popup-inner,
 #buyMultiplePopup.open .popup-inner { transform: translateY(0); }
-#qtyPopup .popup-inner button,
+#qtyPopup.popup .popup-inner button,
 #buyMultiplePopup .popup-inner button { width: 100%; }
 #qtyItemList,
 #priceItemList,
@@ -5862,7 +5862,7 @@ select.level {
 }
 
 /* ---------- Popup för pris ---------- */
-#pricePopup {
+#pricePopup.popup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -5873,8 +5873,8 @@ select.level {
   background: var(--popup-backdrop-shade);
   z-index: 3000;
 }
-#pricePopup.open { display: flex; }
-#pricePopup .popup-inner {
+#pricePopup.popup.open { display: flex; }
+#pricePopup.popup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -5889,8 +5889,8 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#pricePopup.open .popup-inner { transform: translateY(0); }
-#pricePopup .popup-inner button { width: 100%; }
+#pricePopup.popup.open .popup-inner { transform: translateY(0); }
+#pricePopup.popup .popup-inner button { width: 100%; }
 #qtyItemList .price-item,
 #priceItemList .price-item,
 #vehicleItemList .price-item,
@@ -5930,8 +5930,8 @@ select.level {
 }
 
 /* ---------- Popup för färdmedel ---------- */
-#vehiclePopup,
-#vehicleRemovePopup,
+#vehiclePopup.popup,
+#vehicleRemovePopup.popup,
 #vehicleQtyPopup,
 #vehicleMoneyPopup,
 #defenseCalcPopup {
@@ -5945,13 +5945,13 @@ select.level {
   background: var(--popup-backdrop-shade);
   z-index: 3000;
 }
-#vehiclePopup.open,
-#vehicleRemovePopup.open,
+#vehiclePopup.popup.open,
+#vehicleRemovePopup.popup.open,
 #vehicleQtyPopup.open,
 #vehicleMoneyPopup.open,
 #defenseCalcPopup.open { display: flex; }
-#vehiclePopup .popup-inner,
-#vehicleRemovePopup .popup-inner,
+#vehiclePopup.popup .popup-inner,
+#vehicleRemovePopup.popup .popup-inner,
 #vehicleQtyPopup .popup-inner,
 #vehicleMoneyPopup .popup-inner,
 #defenseCalcPopup .popup-inner {
@@ -5969,13 +5969,13 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#vehiclePopup.open .popup-inner,
-#vehicleRemovePopup.open .popup-inner,
+#vehiclePopup.popup.open .popup-inner,
+#vehicleRemovePopup.popup.open .popup-inner,
 #vehicleQtyPopup.open .popup-inner,
 #vehicleMoneyPopup.open .popup-inner,
 #defenseCalcPopup.open .popup-inner { transform: translateY(0); }
-#vehiclePopup .popup-inner button,
-#vehicleRemovePopup .popup-inner button,
+#vehiclePopup.popup .popup-inner button,
+#vehicleRemovePopup.popup .popup-inner button,
 #vehicleQtyPopup .popup-inner button,
 #vehicleMoneyPopup .popup-inner button,
 #defenseCalcPopup .popup-inner button { width: 100%; }
@@ -7286,265 +7286,8 @@ select.level {
 }
 
 /* ---------- Rollpersonshantering-popup layout ---------- */
-#characterToolsPopup .popup-inner {
-  width: min(94vw, 700px);
-  max-width: 700px;
-  max-height: min(86vh, 760px);
-  padding: 1.15rem 1.05rem 1rem;
-  text-align: left;
-  gap: .6rem;
-}
-#characterToolsPopup .popup-inner > h3 {
-  margin: 0;
-}
-#characterToolsPopup #characterToolsOptions {
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-}
-#characterToolsPopup #characterToolsCancel {
-  margin-top: .1rem;
-}
-#characterToolsPopup .tools-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: .4rem;
-}
-#characterToolsPopup .tools-tab {
-  min-height: 2.3rem;
-  padding: .42rem .55rem;
-  font-size: .88rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, .06);
-  color: var(--txt);
-  border: 1px solid var(--border);
-}
-#characterToolsPopup .tools-tab:hover {
-  opacity: 1;
-  border-color: var(--toolborder);
-}
-#characterToolsPopup .tools-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-#characterToolsPopup .tools-panels {
-  display: flex;
-  flex-direction: column;
-}
-#characterToolsPopup .tools-panel {
-  display: none;
-}
-#characterToolsPopup .tools-panel.active {
-  display: block;
-}
-#characterToolsPopup .tools-sections {
-  display: flex;
-  flex-direction: column;
-  gap: .75rem;
-}
-#characterToolsPopup .tools-card {
-  padding: .95rem;
-  border-color: var(--card-border);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03);
-  display: flex;
-  flex-direction: column;
-  gap: .55rem;
-}
-#characterToolsPopup .tools-form {
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-}
-#characterToolsPopup .tools-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: .55rem;
-}
-#characterToolsPopup .tools-grid.two-col {
-  grid-template-columns: 1fr 1fr;
-}
-#characterToolsPopup .tools-field {
-  display: flex;
-  flex-direction: column;
-  gap: .25rem;
-}
-#characterToolsPopup .tools-label {
-  color: var(--subtxt);
-  font-size: .82rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  font-weight: 700;
-}
-#characterToolsPopup .tools-field input,
-#characterToolsPopup .tools-field select,
-#characterToolsPopup .tools-inline-input {
-  width: 100%;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--border);
-  border-radius: .6rem;
-  color: var(--txt);
-  padding: .48rem .6rem;
-  font-size: .95rem;
-}
-#characterToolsPopup .tools-field input:focus,
-#characterToolsPopup .tools-field select:focus,
-#characterToolsPopup .tools-inline-input:focus {
-  border-color: var(--accent);
-}
-#characterToolsPopup .tools-card-title {
-  font-size: 1.04rem;
-  line-height: 1.3;
-}
-#characterToolsPopup .tools-intro {
-  margin: 0;
-  color: var(--subtxt);
-  font-size: .92rem;
-  line-height: 1.35;
-}
-#characterToolsPopup .tools-meta {
-  color: var(--subtxt);
-  font-size: .84rem;
-}
-#characterToolsPopup .tools-warning {
-  color: #ffcf78;
-}
-#characterToolsPopup .tools-action {
-  width: 100%;
-  min-height: 2.45rem;
-  font-weight: 700;
-}
-#characterToolsPopup .tools-action:disabled {
-  opacity: .5;
-  cursor: not-allowed;
-}
-#characterToolsPopup .tools-inline-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: .45rem;
-  align-items: center;
-}
-#characterToolsPopup .tools-inline-btn {
-  width: auto;
-  min-height: 2.35rem;
-  white-space: nowrap;
-}
-#characterToolsPopup .tools-char-list,
-#characterToolsPopup .tools-folder-list {
-  border: 1px solid var(--border);
-  border-radius: .75rem;
-  background: rgba(0, 0, 0, .14);
-  padding: .45rem;
-  max-height: min(28vh, 260px);
-  overflow: auto;
-}
-#characterToolsPopup .tools-check-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: .6rem;
-  background: rgba(255, 255, 255, .03);
-  border: 1px solid var(--card-border);
-  border-radius: .55rem;
-  padding: .33rem .5rem;
-  margin-bottom: .35rem;
-}
-#characterToolsPopup .tools-check-item:last-child {
-  margin-bottom: 0;
-}
-#characterToolsPopup .tools-check-item input[type="checkbox"] {
-  appearance: none;
-  width: 1.05rem;
-  height: 1.05rem;
-  border: 2px solid var(--card-border);
-  border-radius: .25rem;
-  background: var(--bg);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-#characterToolsPopup .tools-check-item input[type="checkbox"]:checked {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-#characterToolsPopup .tools-sub {
-  color: var(--subtxt);
-  font-size: .9em;
-}
-#characterToolsPopup .tools-folder-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .55rem;
-  border: 1px solid rgba(255, 255, 255, .08);
-  border-radius: .58rem;
-  padding: .4rem .45rem;
-  margin-bottom: .45rem;
-}
-#characterToolsPopup .tools-folder-row:last-child {
-  margin-bottom: 0;
-}
-#characterToolsPopup .tools-folder-name {
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  min-width: 0;
-}
-#characterToolsPopup .tools-folder-input {
-  min-width: 0;
-  width: min(220px, 56vw);
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid var(--border);
-  border-radius: .55rem;
-  color: var(--txt);
-  padding: .34rem .45rem;
-  font-size: .92rem;
-}
-#characterToolsPopup .tools-folder-actions {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: .3rem;
-  justify-content: flex-end;
-}
-#characterToolsPopup .tools-mini-btn {
-  appearance: none;
-  border: none;
-  border-radius: .55rem;
-  padding: .33rem .5rem;
-  background: var(--button-standard);
-  color: var(--txt);
-  cursor: pointer;
-  font-size: .8rem;
-  line-height: 1.15;
-}
-#characterToolsPopup .tools-mini-btn.danger {
-  background: var(--danger);
-}
-#characterToolsPopup .tools-mini-btn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-#characterToolsPopup .tools-empty {
-  margin: 0;
-  color: var(--subtxt);
-  text-align: center;
-  padding: .5rem .4rem;
-}
-@media (max-width: 560px) {
-  #characterToolsPopup .popup-inner {
-    width: calc(100% - 1rem);
-    padding: 1rem .9rem .9rem;
-  }
-  #characterToolsPopup .tools-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  #characterToolsPopup .tools-grid.two-col {
-    grid-template-columns: 1fr;
-  }
-  #characterToolsPopup .tools-inline-row {
-    grid-template-columns: 1fr;
-  }
-}
+/* Shared tools-popup-lg rules now live in css/components.css so
+   Rollpersonshantering and the inventory managers stay visually linked. */
 
 /* (removed) Popup för inventarie Export/Import */
 

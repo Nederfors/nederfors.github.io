@@ -447,10 +447,10 @@ window.syncCharacterPanels = syncCharacterPanels;
 
 function createPopupSession(pop, options = {}) {
   const target = pop || null;
-  const type = options.type || 'form';
-  const touchProfile = options.touchProfile
-    || window.daubMotion?.defaultTouchProfile?.(type)
-    || undefined;
+  const type = options.type || target?.dataset?.popupType || 'form';
+  const touchProfile = Object.prototype.hasOwnProperty.call(options, 'touchProfile')
+    ? options.touchProfile
+    : (target?.dataset?.touchProfile || window.daubMotion?.defaultTouchProfile?.(type) || undefined);
   const onClose = typeof options.onClose === 'function' ? options.onClose : () => {};
   const popupManager = window.popupManager;
   let settled = false;
@@ -1062,8 +1062,6 @@ async function pickJsonFilesFromDirectoryWithFallback() {
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
     // Inventarie → Verktyg (verktygslåda-ikon)
-    { id: 'inv-items',      label: 'Hantera föremål',  sel: '#manageItemsBtn',        panel: null, emoji: '🆕', syn: ['hantera föremål','nytt föremål','eget föremål','skapa föremål','mängdköp','mangdkop','lasta i','lasta ur','färdmedel','fordon'] },
-    { id: 'inv-economy',    label: 'Hantera ekonomi',  sel: '#manageEconomyBtn',      panel: null, emoji: '💸', syn: ['hantera ekonomi','hantera pengar','pengar','saldo','multiplicera pris','pris','spara gratis','gratismarkera'] },
     { id: 'inv-quickspend', label: 'Snabbspendera',    sel: '#inventoryQuickSpendBtn', panel: null, emoji: '💰', syn: ['snabbspendera','snabb spendera','betala direkt','spendera'] },
 
     // Verktyg inne i Filter → Verktyg
@@ -3081,26 +3079,35 @@ async function runRenameCharacterFlow() {
 
 function openCharacterToolsPopup(initialTab = 'generate') {
   openChoicePopup((opts) => {
-    const make = (tag, cls, text) => {
-      const el = document.createElement(tag);
-      if (cls) el.className = cls;
-      if (text != null) el.textContent = text;
-      return el;
-    };
-    const decorateInput = input => {
-      input.classList.add('db-input');
-      return input;
-    };
-    const decorateSelect = select => {
-      select.classList.add('db-select__input');
-      return select;
-    };
-    const escapeHtml = s => String(s || '').replace(/[&<>"]/g, m => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;'
-    }[m]));
+    const shellUi = window.toolsPopupShell || {};
+    const make = typeof shellUi.make === 'function'
+      ? shellUi.make
+      : ((tag, cls, text) => {
+          const el = document.createElement(tag);
+          if (cls) el.className = cls;
+          if (text != null) el.textContent = text;
+          return el;
+        });
+    const decorateInput = typeof shellUi.decorateInput === 'function'
+      ? shellUi.decorateInput
+      : (input => {
+          input.classList.add('db-input');
+          return input;
+        });
+    const decorateSelect = typeof shellUi.decorateSelect === 'function'
+      ? shellUi.decorateSelect
+      : (select => {
+          select.classList.add('db-select__input');
+          return select;
+        });
+    const escapeHtml = typeof shellUi.escapeHtml === 'function'
+      ? shellUi.escapeHtml
+      : (s => String(s || '').replace(/[&<>"]/g, m => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;'
+        }[m])));
 
     const getSortedFolders = () => (storeHelper.getFolders(store) || []).slice()
       .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
@@ -3191,14 +3198,6 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       { id: 'rename', label: 'Byt namn' },
       { id: 'folders', label: 'Mappar' }
     ];
-    const tabsEl = make('div', 'db-tabs character-tools-tabs');
-    const tabListEl = make('div', 'db-tabs__list tools-tabs');
-    const panelsEl = make('div', 'tools-panels');
-    const tabButtons = new Map();
-    const tabPanels = new Map();
-    tabsEl.appendChild(tabListEl);
-    tabsEl.appendChild(panelsEl);
-
     const refreshers = new Set();
     const registerRefresh = fn => {
       if (typeof fn === 'function') refreshers.add(fn);
@@ -3793,21 +3792,15 @@ function openCharacterToolsPopup(initialTab = 'generate') {
       render();
     };
 
-    tabs.forEach(tab => {
-      const btn = make('button', 'db-tabs__tab tools-tab', tab.label);
-      btn.type = 'button';
-      btn.dataset.tab = tab.id;
-      btn.setAttribute('aria-selected', 'false');
-      btn.tabIndex = -1;
-      tabListEl.appendChild(btn);
-      tabButtons.set(tab.id, btn);
-
-      const panel = make('section', 'db-tabs__panel tools-panel');
-      panel.dataset.tab = tab.id;
-      panel.hidden = true;
-      panelsEl.appendChild(panel);
-      tabPanels.set(tab.id, panel);
-    });
+    const shell = typeof shellUi.createShell === 'function'
+      ? shellUi.createShell({
+          tabs,
+          ariaLabel: 'Rollpersonshantering',
+          idPrefix: 'characterTools',
+          className: 'character-tools-tabs'
+        })
+      : null;
+    const tabPanels = shell?.tabPanels || new Map();
 
     buildGeneratePanel(tabPanels.get('generate'));
     buildDuplicatePanel(tabPanels.get('duplicate'));
@@ -3815,28 +3808,14 @@ function openCharacterToolsPopup(initialTab = 'generate') {
     buildFoldersPanel(tabPanels.get('folders'));
 
     const setActiveTab = tabId => {
-      tabButtons.forEach((btn, id) => {
-        const active = id === tabId;
-        btn.classList.toggle('active', active);
-        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-        btn.setAttribute('aria-selected', active ? 'true' : 'false');
-        btn.tabIndex = active ? 0 : -1;
-        if (active) btn.setAttribute('aria-current', 'page');
-        else btn.removeAttribute('aria-current');
-      });
-      tabPanels.forEach((panel, id) => {
-        panel.classList.toggle('active', id === tabId);
-        panel.hidden = id !== tabId;
-      });
+      shell?.setActiveTab?.(tabId);
     };
-
-    tabButtons.forEach((btn, id) => {
-      btn.addEventListener('click', () => setActiveTab(id));
-    });
 
     const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'generate';
     setActiveTab(wantedTab);
-    opts.appendChild(tabsEl);
+    if (shell?.root) {
+      opts.appendChild(shell.root);
+    }
     window.DAUB?.init?.(opts.getRootNode?.() || opts);
   }, () => {}, {
     popupId: 'characterToolsPopup',
@@ -6297,25 +6276,33 @@ function openDriveStoragePopup(initialTab = 'drive') {
       { id: 'export', label: 'Export' },
       { id: 'import', label: 'Import' }
     ];
-    const tabsEl = make('div', 'db-tabs drive-storage-tabs');
-    const tabListEl = make('div', 'db-tabs__list storage-tabs');
-    const panelsEl = make('div', 'storage-panels');
+    const tabsEl = make('div', 'db-tabs popup-tabs drive-storage-tabs');
+    const tabListEl = make('div', 'db-tabs__list popup-tabs__list');
+    const panelsEl = make('div', 'popup-tabs__panels storage-panels');
     const tabButtons = new Map();
     const tabPanels = new Map();
+    tabListEl.setAttribute('role', 'tablist');
+    tabListEl.setAttribute('aria-label', 'Drivelagring');
     tabsEl.appendChild(tabListEl);
     tabsEl.appendChild(panelsEl);
 
     tabs.forEach(tab => {
-      const btn = make('button', 'db-tabs__tab storage-tab', tab.label);
+      const btn = make('button', 'db-tabs__tab popup-tabs__tab', tab.label);
       btn.type = 'button';
+      btn.id = `driveStorageTab-${tab.id}`;
       btn.dataset.tab = tab.id;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-controls', `driveStoragePanel-${tab.id}`);
       btn.setAttribute('aria-selected', 'false');
       btn.tabIndex = -1;
       tabListEl.appendChild(btn);
       tabButtons.set(tab.id, btn);
 
-      const panel = make('section', 'db-tabs__panel storage-panel');
+      const panel = make('section', 'db-tabs__panel popup-tabs__panel storage-panel');
+      panel.id = `driveStoragePanel-${tab.id}`;
       panel.dataset.tab = tab.id;
+      panel.setAttribute('role', 'tabpanel');
+      panel.setAttribute('aria-labelledby', btn.id);
       panel.hidden = true;
       panelsEl.appendChild(panel);
       tabPanels.set(tab.id, panel);
@@ -7293,7 +7280,16 @@ async function requireCharacter() {
         </div>
       </div>`;
     document.body.appendChild(pop);
-    window.popupUi?.normalizeModal?.(pop, { titleText: 'Aktiv karaktar kravs' });
+    const popupMeta = {
+      type: 'dialog',
+      size: 'sm',
+      layoutFamily: 'modal',
+      mobileMode: 'sheet',
+      touchProfile: 'sheet-down',
+      titleText: 'Aktiv karaktar kravs'
+    };
+    window.popupUi?.normalizeModal?.(pop, popupMeta);
+    window.popupManager?.register?.(pop, popupMeta);
   }
 
   const wrap   = pop.querySelector('#charPopupContent');

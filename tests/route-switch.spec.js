@@ -52,7 +52,7 @@ test('inventory and traits render after in-app route changes', async ({ page }) 
   });
   await page.waitForFunction(() => document.body.dataset.role === 'inventory');
   await expect.poll(async () => (
-    page.locator('#invFormal li.card').count()
+    page.locator('#invFormal details.db-accordion__item').count()
   )).toBeGreaterThan(0);
   await expect(page.locator('#charName')).toContainText('Route Hero');
 

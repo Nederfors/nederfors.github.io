@@ -18,10 +18,24 @@
 
   const DEFAULT_TYPE = 'form';
   const TOUCH_PROFILE_SET = new Set(['panel-right', 'sheet-down', 'none']);
+  const MOBILE_MODE_SET = new Set(['center', 'sheet']);
 
   function normalizeType(type) {
     const key = String(type || '').trim().toLowerCase();
     return Object.prototype.hasOwnProperty.call(TYPE_DEFAULTS, key) ? key : DEFAULT_TYPE;
+  }
+
+  function normalizeSize(size) {
+    return String(size || '').trim().toLowerCase();
+  }
+
+  function normalizeLayoutFamily(layoutFamily) {
+    return String(layoutFamily || '').trim().toLowerCase();
+  }
+
+  function normalizeMobileMode(mobileMode) {
+    const key = String(mobileMode || '').trim().toLowerCase();
+    return MOBILE_MODE_SET.has(key) ? key : '';
   }
 
   function normalizePolicy(type, dismissPolicy) {
@@ -131,6 +145,9 @@
     const existing = entries.get(id) || {
       id,
       type: DEFAULT_TYPE,
+      size: '',
+      layoutFamily: '',
+      mobileMode: '',
       touchProfile: '',
       dismissPolicy: null,
       cleanup: null,
@@ -143,9 +160,28 @@
     if (!existing.element) {
       existing.element = findElementById(id);
     }
-    if (options.type) existing.type = normalizeType(options.type);
+    const dataset = existing.element?.dataset || {};
+    const resolvedType = options.type || dataset.popupType || existing.type;
+    existing.type = normalizeType(resolvedType);
+    if (Object.prototype.hasOwnProperty.call(options, 'size')) {
+      existing.size = normalizeSize(options.size);
+    } else if (dataset.popupSize) {
+      existing.size = normalizeSize(dataset.popupSize);
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'layoutFamily')) {
+      existing.layoutFamily = normalizeLayoutFamily(options.layoutFamily);
+    } else if (dataset.popupLayout) {
+      existing.layoutFamily = normalizeLayoutFamily(dataset.popupLayout);
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'mobileMode')) {
+      existing.mobileMode = normalizeMobileMode(options.mobileMode);
+    } else if (dataset.popupMobileMode) {
+      existing.mobileMode = normalizeMobileMode(dataset.popupMobileMode);
+    }
     if (Object.prototype.hasOwnProperty.call(options, 'touchProfile')) {
-      existing.touchProfile = normalizeTouchProfile(options.type || existing.type, options.touchProfile);
+      existing.touchProfile = normalizeTouchProfile(existing.type, options.touchProfile);
+    } else if (dataset.touchProfile) {
+      existing.touchProfile = normalizeTouchProfile(existing.type, dataset.touchProfile);
     }
     if (Object.prototype.hasOwnProperty.call(options, 'dismissPolicy')) {
       existing.dismissPolicy = options.dismissPolicy || null;
@@ -157,7 +193,11 @@
     entries.set(id, existing);
 
     if (existing.element) {
+      existing.element.dataset.popupType = existing.type;
       existing.element.dataset.touchProfile = normalizeTouchProfile(existing.type, existing.touchProfile);
+      if (existing.size) existing.element.dataset.popupSize = existing.size;
+      if (existing.layoutFamily) existing.element.dataset.popupLayout = existing.layoutFamily;
+      if (existing.mobileMode) existing.element.dataset.popupMobileMode = existing.mobileMode;
     }
 
     if (existing.element && typeof window.registerOverlayElement === 'function') {
@@ -216,6 +256,9 @@
     return {
       id: entry.id,
       type: entry.type,
+      size: entry.size,
+      layoutFamily: entry.layoutFamily,
+      mobileMode: entry.mobileMode,
       touchProfile: normalizeTouchProfile(entry.type, entry.touchProfile),
       dismissPolicy: normalizePolicy(entry.type, entry.dismissPolicy)
     };

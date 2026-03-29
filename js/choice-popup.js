@@ -58,7 +58,15 @@
       </div>
     </div>`;
     document.body.appendChild(div);
-    window.popupUi?.normalizeModal?.(div);
+    const popupMeta = {
+      type: 'picker',
+      size: 'md',
+      layoutFamily: 'modal',
+      mobileMode: 'center',
+      touchProfile: 'none'
+    };
+    window.popupUi?.normalizeModal?.(div, popupMeta);
+    window.popupManager?.register?.(div, popupMeta);
     window.registerOverlayElement?.(div);
     window.DAUB?.init?.(div);
   }

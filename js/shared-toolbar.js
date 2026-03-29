@@ -100,43 +100,258 @@ const renderSortRadioOptions = () => `
     )).join('')}
   </div>
 `.trim();
-const POPUP_TYPE_BY_ID = Object.freeze({
-  qualPopup: 'picker',
-  inventoryItemsPopup: 'hub',
-  inventoryEconomyPopup: 'hub',
-  customPopup: 'form',
-  moneyPopup: 'form',
-  manualAdjustPopup: 'form',
-  saveFreePopup: 'dialog',
-  advMoneyPopup: 'dialog',
-  qtyPopup: 'form',
-  buyMultiplePopup: 'picker',
-  liveBuyPopup: 'picker',
-  pricePopup: 'form',
-  rowPricePopup: 'picker',
-  vehiclePopup: 'form',
-  vehicleRemovePopup: 'form',
-  vehicleQtyPopup: 'picker',
-  vehicleMoneyPopup: 'picker',
-  defenseCalcPopup: 'form',
-  deleteContainerPopup: 'dialog',
-  alcPopup: 'form',
-  smithPopup: 'form',
-  artPopup: 'form',
-  entrySortPopup: 'form',
-  pdfPopup: 'form',
-  driveStoragePopup: 'form',
-  characterToolsPopup: 'form',
-  nilasPopup: 'dialog',
-  folderManagerPopup: 'form',
-  renameFolderPopup: 'dialog',
-  newCharPopup: 'form',
-  generatorPopup: 'form',
-  dupCharPopup: 'form',
-  renameCharPopup: 'form',
-  dialogPopup: 'dialog',
-  danielPopup: 'dialog'
+const popupMeta = (type, size, layoutFamily, mobileMode, touchProfile) => Object.freeze({
+  type,
+  size,
+  layoutFamily,
+  mobileMode,
+  touchProfile
 });
+const BASE_POPUP_META_BY_ID = Object.freeze({
+  qualPopup: popupMeta('picker', 'md', 'modal', 'center', 'none'),
+  manualAdjustPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  defenseCalcPopup: popupMeta('form', 'lg', 'workflow-lg', 'center', 'none'),
+  alcPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
+  smithPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
+  artPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
+  entrySortPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  pdfPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  driveStoragePopup: popupMeta('form', 'lg', 'tabbed-popup-lg', 'center', 'none'),
+  characterToolsPopup: popupMeta('form', 'lg', 'tools-popup-lg', 'center', 'none'),
+  nilasPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  folderManagerPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  renameFolderPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  newCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  generatorPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  dupCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  renameCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  dialogPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  danielPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down')
+});
+const getPopupMetaById = () => Object.freeze({
+  ...BASE_POPUP_META_BY_ID,
+  ...(window.inventoryPopupRegistry?.getPopupMetaById?.() || {})
+});
+const renderToolsManagerPopup = ({ popupId, title, optionsId, closeId, className = '' }) => `
+      <div id="${popupId}" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner ${String(className || '').trim()}">
+          <h3>${title}</h3>
+          <div id="${optionsId}" class="tools-popup-content"></div>
+          <button id="${closeId}" class="db-btn db-btn--danger">Avbryt</button>
+        </div>
+      </div>
+`;
+const renderInventoryPopupSurfaces = () => `
+      ${renderToolsManagerPopup({
+        popupId: 'inventoryItemsPopup',
+        title: 'Hantera föremål',
+        optionsId: 'inventoryItemsOptions',
+        closeId: 'inventoryItemsClose',
+        className: 'inventory-tools-ui'
+      })}
+      ${renderToolsManagerPopup({
+        popupId: 'inventoryEconomyPopup',
+        title: 'Hantera ekonomi',
+        optionsId: 'inventoryEconomyOptions',
+        closeId: 'inventoryEconomyClose',
+        className: 'inventory-tools-ui'
+      })}
+
+      <div id="liveBuyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Köp i live-läge</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="liveBuyItemName" class="tools-meta popup-item-name" hidden></p>
+              <div class="tools-form">
+                <label class="tools-field">
+                  <span class="tools-label">Antal</span>
+                  <input id="liveBuyQty" class="db-input" type="number" min="1" step="1" value="1">
+                </label>
+                <div class="tools-grid two-col">
+                  <label class="tools-field">
+                    <span class="tools-label">Daler</span>
+                    <input id="liveBuyPriceDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Skilling</span>
+                    <input id="liveBuyPriceSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                </div>
+                <label class="tools-field">
+                  <span class="tools-label">Örtegar</span>
+                  <input id="liveBuyPriceOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="liveBuyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="liveBuyConfirm" class="db-btn">Köp</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="buyMultiplePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Köp flera</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="buyMultipleItemName" class="tools-meta popup-item-name" hidden></p>
+              <label class="tools-field">
+                <span class="tools-label">Antal</span>
+                <input id="buyMultipleInput" class="db-input" type="number" min="1" step="1" placeholder="1">
+              </label>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="buyMultipleCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="buyMultipleRemove" class="db-btn db-btn--danger">Ta bort</button>
+            <button id="buyMultipleConfirm" class="db-btn">Köp</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rowPricePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Snabb prisjustering</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <div class="tools-form">
+                <div id="rowPricePresets" class="tools-grid two-col">
+                  <button class="db-btn" type="button" data-factor="0.5">Halvera</button>
+                  <button class="db-btn" type="button" data-factor="0.75">-25%</button>
+                  <button class="db-btn" type="button" data-factor="1.25">+25%</button>
+                  <button class="db-btn" type="button" data-factor="1.5">+50%</button>
+                  <button class="db-btn" type="button" data-factor="2">Dubbel</button>
+                  <button class="db-btn db-btn--secondary" type="button" data-factor="1">Återställ faktor</button>
+                </div>
+                <label class="tools-field">
+                  <span class="tools-label">Multiplicera pris</span>
+                  <input id="rowPriceFactor" class="db-input" type="number" min="0" step="0.01" placeholder="1.25">
+                </label>
+                <div class="tools-grid two-col">
+                  <label class="tools-field">
+                    <span class="tools-label">Grundpris i daler</span>
+                    <input id="rowBaseDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Grundpris i skilling</span>
+                    <input id="rowBaseSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                </div>
+                <label class="tools-field">
+                  <span class="tools-label">Grundpris i örtegar</span>
+                  <input id="rowBaseOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="rowPriceCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="rowBaseApply" class="db-btn db-btn--secondary">Sätt grundpris</button>
+            <button id="rowPriceApply" class="db-btn">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="vehicleQtyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3 id="vehicleQtyTitle">Välj antal</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="vehicleQtyMessage" class="tools-intro"></p>
+              <label class="tools-field">
+                <span class="tools-label">Antal</span>
+                <input id="vehicleQtyInput" class="db-input" type="number" min="1" step="1" value="1">
+              </label>
+              <p id="vehicleQtyHint" class="tools-meta"></p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="vehicleQtyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="vehicleQtyConfirm" class="db-btn">Fortsätt</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="vehicleMoneyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3 id="vehicleMoneyTitle">Ta ut pengar</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="vehicleMoneyMessage" class="tools-intro"></p>
+              <p id="vehicleMoneyHint" class="tools-meta"></p>
+              <div class="tools-grid two-col">
+                <label class="tools-field">
+                  <span class="tools-label">Daler</span>
+                  <input id="vehicleMoneyDalerRemove" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+                <label class="tools-field">
+                  <span class="tools-label">Skilling</span>
+                  <input id="vehicleMoneySkillingRemove" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+              <label class="tools-field">
+                <span class="tools-label">Örtegar</span>
+                <input id="vehicleMoneyOrtegarRemove" class="db-input" type="number" min="0" step="1" placeholder="0">
+              </label>
+              <p id="vehicleMoneyError" class="tools-meta tools-warning" aria-live="polite"></p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="vehicleMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="vehicleMoneyConfirm" class="db-btn">Ta ut</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="saveFreePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Spara och gratismarkera</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p class="tools-intro">Markera alla nuvarande föremål som gratis och spara sedan den aktuella ekonomin som ny utgångspunkt.</p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="saveFreeCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="saveFreeConfirm" class="db-btn">Fortsätt</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="advMoneyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Fördelspengar</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p class="tools-intro">Privata pengar och fördelspengar kommer att nollställas innan åtgärden fortsätter.</p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="advMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="advMoneyConfirm" class="db-btn">Nollställ och fortsätt</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="deleteContainerPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Ta bort föremål med innehåll</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="deleteContainerText" class="tools-intro">Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort innehållet också?</p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="deleteContainerCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="deleteContainerOnly" class="db-btn db-btn--secondary">Ta bara bort färdmedlet</button>
+            <button id="deleteContainerAll" class="db-btn">Ta bort allt</button>
+          </div>
+        </div>
+      </div>
+`;
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -151,7 +366,7 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   connectedCallback() {
     this.render();
-    window.popupUi?.normalizeTree?.(this.shadowRoot);
+    window.popupUi?.normalizeTree?.(this.shadowRoot, getPopupMetaById());
     window.DAUB?.init?.(this.shadowRoot);
     window.autoResizeAll?.(this.shadowRoot);
     this.bindPopupManager();
@@ -1144,192 +1359,8 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- ---------- Inventariehubb ---------- -->
-      <div id="inventoryItemsPopup" class="db-modal-overlay popup inventory-hub-popup" aria-hidden="true">
-        <div class="db-modal popup-inner inventory-hub-ui">
-          <header class="inventory-hub-header">
-            <div class="inventory-hub-header-copy">
-              <div class="inventory-hub-kicker">Inventarieverktyg</div>
-              <h3>Hantera föremål</h3>
-              <p class="inventory-hub-intro">Skapa egna föremål, gör mängdköp och hantera vad som lastas i eller ur färdmedel utan att lämna inventariet.</p>
-            </div>
-            <button id="inventoryItemsClose" class="db-btn db-btn--icon inventory-hub-close" type="button" title="Stäng">✕</button>
-          </header>
-          <div class="inventory-hub-tabs" role="tablist" aria-label="Inventarieverktyg">
-            <button id="inventoryItemsTabCustomItem" class="db-btn inventory-hub-tab" type="button" data-tab="custom-item" role="tab">Nytt föremål</button>
-            <button id="inventoryItemsTabBulkQty" class="db-btn inventory-hub-tab" type="button" data-tab="bulk-qty" role="tab">Mängdköp</button>
-            <button id="inventoryItemsTabVehicleLoad" class="db-btn inventory-hub-tab" type="button" data-tab="vehicle-load" role="tab">Lasta i färdmedel</button>
-            <button id="inventoryItemsTabVehicleUnload" class="db-btn inventory-hub-tab" type="button" data-tab="vehicle-unload" role="tab">Lasta ur färdmedel</button>
-          </div>
-          <div class="inventory-hub-panels">
-            <section id="inventoryItemsPanelCustomItem" class="inventory-hub-panel" data-tab-panel="custom-item" role="tabpanel">
-              <div id="inventoryItemsCustomItemStack" class="inventory-hub-stack"></div>
-            </section>
-            <section id="inventoryItemsPanelBulkQty" class="inventory-hub-panel" data-tab-panel="bulk-qty" role="tabpanel">
-              <div id="inventoryItemsBulkQtyStack" class="inventory-hub-stack"></div>
-            </section>
-            <section id="inventoryItemsPanelVehicleLoad" class="inventory-hub-panel" data-tab-panel="vehicle-load" role="tabpanel">
-              <div id="inventoryItemsVehicleLoadStack" class="inventory-hub-stack">
-                <section id="inventoryItemsVehicleLoadEmpty" class="inventory-hub-static-card" hidden>
-                  <div class="inventory-hub-static-copy">
-                    <div class="inventory-hub-static-title">Inga färdmedel ännu</div>
-                    <p>Skapa eller lägg till ett färdmedel under “Nytt föremål” innan du lastar i något här.</p>
-                  </div>
-                </section>
-              </div>
-            </section>
-            <section id="inventoryItemsPanelVehicleUnload" class="inventory-hub-panel" data-tab-panel="vehicle-unload" role="tabpanel">
-              <div id="inventoryItemsVehicleUnloadStack" class="inventory-hub-stack">
-                <section id="inventoryItemsVehicleUnloadEmpty" class="inventory-hub-static-card" hidden>
-                  <div class="inventory-hub-static-copy">
-                    <div class="inventory-hub-static-title">Inga färdmedel att ta ut ur</div>
-                    <p>När du har ett färdmedel med innehåll kan du ta ut både föremål och pengar härifrån.</p>
-                  </div>
-                </section>
-              </div>
-            </section>
-          </div>
-        </div>
-      </div>
-
-      <div id="inventoryEconomyPopup" class="db-modal-overlay popup inventory-hub-popup" aria-hidden="true">
-        <div class="db-modal popup-inner inventory-hub-ui">
-          <header class="inventory-hub-header">
-            <div class="inventory-hub-header-copy">
-              <div class="inventory-hub-kicker">Inventarieverktyg</div>
-              <h3>Hantera ekonomi</h3>
-              <p class="inventory-hub-intro">Justera saldo och multiplicera pris utan att lämna inventariet.</p>
-            </div>
-            <button id="inventoryEconomyClose" class="db-btn db-btn--icon inventory-hub-close" type="button" title="Stäng">✕</button>
-          </header>
-          <div class="inventory-hub-tabs" role="tablist" aria-label="Inventarieekonomi">
-            <button id="inventoryEconomyTabMoney" class="db-btn inventory-hub-tab" type="button" data-tab="money" role="tab">Saldo</button>
-            <button id="inventoryEconomyTabPrice" class="db-btn inventory-hub-tab" type="button" data-tab="bulk-price" role="tab">Multiplicera pris</button>
-          </div>
-          <div class="inventory-hub-panels">
-            <section id="inventoryEconomyPanelMoney" class="inventory-hub-panel" data-tab-panel="money" role="tabpanel">
-              <div id="inventoryEconomyMoneyStack" class="inventory-hub-stack">
-                <section id="inventoryEconomyMassActions" class="inventory-hub-static-card" data-hub-focus="mass-actions">
-                  <div class="inventory-hub-static-copy">
-                    <div class="inventory-hub-static-title">Massåtgärder</div>
-                    <p>Spara kontanterna som total, markera hela inventariet som gratis eller nollställ vid behov.</p>
-                  </div>
-                  <div class="inventory-hub-static-actions">
-                    <button id="inventoryEconomySaveFreeBtn" class="db-btn" type="button">Spara & gratismarkera</button>
-                  </div>
-                </section>
-              </div>
-            </section>
-            <section id="inventoryEconomyPanelPrice" class="inventory-hub-panel" data-tab-panel="bulk-price" role="tabpanel">
-              <div id="inventoryEconomyPriceStack" class="inventory-hub-stack"></div>
-            </section>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Custom ---------- -->
-      <div id="customPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3 id="customTitle">Nytt föremål</h3>
-          <input id="customName" placeholder="Namn">
-          <div id="customTypeGroup" class="filter-group">
-            <label for="customType">Typ</label>
-            <div class="custom-type-row">
-              <select id="customType"></select>
-              <button id="customTypeAdd" class="db-btn db-btn--icon db-btn--icon-only" type="button" aria-label="Lägg till typ" title="Lägg till typ">${icon('plus')}</button>
-            </div>
-            <div id="customTypeTags" class="tags"></div>
-          </div>
-          <div id="customArtifactEffect" class="filter-group" style="display:none">
-            <label for="artifactEffect">Effekt</label>
-            <select id="artifactEffect">
-              <option value="">Obunden</option>
-              <option value="xp">\u20131 erfarenhet</option>
-              <option value="corruption">+1 permanent korruption</option>
-            </select>
-          </div>
-          <div id="customWeaponFields" class="filter-group" style="display:none">
-            <label for="customDamage">Skada</label>
-            <input id="customDamage" placeholder="Skada">
-          </div>
-          <div id="customVehicleFields" class="filter-group" style="display:none">
-            <label for="customCapacity">Bärkapacitet</label>
-            <input id="customCapacity" type="number" min="0" step="1" placeholder="Bärkapacitet">
-          </div>
-          <div id="customLevelFields" class="filter-group" style="display:none">
-            <label for="customLevelMode">Nivåtyp</label>
-            <select id="customLevelMode">
-              <option value="novis">Novis</option>
-              <option value="gesall">Gesäll</option>
-              <option value="mastare">Mästare</option>
-              <option value="triple">Novis/Gesäll/Mästare</option>
-            </select>
-            <textarea id="customLevelNovis" class="auto-resize" placeholder="Novis"></textarea>
-            <textarea id="customLevelGesall" class="auto-resize" placeholder="Gesäll"></textarea>
-            <textarea id="customLevelMastare" class="auto-resize" placeholder="Mästare"></textarea>
-          </div>
-          <div id="customPowerFields" class="filter-group" style="display:none">
-            <label>Förmågor</label>
-            <div id="customPowerList"></div>
-            <button id="customPowerAdd" class="db-btn db-btn--icon db-btn--icon-only" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">${icon('plus')}</button>
-          </div>
-          <div id="customBoundFields" class="filter-group" style="display:none">
-            <label for="customBoundType">Bundet till</label>
-            <select id="customBoundType">
-              <option value="">Obundet</option>
-              <option value="kraft">Mystisk kraft</option>
-              <option value="ritual">Ritual</option>
-            </select>
-            <input id="customBoundLabel" placeholder="Etikett (t.ex. Formel)">
-          </div>
-          <div id="customArmorFields" class="filter-group" style="display:none">
-            <label for="customProtection">Skydd</label>
-            <input id="customProtection" placeholder="Skydd">
-            <label for="customRestriction">Begränsning</label>
-            <input id="customRestriction" type="number" step="1" placeholder="Begränsning">
-          </div>
-          <div class="filter-group">
-            <label for="customWeight">Vikt</label>
-            <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
-          </div>
-          <div class="money-row">
-            <input id="customDaler" type="number" min="0" placeholder="Daler">
-            <input id="customSkilling" type="number" min="0" placeholder="Skilling">
-            <input id="customOrtegar" type="number" min="0" placeholder="Örtegar">
-          </div>
-          <textarea id="customDesc" class="auto-resize" placeholder="Beskrivning"></textarea>
-          <button id="customAdd" class="db-btn" type="button">Spara</button>
-          <button id="customDelete" class="db-btn db-btn--danger" type="button" style="display:none">Radera</button>
-          <button id="customCancel" class="db-btn db-btn--danger section-close-btn" type="button">Stäng</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Pengar ---------- -->
-      <div id="moneyPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Saldo</h3>
-          <div class="money-wrapper">
-            <section class="money-section db-card money-section-balance">
-              <header class="money-header">
-                <h4>Saldo</h4>
-                <p>Justera kontanterna när ditt lager har ändrats.</p>
-              </header>
-              <div class="money-row">
-                <input id="moneyBalanceDaler" type="number" min="0" placeholder="Daler">
-                <input id="moneyBalanceSkilling" type="number" min="0" placeholder="Skilling">
-                <input id="moneyBalanceOrtegar" type="number" min="0" placeholder="Örtegar">
-              </div>
-              <div class="money-button-row">
-                <button id="moneySetBtn" class="db-btn">Spara som totalen</button>
-                <button id="moneyAddBtn" class="db-btn">Addera till totalen</button>
-              </div>
-              <button id="moneyResetBtn" class="db-btn db-btn--danger">Nollställ pengar</button>
-            </section>
-            <p id="moneyStatus" class="money-status"></p>
-            <button id="moneyCancel" class="db-btn db-btn--danger section-close-btn">Stäng</button>
-          </div>
-        </div>
-      </div>
+      <!-- ---------- Inventory popup surfaces removed pending rebuild ---------- -->
+      ${renderInventoryPopupSurfaces()}
 
       <!-- ---------- Popup Manuella justeringar ---------- -->
       <div id="manualAdjustPopup" class="db-modal-overlay popup" aria-hidden="true">
@@ -1391,180 +1422,6 @@ class SharedToolbar extends HTMLElement {
           <div class="manual-adjust-footer">
             <button id="manualAdjustReset" class="db-btn db-btn--danger" type="button">Återställ</button>
             <button id="manualAdjustClose" class="db-btn" type="button">Stäng</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Spara & Gratis ---------- -->
-      <div id="saveFreePopup" class="db-modal-overlay popup" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <p>Du håller på att markera allt i ditt inventarie som gratis och spara dina oanvända pengar som dina enda pengar. Är du säker på att du vill fortsätta?</p>
-          <div class="confirm-row">
-            <button id="saveFreeCancel" class="db-btn db-btn--danger">Nej</button>
-            <button id="saveFreeConfirm" class="db-btn">Ja</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Varning Fördelspengar ---------- -->
-      <div id="advMoneyPopup" class="db-modal-overlay popup" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <p>Du håller på att ändra pengar du fått från en fördel.</p>
-          <div class="confirm-row">
-            <button id="advMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="advMoneyConfirm" class="db-btn">Fortsätt</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Antal ---------- -->
-      <div id="qtyPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Lägg till antal</h3>
-          <p class="popup-desc">Välj flera föremål och lägg till samma antal på alla markerade poster.</p>
-          <input id="qtyInput" type="number" min="1" step="1" placeholder="Antal">
-          <div id="qtyItemList"></div>
-          <button id="qtyApply" class="db-btn">Verkställ</button>
-          <button id="qtyCancel" class="db-btn db-btn--danger section-close-btn">Stäng</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Köp Flera ---------- -->
-      <div id="buyMultiplePopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Köp flera</h3>
-          <p id="buyMultipleItemName" class="popup-item-name" hidden></p>
-          <input id="buyMultipleInput" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
-          <div class="confirm-row">
-            <button id="buyMultipleCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="buyMultipleRemove" class="db-btn">Ta bort</button>
-            <button id="buyMultipleConfirm" class="db-btn">Lägg till</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Live-köp ---------- -->
-      <div id="liveBuyPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Köp i live-läge</h3>
-          <p id="liveBuyItemName" class="popup-item-name" hidden></p>
-          <label class="live-buy-label" for="liveBuyQty">Antal</label>
-          <input id="liveBuyQty" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
-          <fieldset class="live-buy-fieldset">
-            <legend>Pris per enhet</legend>
-            <div class="money-row">
-              <input id="liveBuyPriceDaler" type="number" min="0" step="1" placeholder="Daler" aria-label="Pris i daler">
-              <input id="liveBuyPriceSkilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Pris i skilling">
-              <input id="liveBuyPriceOrtegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Pris i örtegar">
-            </div>
-          </fieldset>
-          <div class="confirm-row">
-            <button id="liveBuyCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="liveBuyConfirm" class="db-btn">Köp</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Pris ---------- -->
-      <div id="pricePopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Multiplicera pris</h3>
-          <input id="priceFactor" type="number" step="0.1" placeholder="Faktor">
-          <div id="priceItemList"></div>
-          <button id="priceApply" class="db-btn">Verkställ</button>
-          <button id="priceCancel" class="db-btn db-btn--danger section-close-btn">Stäng</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Snabb Pris ---------- -->
-      <div id="rowPricePopup" class="db-modal-overlay popup" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Snabb prisjustering</h3>
-          <div class="export-sections">
-            <div class="db-card export-card">
-              <div class="card-title">Multiplicera pris</div>
-              <div class="card-desc">
-                <div class="price-custom-row">
-                  <input id="rowPriceFactor" type="number" min="0" step="0.1" placeholder="Faktor">
-                  <button id="rowPriceApply" class="db-btn">Multiplicera</button>
-                </div>
-                <div id="rowPricePresets" class="char-btn-row three-col">
-                  <button class="db-btn" data-factor="0.5">×0.5</button>
-                  <button class="db-btn" data-factor="1.5">×1.5</button>
-                  <button class="db-btn" data-factor="2">×2</button>
-                </div>
-              </div>
-            </div>
-            <div class="db-card export-card">
-              <div class="card-title">Sätt nytt grundpris</div>
-              <div class="card-desc">
-                <label for="rowBaseDaler">Pris</label>
-                <div class="inline-controls">
-                  <div class="money-row">
-                    <input id="rowBaseDaler" type="number" min="0" placeholder="Daler">
-                    <input id="rowBaseSkilling" type="number" min="0" placeholder="Skilling">
-                    <input id="rowBaseOrtegar" type="number" min="0" placeholder="Örtegar">
-                  </div>
-                </div>
-                <button id="rowBaseApply" class="db-btn">Sätt pris</button>
-              </div>
-            </div>
-          </div>
-          <button id="rowPriceCancel" class="db-btn db-btn--danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Färdmedel ---------- -->
-      <div id="vehiclePopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Flytta till färdmedel</h3>
-          <select id="vehicleSelect"></select>
-          <div id="vehicleItemList"></div>
-          <button id="vehicleApply" class="db-btn">Verkställ</button>
-          <button id="vehicleCancel" class="db-btn db-btn--danger section-close-btn">Stäng</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Ta ut ur färdmedel ---------- -->
-      <div id="vehicleRemovePopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3>Ta ut ur färdmedel</h3>
-          <select id="vehicleRemoveSelect"></select>
-          <div id="vehicleRemoveItemList"></div>
-          <button id="vehicleRemoveApply" class="db-btn">Verkställ</button>
-          <button id="vehicleRemoveCancel" class="db-btn db-btn--danger section-close-btn">Stäng</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Antal för färdmedel ---------- -->
-      <div id="vehicleQtyPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3 id="vehicleQtyTitle">Välj antal</h3>
-          <p id="vehicleQtyMessage"></p>
-          <p id="vehicleQtyHint"></p>
-          <input id="vehicleQtyInput" type="number" min="1" step="1" placeholder="Antal">
-          <div class="confirm-row">
-            <button id="vehicleQtyCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="vehicleQtyConfirm" class="db-btn">Verkställ</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Pengar i färdmedel ---------- -->
-      <div id="vehicleMoneyPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <h3 id="vehicleMoneyTitle">Ta ut pengar</h3>
-          <p id="vehicleMoneyMessage"></p>
-          <p id="vehicleMoneyHint"></p>
-          <div class="vehicle-money-inputs">
-            <input id="vehicleMoneyDalerRemove" type="number" min="0" step="1" placeholder="Daler">
-            <input id="vehicleMoneySkillingRemove" type="number" min="0" step="1" placeholder="Skilling">
-            <input id="vehicleMoneyOrtegarRemove" type="number" min="0" step="1" placeholder="Örtegar">
-          </div>
-          <p id="vehicleMoneyError" class="popup-error"></p>
-          <div class="confirm-row">
-            <button id="vehicleMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="vehicleMoneyConfirm" class="db-btn">Verkställ</button>
           </div>
         </div>
       </div>
@@ -1657,16 +1514,6 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
-      <div id="deleteContainerPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
-        <div class="db-modal popup-inner">
-          <p id="deleteContainerText">Du håller på att ta bort ett föremål som innehåller föremål. Vill du ta bort föremålen i föremålet?</p>
-          <button id="deleteContainerAll" class="db-btn db-btn--danger">Ja, ta bort allt</button>
-          <button id="deleteContainerOnly" class="db-btn">Ta bara bort föremålet</button>
-          <button id="deleteContainerCancel" class="db-btn db-btn--danger">Avbryt</button>
-        </div>
-      </div>
-
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
       <div id="alcPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
         <div class="db-modal popup-inner">
@@ -1731,7 +1578,7 @@ class SharedToolbar extends HTMLElement {
       <div id="characterToolsPopup" class="db-modal-overlay popup" aria-hidden="true">
         <div class="db-modal popup-inner character-tools-ui">
           <h3>Rollpersonshantering</h3>
-          <div id="characterToolsOptions"></div>
+          <div id="characterToolsOptions" class="tools-popup-content"></div>
           <button id="characterToolsCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
@@ -1996,7 +1843,7 @@ class SharedToolbar extends HTMLElement {
     const manager = window.popupManager;
     if (!manager) return;
     manager.observeRoot?.(this.shadowRoot);
-    const registrations = Object.entries(POPUP_TYPE_BY_ID).map(([id, type]) => ({ id, type }));
+    const registrations = Object.entries(getPopupMetaById()).map(([id, meta]) => ({ id, ...meta }));
     manager.registerMany?.(registrations);
   }
 
@@ -2495,6 +2342,15 @@ class SharedToolbar extends HTMLElement {
           <div class="db-modal__footer"></div>
         </div>`;
         document.body.appendChild(overlay);
+        const popupMeta = {
+          type: 'dialog',
+          size: 'sm',
+          layoutFamily: 'modal',
+          mobileMode: 'sheet',
+          touchProfile: 'sheet-down'
+        };
+        window.popupUi?.normalizeModal?.(overlay, popupMeta);
+        window.popupManager?.register?.(overlay, popupMeta);
       }
 
       const bodyEl = overlay.querySelector('.db-modal__body');

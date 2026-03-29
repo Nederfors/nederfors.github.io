@@ -31,6 +31,8 @@
     driveStoragePopup: 'driveStorageCancel',
     dupCharPopup: 'dupCharCancel',
     entrySortPopup: 'entrySortCancel',
+    inventoryEconomyPopup: 'inventoryEconomyClose',
+    inventoryItemsPopup: 'inventoryItemsClose',
     liveBuyPopup: 'liveBuyCancel',
     manualAdjustPopup: 'manualAdjustClose',
     masterPopup: 'masterCancel',
@@ -110,6 +112,22 @@
         ${copyHtml}
       </label>
     `.trim();
+  }
+
+  function applyPopupMeta(overlay, modal, options = {}) {
+    if (!(overlay instanceof HTMLElement)) return;
+    const metadata = {
+      popupType: String(options.type || overlay.dataset.popupType || '').trim().toLowerCase(),
+      popupSize: String(options.size || overlay.dataset.popupSize || '').trim().toLowerCase(),
+      popupLayout: String(options.layoutFamily || overlay.dataset.popupLayout || '').trim().toLowerCase(),
+      popupMobileMode: String(options.mobileMode || overlay.dataset.popupMobileMode || '').trim().toLowerCase(),
+      touchProfile: String(options.touchProfile || overlay.dataset.touchProfile || '').trim().toLowerCase()
+    };
+    Object.entries(metadata).forEach(([key, value]) => {
+      if (!value) return;
+      overlay.dataset[key] = value;
+      if (modal instanceof HTMLElement) modal.dataset[key] = value;
+    });
   }
 
   function setDaubSwitchState(el, checked) {
@@ -269,10 +287,10 @@
     button.setAttribute('aria-label', 'Stang');
     button.setAttribute('title', 'Stang');
     button.innerHTML = iconMarkup();
-    button.style.width = 'auto';
-    button.style.minWidth = '2.25rem';
-    button.style.minHeight = '2.25rem';
-    button.style.padding = '0.25rem';
+    button.style.width = 'var(--popup-icon-button-size, 2.5rem)';
+    button.style.minWidth = 'var(--popup-icon-button-size, 2.5rem)';
+    button.style.minHeight = 'var(--popup-icon-button-size, 2.5rem)';
+    button.style.padding = '0';
     button.style.display = 'inline-grid';
     button.style.placeItems = 'center';
     button.style.background = 'transparent';
@@ -311,7 +329,10 @@
     footer.style.flexWrap = 'wrap';
     footer.style.justifyContent = 'flex-end';
     footer.style.gap = '0.75rem';
-    footer.style.padding = '0 1rem 1rem';
+    footer.style.paddingTop = '0';
+    footer.style.paddingRight = '1rem';
+    footer.style.paddingBottom = '1rem';
+    footer.style.paddingLeft = '1rem';
     footer.style.borderTop = '1px solid rgba(var(--db-color-border-rgb, 74, 54, 40), 0.55)';
     footer.style.alignItems = 'center';
     Array.from(footer.children).forEach(child => {
@@ -344,14 +365,20 @@
       header.style.alignItems = 'flex-start';
       header.style.justifyContent = 'space-between';
       header.style.gap = '1rem';
-      header.style.padding = '1rem 1rem 0.85rem';
+      header.style.paddingTop = '1rem';
+      header.style.paddingRight = '1rem';
+      header.style.paddingBottom = '0.85rem';
+      header.style.paddingLeft = '1rem';
       header.style.borderBottom = '1px solid rgba(var(--db-color-border-rgb, 74, 54, 40), 0.55)';
     }
     if (body instanceof HTMLElement) {
       body.style.display = 'flex';
       body.style.flexDirection = 'column';
       body.style.gap = '0.75rem';
-      body.style.padding = '1rem';
+      body.style.paddingTop = '1rem';
+      body.style.paddingRight = '1rem';
+      body.style.paddingBottom = '1rem';
+      body.style.paddingLeft = '1rem';
       body.style.minHeight = '0';
       body.style.overflow = 'auto';
     }
@@ -419,6 +446,7 @@
     if (!modal) return null;
 
     modal.classList.add('db-modal', 'popup-shell--daub');
+    applyPopupMeta(overlay, modal, options);
     const header = ensureHeader(overlay, modal, options);
     ensureCloseButton(overlay, header);
     ensureFooter(modal);

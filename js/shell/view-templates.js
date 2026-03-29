@@ -103,6 +103,12 @@ export const VIEW_TEMPLATES = Object.freeze({
     <div class="db-card__header panel-header">
       <h2 id="charName" class="db-card__title" style="margin:0;"></h2>
       <div class="header-actions">
+        <button id="manageItemsBtn" class="db-btn" type="button" title="Hantera föremål">
+          Hantera föremål
+        </button>
+        <button id="manageEconomyBtn" class="db-btn" type="button" title="Hantera ekonomi">
+          Hantera ekonomi
+        </button>
         <button id="clearInvBtn" class="db-btn db-btn--icon db-btn--danger" type="button" title="Töm inventarie" aria-label="Töm inventarie">
           ${icon('broom')}
         </button>
@@ -110,7 +116,7 @@ export const VIEW_TEMPLATES = Object.freeze({
     </div>
 
     <div class="db-card__body inventory-content">
-      <ul id="invFormal" class="db-list card-list entry-card-list formal-card-list" data-entry-page="inventory"></ul>
+      <div id="invFormal" class="formal-dashboard-wrap"></div>
       <ul id="invList" class="db-list db-accordion card-list entry-card-list" data-entry-page="inventory"></ul>
     </div>
   </div>

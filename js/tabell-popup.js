@@ -47,7 +47,15 @@
       </div>
     `;
     document.body.appendChild(wrap);
-    window.popupUi?.normalizeModal?.(wrap);
+    const popupMeta = {
+      type: 'picker',
+      size: 'table',
+      layoutFamily: 'table',
+      mobileMode: 'center',
+      touchProfile: 'none'
+    };
+    window.popupUi?.normalizeModal?.(wrap, popupMeta);
+    window.popupManager?.register?.(wrap, popupMeta);
     window.registerOverlayElement?.(wrap);
     wrap.querySelector('#tabellClose').addEventListener('click', close);
     wrap.addEventListener('click', e => {

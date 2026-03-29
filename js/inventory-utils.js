@@ -23,8 +23,6 @@
   const OBASE = window.OBASE;
   const moneyToO = window.moneyToO;
   const oToMoney = window.oToMoney;
-  const INV_TOOLS_KEY = 'invToolsOpen';
-  const INV_INFO_KEY  = 'invInfoOpen';
   const INV_CAT_STATE_PREFIX = 'invCatState:';
   let cachedCatState = { key: '', state: {} };
   const WEAPON_BASE_TYPES = Array.isArray(window.WEAPON_BASE_TYPES)
@@ -69,10 +67,10 @@
   const getEl = (id) => document.getElementById(id) || $T(id);
   function createPopupSession(pop, options = {}) {
     const target = pop || null;
-    const type = options.type || 'form';
-    const touchProfile = options.touchProfile
-      || window.daubMotion?.defaultTouchProfile?.(type)
-      || undefined;
+    const type = options.type || target?.dataset?.popupType || 'form';
+    const touchProfile = Object.prototype.hasOwnProperty.call(options, 'touchProfile')
+      ? options.touchProfile
+      : (target?.dataset?.touchProfile || window.daubMotion?.defaultTouchProfile?.(type) || undefined);
     const onClose = typeof options.onClose === 'function' ? options.onClose : () => {};
     const popupManager = window.popupManager;
     let settled = false;
@@ -107,43 +105,57 @@
       finalize
     };
   }
-  const INVENTORY_HUB_DEFS = {
-    items: {
+  const inventoryPopupRegistry = window.inventoryPopupRegistry || null;
+  const createInventoryHubDefinition = (tabGroup, fallback) => {
+    const manager = inventoryPopupRegistry?.getManagerByTabGroup?.(tabGroup) || null;
+    const registryViews = Array.isArray(inventoryPopupRegistry?.listByTabGroup?.(tabGroup))
+      ? inventoryPopupRegistry.listByTabGroup(tabGroup)
+      : [];
+    const views = fallback.views.map(view => {
+      const registryMatch = registryViews.find(entry => entry.id === view.id || entry.tabId === view.tabId);
+      return registryMatch ? { ...view, ...registryMatch } : { ...view };
+    });
+    return Object.freeze({
+      popupId: manager?.id || fallback.popupId,
+      optionsId: manager?.optionsId || fallback.optionsId,
+      closeId: manager?.closeId || fallback.closeId,
+      launcherId: fallback.launcherId,
+      saveFreeBtnId: fallback.saveFreeBtnId || '',
+      massActionsId: fallback.massActionsId || '',
+      defaultTab: fallback.defaultTab,
+      tabs: Object.freeze(views.map(view => view.tabId)),
+      titlesByTabId: Object.freeze(Object.fromEntries(views.map(view => [view.tabId, view.title]))),
+      sectionTabIds: Object.freeze(Object.fromEntries(views.map(view => [view.id, view.tabId])))
+    });
+  };
+  const INVENTORY_HUB_DEFS = Object.freeze({
+    items: createInventoryHubDefinition('items', {
       popupId: 'inventoryItemsPopup',
+      optionsId: 'inventoryItemsOptions',
       closeId: 'inventoryItemsClose',
+      launcherId: 'manageItemsBtn',
       defaultTab: 'custom-item',
-      tabs: ['custom-item', 'bulk-qty', 'vehicle-load', 'vehicle-unload'],
-      sectionTabIds: {
-        customPopup: 'custom-item',
-        qtyPopup: 'bulk-qty',
-        vehiclePopup: 'vehicle-load',
-        vehicleRemovePopup: 'vehicle-unload'
-      },
-      stackIds: {
-        'custom-item': 'inventoryItemsCustomItemStack',
-        'bulk-qty': 'inventoryItemsBulkQtyStack',
-        'vehicle-load': 'inventoryItemsVehicleLoadStack',
-        'vehicle-unload': 'inventoryItemsVehicleUnloadStack'
-      },
-      emptyIds: ['inventoryItemsVehicleLoadEmpty', 'inventoryItemsVehicleUnloadEmpty']
-    },
-    economy: {
+      views: [
+        { id: 'customPopup', tabId: 'custom-item', title: 'Nytt föremål' },
+        { id: 'qtyPopup', tabId: 'bulk-qty', title: 'Mängdköp' },
+        { id: 'vehiclePopup', tabId: 'vehicle-load', title: 'Lasta i färdmedel' },
+        { id: 'vehicleRemovePopup', tabId: 'vehicle-unload', title: 'Lasta ur färdmedel' }
+      ]
+    }),
+    economy: createInventoryHubDefinition('economy', {
       popupId: 'inventoryEconomyPopup',
+      optionsId: 'inventoryEconomyOptions',
       closeId: 'inventoryEconomyClose',
+      launcherId: 'manageEconomyBtn',
       saveFreeBtnId: 'inventoryEconomySaveFreeBtn',
       massActionsId: 'inventoryEconomyMassActions',
       defaultTab: 'money',
-      tabs: ['money', 'bulk-price'],
-      sectionTabIds: {
-        moneyPopup: 'money',
-        pricePopup: 'bulk-price'
-      },
-      stackIds: {
-        money: 'inventoryEconomyMoneyStack',
-        'bulk-price': 'inventoryEconomyPriceStack'
-      }
-    }
-  };
+      views: [
+        { id: 'moneyPopup', tabId: 'money', title: 'Saldo' },
+        { id: 'pricePopup', tabId: 'bulk-price', title: 'Multiplicera pris' }
+      ]
+    })
+  });
   const INVENTORY_HUB_SWIPE_KEYS = Object.freeze({
     items: 'inventory-items-tabs',
     economy: 'inventory-economy-tabs'
@@ -171,6 +183,19 @@
   const INVENTORY_HUB_SECTION_IDS = Array.from(new Set(
     Object.values(INVENTORY_HUB_DEFS).flatMap(def => Object.keys(def.sectionTabIds))
   ));
+  const requireInventoryPopupSurface = (viewKey, ids) => {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const requiredIds = Array.isArray(ids) ? ids : [ids];
+    const maybeView = requiredIds.find(id => id && INVENTORY_HUB_SECTION_IDS.includes(id));
+    if (maybeView) {
+      const hubKey = Object.entries(INVENTORY_HUB_DEFS).find(([, def]) => Object.prototype.hasOwnProperty.call(def.sectionTabIds, maybeView))?.[0] || '';
+      if (hubKey) ensureInventoryHubMounted(hubKey);
+    }
+    const hasAllIds = requiredIds.every(id => !id || root.getElementById(id));
+    if (hasAllIds) return root;
+    return null;
+  };
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const LEVEL_BY_IDX = ['', 'Novis', 'Ges\u00e4ll', 'M\u00e4stare'];
   const PRICE_RULE_LEVEL_SPECS = [
@@ -601,6 +626,12 @@
     inv.forEach(row => normalizeRowQualities(row));
   };
 
+  function getInventorySectionIdForTab(hubKey, tabId) {
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return '';
+    return Object.entries(def.sectionTabIds).find(([, mappedTabId]) => mappedTabId === tabId)?.[0] || '';
+  }
+
   function getInventoryHubKeyForTab(tabId) {
     return Object.entries(INVENTORY_HUB_DEFS).find(([, def]) => def.tabs.includes(tabId))?.[0] || '';
   }
@@ -616,12 +647,10 @@
     const root = getToolbarRoot();
     if (!root) return;
     [
-      'inventoryItemsCustomItemStack',
-      'inventoryItemsBulkQtyStack',
-      'inventoryItemsVehicleLoadStack',
-      'inventoryItemsVehicleUnloadStack',
-      'inventoryEconomyMoneyStack',
-      'inventoryEconomyPriceStack',
+      'qtyItemList',
+      'priceItemList',
+      'vehicleItemList',
+      'vehicleRemoveItemList',
       'qualOptions',
       'choiceOpts'
     ].forEach(id => {
@@ -637,8 +666,8 @@
     if (!root) return false;
     const def = INVENTORY_HUB_DEFS[hubKey];
     if (!def) return false;
-    const panelsHost = root.getElementById(hubKey === 'items' ? 'inventoryItemsPopup' : 'inventoryEconomyPopup')
-      ?.querySelector('.inventory-hub-panels');
+    const hub = root.getElementById(def.popupId);
+    const panelsHost = hub?.querySelector('.tools-panels');
     if (!(panelsHost instanceof HTMLElement) || !window.daubMotion) return false;
     if (!window.daubMotion.isTouchUi?.()) {
       panelsHost.removeAttribute('data-swipe-tabs');
@@ -647,7 +676,7 @@
     }
     window.daubMotion.bindSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey], {
       host: panelsHost,
-      selector: '.inventory-hub-panel',
+      selector: '.tools-panel',
       initialIndex: Math.max(0, def.tabs.indexOf(activeTab)),
       onIndexChange(index) {
         const nextTab = def.tabs[index] || def.defaultTab;
@@ -666,15 +695,7 @@
     if (!hub) return;
     const wanted = def.tabs.includes(tabId) ? tabId : def.defaultTab;
     hub.dataset.activeTab = wanted;
-    hub.querySelectorAll('.inventory-hub-tab').forEach(btn => {
-      const active = btn.dataset.tab === wanted;
-      btn.classList.toggle('active', active);
-      btn.setAttribute('aria-selected', active ? 'true' : 'false');
-      btn.setAttribute('tabindex', active ? '0' : '-1');
-    });
-    hub.querySelectorAll('.inventory-hub-panel').forEach(panel => {
-      panel.classList.toggle('active', panel.dataset.tabPanel === wanted);
-    });
+    hub.__hubShell?.setActiveTab?.(wanted);
     if (options.syncTouch !== false) {
       window.daubMotion?.slideTabsTo?.(
         INVENTORY_HUB_SWIPE_KEYS[hubKey],
@@ -686,7 +707,7 @@
 
   function clearInventoryHubHighlight(root) {
     if (!root) return;
-    root.querySelectorAll('.inventory-hub-popup [data-hub-active="true"]').forEach(el => {
+    root.querySelectorAll('.inventory-tools-popup [data-hub-active="true"]').forEach(el => {
       el.removeAttribute('data-hub-active');
       el.classList.remove('is-active');
       if (el.__hubHighlightTimer) {
@@ -732,44 +753,322 @@
     });
   }
 
+  function renderInventoryHubViewContent(viewId) {
+    if (viewId === 'customPopup') {
+      return `
+        <section id="customPopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title" id="customTitle">Nytt föremål</div>
+                <p class="tools-intro">Skapa eller redigera hemmagjorda föremål direkt i samma shell som Rollpersonshantering.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Namn</span>
+                    <input id="customName" class="db-input" type="text" autocomplete="off" placeholder="Föremålets namn">
+                  </label>
+                  <div class="tools-grid two-col">
+                    <label class="tools-field">
+                      <span class="tools-label">Typ</span>
+                      <select id="customType" class="db-select__input"></select>
+                    </label>
+                    <div class="tools-field">
+                      <span class="tools-label">Lägg till vald typ</span>
+                      <button id="customTypeAdd" class="db-btn db-btn--secondary tools-inline-btn" type="button">Lägg till typ</button>
+                    </div>
+                  </div>
+                  <div id="customTypeTags" class="inventory-manager-chip-row"></div>
+                  <div class="tools-grid two-col">
+                    <label class="tools-field">
+                      <span class="tools-label">Vikt</span>
+                      <input id="customWeight" class="db-input" type="number" min="0" step="0.1" placeholder="0">
+                    </label>
+                    <div id="customArtifactEffect" class="tools-field" style="display:none;">
+                      <span class="tools-label">Artefakteffekt</span>
+                      <select class="db-select__input">
+                        <option value="corruption">Permanent korruption</option>
+                        <option value="xp">Erfarenhet</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="customWeaponFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Skada</span>
+                      <input id="customDamage" class="db-input" type="text" placeholder="1T6">
+                    </label>
+                  </div>
+                  <div id="customVehicleFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Bärkapacitet</span>
+                      <input id="customCapacity" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                  </div>
+                  <div id="customArmorFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Skydd</span>
+                      <input id="customProtection" class="db-input" type="text" placeholder="1D4">
+                    </label>
+                  </div>
+                  <label class="tools-field">
+                    <span class="tools-label">Begränsning</span>
+                    <input id="customRestriction" class="db-input" type="number" step="1" placeholder="0">
+                  </label>
+                  <div id="customLevelFields" class="tools-sections" style="display:none;">
+                    <div class="tools-grid two-col">
+                      <label class="tools-field">
+                        <span class="tools-label">Nivåläge</span>
+                        <select id="customLevelMode" class="db-select__input">
+                          <option value="novis">Novis</option>
+                          <option value="gesall">Gesäll</option>
+                          <option value="mastare">Mästare</option>
+                          <option value="triple">Alla nivåer</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="tools-field">
+                      <span class="tools-label">Novis</span>
+                      <textarea id="customLevelNovis" class="db-input auto-resize" placeholder="Beskrivning för Novis"></textarea>
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Gesäll</span>
+                      <textarea id="customLevelGesall" class="db-input auto-resize" placeholder="Beskrivning för Gesäll"></textarea>
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Mästare</span>
+                      <textarea id="customLevelMastare" class="db-input auto-resize" placeholder="Beskrivning för Mästare"></textarea>
+                    </label>
+                  </div>
+                  <div id="customPowerFields" class="tools-sections" style="display:none;">
+                    <div class="tools-inline-row">
+                      <span class="tools-label">Krafter</span>
+                      <button id="customPowerAdd" class="db-btn db-btn--secondary tools-inline-btn" type="button">Lägg till kraft</button>
+                    </div>
+                    <div id="customPowerList" class="tools-sections"></div>
+                  </div>
+                  <div id="customBoundFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Binder till</span>
+                      <select id="customBoundType" class="db-select__input">
+                        <option value="">Välj</option>
+                        <option value="kraft">Kraft</option>
+                        <option value="ritual">Ritual</option>
+                      </select>
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Rubrik</span>
+                      <input id="customBoundLabel" class="db-input" type="text" autocomplete="off" placeholder="Formel eller ritual">
+                    </label>
+                  </div>
+                  <div class="tools-grid three-col inventory-manager-money-grid">
+                    <label class="tools-field">
+                      <span class="tools-label">Daler</span>
+                      <input id="customDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Skilling</span>
+                      <input id="customSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Örtegar</span>
+                      <input id="customOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                  </div>
+                  <label class="tools-field">
+                    <span class="tools-label">Beskrivning</span>
+                    <textarea id="customDesc" class="db-input auto-resize" placeholder="Beskriv föremålet"></textarea>
+                  </label>
+                </div>
+                <div class="confirm-row">
+                  <button id="customDelete" class="db-btn db-btn--danger" type="button">Ta bort</button>
+                  <button id="customCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="customAdd" class="db-btn" type="button">Spara</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'qtyPopup') {
+      return `
+        <section id="qtyPopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Mängdköp</div>
+                <p class="tools-intro">Lägg till fler exemplar av valda poster i huvudinventarie eller färdmedel.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Antal</span>
+                    <input id="qtyInput" class="db-input" type="number" min="1" step="1" placeholder="1">
+                  </label>
+                  <div id="qtyItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="qtyCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="qtyApply" class="db-btn" type="button">Verkställ</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'vehiclePopup') {
+      return `
+        <section id="vehiclePopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Lasta i färdmedel</div>
+                <p class="tools-intro">Välj färdmedel och flytta markerade poster eller pengar in i lastutrymmet.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Färdmedel</span>
+                    <select id="vehicleSelect" class="db-select__input"></select>
+                  </label>
+                  <div id="vehicleItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="vehicleCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="vehicleApply" class="db-btn" type="button">Lasta</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'vehicleRemovePopup') {
+      return `
+        <section id="vehicleRemovePopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Lasta ur färdmedel</div>
+                <p class="tools-intro">Ta ut markerade föremål eller pengar från valt färdmedel och lägg tillbaka dem i huvudinventariet.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Färdmedel</span>
+                    <select id="vehicleRemoveSelect" class="db-select__input"></select>
+                  </label>
+                  <div id="vehicleRemoveItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="vehicleRemoveCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="vehicleRemoveApply" class="db-btn" type="button">Lasta ur</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'moneyPopup') {
+      return `
+        <section id="moneyPopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Saldo</div>
+                <p class="tools-intro">Sätt eller addera pengar och kör gemensamma ekonomiåtgärder på samma popup-shell.</p>
+                <p id="moneyStatus" class="tools-meta"></p>
+                <div class="tools-grid three-col inventory-manager-money-grid">
+                  <label class="tools-field">
+                    <span class="tools-label">Daler</span>
+                    <input id="moneyBalanceDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Skilling</span>
+                    <input id="moneyBalanceSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Örtegar</span>
+                    <input id="moneyBalanceOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                </div>
+                <div class="confirm-row">
+                  <button id="moneySetBtn" class="db-btn db-btn--secondary" type="button">Sätt saldo</button>
+                  <button id="moneyAddBtn" class="db-btn" type="button">Addera</button>
+                </div>
+                <div id="inventoryEconomyMassActions" class="tools-grid two-col inventory-manager-actions">
+                  <button id="inventoryEconomySaveFreeBtn" class="db-btn db-btn--secondary" type="button">Spara och gratismarkera</button>
+                  <button id="moneyResetBtn" class="db-btn db-btn--danger" type="button">Nollställ pengar</button>
+                </div>
+                <div class="confirm-row">
+                  <button id="moneyCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'pricePopup') {
+      return `
+        <section id="pricePopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Multiplicera pris</div>
+                <p class="tools-intro">Markera en eller flera rader och applicera samma prisfaktor i ett steg.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Prisfaktor</span>
+                    <input id="priceFactor" class="db-input" type="number" min="0" step="0.01" placeholder="1.25">
+                  </label>
+                  <div id="priceItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="priceCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="priceApply" class="db-btn" type="button">Verkställ</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    return '';
+  }
+
   function ensureInventoryHubMounted(hubKey) {
     const root = getToolbarRoot();
     if (!root) return null;
     const def = INVENTORY_HUB_DEFS[hubKey];
     if (!def) return null;
     const hub = root.getElementById(def.popupId);
-    if (!hub) return null;
+    const optionsRoot = root.getElementById(def.optionsId);
+    if (!hub || !optionsRoot) return null;
+    if (hub.__hubShell) return hub;
 
-    Object.entries(def.sectionTabIds).forEach(([sectionId, tabId]) => {
-      const stackId = def.stackIds[tabId];
-      const stack = root.getElementById(stackId);
-      if (!stack) return;
-      const section = root.getElementById(sectionId);
-      if (!section || section.parentElement === stack) return;
-      section.classList.add('inventory-hub-section');
-      section.setAttribute('data-hub-tab', tabId);
-      if (hubKey === 'economy' && tabId === 'money') {
-        const massActions = def.massActionsId ? root.getElementById(def.massActionsId) : null;
-        if (massActions && massActions.parentElement === stack) {
-          stack.insertBefore(section, massActions);
-          return;
-        }
+    const shell = window.toolsPopupShell?.createShell?.({
+      tabs: def.tabs.map(tabId => {
+        const sectionId = getInventorySectionIdForTab(hubKey, tabId);
+        return {
+          id: tabId,
+          label: def.titlesByTabId[tabId] || tabId,
+          build(panel) {
+            panel.innerHTML = renderInventoryHubViewContent(sectionId);
+            const section = panel.querySelector(`#${sectionId}`);
+            if (section) section.setAttribute('data-hub-tab', tabId);
+          }
+        };
+      }),
+      ariaLabel: hubKey === 'items' ? 'Hantera föremål' : 'Hantera ekonomi',
+      idPrefix: `${hubKey}Manager`,
+      onTabChange(nextTab) {
+        openInventoryHubTab(nextTab);
       }
-      stack.appendChild(section);
     });
+    if (!shell?.root) return null;
 
-    if (hub.dataset.bound === '1') return hub;
-
-    const closeBtn = root.getElementById(def.closeId);
-    const saveFreeBtn = def.saveFreeBtnId ? root.getElementById(def.saveFreeBtnId) : null;
-    closeBtn?.addEventListener('click', () => closeInventoryHub(hubKey));
-    saveFreeBtn?.addEventListener('click', () => openSaveFreePopup());
-    hub.querySelectorAll('.inventory-hub-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        openInventoryHubTab(btn.dataset.tab || 'custom-item');
-      });
-    });
-
+    optionsRoot.innerHTML = '';
+    optionsRoot.appendChild(shell.root);
+    window.DAUB?.init?.(optionsRoot);
+    window.autoResizeAll?.(optionsRoot);
+    hub.__hubShell = shell;
+    hub.classList.add('inventory-tools-popup');
     hub.dataset.bound = '1';
     return hub;
   }
@@ -782,14 +1081,8 @@
       const entry = getEntry(row?.id || row?.name);
       return (entry?.taggar?.typ || []).includes('Färdmedel');
     });
-    (INVENTORY_HUB_DEFS.items.emptyIds || []).forEach(id => {
-      const emptyState = root.getElementById(id);
-      if (emptyState) emptyState.hidden = hasVehicle;
-    });
-    const vehicleLoadSection = root.getElementById('vehiclePopup');
-    const vehicleUnloadSection = root.getElementById('vehicleRemovePopup');
-    if (vehicleLoadSection) vehicleLoadSection.hidden = !hasVehicle;
-    if (vehicleUnloadSection) vehicleUnloadSection.hidden = !hasVehicle;
+    const itemsHub = root.getElementById(INVENTORY_HUB_DEFS.items.popupId);
+    if (itemsHub) itemsHub.dataset.hasVehicles = hasVehicle ? 'true' : 'false';
   }
 
   function closeInventoryHub(target = 'all', options = {}) {
@@ -817,8 +1110,8 @@
       if (popup.__hubSession) {
         popup.__hubClosingInternal = true;
         const session = popup.__hubSession;
-        popup.__hubSession = null;
         session.close('programmatic');
+        popup.__hubSession = null;
         return;
       }
       if (window.popupManager?.close && popup.id) {
@@ -833,7 +1126,9 @@
 
   function openInventoryHub(target = 'items', options = {}) {
     const root = getToolbarRoot();
+    if (!root) return null;
     const focusSection = options && typeof options === 'object' ? options.focusSection : '';
+    const activateView = !options || options.activateView !== false;
     let hubKey = Object.prototype.hasOwnProperty.call(INVENTORY_HUB_DEFS, target) ? target : '';
     let resolvedTab = getInventoryHubKeyForTab(target) ? target : '';
     if (!resolvedTab && focusSection) {
@@ -854,31 +1149,35 @@
     syncInventoryHubState();
     syncInventoryHubSwipeTabs(hubKey, resolvedTab);
     setInventoryHubTab(hubKey, resolvedTab, { syncTouch: false });
-    hub.__hubSession = createPopupSession(hub, {
-      type: 'hub',
-      onClose: () => {
-        if (hub.__hubClosingInternal) {
+    if (!hub.__hubSession) {
+      hub.__hubSession = createPopupSession(hub, {
+        type: 'hub',
+        onClose: () => {
+          const isInternalClose = hub.__hubClosingInternal === true;
           hub.__hubClosingInternal = false;
-          return;
+          hub.__hubSession = null;
+          if (isInternalClose) return;
+          Object.keys(def.sectionTabIds).forEach(sectionId => {
+            const section = root.getElementById(sectionId);
+            if (!section || typeof section.__hubCleanup !== 'function') return;
+            const cleanup = section.__hubCleanup;
+            section.__hubCleanup = null;
+            try { cleanup({ viaHubClose: true }); } catch {}
+          });
+          clearInventoryHubHighlight(root);
+          window.updateScrollLock?.();
         }
-        Object.keys(def.sectionTabIds).forEach(sectionId => {
-          const section = root.getElementById(sectionId);
-          if (!section || typeof section.__hubCleanup !== 'function') return;
-          const cleanup = section.__hubCleanup;
-          section.__hubCleanup = null;
-          try { cleanup({ viaHubClose: true }); } catch {}
-        });
-        hub.__hubSession = null;
-        clearInventoryHubHighlight(root);
-        window.updateScrollLock?.();
-      }
-    });
-    const inner = hub.querySelector('.popup-inner.inventory-hub-ui');
+      });
+    }
+    const inner = hub.querySelector(':scope > .popup-inner');
     if (inner) inner.scrollTop = 0;
     syncInventoryMotionTargets();
     window.updateScrollLock?.();
     if (focusSection) {
       requestAnimationFrame(() => highlightInventoryHubSection(focusSection));
+    }
+    if (activateView) {
+      openInventoryHubTab(resolvedTab);
     }
     return hub;
   }
@@ -2613,10 +2912,13 @@
     }
     if (typeof callback !== 'function') callback = () => {};
 
-    const root = getToolbarRoot();
-    if (!root) return;
+    const root = requireInventoryPopupSurface('custom-item', 'customPopup');
+    if (!root) {
+      callback(null);
+      return;
+    }
     cleanupInventoryHubSections('customPopup');
-    const hub = openInventoryItemsHub('custom-item', { focusSection: 'custom-item' });
+    const hub = openInventoryItemsHub('custom-item', { focusSection: 'custom-item', activateView: false });
     const section = root.getElementById('customPopup');
     const popInner = section ? section.querySelector('.popup-inner') : null;
     const title  = root.getElementById('customTitle');
@@ -2767,8 +3069,9 @@
     };
 
     const toggleLevelField = (el, show) => {
-      if (!el) return;
-      el.style.display = show ? '' : 'none';
+      const target = el?.closest?.('.tools-field') || el;
+      if (!target) return;
+      target.style.display = show ? '' : 'none';
     };
 
     const applyLevelMode = () => {
@@ -3148,10 +3451,10 @@
   }
 
   function openMoneyPopup() {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('money', 'moneyPopup');
     if (!root) return;
     cleanupInventoryHubSections('moneyPopup');
-    openInventoryEconomyHub('money', { focusSection: 'money' });
+    openInventoryEconomyHub('money', { focusSection: 'money', activateView: false });
     const section = root.getElementById('moneyPopup');
     const balDIn = root.getElementById('moneyBalanceDaler');
     const balSIn = root.getElementById('moneyBalanceSkilling');
@@ -3363,10 +3666,10 @@
   }
 
   function openQtyPopup() {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('bulk-qty', 'qtyPopup');
     if (!root) return;
     cleanupInventoryHubSections('qtyPopup');
-    openInventoryItemsHub('bulk-qty', { focusSection: 'bulk-qty' });
+    openInventoryItemsHub('bulk-qty', { focusSection: 'bulk-qty', activateView: false });
     const section = root.getElementById('qtyPopup');
     const inEl  = root.getElementById('qtyInput');
     const list  = root.getElementById('qtyItemList');
@@ -3527,8 +3830,8 @@
   }
 
   function openLiveBuyPopup(entry, existingRow) {
-    const root = getToolbarRoot();
-    if (!root) return null;
+    const root = requireInventoryPopupSurface('live-buy', 'liveBuyPopup');
+    if (!root) return Promise.resolve(null);
     const pop    = root.getElementById('liveBuyPopup');
     const inner  = pop ? pop.querySelector('.popup-inner') : null;
     const nameEl = root.getElementById('liveBuyItemName');
@@ -3822,8 +4125,11 @@
       return;
     }
 
-    const root = getToolbarRoot();
-    if (!root) return;
+    const root = requireInventoryPopupSurface('buy-multiple', 'buyMultiplePopup');
+    if (!root) {
+      if (typeof cancelCb === 'function') cancelCb();
+      return;
+    }
     const pop       = root.getElementById('buyMultiplePopup');
     const inner     = pop ? pop.querySelector('.popup-inner') : null;
     const labelEl   = root.getElementById('buyMultipleItemName');
@@ -3939,10 +4245,10 @@
   }
 
   function openPricePopup() {
-    const root    = getToolbarRoot();
+    const root    = requireInventoryPopupSurface('bulk-price', 'pricePopup');
     if (!root) return;
     cleanupInventoryHubSections('pricePopup');
-    openInventoryEconomyHub('bulk-price', { focusSection: 'bulk-price' });
+    openInventoryEconomyHub('bulk-price', { focusSection: 'bulk-price', activateView: false });
     const section = root.getElementById('pricePopup');
     const inEl   = root.getElementById('priceFactor');
     const list   = root.getElementById('priceItemList');
@@ -4029,7 +4335,7 @@
   }
 
   function openRowPricePopup(row) {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('row-price', 'rowPricePopup');
     if (!root) return;
     const pop    = root.getElementById('rowPricePopup');
     const cancel = root.getElementById('rowPriceCancel');
@@ -4149,8 +4455,8 @@
     const max = Number.isFinite(maxRaw) && maxRaw > 0 ? Math.floor(maxRaw) : 0;
     const fallback = max > 0 ? max : 1;
     if (max <= 1) return Promise.resolve(fallback);
-    const root = getToolbarRoot();
-    if (!root) return Promise.resolve(fallback);
+    const root = requireInventoryPopupSurface('vehicle-qty', 'vehicleQtyPopup');
+    if (!root) return Promise.resolve(null);
     const pop     = root.getElementById('vehicleQtyPopup');
     const input   = root.getElementById('vehicleQtyInput');
     const confirm = root.getElementById('vehicleQtyConfirm');
@@ -4247,7 +4553,7 @@
     const maxNormalized = storeHelper.normalizeMoney(maxMoney || {});
     const maxTotalO = moneyToO(maxNormalized);
     if (!maxTotalO) return Promise.resolve(null);
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('vehicle-money', 'vehicleMoneyPopup');
     if (!root) return Promise.resolve(null);
     const pop      = root.getElementById('vehicleMoneyPopup');
     const title    = root.getElementById('vehicleMoneyTitle');
@@ -4457,10 +4763,10 @@
   }
 
   function openVehiclePopup(preselectValue, precheckedPaths) {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('vehicle-load', 'vehiclePopup');
     if (!root) return;
     cleanupInventoryHubSections('vehiclePopup');
-    openInventoryItemsHub('vehicle-load', { focusSection: 'vehicle-load' });
+    openInventoryItemsHub('vehicle-load', { focusSection: 'vehicle-load', activateView: false });
     const section = root.getElementById('vehiclePopup');
     const sel    = root.getElementById('vehicleSelect');
     const list   = root.getElementById('vehicleItemList');
@@ -4470,7 +4776,29 @@
     const inv = storeHelper.getInventory(store);
     const charCarry = getCharacterCarrySummary(inv);
     const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
-    if (!vehicles.length) return;
+    if (!vehicles.length) {
+      const cleanupEmptyState = () => {
+        cancel.onclick = null;
+        sel.disabled = false;
+        apply.disabled = false;
+        sel.innerHTML = '';
+        list.innerHTML = '';
+        if (section) section.__hubCleanup = null;
+      };
+      sel.innerHTML = '<option value="">Inga färdmedel</option>';
+      sel.disabled = true;
+      apply.disabled = true;
+      list.innerHTML = '<p class="inventory-batch-empty">Det finns inga färdmedel att lasta i ännu.</p>';
+      cancel.onclick = () => {
+        cleanupEmptyState();
+        closeInventoryHub({ skipSection: 'vehiclePopup' });
+      };
+      if (section) section.__hubCleanup = cleanupEmptyState;
+      window.DAUB?.init?.(list);
+      return;
+    }
+    sel.disabled = false;
+    apply.disabled = false;
 
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
@@ -4669,10 +4997,10 @@
 }
 
   function openVehicleRemovePopup(preselectIdx, precheckedPaths) {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('vehicle-unload', 'vehicleRemovePopup');
     if (!root) return;
     cleanupInventoryHubSections('vehicleRemovePopup');
-    openInventoryItemsHub('vehicle-unload', { focusSection: 'vehicle-unload' });
+    openInventoryItemsHub('vehicle-unload', { focusSection: 'vehicle-unload', activateView: false });
     const section = root.getElementById('vehicleRemovePopup');
     const sel    = root.getElementById('vehicleRemoveSelect');
     const list   = root.getElementById('vehicleRemoveItemList');
@@ -4681,7 +5009,29 @@
 
     const inv = storeHelper.getInventory(store);
     const { vehicles, vehicleNames } = getInventoryVehicleContext(inv);
-    if (!vehicles.length) return;
+    if (!vehicles.length) {
+      const cleanupEmptyState = () => {
+        cancel.onclick = null;
+        sel.disabled = false;
+        apply.disabled = false;
+        sel.innerHTML = '';
+        list.innerHTML = '';
+        if (section) section.__hubCleanup = null;
+      };
+      sel.innerHTML = '<option value="">Inga färdmedel</option>';
+      sel.disabled = true;
+      apply.disabled = true;
+      list.innerHTML = '<p class="inventory-batch-empty">Det finns inga färdmedel att lasta ur.</p>';
+      cancel.onclick = () => {
+        cleanupEmptyState();
+        closeInventoryHub({ skipSection: 'vehicleRemovePopup' });
+      };
+      if (section) section.__hubCleanup = cleanupEmptyState;
+      window.DAUB?.init?.(list);
+      return;
+    }
+    sel.disabled = false;
+    apply.disabled = false;
 
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
@@ -4838,6 +5188,8 @@
 
     const { message, allLabel, onlyLabel } = options || {};
 
+    if (!pop || !allBtn || !onlyBtn || !cancel || !textEl) return;
+
     if (textEl && message) textEl.textContent = message;
     if (allBtn && allLabel) allBtn.textContent = allLabel;
     if (onlyBtn && onlyLabel) onlyBtn.textContent = onlyLabel;
@@ -4873,6 +5225,8 @@
     const cancel = root.getElementById('advMoneyCancel');
     const confirm= root.getElementById('advMoneyConfirm');
 
+    if (!pop || !cancel || !confirm) return;
+
     let popupSession = null;
     let closed = false;
     const cleanup = () => {
@@ -4897,6 +5251,8 @@
     const pop    = root.getElementById('saveFreePopup');
     const cancel = root.getElementById('saveFreeCancel');
     const confirm= root.getElementById('saveFreeConfirm');
+
+    if (!pop || !cancel || !confirm) return;
 
     let popupSession = null;
     let closed = false;
@@ -5311,20 +5667,15 @@
         : []
     );
     if (dom.invFormal) {
-      [...dom.invFormal.querySelectorAll('li.card')].forEach(li => {
-        if (!li.classList.contains('compact') && li.dataset.special) {
-          openKeys.add(li.dataset.special);
-        }
-      });
-
       dom.invFormal.onclick = async e => {
-        if (e.target.closest('.entry-collapse-btn')) return;
-        const header = e.target.closest('.card-header');
-        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
+        // Delegate trigger buttons to their real targets
+        const trigger = e.target.closest('button[data-dash-trigger]');
+        if (trigger) {
+          const target = getEl(trigger.dataset.dashTrigger);
+          if (target) target.click();
           return;
         }
-
-        // Handle money +/- inside formal card
+        // Handle money +/- inside formal dashboard
         const btn = e.target.closest('button[data-act]');
         if (!btn) return;
         const act = btn.dataset.act;
@@ -5384,20 +5735,6 @@
         }
       };
 
-      if (!dom.invFormal.dataset.toggleBound) {
-        dom.invFormal.addEventListener('entry-card-toggle', e => {
-          updateCollapseBtnState();
-          const card = e.detail?.card;
-          if (!card) return;
-          const expanded = Boolean(e.detail?.expanded);
-          if (card.dataset.special === '__info__') {
-            setUiPref(INV_INFO_KEY, expanded ? '1' : '0');
-          } else if (card.dataset.special === '__invfunc__') {
-            setUiPref(INV_TOOLS_KEY, expanded ? '1' : '0');
-          }
-        });
-        dom.invFormal.dataset.toggleBound = '1';
-      }
     }
 
     const allInv = storeHelper.getInventory(store);
@@ -5545,82 +5882,153 @@
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
-    const moneyRow = moneyWeight
-      ? `<div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
-      : '';
+    const dashOpen = getUiPref('invDashOpen');
+    const isDashOpen = dashOpen === null ? true : dashOpen === '1';
+    if (dashOpen === null) setUiPref('invDashOpen', '1');
 
-    const allFunctionButtons = [
-      '<button id="manageItemsBtn" class="db-btn">Hantera föremål</button>',
-      '<button id="manageEconomyBtn" class="db-btn">Hantera ekonomi</button>'
-    ];
-    const functionsState = getUiPref(INV_TOOLS_KEY);
-    const functionsOpen = functionsState === null ? true : functionsState === '1';
-    if (functionsState === null) setUiPref(INV_TOOLS_KEY, '1');
-    const quickSpendHtml = `
-      <div class="inv-live-toggle inventory-quick-spend">
-        <div class="inventory-quick-spend-copy">
-          <span class="inventory-quick-spend-title">Snabbspendera</span>
-          <span class="inventory-quick-spend-sub">Betala direkt utan att spara köpet som inventariepost</span>
-        </div>
-        <div class="money-row inventory-quick-spend-row">
-          <input id="inventoryQuickSpendDaler" type="number" min="0" step="1" placeholder="Daler" aria-label="Snabbspendera daler">
-          <input id="inventoryQuickSpendSkilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Snabbspendera skilling">
-          <input id="inventoryQuickSpendOrtegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Snabbspendera örtegar">
-        </div>
-        <button id="inventoryQuickSpendBtn" class="db-btn" type="button">Betala</button>
-      </div>`;
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
-    const liveToggleHtml = `
-      <div class="inv-live-toggle">
-        <button id="inventoryLiveToggle" class="db-switch inventory-live-switch" type="button" aria-label="Slå på eller av live-läge" aria-checked="${liveModeEnabled ? 'true' : 'false'}">
-          <span class="inventory-live-switch-copy">
-            <span class="inventory-live-switch-title">Live-läge</span>
-            <span class="inventory-live-switch-sub">Dra pengar direkt och markera inköp som gratis</span>
-          </span>
-          <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
-        </button>
-      </div>`;
-    const functionsCard = createEntryCard({
-      compact: !functionsOpen,
-      dataset: { special: '__invfunc__' },
-      nameHtml: 'Inventarie',
-      titleSuffixHtml: icon('basket', { className: 'title-icon', alt: 'Inventarie' }),
-      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${quickSpendHtml}${liveToggleHtml}</div>`,
-      collapsible: true
+
+    // --- Weight-by-category breakdown ---
+    const weightGroups = { vapen: 0, rustning: 0, proviant: 0, mynt: 0, övrigt: 0 };
+    allInv.forEach(r => {
+      const entry = getEntry(r.id || r.name);
+      const types = entry.taggar?.typ || [];
+      if (types.includes('Färdmedel')) return;
+      const w = calcRowWeight(r, list);
+      if (hasWeaponType(types)) weightGroups.vapen += w;
+      else if (types.includes('Rustning')) weightGroups.rustning += w;
+      else if (types.some(t => { const lc = t.toLowerCase(); return lc === 'mat' || lc === 'dryck'; })) weightGroups.proviant += w;
+      else weightGroups['övrigt'] += w;
     });
+    weightGroups.mynt = moneyWeight;
 
-    const infoKey  = '__info__';
-    const infoState = getUiPref(INV_INFO_KEY);
-    const infoOpen  = infoState === null ? true : infoState === '1';
-    if (infoState === null) setUiPref(INV_INFO_KEY, '1');
+    const capPct = maxCapacity > 0 ? Math.round((usedWeight / maxCapacity) * 100) : 0;
+    const capProgressPct = Math.min(capPct, 100);
+    const isOverCap = remainingCap < 0;
 
-    const infoCardDesc = `
-          <div class="formal-section">
-            <div class="formal-title">Pengar
-              <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Minska mynt" title="Minska mynt">${icon('minus')}</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Öka mynt" title="Öka mynt">${icon('plus')}</button>
+    // --- Build weight chart bars ---
+    const chartLabels = { vapen: 'Vapen', rustning: 'Rustning', proviant: 'Proviant', mynt: 'Mynt', 'övrigt': 'Övrigt' };
+    const maxGroupWeight = Math.max(...Object.values(weightGroups), 0.01);
+    const chartBarsHtml = Object.entries(weightGroups)
+      .filter(([, w]) => w > 0)
+      .map(([key, w]) => {
+        const pct = Math.round((w / maxGroupWeight) * 100);
+        return `<div class="dash-chart-row">
+          <span class="dash-chart-label">${chartLabels[key]}</span>
+          <div class="db-progress dash-chart-bar"><div class="db-progress__bar" style="--db-progress:${pct}%"></div></div>
+          <span class="dash-chart-val">${formatWeight(w)}</span>
+        </div>`;
+      }).join('');
+
+    // --- Vehicle money lines ---
+    const vehicleStatHtml = vehicleMoneyLines.map(v =>
+      `<div class="db-stat"><div class="db-stat__label">${escapeHtml(v.name)}</div><div class="db-stat__value">${v.money}</div></div>`
+    ).join('');
+
+    // --- Capacity status text ---
+    const capStatusText = isOverCap
+      ? `Över kapacitet med ${formatWeight(Math.abs(remainingCap))}`
+      : remainingCap === 0
+        ? 'Exakt på gränsen'
+        : `${formatWeight(remainingCap)} kvar`;
+
+    // --- KPI card sub-texts ---
+    const moneyWeightNote = moneyWeight ? `Myntvikt: ${formatWeight(moneyWeight)}` : '';
+    const foodNote = foodCount === 0 ? '0 proviant' : `${foodCount} proviant`;
+    const capNote = `${capPct}% full`;
+
+
+    const formalHtml = `
+      <details class="db-accordion__item formal-dashboard" ${isDashOpen ? 'open' : ''} data-special="__dashboard__">
+        <summary class="db-accordion__trigger">Inventarie</summary>
+        <div class="db-accordion__content formal-dashboard-content">
+
+          <!-- KPI row -->
+          <div class="dash-kpi-row">
+            <div class="db-card dash-kpi">
+              <div class="db-stat">
+                <div class="db-stat__label">Kontant
+                  <span class="dash-kpi-actions">
+                    <button data-act="moneyMinus" class="dash-money-btn" aria-label="Minska mynt" title="Minska mynt">&minus;</button>
+                    <button data-act="moneyPlus" class="dash-money-btn" aria-label="Öka mynt" title="Öka mynt">&plus;</button>
+                  </span>
+                </div>
+                <div class="db-stat__value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</div>
+                ${moneyWeightNote ? `<div class="db-caption db-text-muted">${moneyWeightNote}</div>` : ''}
+              </div>
+              <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageEconomyBtn" type="button">Hantera ekonomi</button>
+            </div>
+
+            <div class="db-card dash-kpi">
+              <div class="db-stat">
+                <div class="db-stat__label">Oanvänt</div>
+                <div class="db-stat__value" id="unusedOut">0D 0S 0Ö</div>
+              </div>
+              ${vehicleStatHtml ? `<div class="dash-kpi-extra">${vehicleStatHtml}</div>` : ''}
+            </div>
+
+            <div class="db-card dash-kpi ${charCapClass}">
+              <div class="db-stat">
+                <div class="db-stat__label">Kapacitet</div>
+                <div class="db-stat__value">${capStatusText}</div>
+              </div>
+              <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageItemsBtn" type="button">Hantera föremål</button>
+            </div>
+
+            <div class="db-card dash-kpi dash-kpi-live-card">
+              <div class="db-stat__label">Dra pengar vid inköp</div>
+              <div class="dash-live-inline">
+                <div class="db-stat__value">${liveModeEnabled ? 'På' : 'Av'}</div>
+                <button id="inventoryLiveToggle" class="db-switch inventory-live-switch dash-live-switch" type="button" role="switch"
+                        aria-label="Slå på eller av live-läge" aria-checked="${liveModeEnabled ? 'true' : 'false'}">
+                  <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
+                </button>
               </div>
             </div>
-            <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
-            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
-            ${moneyRow}
-            ${vehicleMoneyLines.map(v => `<div class="money-line"><span class="label">Pengar på ${escapeHtml(v.name)}:</span><span class="value">${v.money}</span></div>`).join('')}
           </div>
-          <div class="formal-section ${charCapClass}">
-            <div class="formal-title">Bärkapacitet</div>
-            <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
-            <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
-            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
-          </div>`;
-    const infoCard = createEntryCard({
-      compact: !infoOpen,
-      dataset: { special: infoKey },
-      nameHtml: 'Information',
-      titleSuffixHtml: icon('money-bag', { className: 'title-icon', alt: 'Information' }),
-      descHtml: `<div class="card-desc">${infoCardDesc}</div>`,
-      collapsible: true
-    });
+
+          <!-- Hero capacity card -->
+          <div class="db-card dash-hero-cap ${charCapClass}">
+            <div class="db-card__header dash-hero-header">
+              <h3 class="db-card__title">Bärkapacitet</h3>
+              <span class="db-badge${foodCount === 0 ? ' db-badge--warning' : ''}">${foodNote}</span>
+            </div>
+            <div class="db-card__body dash-hero-body">
+              <div class="dash-cap-meter">
+                <div class="db-progress${isOverCap ? ' dash-progress-danger' : ''}">
+                  <div class="db-progress__bar" style="--db-progress:${capProgressPct}%"></div>
+                </div>
+                <div class="dash-cap-labels">
+                  <span>${formatWeight(usedWeight)} / ${formatWeight(maxCapacity)}</span>
+                  <span>${capPct}%</span>
+                </div>
+              </div>
+              ${isOverCap ? `<div class="db-alert db-alert--error dash-cap-alert"><div class="db-alert__content">Över kapacitet med <strong>${formatWeight(Math.abs(remainingCap))}</strong></div></div>` : ''}
+              ${chartBarsHtml ? `
+                <div class="dash-weight-chart">
+                  <div class="db-caption db-text-muted dash-chart-title">Vikt per kategori</div>
+                  ${chartBarsHtml}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Actions row -->
+          <div class="db-card dash-actions-card">
+            <div class="db-card__body">
+              <h4 class="db-h4">Snabbspendera</h4>
+              <p class="db-caption db-text-muted">Betala direkt utan att spara köpet som inventariepost</p>
+              <div class="formal-spend-row">
+                <input id="inventoryQuickSpendDaler" class="db-input db-input--sm" type="number" min="0" step="1" placeholder="Daler" aria-label="Snabbspendera daler">
+                <input id="inventoryQuickSpendSkilling" class="db-input db-input--sm" type="number" min="0" step="1" placeholder="Skilling" aria-label="Snabbspendera skilling">
+                <input id="inventoryQuickSpendOrtegar" class="db-input db-input--sm" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Snabbspendera örtegar">
+                <button id="inventoryQuickSpendBtn" class="db-btn db-btn--primary db-btn--sm" type="button">Betala</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </details>`;
 
     const buildInventoryStandardActionConfig = ({
       qty = 0,
@@ -6008,9 +6416,15 @@
 
     timeActiveMutationStage('dom-patch', () => {
       if (dom.invFormal) {
-        dom.invFormal.innerHTML = '';
-        dom.invFormal.appendChild(functionsCard);
-        dom.invFormal.appendChild(infoCard);
+        dom.invFormal.innerHTML = formalHtml;
+        const dashDetails = dom.invFormal.querySelector('details');
+        if (dashDetails) {
+          dashDetails.addEventListener('toggle', ev => {
+            if (!ev.isTrusted) return;
+            setUiPref('invDashOpen', dashDetails.open ? '1' : '0');
+            updateCollapseBtnState();
+          });
+        }
       }
 
       if (listEl) {
@@ -6086,17 +6500,15 @@
 
 
   function getInvCards() {
-    const formalCards = dom.invFormal ? [...dom.invFormal.querySelectorAll('li.card')] : [];
-    const listCards   = dom.invList   ? [...dom.invList.querySelectorAll('li.card')]   : [];
-    return [...formalCards, ...listCards];
+    return dom.invList ? [...dom.invList.querySelectorAll('li.card')] : [];
   }
 
   function updateCollapseBtnState() {
     if (!dom.collapseAllBtn) return;
+    const dash = dom.invFormal?.querySelector('details');
     const cards = getInvCards();
-    if (!cards.length) return;
-    // Follow same pattern as taskbar: ▶ when all collapsed, ▼ when any open
-    const allCollapsed = cards.every(li => li.classList.contains('compact'));
+    if (!dash && !cards.length) return;
+    const allCollapsed = (!dash || !dash.open) && cards.every(li => li.classList.contains('compact'));
     { const ci = dom.collapseAllBtn.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     dom.collapseAllBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
   }
@@ -6110,6 +6522,20 @@
 
     const listEl = dom.invList;
     const searchEl = dom.sIn || getEl('searchField');
+    const manageItemsBtn = getEl('manageItemsBtn');
+    const manageEconomyBtn = getEl('manageEconomyBtn');
+    if (manageItemsBtn && manageItemsBtn.dataset.invBound !== '1') {
+      manageItemsBtn.dataset.invBound = '1';
+      manageItemsBtn.addEventListener('click', () => {
+        openInventoryItemsHub('custom-item');
+      });
+    }
+    if (manageEconomyBtn && manageEconomyBtn.dataset.invBound !== '1') {
+      manageEconomyBtn.dataset.invBound = '1';
+      manageEconomyBtn.addEventListener('click', () => {
+        openInventoryEconomyHub('money');
+      });
+    }
     const bindFilterSelect = (el, key) => {
       if (!el || el.dataset.invBound) return;
       el.dataset.invBound = '1';
@@ -6144,37 +6570,24 @@
         renderInventory();
       });
     }
-    const manageItemsBtn = getEl('manageItemsBtn');
-    if (manageItemsBtn) {
-      manageItemsBtn.onclick = () => openInventoryCustomItemManager();
-    }
     if (dom.collapseAllBtn) {
       dom.collapseAllBtn.onclick = () => {
+        const dash = dom.invFormal?.querySelector('details');
         const cards = getInvCards();
-        const anyOpen = cards.some(li => !li.classList.contains('compact'));
+        const anyOpen = (dash && dash.open) || cards.some(li => !li.classList.contains('compact'));
+        if (dash) {
+          dash.open = !anyOpen;
+          setUiPref('invDashOpen', !anyOpen ? '1' : '0');
+        }
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
           window.entryCardFactory?.syncCollapse?.(li);
-          if (li.dataset.special === '__invfunc__') {
-            setUiPref(INV_TOOLS_KEY, anyOpen ? '0' : '1');
-          } else if (li.dataset.special === '__info__') {
-            setUiPref(INV_INFO_KEY, anyOpen ? '0' : '1');
-          }
         });
         updateCollapseBtnState();
       };
 
       listEl.addEventListener('entry-card-toggle', e => {
         updateCollapseBtnState();
-        const detail = e.detail || {};
-        const card = detail.card;
-        if (!card) return;
-        const expanded = Boolean(detail.expanded);
-        if (card.dataset.special === '__invfunc__') {
-          setUiPref(INV_TOOLS_KEY, expanded ? '1' : '0');
-        } else if (card.dataset.special === '__info__') {
-          setUiPref(INV_INFO_KEY, expanded ? '1' : '0');
-        }
       });
     }
     const getRowInfo = (inv, li) => {
@@ -6833,16 +7246,17 @@
     };
     }
 
-    // Bind clicks within the Formaliteter card when it is outside invList
+    // Bind clicks within the formal dashboard
     if (dom.invFormal) {
       dom.invFormal.onclick = async e => {
-        if (e.target.closest('.entry-collapse-btn')) return;
-        const header = e.target.closest('.card-header');
-        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
+        // Delegate trigger buttons to their real targets
+        const trigger = e.target.closest('button[data-dash-trigger]');
+        if (trigger) {
+          const target = getEl(trigger.dataset.dashTrigger);
+          if (target) target.click();
           return;
         }
-
-        // Handle money +/- inside formal card
+        // Handle money +/- inside formal dashboard
         const btn = e.target.closest('button[data-act]');
         if (!btn) return;
         const act = btn.dataset.act;
@@ -6902,26 +7316,18 @@
         }
       };
 
-      dom.invFormal.addEventListener('entry-card-toggle', e => {
-        updateCollapseBtnState();
-        const expanded = Boolean(e.detail?.expanded);
-        setUiPref(INV_INFO_KEY, expanded ? '1' : '0');
-      });
     }
 
   }
 
   function bindMoney() {
-    const manageItemsBtn = getEl('manageItemsBtn');
-    const manageEconomyBtn = getEl('manageEconomyBtn');
     const quickSpendBtn = getEl('inventoryQuickSpendBtn');
     const quickSpendDaler = getEl('inventoryQuickSpendDaler');
     const quickSpendSkilling = getEl('inventoryQuickSpendSkilling');
     const quickSpendOrtegar = getEl('inventoryQuickSpendOrtegar');
     const resetBtn  = getEl('moneyResetBtn');
     const clearBtn  = getEl('clearInvBtn');
-    if (manageItemsBtn) manageItemsBtn.onclick = () => openInventoryCustomItemManager();
-    if (manageEconomyBtn) manageEconomyBtn.onclick = () => openMoneyPopup();
+    const saveFreeBtn = getEl('inventoryEconomySaveFreeBtn');
     const runQuickSpend = () => {
       const spendMoney = {
         daler: Number(quickSpendDaler?.value) || 0,
@@ -6966,6 +7372,7 @@
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) openAdvMoneyPopup(doReset); else doReset();
     };
+    if (saveFreeBtn) saveFreeBtn.onclick = () => openSaveFreePopup();
     if (clearBtn) clearBtn.onclick = async () => {
       if (await confirmPopup('Du håller på att tömma hela inventariet, är du säker?')) {
         const inv = storeHelper.getInventory(store);
@@ -7050,6 +7457,24 @@
     bindInv,
     bindMoney
   };
+  inventoryPopupRegistry?.setOpenHandlers?.({
+    inventoryItemsPopup: openInventoryItemsHub,
+    inventoryEconomyPopup: openInventoryEconomyHub,
+    customPopup: openCustomPopup,
+    qtyPopup: openQtyPopup,
+    vehiclePopup: openVehiclePopup,
+    vehicleRemovePopup: openVehicleRemovePopup,
+    moneyPopup: openMoneyPopup,
+    pricePopup: openPricePopup,
+    liveBuyPopup: openLiveBuyPopup,
+    buyMultiplePopup: openBuyMultiplePopup,
+    rowPricePopup: openRowPricePopup,
+    vehicleQtyPopup: openVehicleQtyPrompt,
+    vehicleMoneyPopup: openVehicleMoneyPrompt,
+    saveFreePopup: openSaveFreePopup,
+    advMoneyPopup: openAdvMoneyPopup,
+    deleteContainerPopup: openDeleteContainerPopup
+  });
   window.openInventoryHub = openInventoryHub;
   window.openInventoryItemsHub = openInventoryItemsHub;
   window.openInventoryEconomyHub = openInventoryEconomyHub;
