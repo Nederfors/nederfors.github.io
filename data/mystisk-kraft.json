@@ -422,7 +422,7 @@
     "nivåer": {
       "Novis": "Handling: Fri. En gång per runda kan mystikers mörka blick göra så att en fiende automatiskt får en andra chans att misslyckas med sina framgångsslag mot mystikern (slå två gånger, misslyckas ena slaget fallerar försöket). Effekten pågår tills mystikern misslyckas med ett Viljestark.",
       "Gesäll": "Handling: Fri. Som novis, men fienden får en andra chans att misslyckas med alla framgångsslag, oavsett vem som är målet. Effekten varar tills mystikern misslyckas med ett Viljestark.",
-      "Mästare": "Handling: Aktiv. Mystikern uttalar en dödsförbannelse över en fiende. Fienden tar 1T6 i skada, Bepansring skyddar ej, för varje handling den företar sig. Om målet förblir stilla och passivt tar det ingen skada. Effekten varar tills mystikern misslyckas med ett Viljestark."
+      "Mästare": "Handling: Aktiv. Som gesäll, men mystikern uttalar en dödsförbannelse över fienden. Fienden tar nu också 1T6 i skada, Bepansring skyddar ej, för varje handling den företar sig. Om målet förblir stilla och passivt tar det ingen skada. Effekten varar tills mystikern misslyckas med ett Viljestark."
     },
     "id": "mystiskkr12"
   },
