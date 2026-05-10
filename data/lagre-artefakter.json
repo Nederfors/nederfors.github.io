@@ -352,7 +352,7 @@
       ]
     },
     "nivåer": {
-      "Gesäll": "En fläta av tre sorters hår eller päls håller döden på avstånd. Häxflätan ger +1 på Stark vid Dödsslag. Spelledarpersoner som bär flätan slår också för Dödsslag, då med +1."
+      "Gesäll": "En fläta av hår och päls med invävda skyddsandar som håller döden borta. Vid dödens tröskel löser flätans andar upp knopen för att låta bäraren avstå från att slå ett dödsslag denna rundan. När andarna utfört sitt givna jobb återvänder de till bortomvärlden och Häxflätan är förbrukad. "
     },
     "grundpris": {
       "daler": 8,
