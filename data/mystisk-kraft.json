@@ -145,7 +145,7 @@
   },
   {
     "namn": "Bända vilja",
-    "beskrivning": "Material: En silverring\nDen fria viljan är en illusion men viljans kraft är otvetydig. Mystikern har förstått dessa till synes motstridiga principer och kan utnyttja sin insikt till att kortvarigt kontrollera en annan varelses vilja.",
+    "beskrivning": "Material: En silverring. Den fria viljans kraft är otvetydig, men kött och blod lyder alltid. Mystikern har förstått dessa till synes motstridiga principer och kan utnyttja sin insikt till att kortvarigt kontrollera en annan varelses kropp. Det är en djupt kränkande upplevelse där offret förblir vid fullt medvetande och kan tala, vädja eller varna sina allierade om vad som försigår. Sinneslösa varelser drivna av korruption och naturkrafter saknar den själsliga koppling som krävs för att kraften ska fungera och är därmed immuna.",
     "taggar": {
       "typ": [
         "Mystisk kraft"
@@ -174,9 +174,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Viljestark]. Svårighetsgraden ökar för varje runda: mystikerns Viljestark får en kumulativ modifikation −1 för varje runda efter den första. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktionsförmågor/krafter under effekten. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
-      "Gesäll": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Viljestark]. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktiva förmågor/krafter. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
-      "Mästare": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen pågår tills mystikern misslyckas med [Viljestark←Viljestark] eller tappar koncentrationen. Den kontrollerade varelsen kan tvingas utföra sina två vanliga handlingar per runda men kan inte använda reaktiva förmågor (som t.ex försvar), men har nu tillgång till aktiva förmågor. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen."
+      "Novis": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Star]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Stark]. Svårighetsgraden ökar för varje runda: mystikerns Viljestark får en kumulativ modifikation −1 för varje runda efter den första. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktionsförmågor/krafter under effekten. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
+      "Gesäll": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Stark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Stark]. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktiva förmågor/krafter. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
+      "Mästare": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Stark]. Kontrollen pågår tills mystikern misslyckas med [Viljestark←Stark] eller tappar koncentrationen. Den kontrollerade varelsen kan tvingas utföra sina två vanliga handlingar per runda men kan inte använda reaktiva förmågor (som t.ex försvar), men har nu tillgång till aktiva förmågor. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen."
     },
     "id": "mystiskkr5"
   },
