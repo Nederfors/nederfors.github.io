@@ -489,6 +489,8 @@
     let fixedRandomEntries = null;
 
     const STATE_KEY = 'indexViewState';
+    const CATEGORY_BATCH_SIZE = 50;
+    const catRenderLimits = {};
     let catState = {};
     const loadState = () => {
       try { return JSON.parse(getUiPref(STATE_KEY)) || {}; }
@@ -2107,7 +2109,9 @@
       return filteredResultCache.entries;
     };
 
-    const renderList = arr => {
+    let renderListSequence = 0;
+    const renderList = async arr => {
+      const renderSequence = ++renderListSequence;
       const sortMode = storeHelper.getEntrySort
         ? storeHelper.getEntrySort(store)
         : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
@@ -2167,6 +2171,33 @@
         rows: Array.isArray(arr) ? arr.length : 0,
         surface: 'index'
       });
+      const shouldOpenCategory = (cat) => (
+        openCatsOnce.has(cat) || (catState[cat] !== undefined ? catState[cat] : openCats.has(cat))
+      );
+      const visibleEntriesByCat = new Map();
+      const hydrationQueue = [];
+      catKeys.forEach(cat => {
+        if (!shouldOpenCategory(cat)) {
+          visibleEntriesByCat.set(cat, []);
+          return;
+        }
+        cats[cat].sort(entrySorter);
+        const limit = Math.max(CATEGORY_BATCH_SIZE, Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE);
+        const visible = cats[cat].slice(0, limit);
+        visibleEntriesByCat.set(cat, visible);
+        hydrationQueue.push(...visible);
+      });
+      if (hydrationQueue.length && typeof window.catalogLoader?.ensureEntriesData === 'function') {
+        const hydratedEntries = await window.catalogLoader.ensureEntriesData(hydrationQueue);
+        if (renderSequence !== renderListSequence) return;
+        const hydratedBySource = new WeakMap();
+        hydrationQueue.forEach((entry, index) => {
+          hydratedBySource.set(entry, hydratedEntries[index] || entry);
+        });
+        visibleEntriesByCat.forEach((entries, cat) => {
+          visibleEntriesByCat.set(cat, entries.map(entry => hydratedBySource.get(entry) || entry));
+        });
+      }
       timeActiveAddStage('dom-patch', () => {
         const fragment = document.createDocumentFragment();
         catKeys.forEach(cat => {
@@ -2175,17 +2206,22 @@
         catLi.className = 'cat-group';
         catLi.dataset.aaKey = `cat:${cat}`;
         // Allow temporary "open once" categories to override saved state
-        const shouldOpen = openCatsOnce.has(cat) || (catState[cat] !== undefined ? catState[cat] : openCats.has(cat));
+        const shouldOpen = shouldOpenCategory(cat);
         catLi.innerHTML = `<details class="db-accordion__item" data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary class="db-accordion__trigger">${catName(cat)}</summary><ul class="db-accordion__content card-list entry-card-list"></ul></details>`;
         const detailsEl = catLi.querySelector('details');
         const listEl = catLi.querySelector('ul');
         detailsEl.addEventListener('toggle', (ev) => {
           updateCatToggle();
+          if (detailsEl.open && !listEl.children.length) {
+            catRenderLimits[cat] = Math.max(CATEGORY_BATCH_SIZE, Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE);
+            scheduleRenderList();
+          }
           if (!ev.isTrusted) return;
           catState[cat] = detailsEl.open;
           saveState();
         });
-        cats[cat].forEach(p => {
+        const entriesToRender = visibleEntriesByCat.get(cat) || [];
+        entriesToRender.forEach(p => {
           const meta = ensureEntryMeta(p) || {};
           if (p.kolumner && p.rader) {
             const infoHtml = tabellInfoHtml(p);
@@ -2453,6 +2489,24 @@
             if (descEl) highlightInElement(descEl, terms);
           }
         });
+        if (shouldOpen && entriesToRender.length < cats[cat].length) {
+          const remaining = cats[cat].length - entriesToRender.length;
+          const moreLi = document.createElement('li');
+          moreLi.className = 'db-card entry-card index-load-more-card compact';
+          moreLi.dataset.name = `Visa fler ${cat}`;
+          moreLi.innerHTML = `
+            <div class="db-card__header entry-card-summary card-header">
+              <div class="entry-row entry-row-header">
+                <div class="entry-header-main">
+                  <div class="card-title"><span class="entry-title-main">${remaining} fler i ${catName(cat)}</span></div>
+                </div>
+                <div class="entry-header-actions">
+                  <button class="db-btn" type="button" data-load-more-cat="${cat}">Visa fler</button>
+                </div>
+              </div>
+            </div>`;
+          listEl.appendChild(moreLi);
+        }
         fragment.appendChild(catLi);
         });
         // Append special "Hoppsan" category with a clear-filters action
@@ -2975,6 +3029,22 @@
         return;
       }
       if (e.target.closest('.filter-tag')) return;
+      const loadMoreBtn = e.target.closest('button[data-load-more-cat]');
+      if (loadMoreBtn) {
+        const cat = loadMoreBtn.dataset.loadMoreCat || '';
+        if (cat) {
+          catRenderLimits[cat] = Math.max(
+            CATEGORY_BATCH_SIZE,
+            (Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE) + CATEGORY_BATCH_SIZE
+          );
+          catState[cat] = true;
+          saveState();
+          scheduleRenderList();
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       // Special clear-filters action inside the Hoppsan category
       const clearBtn = e.target.closest('button[data-clear-filters]');
       if (clearBtn) {

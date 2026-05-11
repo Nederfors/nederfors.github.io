@@ -565,8 +565,9 @@ function ensureEntryMeta(entry) {
     .map(toLower)
     .join(' ');
   const descText = toLower(entry.beskrivning);
+  const catalogSearchText = toLower(entry.__searchText);
   const aliasTerms = getAliasesForEntryName(entry.namn);
-  const combined = `${lowerName} ${descText} ${levelText} ${aliasTerms.join(' ')}`.trim();
+  const combined = `${lowerName} ${descText} ${levelText} ${catalogSearchText} ${aliasTerms.join(' ')}`.trim();
   const normText = typeof searchNormalize === 'function'
     ? searchNormalize(combined)
     : combined;
@@ -1635,8 +1636,13 @@ const DATA_FILES = [
 ].map(f => `data/${f}`);
 
 const ALL_DATA_FILE = 'data/all.json';
+const INDEX_CATALOG_FILE = 'data/index-catalog.json';
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
+let databaseMode = 'empty';
+let databaseLoadPromise = null;
+let fullDatabaseLoadPromise = null;
+const sourceChunkPromises = new Map();
 
 function normalizeTableMatrixCell(value) {
   if (value === undefined || value === null) return '—';
@@ -1871,35 +1877,267 @@ function loadDatabaseData() {
     });
 }
 
-loadDatabaseData()
-  .then(({ entries, tables }) => {
-    setTablesData(Array.isArray(tables) ? tables : []);
-    DB = Array.isArray(entries) ? entries.slice() : [];
-    ensureEntryMetaList(DB);
-    DB = DB.sort(sortByType);
-    DB.forEach((ent, idx) => {
-      if (ent.id === undefined) ent.id = idx;
-      DB[ent.id] = ent;
-    });
-    entryDataVersions.db += 1;
-    window.DB = DB;
-    DBIndex = {};
-    DB.forEach(ent => { DBIndex[ent.namn] = ent; });
-    window.DBIndex = DBIndex;
-    if (storeHelper.migrateInventoryIds) {
-      storeHelper.migrateInventoryIds(store);
-      store = storeHelper.load();
-    }
-    boot();
-    runQueuedPostUpdateEntrySync();
-    try { window.globalSearch?.refreshSuggestions?.(); } catch {}
+function loadIndexCatalogData() {
+  return fetch(INDEX_CATALOG_FILE)
+    .then(r => {
+      if (!r.ok) throw new Error(`${INDEX_CATALOG_FILE} (${r.status})`);
+      return r.json();
+    })
+    .then(payload => ({
+      entries: Array.isArray(payload?.entries) ? payload.entries : [],
+      tables: Array.isArray(payload?.tables) ? payload.tables : [],
+      catalogOnly: true,
+      meta: payload?.sources || null
+    }));
+}
+
+function annotateLoadedEntry(entry, sourceFile, sourceIndex, table = false) {
+  if (!entry || typeof entry !== 'object') return entry;
+  const props = {
+    __sourceFile: sourceFile,
+    __sourceIndex: sourceIndex
+  };
+  if (table) props.__catalogTable = true;
+  Object.entries(props).forEach(([key, value]) => {
     try {
-      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', { detail: { entries: DB.length } }));
-    } catch {}
+      Object.defineProperty(entry, key, {
+        value,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      entry[key] = value;
+    }
+  });
+  return entry;
+}
+
+function normalizeCatalogEntries(entries = [], table = false) {
+  return (Array.isArray(entries) ? entries : [])
+    .filter(entry => entry && typeof entry === 'object')
+    .map((entry, index) => {
+      if (!entry.__sourceIndex && entry.__sourceIndex !== 0) entry.__sourceIndex = index;
+      if (table) entry.__catalogTable = true;
+      entry.__catalogSummary = true;
+      return entry;
+    });
+}
+
+function rebuildDatabaseIndexes(entries = []) {
+  DB = Array.isArray(entries) ? entries.filter(Boolean).slice() : [];
+  ensureEntryMetaList(DB);
+  DB = DB.sort(sortByType);
+  DB.forEach((ent, idx) => {
+    if (ent.id === undefined) ent.id = idx;
+    DB[ent.id] = ent;
+  });
+  window.DB = DB;
+  DBIndex = {};
+  DB.forEach(ent => {
+    if (ent?.namn) DBIndex[ent.namn] = ent;
+  });
+  window.DBIndex = DBIndex;
+  return DB;
+}
+
+function dispatchDatabaseReady(detail = {}) {
+  try {
+    window.dispatchEvent(new CustomEvent('symbaroum-db-ready', {
+      detail: {
+        entries: Array.isArray(DB) ? DB.length : 0,
+        mode: databaseMode,
+        ...detail
+      }
+    }));
+  } catch {}
+}
+
+function applyDatabaseData({ entries = [], tables = [] } = {}, options = {}) {
+  const catalogOnly = Boolean(options.catalogOnly);
+  databaseMode = catalogOnly ? 'catalog' : 'full';
+  window.__symbaroumDatabaseMode = databaseMode;
+  setTablesData(Array.isArray(tables) ? tables : []);
+  rebuildDatabaseIndexes(entries);
+  entryDataVersions.db += 1;
+  if (!catalogOnly && storeHelper.migrateInventoryIds) {
+    storeHelper.migrateInventoryIds(store);
+    store = storeHelper.load();
+  }
+  try { window.globalSearch?.refreshSuggestions?.(); } catch {}
+  return { entries: DB, tables: TABELLER, catalogOnly };
+}
+
+function applyHydratedSource(sourceFile, entries = [], table = false) {
+  const annotated = (Array.isArray(entries) ? entries : [])
+    .map((entry, index) => annotateLoadedEntry(entry, sourceFile, index, table));
+  if (table) {
+    setTablesData(annotated);
+    return annotated;
+  }
+  const next = (Array.isArray(DB) ? DB.filter(entry => entry && entry.__sourceFile !== sourceFile) : [])
+    .concat(annotated);
+  rebuildDatabaseIndexes(next);
+  entryDataVersions.db += 1;
+  databaseMode = databaseMode === 'full' ? 'full' : 'partial';
+  window.__symbaroumDatabaseMode = databaseMode;
+  try { window.globalSearch?.refreshSuggestions?.(); } catch {}
+  return annotated;
+}
+
+function normalizeSourceEntries(sourceFile, payload) {
+  if (sourceFile === TABELLER_FILE) {
+    const tableEntries = Array.isArray(payload)
+      ? payload
+      : (Array.isArray(payload?.entries) ? payload.entries : []);
+    return {
+      entries: normalizeTableEntries(tableEntries),
+      table: true
+    };
+  }
+  return {
+    entries: collectEntriesFromPayloads([payload], [{ file: sourceFile }]),
+    table: false
+  };
+}
+
+function loadCatalogSource(sourceFile) {
+  const normalizedSource = String(sourceFile || '').trim();
+  if (!normalizedSource) return Promise.resolve([]);
+  if (sourceChunkPromises.has(normalizedSource)) {
+    return sourceChunkPromises.get(normalizedSource);
+  }
+  const promise = fetch(normalizedSource)
+    .then(r => {
+      if (!r.ok) throw new Error(`${normalizedSource} (${r.status})`);
+      return r.json();
+    })
+    .then(payload => {
+      const parsed = normalizeSourceEntries(normalizedSource, payload);
+      return applyHydratedSource(normalizedSource, parsed.entries, parsed.table);
+    });
+  sourceChunkPromises.set(normalizedSource, promise);
+  return promise;
+}
+
+function findEntryInCollections(ref) {
+  if (typeof window.lookupEntry === 'function') {
+    const hit = window.lookupEntry(ref);
+    if (hit) return hit;
+  }
+  const id = ref && typeof ref === 'object' ? ref.id : undefined;
+  const name = ref && typeof ref === 'object' ? (ref.namn || ref.name) : ref;
+  if (id !== undefined && id !== null) {
+    const idText = String(id);
+    const dbHit = Array.isArray(DB) ? DB.find(entry => String(entry?.id ?? '') === idText) : null;
+    if (dbHit) return dbHit;
+    const tableHit = Array.isArray(TABELLER) ? TABELLER.find(entry => String(entry?.id ?? '') === idText) : null;
+    if (tableHit) return tableHit;
+  }
+  if (name) {
+    const nameText = String(name);
+    const dbHit = Array.isArray(DB) ? DB.find(entry => entry?.namn === nameText) : null;
+    if (dbHit) return dbHit;
+    const tableHit = Array.isArray(TABELLER) ? TABELLER.find(entry => entry?.namn === nameText) : null;
+    if (tableHit) return tableHit;
+  }
+  return null;
+}
+
+function findHydratedEntry(summary) {
+  if (!summary || typeof summary !== 'object') return null;
+  const sourceFile = summary.__sourceFile || '';
+  const sourceIndex = summary.__sourceIndex;
+  const collections = summary.__catalogTable ? TABELLER : DB;
+  const bySource = Array.isArray(collections)
+    ? collections.find(entry =>
+      entry
+      && !entry.__catalogSummary
+      && entry.__sourceFile === sourceFile
+      && Number(entry.__sourceIndex) === Number(sourceIndex)
+    )
+    : null;
+  if (bySource) return bySource;
+  return findEntryInCollections({ id: summary.id, name: summary.namn });
+}
+
+async function ensureEntryData(ref) {
+  let entry = ref && typeof ref === 'object' && ref.namn ? ref : findEntryInCollections(ref);
+  if (!entry || !entry.__catalogSummary) return entry || null;
+  const sourceFile = entry.__sourceFile || '';
+  if (!sourceFile) return entry;
+  await loadCatalogSource(sourceFile);
+  return findHydratedEntry(entry) || entry;
+}
+
+async function ensureEntriesData(entries = []) {
+  const list = (Array.isArray(entries) ? entries : [])
+    .filter(Boolean);
+  const sources = [...new Set(
+    list
+      .filter(entry => entry?.__catalogSummary && entry.__sourceFile)
+      .map(entry => entry.__sourceFile)
+  )];
+  await Promise.all(sources.map(source => loadCatalogSource(source)));
+  return list.map(entry => entry?.__catalogSummary ? (findHydratedEntry(entry) || entry) : entry);
+}
+
+function ensureFullDatabase() {
+  if (databaseMode === 'full') {
+    return Promise.resolve({ entries: DB, tables: TABELLER, catalogOnly: false });
+  }
+  if (!fullDatabaseLoadPromise) {
+    fullDatabaseLoadPromise = loadDatabaseData()
+      .then(payload => {
+        const applied = applyDatabaseData(payload, { catalogOnly: false });
+        runQueuedPostUpdateEntrySync();
+        dispatchDatabaseReady({ catalogOnly: false });
+        return applied;
+      });
+  }
+  return fullDatabaseLoadPromise;
+}
+
+window.ensureFullDatabase = ensureFullDatabase;
+window.catalogLoader = Object.freeze({
+  ensureEntryData,
+  ensureEntriesData,
+  ensureFullDatabase,
+  ensureSource: loadCatalogSource,
+  isCatalogSummary: entry => Boolean(entry?.__catalogSummary),
+  get mode() { return databaseMode; }
+});
+
+function isInitialIndexRole() {
+  const role = String(ROLE || document.body?.dataset?.role || 'index').trim().toLowerCase();
+  return role === 'index';
+}
+
+databaseLoadPromise = (isInitialIndexRole()
+  ? loadIndexCatalogData()
+      .catch(err => {
+        console.warn(`Kunde inte läsa ${INDEX_CATALOG_FILE}, återgår till full databas.`, err);
+        return loadDatabaseData();
+      })
+  : loadDatabaseData())
+  .then(payload => {
+    const catalogOnly = Boolean(payload?.catalogOnly);
+    const normalizedEntries = catalogOnly ? normalizeCatalogEntries(payload.entries) : payload.entries;
+    const normalizedTables = catalogOnly ? normalizeCatalogEntries(payload.tables, true) : payload.tables;
+    const applied = applyDatabaseData({
+      entries: normalizedEntries,
+      tables: normalizedTables
+    }, { catalogOnly });
+    boot();
+    if (!catalogOnly) runQueuedPostUpdateEntrySync();
+    dispatchDatabaseReady({ catalogOnly });
+    return applied;
   })
   .catch(err => {
     console.error('Kunde inte läsa databasen', err);
   });
+
+window.symbaroumDatabaseReady = databaseLoadPromise;
 
 /* ===========================================================
    HJÄLPFUNKTIONER

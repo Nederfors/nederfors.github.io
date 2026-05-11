@@ -53,7 +53,7 @@
 
   /* -- App layout vars (no DAUB equivalent) ----------------- */
   --shell-width: min(1120px, calc(100vw - 1.6rem));
-  --shell-highlight: rgba(245, 230, 208, 0.14);
+  --shell-highlight: rgba(255, 243, 228, 0.14);
   --ctrl-btn-size: 40px;
   --entry-card-action-size: var(--ctrl-btn-size);
   --ctrl-btn-font-size: 1.35rem;
@@ -61,11 +61,11 @@
 
   /* -- Game-semantic colours (no DAUB equivalent) ----------- */
   --mystic: #a88fcc;
-  --quality: #6b9e5b;
-  --neutral: #5b8ab5;
-  --hilight: #e0783840;
-  --negative: #8b6540;
-  --danger-bg: #3a1812;
+  --quality: #C2A36A;
+  --neutral: #9CB69A;
+  --hilight: #57ff4b75;
+  --negative: #8B4513;
+  --danger-bg: #3B1C1C;
 
   /* -- XP / status pills ------------------------------------ */
   --xp-pill-bg: #3A3029;
@@ -73,9 +73,9 @@
   --xp-pill-text: #F3E8D8;
 
   /* -- Tag interactive (bridged to DAUB where possible) ----- */
-  --tag-interactive-bg: var(--db-color-bg-alt, #4A3A2F);
-  --tag-interactive-border: var(--db-color-border, #6A443B);
-  --tag-interactive-text: var(--db-color-text, #EBDDC8);
+  --tag-interactive-bg: #4A3A2F;
+  --tag-interactive-border: #6A443B;
+  --tag-interactive-text: #EBDDC8;
 }
 
 @media (max-width: 640px) {
@@ -88,7 +88,7 @@
 html,
 body {
   min-height: 100%;
-  background: var(--db-color-bg, #231c14);
+  background: var(--db-color-bg, #2D2C21);
   color: var(--db-color-text, var(--txt));
   overflow-x: hidden;
 }

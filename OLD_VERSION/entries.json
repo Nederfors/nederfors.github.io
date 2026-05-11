@@ -1,0 +1,294 @@
+[
+  {
+    "id": 1,
+    "namn": "Nattbajsare",
+    "beskrivning": "Vaknar varje natt för att bajsa.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "namn": "Hurtig läkning",
+    "beskrivning": "Din kropp läker snabbare än en ost gror — helt ostoppbar healing!",
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [
+        "Mystiker"
+      ],
+      "test": [
+        "Stark"
+      ]
+    }
+  },
+  {
+    "id": 17,
+    "namn": "Magisk Projektil",
+    "beskrivning": "Kastar en projektil av ren magi.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Magiker"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Skada 1T4, räckvidd 10 m.",
+      "Gesäll": "Skada 1T6, räckvidd 20 m.",
+      "Mästare": "Skada 1T8, räckvidd 30 m + två projektiler."
+    }
+  },
+  {
+    "id": 18,
+    "namn": "Pruttlukt",
+    "beskrivning": "Pruttar så högt och illaluktande att alla omkring svimmar.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Häxkonst"
+      ]
+    }
+  },
+  {
+    "id": 19,
+    "namn": "Oändlig Ostkniv",
+    "beskrivning": "Ett vasst vapen som aldrig slöas — perfekt för frukost och strid.",
+    "taggar": {
+      "typ": [
+        "Vapen"
+      ],
+      "kvalitet": [
+        "Knivig",
+        "Skarp"
+      ]
+    },
+    "stat": {
+      "skada": "1T6",
+      "räckvidd": "1 m"
+    }
+  },
+  {
+    "id": 20,
+    "namn": "Elixir av Episk Energi",
+    "beskrivning": "Ger dig en energiboost som varar en timme — eller tills du somnar.",
+    "taggar": {
+      "typ": [
+        "Elixir"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Ger +1 på alla tester i 10 min.",
+      "Gesäll": "Ger +2 på alla tester i 30 min.",
+      "Mästare": "Ger +3 på alla tester i 60 min."
+    }
+  },
+  {
+    "id": 21,
+    "namn": "Myrskrustning",
+    "beskrivning": "En rustning gjord av komprimerad myrjord — överraskande lätt.",
+    "taggar": {
+      "typ": [
+        "Rustning"
+      ],
+      "kvalitet": [
+        "Tung",
+        "Pansarlik"
+      ]
+    },
+    "stat": {
+      "försvar": "+2 Tålighet"
+    }
+  },
+  {
+    "id": 22,
+    "namn": "Gyllene Pappmugg",
+    "beskrivning": "En kaffemugg som aldrig rinner ut — idealisk för äventyrare med bråttom.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    }
+  },
+  {
+    "id": 23,
+    "namn": "Spindelsteg",
+    "beskrivning": "Rör dig tystare än en spindel med tofflor.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Diskret"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Får +1 Tärningsbonus på Diskret-tester.",
+      "Gesäll": "Får +2 Tärningsbonus på Diskret-tester.",
+      "Mästare": "Får +3 Tärningsbonus på Diskret-tester och lämnar inga spår."
+    }
+  },
+  {
+    "id": 24,
+    "namn": "Blixtsnabb",
+    "beskrivning": "Du blinkar – världen hinner inte med.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Kvickhets-tester.",
+      "Gesäll": "+2 på Kvickhets-tester; parera som reaktion.",
+      "Mästare": "+3 på Kvickhets-tester; får extra handling per stridsrunda."
+    }
+  },
+  {
+    "id": 25,
+    "namn": "Listmeka",
+    "beskrivning": "Finurlig plantering av “Vad hände precis?”-ögonblick.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Listig"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Listig-tester.",
+      "Gesäll": "+2 på Listig-tester; kan lura en motståndare per scen.",
+      "Mästare": "+3 på Listig-tester; förvirrar alla åskådare i två ronder."
+    }
+  },
+  {
+    "id": 26,
+    "namn": "Stenstark",
+    "beskrivning": "Lyfter stenbumlingar som om de vore kuddar.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Stark"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Styrke-tester.",
+      "Gesäll": "+2 på Styrke-tester; lyfter 200 kg utan hjälp.",
+      "Mästare": "+3 på Styrke-tester; kan kasta en ko som impro-vapen."
+    }
+  },
+  {
+    "id": 27,
+    "namn": "Laserprecision",
+    "beskrivning": "Din träffsäkerhet är kuslig.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Träffsäker-tester.",
+      "Gesäll": "+2; ignorerar halv täckning.",
+      "Mästare": "+3; kritiska träffar på 19–20."
+    }
+  },
+  {
+    "id": 28,
+    "namn": "Ugglesyn",
+    "beskrivning": "Ser i mörker som en caffeinerad uggla.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Vaksam-tester.",
+      "Gesäll": "+2; nattseende 30 m.",
+      "Mästare": "+3; ser osynliga varelser i svagt ljus."
+    }
+  },
+  {
+    "id": 29,
+    "namn": "Järnvilja",
+    "beskrivning": "Din beslutsamhet får berg att flytta på sig.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Viljestark-tester.",
+      "Gesäll": "+2; ignorera första skräckslageffekten per scen.",
+      "Mästare": "+3; immun mot mental tvång."
+    }
+  },
+  {
+    "id": 30,
+    "namn": "Silverpung",
+    "beskrivning": "En röst som får stenstatyer att öppna plånboken.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "nivåer": {
+      "Novis": "+1 på Övertygande-tester.",
+      "Gesäll": "+2; sänker handelspris med 10 %.",
+      "Mästare": "+3; kan övertala fiende att pausa striden en runda."
+    }
+  },
+  {
+    "id": 31,
+    "namn": "Skarp",
+    "beskrivning": "Ger vapnet bättre bett.",
+    "taggar": {
+      "typ": [
+        "Kvalitet"
+      ]
+    }
+
+  },
+  {
+    "id": 32,
+    "namn": "Lätt",
+    "beskrivning": "Minskar vikten på föremålet.",
+    "taggar": {
+      "typ": [
+        "Kvalitet"
+      ]
+    }
+  },
+  {
+    "id": 33,
+    "namn": "Hållbar",
+    "beskrivning": "Tål hårda tag utan att gå sönder.",
+    "taggar": {
+      "typ": [
+        "Kvalitet"
+      ]
+    }
+  }
+]

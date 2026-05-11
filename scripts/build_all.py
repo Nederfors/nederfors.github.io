@@ -50,6 +50,7 @@ DATA_FILES = [
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 OUTPUT_FILE = DATA_DIR / 'all.json'
+INDEX_CATALOG_FILE = DATA_DIR / 'index-catalog.json'
 TABLES_FILE = DATA_DIR / 'tabeller.json'
 RITUAL_LEVELS = ('Enkel', 'Ordinär', 'Avancerad')
 MYSTIC_LEVELS = ('Novis', 'Gesäll', 'Mästare')
@@ -70,6 +71,94 @@ def split_tags(value):
             if tag:
                 out.append(tag)
     return out
+
+
+def compact_tags(tags):
+    if not isinstance(tags, dict):
+        return {}
+    aliases = {
+        'types': 'typ',
+        'traditions': 'ark_trad',
+        'tests': 'test',
+        'qualities': 'kvalitet',
+        'hidden': 'dold',
+        'max_count': 'max_antal',
+    }
+    keep = {}
+    for key in ('typ', 'types', 'ark_trad', 'traditions', 'test', 'tests', 'dold', 'hidden', 'max_antal', 'max_count', 'kvalitet', 'qualities'):
+        if key not in tags:
+            continue
+        keep[aliases.get(key, key)] = tags[key]
+    return keep
+
+
+def search_parts(value):
+    parts = []
+    if isinstance(value, dict):
+        for item in value.values():
+            parts.extend(search_parts(item))
+    elif isinstance(value, list):
+        for item in value:
+            parts.extend(search_parts(item))
+    elif value is not None:
+        text = str(value).strip()
+        if text:
+            parts.append(text)
+    return parts
+
+
+def searchable_levels(levels):
+    if not isinstance(levels, dict):
+        return {}
+    keep = {}
+    allowed = {'description', 'beskrivning', 'actions', 'handling', 'tests', 'test', 'damage_type', 'skadetyp'}
+    for level, data in levels.items():
+        if isinstance(data, dict):
+            keep[level] = {key: value for key, value in data.items() if key in allowed}
+        else:
+            keep[level] = data
+    return keep
+
+
+def summarize_entry(entry, source_file, source_index, table=False):
+    if not isinstance(entry, dict):
+        return {}
+    tags = get_entry_tags(entry)
+    summary_tags = compact_tags(tags)
+    levels = get_entry_levels(entry, tags)
+    level_keys = list(levels.keys()) if isinstance(levels, dict) else []
+    search_text = ' '.join(search_parts([
+        entry.get('namn'),
+        entry.get('name'),
+        summary_tags,
+        level_keys,
+        entry.get('beskrivning'),
+        entry.get('description'),
+        entry.get('extra'),
+        searchable_levels(levels),
+        entry.get('kolumner') if table else None,
+        entry.get('rader') if table else None,
+    ]))
+    search_limit = 900 if table else 360
+    if len(search_text) > search_limit:
+        search_text = search_text[:search_limit].rsplit(' ', 1)[0]
+
+    summary = {
+        '__catalogSummary': True,
+        '__sourceFile': f'data/{source_file}',
+        '__sourceIndex': source_index,
+        'id': entry.get('id'),
+        'namn': entry.get('namn') or entry.get('name') or entry.get('id') or '',
+        'taggar': summary_tags,
+        'nivåer': {key: '' for key in level_keys},
+        '__levelKeys': level_keys,
+        '__searchText': search_text,
+    }
+    if table:
+        summary['__catalogTable'] = True
+        summary['kolumner'] = []
+        summary['rader'] = []
+    return summary
 
 
 def get_level_data(tags):
@@ -202,6 +291,15 @@ def main():
         )
 
     tables_payload = load_json(TABLES_FILE)
+    table_catalog_entries = []
+    if isinstance(tables_payload, list):
+        table_source_entries = tables_payload
+    elif isinstance(tables_payload, dict) and isinstance(tables_payload.get('entries'), list):
+        table_source_entries = tables_payload.get('entries')
+    else:
+        table_source_entries = []
+    for idx, entry in enumerate(table_source_entries):
+        table_catalog_entries.append(summarize_entry(entry, 'tabeller.json', idx, table=True))
 
     bundle = {
         'generatedAt': datetime.now(timezone.utc).isoformat(),
@@ -216,6 +314,25 @@ def main():
             json.dump(bundle, handle, ensure_ascii=False, indent=2)
         else:
             json.dump(bundle, handle, ensure_ascii=False)
+        handle.write('\n')
+
+    index_catalog = {
+        'generatedAt': bundle['generatedAt'],
+        'totalCount': len(entries),
+        'sources': sources,
+        'entries': [
+            summarize_entry(entry, filename, idx)
+            for filename, payload in zip(DATA_FILES, source_payloads)
+            for idx, entry in enumerate(payload.get('entries', []) if isinstance(payload, dict) else [])
+        ],
+        'tables': table_catalog_entries,
+    }
+
+    with INDEX_CATALOG_FILE.open('w', encoding='utf-8') as handle:
+        if args.pretty:
+            json.dump(index_catalog, handle, ensure_ascii=False, indent=2)
+        else:
+            json.dump(index_catalog, handle, ensure_ascii=False, separators=(',', ':'))
         handle.write('\n')
 
     print(f'Wrote {len(entries)} entries to {OUTPUT_FILE.relative_to(ROOT_DIR)}')

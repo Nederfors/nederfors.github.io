@@ -264,6 +264,101 @@ async function collectRuns(browser, iterations, runner) {
   return runs;
 }
 
+async function revealIndexPerfTarget(page, kind, options = {}) {
+  const preferredNames = options.entryName
+    ? [String(options.entryName)]
+    : kind === 'inventory'
+      ? ['Dubbel ringbrynja']
+      : kind === 'popup'
+        ? ['Monsterlärd', 'Exceptionellt karaktärsdrag', 'Blodsband']
+        : ['Akrobatik'];
+  const target = await page.evaluate(({ kind, preferredNames }) => {
+    const listEntryTypes = new Set(['Förmåga', 'Basförmåga', 'Särdrag', 'Fördel', 'Nackdel', 'Mystisk kraft', 'Ritual']);
+    const entries = Array.isArray(window.DB) ? window.DB : [];
+    const visibleCards = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')];
+    const visibleMatch = preferredNames
+      .map((name) => visibleCards.find((card) => String(card?.dataset?.name || '').trim() === name))
+      .find(Boolean);
+    if (visibleMatch) {
+      return {
+        id: visibleMatch.dataset.id || '',
+        name: String(visibleMatch.dataset.name || '').trim()
+      };
+    }
+
+    const describe = (entry) => {
+      const meta = typeof window.ensureEntryMeta === 'function'
+        ? window.ensureEntryMeta(entry)
+        : null;
+      const types = Array.isArray(meta?.typList)
+        ? meta.typList
+        : (Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : []);
+      return {
+        entry,
+        id: String(entry?.id || ''),
+        name: String(entry?.namn || '').trim(),
+        types,
+        isInventory: typeof window.isInv === 'function' ? Boolean(window.isInv(entry)) : false,
+        isEmployment: typeof window.isEmployment === 'function' ? Boolean(window.isEmployment(entry)) : false,
+        isService: typeof window.isService === 'function' ? Boolean(window.isService(entry)) : false,
+        isHidden: typeof window.storeHelper?.isSearchHiddenEntry === 'function'
+          ? Boolean(window.storeHelper.isSearchHiddenEntry(entry))
+          : false,
+        isArtifact: types.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
+      };
+    };
+    const candidates = entries.map(describe).filter((item) => item.name);
+    const preferred = preferredNames
+      .map((name) => candidates.find((item) => item.name === name))
+      .find(Boolean);
+    const fallback = kind === 'inventory'
+      ? candidates.find((item) => item.isInventory && !item.isHidden && !item.isArtifact)
+        || candidates.find((item) => item.isInventory)
+      : candidates.find((item) => (
+        !item.isInventory
+        && !item.isEmployment
+        && !item.isService
+        && item.types.some((type) => listEntryTypes.has(String(type || '').trim()))
+      )) || candidates.find((item) => !item.isInventory && !item.isEmployment && !item.isService);
+    const picked = preferred || fallback || null;
+    if (!picked) return null;
+    if (typeof window.handleIndexSearchTerm === 'function') {
+      window.handleIndexSearchTerm(picked.name, { scroll: false });
+    } else {
+      const cat = picked.types[0] || '';
+      const details = [...document.querySelectorAll('.cat-group > details')]
+        .find((candidate) => String(candidate?.dataset?.cat || '') === cat);
+      if (details) {
+        details.open = true;
+        details.dispatchEvent(new Event('toggle'));
+      }
+    }
+    return {
+      id: picked.id,
+      name: picked.name
+    };
+  }, { kind, preferredNames });
+
+  if (!target?.name) {
+    throw new Error(`Unable to reveal a deterministic ${kind} index target.`);
+  }
+
+  const actionSelector = options.actionSelector || 'button.add-btn, button[data-act="add"], button[data-act="addInventory"]';
+  await page.waitForFunction(({ id, name, actionSelector }) => {
+    const cards = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')];
+    return cards.some((card) => {
+      const cardId = String(card?.dataset?.id || '').trim();
+      const cardName = String(card?.dataset?.name || '').trim();
+      const sameEntry = (id && cardId === id) || cardName === name;
+      return sameEntry && (!actionSelector || Boolean(card.querySelector(actionSelector)));
+    });
+  }, { ...target, actionSelector }, { timeout: 120_000 });
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  return target;
+}
+
 async function clickDeterministicAddButton(page, kind) {
   const target = await page.evaluate((targetKind) => {
     const listEntryTypes = new Set(['Förmåga', 'Basförmåga', 'Särdrag', 'Fördel', 'Nackdel', 'Mystisk kraft', 'Ritual']);
@@ -491,10 +586,13 @@ async function prepareCharacterArtifactRemove(page) {
 async function prepareIndexListEntry(page, options = {}) {
   return page.evaluate(async ({ entryName = 'Akrobatik', count = 1, onlySelected = false }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-    const entry = window.lookupEntry?.({ name: entryName })
+    let entry = window.lookupEntry?.({ name: entryName })
       || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
       || null;
     if (!entry) throw new Error(`Missing entry: ${entryName}`);
+    if (typeof window.catalogLoader?.ensureEntryData === 'function') {
+      entry = await window.catalogLoader.ensureEntryData(entry);
+    }
     const levels = Object.keys(entry.nivåer || {});
     const level = levels[0] || entry.nivå || 'Novis';
     const list = Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => ({
@@ -520,7 +618,7 @@ async function prepareIndexListEntry(page, options = {}) {
 async function prepareIndexInventoryEntry(page, options = {}) {
   return page.evaluate(async ({ entryName = 'Dubbel ringbrynja', qty = 1, useArtifactCandidate = false, onlySelected = false }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-    const entry = useArtifactCandidate
+    let entry = useArtifactCandidate
       ? (() => {
           const visibleCards = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')]
             .map((card) => {
@@ -551,6 +649,9 @@ async function prepareIndexInventoryEntry(page, options = {}) {
         || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
         || null;
     if (!entry) throw new Error('Missing inventory entry for index remove scenario.');
+    if (typeof window.catalogLoader?.ensureEntryData === 'function') {
+      entry = await window.catalogLoader.ensureEntryData(entry);
+    }
     const row = useArtifactCandidate
       ? {
           id: entry.id,
@@ -682,6 +783,7 @@ async function runSearchFilter(browser, iterations) {
 async function runIndexAdd(browser, iterations, kind) {
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
+      await revealIndexPerfTarget(page, kind);
       await clearPerfHistory(page);
       const target = await clickDeterministicAddButton(page, kind);
       const scenario = await waitForScenario(page, 'add-item-to-character');
@@ -704,6 +806,7 @@ async function runIndexPopupAdd(browser, iterations) {
       readySelector: '#lista',
       profile: 'interaction-heavy'
     }, async (page) => {
+      await revealIndexPerfTarget(page, 'popup');
       await page.evaluate(() => {
         window.__symbaroumPerfAwaitFlush = true;
         window.symbaroumPerf?.clearHistory?.();
@@ -764,14 +867,28 @@ async function runIndexPopupAdd(browser, iterations) {
       }
 
       await page.locator('#choicePopup').waitFor({ state: 'visible' });
+      await page.waitForFunction(() => {
+        const popup = document.getElementById('choicePopup');
+        if (!popup) return false;
+        const optionRoot = popup.querySelector('#choiceOpts') || popup;
+        const buttons = [...optionRoot.querySelectorAll('button')]
+          .some((candidate) => !candidate.disabled && String(candidate.textContent || '').trim());
+        const radios = [...optionRoot.querySelectorAll('input[type="radio"]')]
+          .some((candidate) => !candidate.disabled);
+        return buttons || radios;
+      }, null, { timeout: 10_000 });
       const popupClose = await page.evaluate(async () => {
         const popup = document.getElementById('choicePopup');
         if (!popup) throw new Error('Choice popup was not found.');
         const optionRoot = popup.querySelector('#choiceOpts') || popup;
         const button = [...optionRoot.querySelectorAll('button')]
           .find((candidate) => !candidate.disabled && String(candidate.textContent || '').trim());
-        if (!button) throw new Error('Choice popup had no selectable option.');
-        const label = String(button.textContent || '').trim();
+        const radio = [...optionRoot.querySelectorAll('input[type="radio"]')]
+          .find((candidate) => !candidate.disabled);
+        const control = button || radio || null;
+        if (!control) throw new Error('Choice popup had no selectable option.');
+        const labelRoot = control.closest('label') || control;
+        const label = String(labelRoot.textContent || control.value || '').trim();
         const isVisible = () => {
           if (!popup.isConnected) return false;
           const style = window.getComputedStyle(popup);
@@ -783,7 +900,10 @@ async function runIndexPopupAdd(browser, iterations) {
             || popup.getBoundingClientRect().height > 0;
         };
         const start = performance.now();
-        button.click();
+        control.click();
+        if (radio) {
+          radio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         const timeoutAt = performance.now() + 5000;
         await new Promise((resolve, reject) => {
           const tick = () => {
@@ -1531,6 +1651,10 @@ async function runIndexListRemove(browser, iterations, options = {}) {
         onlySelected: Boolean(options.onlySelected)
       });
       await settleAfterMutation(page);
+      await revealIndexPerfTarget(page, 'list', {
+        entryName: target.name,
+        actionSelector: 'button[data-act="rem"], button[data-act="sub"], button[data-act="del"]'
+      });
       await enableRemoveProfiling(page);
       await clickCardAction(page, { rootSelector: '#lista', name: target.name, act: 'rem' });
       const scenario = await waitForRemoveScenario(page);
@@ -1556,6 +1680,10 @@ async function runIndexInventoryRemove(browser, iterations, options = {}) {
         useArtifactCandidate: Boolean(options.useArtifactCandidate)
       });
       await settleAfterMutation(page);
+      await revealIndexPerfTarget(page, 'inventory', {
+        entryName: target.name,
+        actionSelector: 'button[data-act="rem"], button[data-act="sub"], button[data-act="del"]'
+      });
       await enableRemoveProfiling(page);
       await clickCardAction(page, {
         rootSelector: '#lista',

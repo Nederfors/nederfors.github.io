@@ -21,6 +21,7 @@ JS_END = "  // sync-data-manifest:end"
 ENTRY_DATA_EXCLUDES = {
     "ai-plugin.json",
     "all.json",
+    "index-catalog.json",
     "pdf-list.json",
     "struktur.json",
     "tabeller.json",

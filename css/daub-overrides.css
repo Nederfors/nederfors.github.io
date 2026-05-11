@@ -6,31 +6,31 @@
 
 [data-theme="ember-dark"] {
   /* ── Backgrounds (charred wood) ────────────────────── */
-  --db-color-bg:              #1a1310;
-  --db-color-bg-alt:          #261c16;
+  --db-color-bg:              #2D2C21;
+  --db-color-bg-alt:          #26211D;
   --db-color-bg-rgb:          26, 19, 16;
 
   /* ── Surfaces (weathered plank) ────────────────────── */
-  --db-color-surface:         #2a1f18;
+  --db-color-surface:         #231E1A;
   --db-color-surface-rgb:     42, 31, 24;
 
   /* ── Text (parchment / ash) ────────────────────────── */
-  --db-color-text:            #f5e6d0;
-  --db-color-text-secondary:  #c4a882;
+  --db-color-text:            #FFF3E4;
+  --db-color-text-secondary:  #BCAE9E;
   --db-color-text-muted:      rgba(245, 230, 208, 0.40);
   --db-color-text-rgb:        245, 230, 208;
 
   /* ── Borders (wood-grain edge) ─────────────────────── */
-  --db-color-border:          #4a3628;
+  --db-color-border:          #3E342E;
   --db-color-border-rgb:      74, 54, 40;
 
   /* ── Accent (burning ember) ────────────────────────── */
-  --db-color-accent:          #c45a2a;
-  --db-color-accent-hover:    #e07838;
-  --db-color-accent-rgb:      196, 90, 42;
+  --db-color-accent:          #B97A52;
+  --db-color-accent-hover:    #C98B63;
+  --db-color-accent-rgb:      185, 122, 82;
   --db-accent-dark:           #B97A52;
-  --db-accent-light:          #e07838;
-  --db-accent-hover:          #e07838;
+  --db-accent-light:          #C98B63;
+  --db-accent-hover:          #C98B63;
   --db-accent-pressed:        #8a3618;
 
   /* ── Status colours ──────────────────────────────── */
@@ -50,9 +50,9 @@
   --db-font-ui:               'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif;
 
   /* ── Shadows (ember glow + depth) ──────────────────── */
-  --db-shadow-1:              0 12px 28px rgba(0, 0, 0, 0.20), 0 0 1px rgba(196, 90, 42, 0.06);
-  --db-shadow-2:              0 18px 38px rgba(0, 0, 0, 0.38), 0 0 2px rgba(196, 90, 42, 0.08);
-  --db-shadow-3:              0 28px 48px rgba(0, 0, 0, 0.36), 0 0 3px rgba(196, 90, 42, 0.10);
+  --db-shadow-1:              0 12px 28px rgba(0, 0, 0, 0.20), 0 0 1px rgba(185, 122, 82, 0.06);
+  --db-shadow-2:              0 18px 38px rgba(0, 0, 0, 0.38), 0 0 2px rgba(185, 122, 82, 0.08);
+  --db-shadow-3:              0 28px 48px rgba(0, 0, 0, 0.36), 0 0 3px rgba(185, 122, 82, 0.10);
   --db-shadow-inset:          inset 0 2px 5px rgba(0, 0, 0, 0.48);
 
   /* ── Legacy aliases (resolve through DAUB tokens) ──── */
@@ -145,9 +145,9 @@
 
 /* ── Entry card visual separation ── */
 .db-card.entry-card {
-  border: 1px solid var(--db-color-border, #4a3628);
+  border: 1px solid var(--db-color-border, #3E342E);
   border-radius: 0.75rem;
-  background: var(--db-color-surface, #2a1f18);
+  background: var(--db-color-surface, #231E1A);
   padding: 0.65rem 0.75rem;
 }
 
@@ -325,7 +325,7 @@
 .db-chip.filter-tag {
   cursor: pointer;
   background: var(--tag-interactive-bg, rgba(62, 44, 30, 0.98));
-  color: var(--tag-interactive-text, #f5e6d0);
+  color: var(--tag-interactive-text, #FFF3E4);
   border: 1px solid var(--tag-interactive-border, rgba(245, 230, 208, 0.12));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04), 0 1px 2px rgba(0, 0, 0, .35);
   transition: opacity 0.15s ease, background 0.15s ease;

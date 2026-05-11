@@ -5,44 +5,44 @@
  */
 
 [data-theme="ember"] {
-  /* ── Backgrounds (charred wood) ────────────────────── */
-  --db-color-bg:              #1a1310;
-  --db-color-bg-alt:          #261c16;
-  --db-color-bg-rgb:          26, 19, 16;
+  /* ── Backgrounds (classic Symbapedia umber) ─────────── */
+  --db-color-bg:              #2D2C21;
+  --db-color-bg-alt:          #26211D;
+  --db-color-bg-rgb:          45, 44, 33;
 
-  /* ── Surfaces (weathered plank) ────────────────────── */
-  --db-color-surface:         #2a1f18;
-  --db-color-surface-rgb:     42, 31, 24;
+  /* ── Surfaces (old card/panel stack) ───────────────── */
+  --db-color-surface:         #231E1A;
+  --db-color-surface-rgb:     35, 30, 26;
 
-  /* ── Text (parchment / ash) ────────────────────────── */
-  --db-color-text:            #f5e6d0;
-  --db-color-text-secondary:  #c4a882;
-  --db-color-text-muted:      rgba(245, 230, 208, 0.40);
-  --db-color-text-rgb:        245, 230, 208;
+  /* ── Text (classic parchment) ──────────────────────── */
+  --db-color-text:            #FFF3E4;
+  --db-color-text-secondary:  #BCAE9E;
+  --db-color-text-muted:      rgba(255, 243, 228, 0.40);
+  --db-color-text-rgb:        255, 243, 228;
 
-  /* ── Borders (wood-grain edge) ─────────────────────── */
-  --db-color-border:          #4a3628;
-  --db-color-border-rgb:      74, 54, 40;
+  /* ── Borders (old warm brown edge) ─────────────────── */
+  --db-color-border:          #3E342E;
+  --db-color-border-rgb:      62, 52, 46;
 
-  /* ── Accent (burning ember) ────────────────────────── */
-  --db-color-accent:          #c45a2a;
-  --db-color-accent-hover:    #e07838;
-  --db-color-accent-rgb:      196, 90, 42;
+  /* ── Accent (old leather/copper accent) ────────────── */
+  --db-color-accent:          #B97A52;
+  --db-color-accent-hover:    #C98B63;
+  --db-color-accent-rgb:      185, 122, 82;
   --db-accent-dark:           #B97A52;
-  --db-accent-light:          #e07838;
-  --db-accent-hover:          #e07838;
-  --db-accent-pressed:        #8a3618;
+  --db-accent-light:          #C98B63;
+  --db-accent-hover:          #C98B63;
+  --db-accent-pressed:        #8E5738;
 
   /* ── Status colours ──────────────────────────────── */
-  --db-color-error:           #e85c4a;
-  --db-color-success:         #7daa6e;
-  --db-color-warning:         #d4a237;
-  --db-error:                 #e85c4a;
-  --db-success:               #7daa6e;
-  --db-warning:               #d4a237;
+  --db-color-error:           #ee6b61;
+  --db-color-success:         #9CB69A;
+  --db-color-warning:         #C2A36A;
+  --db-error:                 #ee6b61;
+  --db-success:               #9CB69A;
+  --db-warning:               #C2A36A;
 
   /* ── Overlay / backdrop ──────────────────────────── */
-  --db-color-overlay:         rgba(8, 4, 2, 0.68);
+  --db-color-overlay:         rgba(20, 16, 13, 0.68);
 
   /* ── Typography ──────────────────────────────────── */
   --db-font-heading:          'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
@@ -50,26 +50,26 @@
   --db-font-ui:               'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif;
 
   /* ── Shadows (ember glow + depth) ──────────────────── */
-  --db-shadow-1:              0 12px 28px rgba(0, 0, 0, 0.20), 0 0 1px rgba(196, 90, 42, 0.06);
-  --db-shadow-2:              0 18px 38px rgba(0, 0, 0, 0.38), 0 0 2px rgba(196, 90, 42, 0.08);
-  --db-shadow-3:              0 28px 48px rgba(0, 0, 0, 0.36), 0 0 3px rgba(196, 90, 42, 0.10);
+  --db-shadow-1:              0 12px 28px rgba(0, 0, 0, 0.20), 0 0 1px rgba(185, 122, 82, 0.06);
+  --db-shadow-2:              0 18px 38px rgba(0, 0, 0, 0.38), 0 0 2px rgba(185, 122, 82, 0.08);
+  --db-shadow-3:              0 28px 48px rgba(0, 0, 0, 0.36), 0 0 3px rgba(185, 122, 82, 0.10);
   --db-shadow-inset:          inset 0 2px 5px rgba(0, 0, 0, 0.48);
 
   /* ── Legacy aliases (resolve through DAUB tokens) ──── */
-  --bg:                       var(--db-color-bg-alt);
-  --panel:                    var(--db-color-surface);
-  --border:                   var(--db-color-border);
-  --card:                     var(--db-color-bg);
-  --card-border:              var(--db-color-border);
-  --txt:                      var(--db-color-text);
-  --subtxt:                   var(--db-color-text-secondary);
-  --accent:                   var(--db-color-accent);
-  --danger:                   var(--db-color-error);
+  --bg:                       #2D2C21;
+  --panel:                    #26211D;
+  --border:                   #3A312A;
+  --card:                     #231E1A;
+  --card-border:              #3E342E;
+  --txt:                      #FFF3E4;
+  --subtxt:                   #BCAE9E;
+  --accent:                   #B97A52;
+  --danger:                   #ee6b61;
   --shadow:                   var(--db-shadow-2);
-  --toolborder:               var(--db-color-border);
-  --button-standard:          var(--db-color-border);
-  --button-cta:               var(--db-accent-dark);
-  --text-icons:               var(--db-color-text);
+  --toolborder:               #6A443B;
+  --button-standard:          #6A443B;
+  --button-cta:               #8B0000;
+  --text-icons:               #E0D2C0;
   --popup-backdrop-shade:     var(--db-color-overlay);
   --display-font:             var(--db-font-heading);
   --ui-font:                  var(--db-font-ui);

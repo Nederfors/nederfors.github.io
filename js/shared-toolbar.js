@@ -803,16 +803,16 @@ class SharedToolbar extends HTMLElement {
       <style>
         :host { display: block; }
 
-        .toolbar {
+        .toolbar.db-bottom-nav {
           position: fixed;
-          bottom: calc(env(safe-area-inset-bottom) + var(--toolbar-lift, 0px));
+          bottom: 0;
           left: 0;
           right: 0;
           width: 100%;
-          z-index: 900;
+          z-index: 1000;
           background: var(--panel);
           border-top: 1.5px solid var(--border);
-          padding: .6rem .8rem;
+          padding: .6rem .8rem calc(.6rem + env(safe-area-inset-bottom, 0px));
           display: flex;
           flex-direction: column;
           gap: .6rem;
@@ -871,6 +871,84 @@ class SharedToolbar extends HTMLElement {
         .button-row {
           display: flex;
           gap: .6rem;
+        }
+        .toolbar .toolbar-nav-items {
+          position: relative;
+          inset: auto;
+          z-index: auto;
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: .15rem;
+          padding: .2rem;
+          border: 1px solid var(--db-color-border, rgba(245, 230, 208, .1));
+          border-radius: 1rem;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .01)),
+            rgba(25, 20, 17, .74);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, .05),
+            0 8px 18px rgba(0, 0, 0, .16);
+          padding-bottom: .2rem;
+        }
+        .toolbar .db-bottom-nav__item {
+          min-width: 0;
+          min-height: 3.35rem;
+          padding: .42rem .22rem .38rem;
+          border: 1px solid transparent;
+          border-radius: .78rem;
+          background: transparent;
+          box-shadow: none;
+          color: var(--txt-muted, rgba(245, 230, 208, .72));
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: .2rem;
+          font-size: .6rem;
+          font-weight: 650;
+          line-height: 1.08;
+          text-decoration: none;
+          text-shadow: none;
+          letter-spacing: 0;
+        }
+        .toolbar .db-bottom-nav__item .btn-icon {
+          width: 1.42rem;
+          height: 1.42rem;
+        }
+        .toolbar .db-bottom-nav__label {
+          display: block;
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .toolbar .toolbar-nav-items .db-bottom-nav__item.db-bottom-nav__item--active,
+        .toolbar .toolbar-nav-items .db-bottom-nav__item.active {
+          border-color: rgba(221, 225, 186, .34);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02)),
+            #7a9470;
+          color: #192013;
+          box-shadow:
+            0 2px 8px rgba(0, 0, 0, .18),
+            inset 0 1px 0 rgba(255, 255, 255, .16);
+        }
+        .toolbar .db-bottom-nav__item:hover {
+          color: #fff7ee;
+          border-color: rgba(245, 230, 208, .16);
+          background: rgba(255, 255, 255, .06);
+          filter: none;
+          transform: translateY(-1px);
+        }
+        .toolbar .db-bottom-nav__item:active {
+          transform: translateY(1px);
+        }
+        .toolbar .db-bottom-nav__item.db-bottom-nav__item--active:hover,
+        .toolbar .db-bottom-nav__item.active:hover {
+          color: #192013;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .03)),
+            #7a9470;
         }
         @media (pointer: coarse) {
           .toolbar.keyboard-open .button-row {
@@ -1007,7 +1085,7 @@ class SharedToolbar extends HTMLElement {
             rgba(49, 43, 39, .72);
           color: #fff;
           padding: 0 .95rem;
-          border: 1.5px solid rgba(227, 186, 106, .24);
+          border: 1.5px solid rgba(194, 163, 106, .24);
           border-radius: .6rem;
           box-shadow:
             0 4px 10px rgba(0, 0, 0, .22),
@@ -1024,7 +1102,7 @@ class SharedToolbar extends HTMLElement {
           transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
         }
         .toolbar .exp-counter:hover {
-          border-color: rgba(227, 186, 106, .4);
+          border-color: rgba(194, 163, 106, .4);
           box-shadow:
             0 6px 13px rgba(0, 0, 0, .26),
             inset 0 1px 0 rgba(255, 255, 255, .1);
@@ -1033,7 +1111,7 @@ class SharedToolbar extends HTMLElement {
             rgba(56, 49, 44, .8);
         }
         .toolbar .exp-counter:focus-visible {
-          outline: 2px solid rgba(227, 186, 106, .6);
+          outline: 2px solid rgba(194, 163, 106, .6);
           outline-offset: 2px;
         }
         .toolbar .exp-counter:active {
@@ -1102,18 +1180,18 @@ class SharedToolbar extends HTMLElement {
           font-size: .92rem;
         }
         .popup-radio-option:hover {
-          border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.52);
-          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.16);
+          border-color: rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.52);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.16);
         }
         .popup-radio-option:focus-within {
-          border-color: rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.52);
-          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.16);
+          border-color: rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.52);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.16);
           outline: none;
         }
         .popup-radio-option.is-selected {
           background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
           border-color: var(--db-color-accent, var(--accent));
-          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 196, 90, 42), 0.24);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.24);
         }
         .popup-radio-option.is-selected .popup-radio-hint {
           color: var(--txt-muted, var(--txt));
@@ -1162,23 +1240,38 @@ class SharedToolbar extends HTMLElement {
       <link rel="stylesheet" href="css/style.css">
 
       <!-- ---------- Verktygsrad ---------- -->
-      <footer class="toolbar">
+      <nav class="toolbar db-bottom-nav db-bottom-nav--always" aria-label="Primär navigering">
         <div class="toolbar-top">
           <button id="catToggle" class="db-btn db-btn--icon chevron-toggle" title="Minimera alla kategorier"><span class="chevron-icon"></span></button>
-          <div class="search-wrap">
-            <input id="searchField" placeholder="T.ex 'Pajkastare'" autocomplete="off">
+          <div class="search-wrap db-search" role="search">
+            <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off">
             <div id="searchSuggest" class="suggestions" hidden></div>
           </div>
           <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
         </div>
-        <div class="button-row">
-          <a       id="traitsLink" class="db-btn db-btn--icon db-btn--icon-only nav-link" title="Egenskaper" href="#/traits">${icon('egenskaper')}</a>
-          <a       id="inventoryLink" class="db-btn db-btn--icon nav-link" title="Inventarievy" href="#/inventory">${icon('inventarie')}</a>
-          <a       id="indexLink" class="db-btn db-btn--icon db-btn--icon-only nav-link" title="Index" href="#/index">${icon('index')}</a>
-          <a       id="characterLink" class="db-btn db-btn--icon db-btn--icon-only nav-link" title="Rollperson" href="#/character">${icon('character')}</a>
-          <button  id="filterToggle" class="db-btn db-btn--icon db-btn--icon-only" title="Filter">${icon('settings')}</button>
+        <div class="button-row toolbar-nav-items" role="list" aria-label="Vyer och filter">
+          <a id="traitsLink" class="db-bottom-nav__item nav-link" title="Egenskaper" href="#/traits">
+            ${icon('egenskaper')}
+            <span class="db-bottom-nav__label">Egenskaper</span>
+          </a>
+          <a id="inventoryLink" class="db-bottom-nav__item nav-link" title="Inventarievy" href="#/inventory">
+            ${icon('inventarie')}
+            <span class="db-bottom-nav__label">Inventarie</span>
+          </a>
+          <a id="indexLink" class="db-bottom-nav__item nav-link" title="Index" href="#/index">
+            ${icon('index')}
+            <span class="db-bottom-nav__label">Index</span>
+          </a>
+          <a id="characterLink" class="db-bottom-nav__item nav-link" title="Rollperson" href="#/character">
+            ${icon('character')}
+            <span class="db-bottom-nav__label">Rollperson</span>
+          </a>
+          <button id="filterToggle" class="db-bottom-nav__item" type="button" title="Filter">
+            ${icon('settings')}
+            <span class="db-bottom-nav__label">Filter</span>
+          </button>
         </div>
-      </footer>
+      </nav>
 
       <!-- ---------- Filter ---------- -->
       <aside id="filterPanel" class="db-drawer offcanvas" data-touch-profile="panel-right">
@@ -2497,6 +2590,7 @@ class SharedToolbar extends HTMLElement {
       const act = Array.isArray(activeRoles) ? activeRoles : [activeRoles];
       const isActive = act.includes(role);
       link.classList.toggle('active', isActive);
+      link.classList.toggle('db-bottom-nav__item--active', isActive);
       if (isActive) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     };

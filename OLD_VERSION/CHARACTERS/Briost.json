@@ -1,0 +1,264 @@
+{
+  "name": "Briost",
+  "folderId": "fd-standard-237911",
+  "folder": "Standard",
+  "data": {
+    "artifactEffects": {
+      "xp": 0,
+      "corruption": 1
+    },
+    "bonusMoney": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0,
+      "d": 0,
+      "s": 0,
+      "o": 0
+    },
+    "forcedDefense": "",
+    "defenseSetup": {
+      "enabled": true,
+      "trait": "",
+      "armor": {
+        "path": [
+          0
+        ],
+        "id": "ru18",
+        "name": "Templárpansar"
+      },
+      "weapons": [
+        {
+          "path": [
+            2
+          ],
+          "id": "v14",
+          "name": "Sköld"
+        },
+        {
+          "path": [
+            6
+          ],
+          "id": "ar84",
+          "name": "Solkross"
+        }
+      ],
+      "dancingTrait": "",
+      "dancingWeapon": null
+    },
+    "liveMode": false,
+    "baseXp": 260,
+    "inventory": [
+      {
+        "i": "ru18",
+        "n": "Templárpansar"
+      },
+      {
+        "i": "forv12",
+        "n": "Säck"
+      },
+      {
+        "i": "v14",
+        "n": "Sköld"
+      },
+      {
+        "i": "kl13",
+        "n": "Mantel"
+      },
+      {
+        "i": "kl18",
+        "n": "Särk"
+      },
+      {
+        "i": "di5",
+        "n": "Fackla"
+      },
+      {
+        "i": "ar84",
+        "n": "Solkross",
+        "e": "corruption"
+      },
+      {
+        "i": "di10",
+        "n": "Flinta & stål"
+      },
+      {
+        "i": "di11",
+        "n": "Kokkärl"
+      },
+      {
+        "i": "di12",
+        "n": "Rep, 10 meter"
+      },
+      {
+        "i": "di13",
+        "n": "Sovfäll"
+      },
+      {
+        "i": "di14",
+        "n": "Tändved"
+      },
+      {
+        "i": "di15",
+        "n": "Vattenskinn"
+      },
+      {
+        "i": "far7",
+        "n": "Mulåsna"
+      }
+    ],
+    "entryOrderCounter": 25,
+    "list": [
+      {
+        "i": "mystiskkr17",
+        "l": "Mästare",
+        "u": "ent-mku490nr-2",
+        "o": 2
+      },
+      {
+        "i": "form20",
+        "l": "Gesäll",
+        "u": "ent-mku490nr-3",
+        "o": 3
+      },
+      {
+        "i": "form35",
+        "l": "Mästare",
+        "u": "ent-mku490nr-4",
+        "o": 4
+      },
+      {
+        "i": "elit2",
+        "u": "ent-mku490nt-5",
+        "o": 5
+      },
+      {
+        "i": "y8",
+        "f": "normal",
+        "u": "ent-mku4bevn-6",
+        "o": 6
+      },
+      {
+        "i": "ra6",
+        "f": "normal",
+        "u": "ent-mku4cqoh-7",
+        "o": 7
+      },
+      {
+        "i": "form41",
+        "l": "Gesäll",
+        "f": "normal",
+        "u": "ent-mku4ixgh-1",
+        "o": 8
+      },
+      {
+        "i": "mystiskkr19",
+        "l": "Novis",
+        "f": "normal",
+        "u": "ent-mku4n2yb-2",
+        "o": 9
+      },
+      {
+        "i": "form5",
+        "l": "Gesäll",
+        "t": "Viljestark",
+        "u": "ent-mku4t60h-1",
+        "o": 10
+      },
+      {
+        "i": "ri13",
+        "f": "normal",
+        "u": "ent-mku5b3kk-1",
+        "o": 12
+      },
+      {
+        "i": "mystiskkr44",
+        "l": "Gesäll",
+        "f": "normal",
+        "u": "ent-ml43oyqz-1",
+        "o": 14
+      },
+      {
+        "i": "na49",
+        "f": "normal",
+        "u": "ent-ml43rixz-1",
+        "o": 15
+      },
+      {
+        "i": "na41",
+        "f": "normal",
+        "u": "ent-ml43w3go-2",
+        "o": 16
+      },
+      {
+        "i": "na51",
+        "f": "normal",
+        "u": "ent-ml43x5lb-3",
+        "o": 17
+      },
+      {
+        "i": "na44",
+        "f": "normal",
+        "u": "ent-ml440wsw-4",
+        "o": 18
+      },
+      {
+        "i": "na66",
+        "f": "normal",
+        "u": "ent-ml445o01-1",
+        "o": 19
+      },
+      {
+        "i": "ford15",
+        "f": "normal",
+        "u": "ent-ml44coyf-2",
+        "o": 20
+      },
+      {
+        "i": "ford63",
+        "f": "normal",
+        "u": "ent-ml44d8bk-3",
+        "o": 21
+      },
+      {
+        "i": "ford62",
+        "f": "normal",
+        "u": "ent-ml44fs1f-5",
+        "o": 23
+      },
+      {
+        "i": "ar84",
+        "u": "ent-mlht3tqo-1",
+        "o": 24
+      },
+      {
+        "i": "form23",
+        "l": "Novis",
+        "f": "normal",
+        "u": "ent-mlhuc6nn-1",
+        "o": 25
+      }
+    ],
+    "traits": {
+      "Diskret": 5,
+      "Kvick": 14,
+      "Listig": 8,
+      "Stark": 14,
+      "Träffsäker": 5,
+      "Vaksam": 8,
+      "Viljestark": 15,
+      "Övertygande": 11
+    },
+    "revealedArtifacts": [
+      "ar84",
+      "ar93"
+    ],
+    "money": {
+      "örtegar": 0,
+      "skilling": 0,
+      "daler": 300,
+      "d": 300,
+      "s": 0,
+      "o": 0
+    }
+  }
+}

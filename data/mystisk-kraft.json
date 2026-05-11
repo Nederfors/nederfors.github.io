@@ -148,7 +148,7 @@
     {
       "id": "mystiskkr5",
       "name": "Bända vilja",
-      "description": "Material: En silverring\nDen fria viljan är en illusion men viljans kraft är otvetydig. Mystikern har förstått dessa till synes motstridiga principer och kan utnyttja sin insikt till att kortvarigt kontrollera en annan varelses vilja.",
+      "beskrivning": "Material: En silverring. Den fria viljans kraft är otvetydig, men kött och blod lyder alltid. Mystikern har förstått dessa till synes motstridiga principer och kan utnyttja sin insikt till att kortvarigt kontrollera en annan varelses kropp. Det är en djupt kränkande upplevelse där offret förblir vid fullt medvetande och kan tala, vädja eller varna sina allierade om vad som försiggår. Sinneslösa varelser drivna av korruption och naturkrafter saknar den själsliga koppling som krävs för att kraften ska fungera och är därmed immuna.",
       "tags": {
         "types": [
           "Mystisk kraft"
@@ -164,17 +164,17 @@
       },
       "levels": {
         "Novis": {
-          "description": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Viljestark]. Svårighetsgraden ökar för varje runda: mystikerns Viljestark får en kumulativ modifikation −1 för varje runda efter den första. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktionsförmågor/krafter under effekten. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
+          "description": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Stark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Stark]. Svårighetsgraden ökar för varje runda: mystikerns Viljestark får en kumulativ modifikation −1 för varje runda efter den första. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktionsförmågor/krafter under effekten. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         },
         "Gesäll": {
-          "description": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Viljestark]. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktiva förmågor/krafter. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
+          "description": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Stark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Stark]. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktiva förmågor/krafter. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         },
         "Mästare": {
-          "description": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen pågår tills mystikern misslyckas med [Viljestark←Viljestark] eller tappar koncentrationen. Den kontrollerade varelsen kan tvingas utföra sina två vanliga handlingar per runda men kan inte använda reaktiva förmågor (som t.ex försvar), men har nu tillgång till aktiva förmågor. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
+          "description": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Stark]. Kontrollen pågår tills mystikern misslyckas med [Viljestark←Stark] eller tappar koncentrationen. Den kontrollerade varelsen kan tvingas utföra sina två vanliga handlingar per runda men kan inte använda reaktiva förmågor (som t.ex försvar), men har nu tillgång till aktiva förmågor. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         }
@@ -444,7 +444,7 @@
           "damage_type": "Ingen"
         },
         "Mästare": {
-          "description": "Handling: Aktiv. Mystikern uttalar en dödsförbannelse över en fiende. Fienden tar 1T6 i skada, Bepansring skyddar ej, för varje handling den företar sig. Om målet förblir stilla och passivt tar det ingen skada. Effekten varar tills mystikern misslyckas med ett Viljestark.",
+          "description": "Handling: Aktiv. Som gesäll, men mystikern uttalar en dödsförbannelse över fienden. Fienden tar nu också 1T6 i skada, Bepansring skyddar ej, för varje handling den företar sig. Om målet förblir stilla och passivt tar det ingen skada. Effekten varar tills mystikern misslyckas med ett Viljestark.",
           "actions": "Aktiv",
           "damage_type": "Mystisk"
         }
@@ -628,12 +628,12 @@
           "damage_type": "Ingen"
         },
         "Gesäll": {
-          "description": "Handling: Aktiv. Mystikerns helande händer läker 1T8 Tålighet och stoppar pågående gifter, blödningar och kritiska skador som uppkommit på grund av överskriden smärtgräns.",
+          "description": "Handling: Aktiv. Mystikern kan hela en varelse inom synhåll. Kraften läker 1T8 Tålighet. Direkt handpåläggning av mystikern helar dessutom 1T10 Tålighet och stoppar pågående gifter, blödningar och kritiska skador som uppkommit på grund av överskriden smärtgräns.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         },
         "Mästare": {
-          "description": "Handling: Aktiv. Mystikern kan hela en varelse inom synhåll. Kraften läker 1T8 Tålighet samt stoppar pågående gifter, blödningar och kritiska skador som uppkommit på grund av överskriden smärtgräns. Direkt handpåläggning av mystikern helar 1T12 Tålighet.",
+          "description": "Handling: Aktiv. Som gesäll, men mystikerns helande kraft flödar nu starkare på avstånd. På distans läker målet 1T10 Tålighet och befrias från gifter, blödningar samt kritiska skador. Sker helandet genom direkt handpåläggning på en varelse med 0 eller mindre Tålighet, stabiliseras målet omedelbart till minst 1 Tålighet, oavsett effekttärningens utfall.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         }

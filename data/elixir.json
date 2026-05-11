@@ -99,7 +99,7 @@
     },
     {
       "id": "elix5",
-      "name": "Fällande lod",
+      "name": "Förtyngande salva",
       "tags": {
         "types": [
           "Elixir"
@@ -107,7 +107,7 @@
       },
       "levels": {
         "Novis": {
-          "description": "Alkemisten smörjer in ett lod med tyngande elixir, vilket gör att den som träffas av lodet måste klara ett [Stark –Skada] eller ramla omkull. Det monstruösa särdraget Robust ger +2 på Stark per nivå vid försöket att motstå detta."
+          "description": "Alkemisten smörjer in ett vapen med en förtyngande salva, vilket gör att nästa varelse som träffas av vapnet måste klara ett [Stark –Skada] eller ramla omkull. Det monstruösa särdraget Robust ger +2 på Stark per nivå vid försöket att motstå detta."
         }
       },
       "stats": {

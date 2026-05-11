@@ -31,7 +31,7 @@ SPECIAL_DATA_FILES = [
     "pdf-list.json",
 ]
 BUNDLED_DATA_FILES = [
-    "all.json",
+    "index-catalog.json",
 ]
 
 
@@ -111,7 +111,7 @@ def render_refresh_targets() -> str:
             "  { url: 'webapp.html', cacheName: CORE_CACHE },",
             "  { url: 'manifest.json', cacheName: CORE_CACHE },",
             "  { url: 'data/pdf-list.json', cacheName: JSON_CACHE },",
-            "  { url: 'data/all.json', cacheName: JSON_CACHE }",
+            "  { url: 'data/index-catalog.json', cacheName: JSON_CACHE }",
         ]
     )
 

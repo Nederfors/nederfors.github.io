@@ -1,0 +1,120 @@
+{
+  "name": "Testperson",
+  "folderId": "fd-standard-237911",
+  "folder": "Standard",
+  "data": {
+    "bonusMoney": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0,
+      "d": 0,
+      "s": 0,
+      "o": 0
+    },
+    "forcedDefense": "",
+    "defenseSetup": {
+      "enabled": false,
+      "trait": "",
+      "armor": null,
+      "weapons": [],
+      "dancingTrait": "",
+      "dancingWeapon": null
+    },
+    "liveMode": false,
+    "baseXp": 250,
+    "inventory": [
+      {
+        "i": "di12",
+        "n": "Rep, 10 meter",
+        "q": 4,
+        "g": 3,
+        "pk": "Välutrustad",
+        "pg": 3
+      },
+      {
+        "i": "di23",
+        "n": "Papper",
+        "g": 1,
+        "pk": "Välutrustad",
+        "pg": 1
+      },
+      {
+        "i": "di18",
+        "n": "Kritor",
+        "g": 1,
+        "pk": "Välutrustad",
+        "pg": 1
+      },
+      {
+        "i": "di5",
+        "n": "Fackla",
+        "q": 3,
+        "g": 3,
+        "pk": "Välutrustad",
+        "pg": 3
+      },
+      {
+        "i": "i11",
+        "n": "Signalhorn",
+        "g": 1,
+        "pk": "Välutrustad",
+        "pg": 1
+      },
+      {
+        "i": "elix34",
+        "n": "Långfärdsbröd",
+        "q": 3,
+        "g": 3,
+        "pk": "Välutrustad",
+        "pg": 3
+      },
+      {
+        "i": "elix43",
+        "n": "Örtkur",
+        "q": 3,
+        "g": 3,
+        "pk": "Välutrustad",
+        "pg": 3
+      },
+      {
+        "i": "di10",
+        "n": "Flinta & stål"
+      },
+      {
+        "i": "di11",
+        "n": "Kokkärl"
+      },
+      {
+        "i": "di13",
+        "n": "Sovfäll"
+      },
+      {
+        "i": "di14",
+        "n": "Tändved"
+      },
+      {
+        "i": "di15",
+        "n": "Vattenskinn"
+      },
+      {
+        "i": "l9",
+        "n": "Djurmask",
+        "t": "Kvick",
+        "pm": 10
+      }
+    ],
+    "entryOrderCounter": 27,
+    "list": [
+      {
+        "i": "mystiskkr56",
+        "l": "Mästare",
+        "f": "normal",
+        "u": "ent-mmhuapog-1",
+        "o": 26
+      }
+    ],
+    "traits": {
+      "Viljestark": 18
+    }
+  }
+}

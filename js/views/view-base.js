@@ -11,6 +11,9 @@ export function createLegacyView(role) {
       if (mountedRoot) {
         mountedRoot.dataset.activeView = normalizedRole;
       }
+      if (normalizedRole !== 'index' && typeof window.ensureFullDatabase === 'function') {
+        await window.ensureFullDatabase();
+      }
       await ensureRouteScripts(normalizedRole);
       viewBridge.mount(normalizedRole, detail);
       return mountedRoot;

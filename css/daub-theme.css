@@ -61,11 +61,11 @@
 
   /* -- Game-semantic colours (no DAUB equivalent) ----------- */
   --mystic: #a88fcc;
-  --quality: #6b9e5b;
-  --neutral: #5b8ab5;
-  --hilight: #e0783840;
-  --negative: #8b6540;
-  --danger-bg: #3a1812;
+  --quality: #C2A36A;
+  --neutral: #9CB69A;
+  --hilight: #C98B6340;
+  --negative: #8B4513;
+  --danger-bg: #3B1C1C;
 
   /* -- XP / status pills ------------------------------------ */
   --xp-pill-bg: #3A3029;

@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,svg,ico,json}'],
           globIgnores: [
             '**/pdf/**',
+            '**/data/*.json',
             '**/data/all.json',
             '**/css/app-shell.css',
             '**/css/style.legacy.css',
