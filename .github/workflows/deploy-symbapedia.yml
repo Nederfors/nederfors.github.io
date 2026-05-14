@@ -1,0 +1,68 @@
+name: Deploy Symbapedia
+
+on:
+  push:
+    branches:
+      - rpg-db-beta
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-symbapedia
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      TARGET_REPO: Nederfors/nederfors.github.io
+      TARGET_BRANCH: main
+
+    steps:
+      - name: Check out source repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production site
+        run: python3 scripts/master_sync.py
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Clone live Pages repo
+        env:
+          DEPLOY_TOKEN: ${{ secrets.SYMBAPEDIA_DEPLOY_TOKEN }}
+        run: |
+          git config --global url."https://x-access-token:${DEPLOY_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git clone --depth 1 --branch "$TARGET_BRANCH" "https://github.com/$TARGET_REPO.git" ../symbapedia-live
+
+      - name: Replace live site with built dist
+        run: |
+          rsync -av --delete --exclude='.git' dist/ ../symbapedia-live/
+          touch ../symbapedia-live/.nojekyll
+
+      - name: Commit and push live site
+        working-directory: ../symbapedia-live
+        run: |
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No deploy changes."
+            exit 0
+          fi
+
+          git commit -m "Deploy production build from rpg-db-beta"
+          git push origin "$TARGET_BRANCH"
