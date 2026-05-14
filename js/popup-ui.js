@@ -13,9 +13,6 @@
   });
   const REMOVE_BUTTON_IDS = Object.freeze({
     choicePopup: ['choiceCancel'],
-    defenseCalcPopup: ['defenseCalcCancel'],
-    folderManagerPopup: ['folderManagerDone'],
-    qualPopup: ['qualCancel'],
     requirementPopup: ['requirementCancel']
   });
   const PROMOTE_BUTTON_IDS = Object.freeze({

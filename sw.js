@@ -24,12 +24,14 @@ const CORE_PRECACHE_URLS = [
   'css/style.legacy.css',
   'css/theme.css',
   'data/index-catalog.json',
+  'data/legacy-import-map.json',
   'data/pdf-list.json',
 ];
 const CORE_REFRESH_TARGETS = [
   { url: 'index.html', cacheName: CORE_CACHE },
   { url: 'webapp.html', cacheName: CORE_CACHE },
   { url: 'manifest.json', cacheName: CORE_CACHE },
+  { url: 'data/legacy-import-map.json', cacheName: JSON_CACHE },
   { url: 'data/pdf-list.json', cacheName: JSON_CACHE },
   { url: 'data/index-catalog.json', cacheName: JSON_CACHE }
 ];

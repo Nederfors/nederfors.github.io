@@ -159,7 +159,7 @@ function listDataJsonFiles(rootPath) {
   const names = ObjC.deepUnwrap($.NSFileManager.defaultManager.contentsOfDirectoryAtPathError($(dataPath), null));
   return (Array.isArray(names) ? names : [])
     .filter(name => typeof name === 'string' && name.endsWith('.json'))
-    .filter(name => name !== 'all.json' && name !== 'struktur.json' && name !== 'ai-plugin.json')
+    .filter(name => !['all.json', 'struktur.json', 'ai-plugin.json', 'legacy-import-map.json'].includes(name))
     .sort();
 }
 

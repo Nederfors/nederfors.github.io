@@ -2702,6 +2702,7 @@
       const tr = liEl.dataset.trait || null;
       const before = storeHelper.getCurrentList(store);
       const disBefore = storeHelper.countDisadvantages(before);
+      let pendingDisadvWarning = '';
       let p = idAttr ? before.find(x => String(x.id) === String(idAttr)) : null;
       if (!p && name) p = before.find(x => x.namn === name);
       if (!p) p = lookupEntry(ref);
@@ -2843,9 +2844,12 @@
           replacedExisting.manualRuleOverride = true;
         }
         list = replacedExisting ? conflictBaseList : [...conflictBaseList, added];
+        const cap = Number(storeHelper.getErfRules?.()?.disadvantageCap || 5);
         const disAfter = storeHelper.countDisadvantages(list);
-        if (disAfter === 5 && disBefore < 5) {
-          await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+        if (disAfter >= cap && disBefore < cap) {
+          pendingDisadvWarning = 'cap';
+        } else if (disAfter > cap && disBefore <= cap) {
+          pendingDisadvWarning = 'over-cap';
         }
       } else if (act === 'sub' || act === 'del' || act === 'rem') {
         if (name === 'Mörkt förflutet' && before.some(x => x.namn === 'Mörkt blod')) {
@@ -3031,6 +3035,12 @@
           refreshCharacterSelection();
         }
         refreshCharacterFilters();
+        if (pendingDisadvWarning === 'cap') {
+          await new Promise(resolve => setTimeout(resolve, 120));
+          await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+        } else if (pendingDisadvWarning === 'over-cap') {
+          window.toast?.('Nackdelar över fem ger +0 Erf.');
+        }
       }
       if (act === 'add') {
         void waitForCharacterMutationRefresh().then(() => {

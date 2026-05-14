@@ -109,9 +109,6 @@ export const VIEW_TEMPLATES = Object.freeze({
         <button id="manageEconomyBtn" class="db-btn" type="button" title="Hantera ekonomi">
           Hantera ekonomi
         </button>
-        <button id="clearInvBtn" class="db-btn db-btn--icon db-btn--danger" type="button" title="Töm inventarie" aria-label="Töm inventarie">
-          ${icon('broom')}
-        </button>
       </div>
     </div>
 
@@ -219,13 +216,8 @@ export const VIEW_TEMPLATES = Object.freeze({
   <div id="activeFilters" class="tags"></div>
 
   <div class="db-card panel traits-hub-panel">
-    <div class="db-card__header panel-header traits-hub-header">
-      <div class="traits-hub-heading">
-        <span id="traitsViewTitle" class="traits-view-title">Karaktärsdrag</span>
-        <h2 id="charName" class="traits-view-name" aria-live="polite"></h2>
-      </div>
-      <div class="header-actions"></div>
-    </div>
+    <span id="traitsViewTitle" class="db-sr-only">Karaktärsdrag</span>
+    <span id="charName" class="db-sr-only" aria-live="polite"></span>
 
     <div class="db-tabs traits-tabs-shell">
       <nav class="db-tabs__list traits-tabs" aria-label="Egenskapsnavigering" role="tablist">
@@ -277,7 +269,7 @@ export const VIEW_TEMPLATES = Object.freeze({
               <div class="traits-total" role="status">
                 Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
               </div>
-              <button id="resetTraits" class="db-btn db-btn--icon icon-only db-btn--danger traits-reset-btn" title="Återställ basegenskaper" aria-label="Återställ basegenskaper">
+              <button id="resetTraits" class="db-btn db-btn--icon db-btn--icon-only db-btn--danger traits-reset-btn" title="Återställ basegenskaper" aria-label="Återställ basegenskaper">
                 <img src="icons/broom.svg" alt="" class="btn-icon" width="32" height="32">
               </button>
             </div>

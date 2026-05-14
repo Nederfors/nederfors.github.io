@@ -15,6 +15,7 @@
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "kind": { "type": "string", "enum": ["primary", "specific_choice", "tag_pool", "optional_pool", "named_count"] },
+          "counts_primary_baseline": { "type": "boolean" },
           "min_xp": { "type": "number" },
           "min_count": { "type": "number" },
           "entry_type": { "type": "string" },

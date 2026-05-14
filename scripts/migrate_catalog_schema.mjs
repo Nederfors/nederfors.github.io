@@ -11,6 +11,7 @@ const SKIP_FILES = new Set([
   'all.json',
   'struktur.json',
   'ai-plugin.json',
+  'legacy-import-map.json',
   'pdf-list.json',
   'tabeller.json'
 ]);

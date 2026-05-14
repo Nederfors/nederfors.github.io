@@ -7,11 +7,12 @@
     "Långa vapen": {},
     "Tvåhandsvapen": {},
     "Obeväpnad attack": {},
-    "Stav": {}
+    "Stav": {},
+    "Sköld": {}
   },
   "entries": [
     {
-      "id": "v1",
+      "id": "nv1",
       "name": "Enhandsvapen",
       "description": "Enhandsvapen omfattar alla typer av vapen som kan svingas i en hand. Exempel på enhandsvapen som är vanliga i davokarregionen är hammare, kroksabel, svärd och yxa.",
       "tags": {
@@ -33,7 +34,7 @@
       }
     },
     {
-      "id": "v2",
+      "id": "nv2",
       "name": "Duellsvärd",
       "description": "I Yndaros är det ambriska duellsvärdet högsta mode, ett fjäderstålsmide med ypperlig precision. Och det kombineras gärna med fäktarens favorit, parerdolken, som ger de lätt rustade duellanterna ett starkare försvar under fäktningsmatcherna.",
       "tags": {
@@ -58,7 +59,7 @@
       }
     },
     {
-      "id": "v3",
+      "id": "nv3",
       "name": "Korpnäbb",
       "description": "Ett mindre elegant men likafullt effektivt vapen är korpnäbben, också känd som den kandoriska stridshackan efter staden i Alberetor där den först smiddes. Korpnäbben är en stridsklubba vars järnhuvud försetts med en spik eller näbb av stål, för att bättre slå genom rustningar. Kandorias stridshackesmeder slog sig efter flytten till Yndaros ner i stadsdelen Gamla Kadizar och fortsätter där att ge skäl åt vapnets smeknamn.",
       "tags": {
@@ -83,7 +84,7 @@
       }
     },
     {
-      "id": "v4",
+      "id": "nv4",
       "name": "Stridsgissel",
       "description": "Stridsgisslet är ett Ledat vapen där ett järnklot – ofta spikförsett – fäst i en kedja svingas mot fienden. Att parera vapnet är inte lätt, då stålklotet ofta slår runt vapen och sköldkant och ändå når sitt mål.",
       "tags": {
@@ -108,7 +109,7 @@
       }
     },
     {
-      "id": "v5",
+      "id": "nv5",
       "name": "Korta vapen",
       "description": "Lätta vapen består av korta klingor som är snabba att dra och lätta att dölja. Exempel på korta vapen är dolk och kortsvärd.",
       "tags": {
@@ -133,7 +134,7 @@
       }
     },
     {
-      "id": "v6",
+      "id": "nv6",
       "name": "Parerdolk",
       "description": "I Yndaros har parerdolken med sin breda och v-formade parerstång blivit populär, gärna tillsammans med ett duellsvärd.",
       "tags": {
@@ -142,7 +143,7 @@
           "Korta vapen"
         ],
         "qualities": [
-          "Balanserad"
+          "Balanserat"
         ]
       },
       "levels": {},
@@ -158,7 +159,7 @@
       }
     },
     {
-      "id": "v7",
+      "id": "nv7",
       "name": "Stylett",
       "description": "Den slanka och smidiga styletten är en dolk vars sylvassa spets tränger djupt – en lönnmördares vapen.",
       "tags": {
@@ -183,7 +184,7 @@
       }
     },
     {
-      "id": "v8",
+      "id": "nv8",
       "name": "Långa vapen",
       "description": "Långa vapen har räckvidd som fördel och ger användaren ett frislag mot fiender som inte har långa vapen. Ett långt vapen kan användas i en hand, men förlorar då kvaliteten Långt eftersom användaren tvingas hålla längre fram för att alls kunna kontrollera vapnet. Exempel på långa vapen är spjut och stav.",
       "tags": {
@@ -208,7 +209,7 @@
       }
     },
     {
-      "id": "v9",
+      "id": "nv9",
       "name": "Hillebard",
       "description": "Hillebarden, bland barbarerna känd som pikyxa, har drag av både det långa och det tunga vapnet då det kombinerar en spjutspets med ett yxhuvud. Dess stötar är inte lika snabba som spjutets men dess svepande hugg kan ha en förödande verkan.",
       "tags": {
@@ -233,7 +234,7 @@
       }
     },
     {
-      "id": "v10",
+      "id": "nv10",
       "name": "Pik",
       "description": "Den ambriska pikens smäckra skaft och eldhärdade stålspets glider mot målet med stor precision.",
       "tags": {
@@ -258,7 +259,7 @@
       }
     },
     {
-      "id": "v11",
+      "id": "nv11",
       "name": "Vandringsstav",
       "description": "Den enklare trästaven, inte sällan i tungt trä och härdad nära elden, har de långa vapnens räckvidd men saknar stålspetsade vapnens verkan.",
       "tags": {
@@ -285,7 +286,7 @@
       }
     },
     {
-      "id": "v12",
+      "id": "nv12",
       "name": "Obeväpnad attack",
       "description": "Obeväpnade attacker används vanligen som desperata kulturvarelsers sista utväg och de är i alla hänseenden mindre effektiva än rovbestars och styggelsers naturliga vapen. Tillsammans med förmågan Naturlig krigare kan dock även en obeväpnad rollperson tillfoga sina fiender ansenlig skada. Exempel på obeväpnade attacker omfattar armbåge, bett, knytnäve, skallning, knogjärn och spark.",
       "tags": {
@@ -310,7 +311,7 @@
       }
     },
     {
-      "id": "v13",
+      "id": "nv13",
       "name": "Stridsklo",
       "description": "Kariterna i Davokar har utvecklat en stridsklo som träs på handen och vars långa blad simulerar marakattens klor.",
       "tags": {
@@ -335,7 +336,76 @@
       }
     },
     {
-      "id": "v17",
+      "id": "nv14",
+      "name": "Sköld",
+      "description": "Sköldar gör det svårt att träffa bäraren med såväl närstrids- som avståndsvapen. De kombineras oftast med ett enhandsvapen, alternativt med enhandsvapen och kastvapen.",
+      "tags": {
+        "types": [
+          "Sköld"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "skada": "1T4",
+        "vikt": 0.5,
+        "weight": 0.5
+      },
+      "base_price": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "id": "nv15",
+      "name": "Bucklare",
+      "description": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och duellanter. Den fästs på underarmen och ger +1 försvar, samtidigt som handen kan användas till annat, men är för nätt för att användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
+      "tags": {
+        "types": [
+          "Sköld"
+        ],
+        "qualities": [
+          "Armfäst"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "skada": "1T4",
+        "vikt": 0.5,
+        "weight": 0.5
+      },
+      "base_price": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "id": "nv16",
+      "name": "Stålsköld",
+      "description": "Stålskölden är lika stark som de vanliga träsköldarna men tunnare och mer lättmanövrerad.",
+      "tags": {
+        "types": [
+          "Sköld"
+        ],
+        "qualities": [
+          "Balanserat"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "skada": "1T4",
+        "vikt": 0.5,
+        "weight": 0.5
+      },
+      "base_price": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "id": "nv17",
       "name": "Tvåhandsvapen",
       "description": "Tvåhandsvapen utmärks av att de kräver tvåhandsfattning för att alls kunna användas. De har en oöverträffad skadeverkan i närstrid. Exempel på tvåhandsvapen är pålyxa, krigshammare samt det mäktiga tvåhandssvärdet.",
       "tags": {
@@ -357,7 +427,7 @@
       }
     },
     {
-      "id": "v18",
+      "id": "nv18",
       "name": "Bastardsvärd",
       "description": "Pansárernas mästersmeder hamrar fram Ambrias finaste vapen, och pansárernas bastardklingor är utsökta sådana i händerna på rätt krigare. Bastardsvärd hanteras med fördel med två händer (som ett tungt vapen) men kan användas i en hand för bruk med sköld. Svingat med en hand tappar bastardsvärdet kvaliteten Precist och gör skada som ett enhandsvapen.",
       "tags": {
@@ -383,7 +453,7 @@
       }
     },
     {
-      "id": "v19",
+      "id": "nv19",
       "name": "Dubbelyxa",
       "description": "Barbarernas dubbelyxa (inte att förväxla med den vanligare förekommande pålyxan som endast har ett yxblad på sitt skaft) kallas så efter sina två yxblad och antas vara ett arv från det fallna Symbaroum. Där förekom dubbelyxan både som vapen och som statussymbol. Även efter att det metallurgiska kunnandet i Davokar dalade i och med Symbaroums fall kunde dessa mäktiga vapen smidas, vilket ännu görs åt särskilt framstående klankrigare. Bland ambrierna anses dubbelyxan vara ofin och förråande, lämplig för barbarer och få andra, men dess form är välkänd genom dess likhet med den kungliga runan Labrys.",
       "tags": {
@@ -408,7 +478,7 @@
       }
     },
     {
-      "id": "v20",
+      "id": "nv20",
       "name": "Stridsslagan",
       "description": "Tvåhandsversionen av ett stridsgissel kombinerar enhandsversionens kättingverkan med en större tyngd i slaget. Stridsslagan finns i en rad olika utföranden, från den traditionella varianten med ett träskaft för tvåhandsgrepp, fäst i en kedja med en spikförsedd järnklump i änden. Därtill finns varianter med spikförsedda stålstycken som länkar i varandra, samt modeller där två eller tre kättingar och stålhuvuden samsas om ett och samma skaft. Oavsett utförande delar de alla slagans tyngd och svårighet att försvara sig mot.",
       "tags": {
@@ -433,7 +503,7 @@
       }
     },
     {
-      "id": "v27",
+      "id": "nv21",
       "name": "Enhandssvärd",
       "description": "Det enklaste soldatvapnet: en rak stålblank klinga som delas ut till nyrekryter och håller skärpan länge utan särskild omtanke.",
       "tags": {
@@ -455,7 +525,7 @@
       }
     },
     {
-      "id": "v28",
+      "id": "nv22",
       "name": "Enkeldolk",
       "description": "En kort egg i härdat järn; slips lätt på bryne, ryms i ärm eller stövel och är alltid redo för nödförsvar.",
       "tags": {
@@ -477,7 +547,7 @@
       }
     },
     {
-      "id": "v29",
+      "id": "nv23",
       "name": "Krigsklubba",
       "description": "En robust träklubba med järnband runt slaghuvudet; billig, hållbar och vanlig bland vakter som saknar råd för ädlare vapen.",
       "tags": {
@@ -499,7 +569,7 @@
       }
     },
     {
-      "id": "v33",
+      "id": "nv24",
       "name": "Bladdolk",
       "description": "Det smäckra handtaget och bladets tunna stål gör bladdolken enkel att dölja utan att den förlorar sitt sting. Den fästs lätt kring handled eller fotled med ett tunt band, eller mer fantasifullt med en bit kåda i nackbandet. Speciella gördlar eller dolda fack i kläder kan också användas. Vapnet smugglas lätt förbi vakter, för att utföra lönndåd eller för att lämnas vidare till fångar eller liknade.",
       "tags": {
@@ -525,7 +595,7 @@
       }
     },
     {
-      "id": "v39",
+      "id": "nv25",
       "name": "Kampslägga",
       "description": "Kampslägga är samlingsnamnet för en rad olika tvåhandsbeläten av synnerlig längd och tyngd. Vapnen är i de flesta fall varianter av hammare, inte sällan med långa spikar på hammarhuvudets träffyta. Men även ett bärbart alkemiskt eldrör som svingas av någon sappör i närstrid räknas som en kampslägga.",
       "tags": {
@@ -552,7 +622,7 @@
       }
     },
     {
-      "id": "v43",
+      "id": "nv26",
       "name": "Kedjestav",
       "description": "Kedjestaven är utvecklad bland alver och adopterat av vissa barbarer. Vapnet består av en stav med en kort kedja fäst i ena eller båda ändarna. Kedjan eller kedjorna har vanligen en tyngd eller en kort klinga längst ut, för att ge rätt snärt. Vapnet kan användas som en stav eller för att snärja en fiende.",
       "tags": {
@@ -578,7 +648,7 @@
       }
     },
     {
-      "id": "v44",
+      "id": "nv27",
       "name": "Lans",
       "description": "Lansens värde för gamla Alberetor kan knappast överskattas; det var med lansar i riddarnas händer som mörkermästarnas största monstrositeter nedlades. Traditionen har fortsatt också i Ambria, där rytteriets dominans i flack terräng snabbt lät drottningens folk trycka barbarer, troll och styggelser tillbaka till Davokars dunkla bryn.\nRyttarlansen är ett förlängt spjut, med grepp och handskydd avsett för bruk till häst. På ett riddjurs rygg räknas lansen som ett långt vapen, även med enhandsgrepp. På marken är lansen alltför lång för att alls kunna användas med en hand.",
       "tags": {
@@ -603,7 +673,7 @@
       }
     },
     {
-      "id": "v45",
+      "id": "nv28",
       "name": "Långhammare",
       "description": "Långhammaren är en bastardvariant av stridshammaren. Den kan användas i en hand tillsammans med sköld men kommer – liksom alla bastardvapen – till sin rätt främst då den svingas i två händer.",
       "tags": {
@@ -628,7 +698,7 @@
       }
     },
     {
-      "id": "v46",
+      "id": "nv29",
       "name": "Långpiska",
       "description": "Långpiskan är en utveckling av det vanliga djur- eller slavdrivarverktyget. Långpiskan är avsedd inte bara att driva på utan också att kunna snärja. Dess längd ger en avsevärd snärt, vilket mot ett klent skyddat mål kan ge otäcka sår.",
       "tags": {
@@ -655,7 +725,7 @@
       }
     },
     {
-      "id": "v47",
+      "id": "nv30",
       "name": "Pansarstickare",
       "description": "Pansarstickaren är ett duellsvärd men med en avsmalnande klinga som slutar i en sylformad spets, avsedd att tränga genom rustning.",
       "tags": {
@@ -680,7 +750,7 @@
       }
     },
     {
-      "id": "v52",
+      "id": "nv31",
       "name": "Skarprättarsvärd",
       "description": "Skarprättarsvärdet ingår i bödelns arsenal och används för att avsluta livet på ädlingar – yxan för borgare och repet för pöbeln – men för vissa bödlar är svärdet också det vapen som reserveras för slagfältet.",
       "tags": {
@@ -707,7 +777,7 @@
       }
     },
     {
-      "id": "v53",
+      "id": "nv32",
       "name": "Storslaga",
       "description": "Storslagan är en tyngre version av stridsslagan. Som väntat är den tyngre storslagan långsammare men med större verkan på dem som träffas av dess massiva huvud.",
       "tags": {
@@ -734,7 +804,7 @@
       }
     },
     {
-      "id": "v55",
+      "id": "nv33",
       "name": "Änterbila",
       "description": "Änterbilan är en långskaftad yxa, en bastardyxa avsedd för stormningar. Den greppas med en hand tillsammans med sköld eller ensamt under klättring uppför stormstegar, för att sedan med tvåhandsgrepp rensa murkrönet medelst tunga hugg. Äldre modeller från Det stora krigets tid användes i strider till sjöss och har då en änterkrok på yxbladets rygg, för att säkra ett bra grepp under klättringen upp på fiendens reling.",
       "tags": {
@@ -760,7 +830,7 @@
       }
     },
     {
-      "id": "v68",
+      "id": "nv34",
       "name": "Långspjut",
       "description": "Ett spjut med långt skaft; tillräckligt långt för att hålla fienden på avstånd i första handgemänget.",
       "tags": {

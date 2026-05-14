@@ -79,6 +79,254 @@
     }
   };
 
+  const normalizeAliasKey = (value) => String(value ?? '').trim().normalize('NFC').toLowerCase();
+  const aliasLookup = (map, value) => {
+    const raw = String(value ?? '').trim();
+    if (!raw || !map) return '';
+    if (Object.prototype.hasOwnProperty.call(map.exact, raw)) return map.exact[raw];
+    return map.normalized[normalizeAliasKey(raw)] || '';
+  };
+  const normalizeAliasMap = (raw) => {
+    const exact = {};
+    const normalized = {};
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      Object.entries(raw).forEach(([key, value]) => {
+        const from = String(key ?? '').trim();
+        const to = String(value ?? '').trim();
+        if (!from || !to) return;
+        exact[from] = to;
+        normalized[normalizeAliasKey(from)] = to;
+      });
+    }
+    return { exact, normalized };
+  };
+  const normalizeLegacyImportMap = (raw) => ({
+    raw: raw && typeof raw === 'object' && !Array.isArray(raw) ? cloneValue(raw) : {},
+    entryIdAliases: normalizeAliasMap(raw?.entry_id_aliases),
+    entryNameAliases: normalizeAliasMap(raw?.entry_name_aliases),
+    qualityNameAliases: normalizeAliasMap(raw?.quality_name_aliases),
+    typeAliases: normalizeAliasMap(raw?.type_aliases)
+  });
+  let legacyImportMap = normalizeLegacyImportMap(global.__symbaroumLegacyImportMap || {});
+
+  function setLegacyImportMap(map) {
+    legacyImportMap = normalizeLegacyImportMap(map || {});
+    global.__symbaroumLegacyImportMap = legacyImportMap.raw;
+    return legacyImportMap.raw;
+  }
+
+  function getLegacyImportMap() {
+    return cloneValue(legacyImportMap.raw);
+  }
+
+  function canonicalizeLegacyEntryId(id) {
+    const raw = String(id ?? '').trim();
+    if (!raw) return '';
+    return aliasLookup(legacyImportMap.entryIdAliases, raw) || raw;
+  }
+
+  function canonicalizeLegacyEntryNameToId(name) {
+    return aliasLookup(legacyImportMap.entryNameAliases, name);
+  }
+
+  function canonicalizeLegacyQualityName(name) {
+    const raw = String(name ?? '').trim();
+    if (!raw) return '';
+    return aliasLookup(legacyImportMap.qualityNameAliases, raw) || raw;
+  }
+
+  function canonicalizeLegacyTypeName(name) {
+    const raw = String(name ?? '').trim();
+    if (!raw) return '';
+    return aliasLookup(legacyImportMap.typeAliases, raw) || raw;
+  }
+
+  function rewriteStringList(list, canonicalize) {
+    if (!Array.isArray(list)) return { value: list, changed: false };
+    let changed = false;
+    const value = list.map(item => {
+      if (typeof item !== 'string') return item;
+      const next = canonicalize(item);
+      if (next !== item) changed = true;
+      return next;
+    });
+    return { value, changed };
+  }
+
+  function canonicalizeTags(target) {
+    if (!target || typeof target !== 'object') return false;
+    let changed = false;
+    const rewrite = (key, canonicalize) => {
+      if (!Array.isArray(target[key])) return;
+      const result = rewriteStringList(target[key], canonicalize);
+      if (result.changed) {
+        target[key] = result.value;
+        changed = true;
+      }
+    };
+    rewrite('typ', canonicalizeLegacyTypeName);
+    rewrite('types', canonicalizeLegacyTypeName);
+    rewrite('kvalitet', canonicalizeLegacyQualityName);
+    rewrite('qualities', canonicalizeLegacyQualityName);
+    return changed;
+  }
+
+  function canonicalizeQualityFields(target) {
+    if (!target || typeof target !== 'object') return false;
+    let changed = false;
+    ['kvaliteter', 'qualities', 'gratisKval', 'removedKval', 'manualQualityOverride'].forEach(key => {
+      const result = rewriteStringList(target[key], canonicalizeLegacyQualityName);
+      if (result.changed) {
+        target[key] = result.value;
+        changed = true;
+      }
+    });
+    if (canonicalizeTags(target.taggar)) changed = true;
+    if (canonicalizeTags(target.tags)) changed = true;
+    return changed;
+  }
+
+  function findCustomEntry(custom, id, name) {
+    const list = Array.isArray(custom) ? custom : [];
+    const idText = String(id ?? '').trim();
+    const nameText = String(name ?? '').trim();
+    if (idText) {
+      const hit = list.find(entry => String(entry?.id ?? '').trim() === idText);
+      if (hit) return hit;
+    }
+    if (nameText) {
+      return list.find(entry => String(entry?.namn ?? entry?.name ?? '').trim() === nameText) || null;
+    }
+    return null;
+  }
+
+  function lookupCanonicalEntry(id, name, custom) {
+    const customEntry = findCustomEntry(custom, id, name);
+    if (customEntry) return customEntry;
+    if (typeof global.lookupEntry !== 'function') return null;
+    const ref = { id, name };
+    return global.lookupEntry(ref, { explicitName: name, allowNameFallback: true }) || null;
+  }
+
+  function canonicalizeEntryRefFields(target, options = {}) {
+    if (!target || typeof target !== 'object') return false;
+    const custom = Array.isArray(options.custom) ? options.custom : [];
+    const rawId = target.id ?? target.i;
+    const rawName = target.namn ?? target.name ?? target.n;
+    const idText = rawId === undefined || rawId === null ? '' : String(rawId).trim();
+    const nameText = rawName === undefined || rawName === null ? '' : String(rawName).trim();
+    const mappedId = idText ? canonicalizeLegacyEntryId(idText) : '';
+    const nameMappedId = nameText ? canonicalizeLegacyEntryNameToId(nameText) : '';
+    const effectiveId = nameMappedId || mappedId || idText;
+    const entry = lookupCanonicalEntry(effectiveId, nameText, custom);
+    const resolvedId = entry?.id !== undefined ? String(entry.id).trim() : effectiveId;
+    const resolvedName = String(entry?.namn ?? entry?.name ?? nameText ?? '').trim();
+    let changed = false;
+
+    if (resolvedId && target.id !== resolvedId) {
+      target.id = resolvedId;
+      changed = true;
+    }
+    if (resolvedId && Object.prototype.hasOwnProperty.call(target, 'i') && target.i !== resolvedId) {
+      target.i = resolvedId;
+      changed = true;
+    }
+    if (resolvedName && Object.prototype.hasOwnProperty.call(target, 'namn') && target.namn !== resolvedName) {
+      target.namn = resolvedName;
+      changed = true;
+    }
+    if (resolvedName && Object.prototype.hasOwnProperty.call(target, 'name') && target.name !== resolvedName) {
+      target.name = resolvedName;
+      changed = true;
+    }
+    if (resolvedName && Object.prototype.hasOwnProperty.call(target, 'n') && target.n !== resolvedName) {
+      target.n = resolvedName;
+      changed = true;
+    }
+    if (canonicalizeQualityFields(target)) changed = true;
+    return changed;
+  }
+
+  function canonicalizeInventoryRows(rows, custom) {
+    if (!Array.isArray(rows)) return false;
+    let changed = false;
+    rows.forEach(row => {
+      if (!row || typeof row !== 'object') return;
+      if (row.typ !== 'currency' && canonicalizeEntryRefFields(row, { custom })) changed = true;
+      if (Array.isArray(row.contains) && canonicalizeInventoryRows(row.contains, custom)) changed = true;
+    });
+    return changed;
+  }
+
+  function canonicalizeDefenseItem(item, custom) {
+    return canonicalizeEntryRefFields(item, { custom });
+  }
+
+  function canonicalizeDefenseSetupRefs(setup, custom) {
+    if (!setup || typeof setup !== 'object') return false;
+    let changed = false;
+    if (canonicalizeDefenseItem(setup.armor, custom)) changed = true;
+    if (Array.isArray(setup.weapons)) {
+      setup.weapons.forEach(item => {
+        if (canonicalizeDefenseItem(item, custom)) changed = true;
+      });
+    }
+    if (canonicalizeDefenseItem(setup.dancingWeapon, custom)) changed = true;
+    const rawSeparate = setup.separateWeapons;
+    if (rawSeparate && typeof rawSeparate === 'object' && !Array.isArray(rawSeparate)) {
+      Object.entries(rawSeparate).forEach(([key, value]) => {
+        const mappedKey = canonicalizeLegacyEntryId(key);
+        if (mappedKey && mappedKey !== key) {
+          rawSeparate[mappedKey] = value;
+          delete rawSeparate[key];
+          changed = true;
+        }
+        const items = Array.isArray(value) ? value : [value];
+        items.forEach(item => {
+          if (canonicalizeDefenseItem(item, custom)) changed = true;
+        });
+      });
+    }
+    return changed;
+  }
+
+  function canonicalizeRevealedArtifacts(list, custom) {
+    if (!Array.isArray(list)) return { value: list, changed: false };
+    let changed = false;
+    const value = list.map(item => {
+      const id = canonicalizeLegacyEntryId(item);
+      const nameId = canonicalizeLegacyEntryNameToId(item);
+      const effectiveId = nameId || id;
+      const entry = lookupCanonicalEntry(effectiveId, item, custom);
+      const next = entry?.id || effectiveId || item;
+      if (next !== item) changed = true;
+      return next;
+    });
+    return { value: [...new Set(value)], changed };
+  }
+
+  function canonicalizeCharacterReferences(data, options = {}) {
+    if (!data || typeof data !== 'object') return false;
+    const custom = Array.isArray(options.custom) ? options.custom : (Array.isArray(data.custom) ? data.custom : []);
+    let changed = false;
+    custom.forEach(entry => {
+      if (canonicalizeQualityFields(entry)) changed = true;
+    });
+    if (Array.isArray(data.list)) {
+      data.list.forEach(entry => {
+        if (canonicalizeEntryRefFields(entry, { custom })) changed = true;
+      });
+    }
+    if (canonicalizeInventoryRows(data.inventory, custom)) changed = true;
+    if (canonicalizeDefenseSetupRefs(data.defenseSetup, custom)) changed = true;
+    const revealed = canonicalizeRevealedArtifacts(data.revealedArtifacts, custom);
+    if (revealed.changed) {
+      data.revealedArtifacts = revealed.value;
+      changed = true;
+    }
+    return changed;
+  }
+
   const getPersistence = () => global.symbaroumPersistence || null;
   const normalizeMutationFields = (fields) => {
     const list = Array.isArray(fields) ? fields : (fields ? [fields] : []);
@@ -1103,6 +1351,10 @@
         }
       }
 
+      if (canonicalizeCharacterReferences(data, { custom: data.custom })) {
+        mutated = true;
+      }
+
       initializeEntryMetadata(data);
 
       return { data, mutated };
@@ -1320,6 +1572,13 @@
       if (!store.data || typeof store.data !== 'object') return;
       const changedIds = new Set();
       Object.entries(store.data).forEach(([id, data]) => {
+        const beforeRefs = JSON.stringify({
+          custom: data.custom || [],
+          list: data.list || [],
+          inventory: data.inventory || [],
+          revealedArtifacts: data.revealedArtifacts || [],
+          defenseSetup: data.defenseSetup || null
+        });
         const custom = data.custom || [];
         custom.forEach(c => {
           if (!c.id) {
@@ -1352,6 +1611,18 @@
             data.revealedArtifacts = [...new Set(updated)];
             changedIds.add(id);
           }
+        }
+        if (canonicalizeCharacterReferences(data, { custom })) {
+          changedIds.add(id);
+        } else {
+          const afterRefs = JSON.stringify({
+            custom: data.custom || [],
+            list: data.list || [],
+            inventory: data.inventory || [],
+            revealedArtifacts: data.revealedArtifacts || [],
+            defenseSetup: data.defenseSetup || null
+          });
+          if (afterRefs !== beforeRefs) changedIds.add(id);
         }
       });
       changedIds.forEach(charId => persistCharacter(store, charId));
@@ -4267,14 +4538,15 @@ function defaultTraits() {
 
     const remapId = (value) => {
       if (value === undefined || value === null) return value;
+      let nextValue = value;
       if (idMap instanceof Map) {
         const mapped = idMap.get(value);
-        if (mapped !== undefined) return mapped;
+        if (mapped !== undefined) nextValue = mapped;
         const asString = typeof value === 'string' ? value : String(value);
         const mappedString = idMap.get(asString);
-        if (mappedString !== undefined) return mappedString;
+        if (mappedString !== undefined) nextValue = mappedString;
       }
-      return value;
+      return canonicalizeLegacyEntryId(nextValue);
     };
 
     const cloneWithOrder = (base, src) => {
@@ -4494,7 +4766,10 @@ function defaultTraits() {
         // Determine matching entry from DB or custom definitions
         const rawId = row.id !== undefined ? row.id : row.i;
         const mappedId = (idMap && rawId !== undefined) ? idMap.get(rawId) : undefined;
-        const effectiveId = mappedId !== undefined ? mappedId : rawId;
+        const mappedOrRawId = mappedId !== undefined ? mappedId : rawId;
+        const effectiveId = mappedOrRawId === undefined || mappedOrRawId === null
+          ? mappedOrRawId
+          : canonicalizeLegacyEntryId(mappedOrRawId);
         const rawName = row.name || row.n || '';
         let entry = null;
         if (effectiveId !== undefined) {
@@ -4697,6 +4972,7 @@ function defaultTraits() {
       if (idMap.size && Array.isArray(data.revealedArtifacts)) {
         data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
       }
+      canonicalizeCharacterReferences(data, { custom });
       store.data[id] = {
         custom: [],
         artifactEffects: defaultArtifactEffects(),
@@ -4754,6 +5030,10 @@ function defaultTraits() {
   global.storeHelper = {
     load,
     loadLegacyStorage,
+    setLegacyImportMap,
+    getLegacyImportMap,
+    canonicalizeLegacyEntryId,
+    canonicalizeLegacyEntryNameToId,
     save,
     makeCharId,
     persistMeta,

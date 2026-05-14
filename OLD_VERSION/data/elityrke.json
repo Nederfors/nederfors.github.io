@@ -7,15 +7,13 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Järnsvuren",
-         "Jägare"
+        "Järnsvuren"
       ]
     },
+    "krav_formagor": "Lärd, Monsterlärd, Prickskytt, Stångverkan eller Tvillingattack",
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
     "Elityrkesförmågor": [
-      "Rörlig strid",
-      "Koreograferad Strid",
-      "Miljökämpe"
+      "Rörlig strid", "Koreograferad Strid", "Miljökämpe"
     ],
     "mojliga_fordelar": [
       "Bestars tunga",
@@ -28,67 +26,9 @@
     ],
     "tankbara_nackdelar": [
       "Blodtörstig",
-      "Mardrömmar",
-      "Paria"
+      "Mardrömmar"
     ],
-    "id": "elit1",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Ritual",
-        "Fördel",
-        "Mystisk kraft"
-      ],
-      "primarformaga": {
-        "namn": "Akrobatik",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [
-          "Jägare"
-        ],
-        "krav_erf": 30
-      },
-      "sekundartagg": {
-        "aktiv": true,
-        "taggfalt": "ark_trad",
-        "taggar": [
-          "Häxkonst"
-        ],
-        "krav_erf": 10
-      },
-      "valfri_inom_tagg": [],
-      "specifika_formagor": {
-        "namn": [
-          "Sjätte sinne",
-          "Spjutdans"
-        ],
-        "min_niva": "Gesäll",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          ""
-        ],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [
-          "Vildmarksvana"
-        ],
-        "min_antal": 2
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      }
-    }
+    "id": "elit1"
   },
   {
     "namn": "Templár",
@@ -98,11 +38,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Templár",
-        "Teurgi"
+        "Templár"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Tvåhandskraft eller Sköldkamp, Mystisk kraft (Häxhammare) eller Mystisk kraft (Helig aura), Rustmästare, Teurgi",
     "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
     "Elityrkesförmågor": [
       "Bepansrad mystiker"
@@ -119,77 +58,7 @@
       "Hederskod",
       "Mörk hemlighet"
     ],
-    "id": "elit2",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Teurgi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Tvåhandskraft",
-            "Sköldkamp"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        },
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Häxhammare",
-            "Helig aura"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Rustmästare"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit2"
   },
   {
     "namn": "Vredesgardist",
@@ -199,15 +68,13 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Vredesgardist", 
-        "Krigare"
+        "Vredesgardist"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Järnnäve, Rustmästare, Sköldkamp eller Tvillingattack, Återhämtning; Andra krav: Barbarättad människa",
     "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
     "Elityrkesförmågor": [
-      "Blodskamp",
-      "Vredesvirvel"
+      "Blodskamp", "Vredesvirvel"
     ],
     "mojliga_fordelar": [
       "Arvegods",
@@ -221,68 +88,7 @@
       "Bestialisk",
       "Blodtörstig"
     ],
-    "id": "elit3",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Järnnäve",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Sköldkamp",
-            "Tvillingattack"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Rustmästare",
-          "Återhämtning"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 2
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit3"
   },
   {
     "namn": "Artefaktmakare",
@@ -292,12 +98,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Artefaktmakare", 
-        "Ordensmagi", 
-        "Trollsång"
+        "Artefaktmakare"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lärd, Mystisk kraft (valfri), Ritualist, Smideskonst",
     "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
     "Elityrkesförmågor": [
       "Artefaktmakande"
@@ -312,70 +116,7 @@
       "Protegé",
       "Åldrad"
     ],
-    "id": "elit4",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Smideskonst",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "",
-          "taggar": [],
-          "min_niva": "Novis",
-          "min_antal": 1
-        },
-        {
-          "typ": "Ritual",
-          "taggfalt": "",
-          "taggar": [],
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Lärd"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit4"
   },
   {
     "namn": "Stavmagiker",
@@ -385,16 +126,16 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Stavmagiker", 
-        "Mystiker"
+        "Stavmagiker"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lärd, Stavkamp, Stångverkan, Mystisk kraft (valfri)",
     "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
     "Elityrkesförmågor": [
       "Mystisk kraft (Stavprojektil)",
       "Stavmagi",
-      "Ritualist (Blodsregn och Jordstöt)"
+      "Ritualist (Blodsregn)",
+      "Ritualist (Jordstöt)"
     ],
     "mojliga_fordelar": [
       "Arkivarie",
@@ -408,65 +149,7 @@
       "Hederskod",
       "Protegé"
     ],
-    "id": "elit5",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Stavkamp",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "",
-          "taggar": [],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Lärd",
-          "Stångverkan"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 2
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit5"
   },
   {
     "namn": "Andebesvärjare",
@@ -476,11 +159,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Andebesvärjare",
-        "Häxkonst"
+        "Andebesvärjare"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Häxkonster, Häxsyn, Mystisk kraft (Ärva skada), Ritualist (Andebesvärjelse)",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Andeplåga",
@@ -499,60 +181,7 @@
       "Fallandesjuk",
       "Mardrömmar"
     ],
-    "id": "elit6",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Häxkonster",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [],
-      "specifika_formagor": {
-        "namn": [
-          "Häxsyn"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Ärva skada"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Andebesvärjelse"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit6"
   },
   {
     "namn": "Blodvadare",
@@ -562,11 +191,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Blodvadare",
-        "Häxkonst"
+        "Blodvadare"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Häxkonster, Medicus, Mystisk kraft (Hamnskifte), Naturlig krigare",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Hjärtebest (ritual)",
@@ -587,59 +215,7 @@
       "Bestialisk",
       "Blodtörstig"
     ],
-    "id": "elit7",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Häxkonster",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [],
-      "specifika_formagor": {
-        "namn": [
-          "Medicus",
-          "Naturlig krigare"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 2
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Hamnskifte"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit7"
   },
   {
     "namn": "Demonolog",
@@ -649,11 +225,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Demonolog",
-        "Svartkonst"
+        "Demonolog"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Häxsyn eller Lärd, Mystisk kraft (Ohelig aura), Ritualist (Vanhelgande rit), Svartkonst",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Frammana daemon (ritual)",
@@ -672,69 +247,7 @@
       "Efterlyst",
       "Mardrömmar"
     ],
-    "id": "elit8",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Svartkonst",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Häxsyn",
-            "Lärd"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Ohelig aura"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Vanhelgande rit"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit8"
   },
   {
     "namn": "Grönvävare",
@@ -744,11 +257,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Grönvävare",
-        "Häxkonst"
+        "Grönvävare"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Alkemi, Häxkonster, Mystisk kraft (Örtrankor), Ritualist (Snabbväxt)",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Levande fort (ritual)",
@@ -765,60 +277,7 @@
       "Mörk hemlighet",
       "Sävlig"
     ],
-    "id": "elit9",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Alkemi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [],
-      "specifika_formagor": {
-        "namn": [
-          "Häxkonster"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Örtrankor"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Snabbväxt"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit9"
   },
   {
     "namn": "Illusionist",
@@ -828,11 +287,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Illusionist",
-        "Ordensmagi"
+        "Illusionist"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lärd, Mystisk kraft (Illusorisk korrigering eller Obemärkt), Ordensmagi, Ritualist (Falsk terräng, Skenverk)",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Illusionskopia",
@@ -850,70 +308,7 @@
       "Drogberoende",
       "Fallandesjuk"
     ],
-    "id": "elit10",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Illusorisk korrigering",
-            "Obemärkt"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Lärd"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Falsk terräng",
-          "Skenverk"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit10"
   },
   {
     "namn": "Inkvisitor",
@@ -923,11 +318,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Inkvisitor",
-        "Teurgi"
+        "Inkvisitor"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Häxsyn eller Lönnstöt, Mystisk kraft (Anatema eller Obemärkt), Ritualist (Offerrök), Teurgi",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Purgatorium",
@@ -945,77 +339,7 @@
       "Hederskod",
       "Mardrömmar"
     ],
-    "id": "elit11",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Teurgi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Häxsyn",
-            "Lönnstöt"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        },
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Anatema",
-            "Obemärkt"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Offerrök"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit11"
   },
   {
     "namn": "Mentalist",
@@ -1025,11 +349,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Mentalist",
-        "Ordensmagi"
+        "Mentalist"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lärd, Mystisk kraft (Bända vilja, Tankekast eller Viljelyft), Ordensmagi, Ritualist (Klärvoajans, Telepatiskt förhör)",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Formeltunnel (ritual)",
@@ -1047,71 +370,7 @@
       "Drogberoende",
       "Fallandesjuk"
     ],
-    "id": "elit12",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Bända vilja",
-            "Tankekast",
-            "Viljelyft"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Lärd"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Klärvoajans",
-          "Telepatiskt förhör"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit12"
   },
   {
     "namn": "Nekromantiker",
@@ -1121,11 +380,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Nekromantiker",
-        "Svartkonst"
+        "Nekromantiker"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Medicus, Mystisk kraft (Vandråp), Ritualist (Väcka vandöd), Svartkonst",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Spökvandring (mystisk kraft)",
@@ -1143,60 +401,7 @@
       "Efterlyst",
       "Sjuklig"
     ],
-    "id": "elit13",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Svartkonst",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [],
-      "specifika_formagor": {
-        "namn": [
-          "Medicus"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Vandråp"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Väcka vandöd"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit13"
   },
   {
     "namn": "Pyromantiker",
@@ -1206,11 +411,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Pyromantiker",
-        "Ordensmagi"
+        "Pyromantiker"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lärd, Mystisk kraft (Brandvägg eller Svavelkaskad), Ordensmagi, Ritualist (Askans berättelse eller Flammande tjänare)",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Eldsjäl",
@@ -1227,70 +431,7 @@
       "Blodtörstig",
       "Impulsiv"
     ],
-    "id": "elit14",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Brandvägg",
-            "Svavelkaskad"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Lärd"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Askans berättelse",
-          "Flammande tjänare"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit14"
   },
   {
     "namn": "Själasörjare",
@@ -1300,11 +441,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Själasörjare",
-        "Teurgi"
+        "Själasörjare"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Ledare eller Medicus, Mystisk kraft (Helbrägdagörelse, Helig aura eller Sannform), Ritualist (Exorcism), Teurgi",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Botgöring (ritual)",
@@ -1321,78 +461,7 @@
       "Hederskod",
       "Mörk hemlighet"
     ],
-    "id": "elit15",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Teurgi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Ledare",
-            "Medicus"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        },
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Helbrägdagörelse",
-            "Helig aura",
-            "Sannform"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Exorcism"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit15"
   },
   {
     "namn": "Drottningspion",
@@ -1402,11 +471,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Drottningspion", 
-        "Tjuv"
+        "Drottningspion"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Fint, Giftbrukare eller Stryparkonst, Svärdshelgon, Tvillingattack",
     "viktiga_karaktarsdrag": "Listig 13+, Diskret 11+",
     "Elityrkesförmågor": [
       "Pyroteknik"
@@ -1424,68 +492,7 @@
       "Efterlyst",
       "Ärkefiende"
     ],
-    "id": "elit16",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Fint",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Giftbrukare",
-            "Stryparkonst"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Svärdshelgon",
-          "Tvillingattack"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 2
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit16"
   },
   {
     "namn": "Gentlemannatjuv",
@@ -1495,15 +502,13 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Gentlemannatjuv", 
-        "Tjuv"
+        "Gentlemannatjuv"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lönnstöt, Fint, Tvillingattack, Svärdshelgon eller Knivgöra",
     "viktiga_karaktarsdrag": "Diskret 13+, Övertygande 11+",
     "Elityrkesförmågor": [
-      "Manteldans",
-      "Miljökämpe"
+      "Manteldans", "Miljökämpe"
     ],
     "mojliga_fordelar": [
       "Arvegods",
@@ -1517,68 +522,7 @@
       "Hederskod",
       "Ärkefiende"
     ],
-    "id": "elit17",
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Lönnstöt",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Svärdshelgon",
-            "Knivgöra"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Fint",
-          "Tvillingattack"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 2
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    "id": "elit17"
   },
   {
     "id": "elit18",
@@ -1589,11 +533,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Stormbringare",
-        "Ordensmagi"
+        "Stormbringare"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Lärd, Mystisk kraft (Blixtfrämjande) eller Mystisk kraft (Åskvärn),Ritualist (Blixtfång) , Ordensmagi",
     "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
     "Elityrkesförmågor": [
       "Klotblixt",
@@ -1610,71 +553,10 @@
     "tankbara_nackdelar": [
       "Sensoriskt känslig",
       "Övermod"
-    ],
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
-          "taggar": [
-            "Blixtfrämjande",
-            "Åskvärn"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Lärd"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Blixtfång"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    ]
   },
-  {
+  
+    {
     "id": "elit19",
     "namn": "Skald",
     "beskrivning": "*”Berget sjunger. Och jag är dess röst.”*\n\n Trollsångarna har länge vandrat i Davokars utkanter och de djupa dalarna, men Skalderna är de som gått djupare, in i bergets hjärta och historiens mörker. De är inte bara sångare utan väktare av de gamla sanningarna, de som kan sjunga så att urberget spricker och viljor krossas. En Skald söker ofta efter de glömda verser som sades ha format världen, och deras röst bär en tyngd som får både kungar och bestar att darra.\nSkalden är ofta knuten till trollens kultursfär men även människor med tillräckligt djup röst och stark vilja kan vandra denna väg, ofta efter att ha skolats av en urgammal läromästare i någon av Ravennernas grottor.",
@@ -1683,11 +565,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Skald",
-        "Trollsång"
+        "Skald"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Trollsång, Ledare, Mystisk Kraft (Bergasång), Ritualist (Stensång)",
     "viktiga_karaktarsdrag": "Övertygande 13+, Viljestark 11+",
     "Elityrkesförmågor": [
       "Bergatroll",
@@ -1704,62 +585,9 @@
     "tankbara_nackdelar": [
       "Hävdningsproblem",
       "Mörkt förflutet"
-    ],
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Trollsång",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [],
-      "specifika_formagor": {
-        "namn": [
-          "Ledare"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Bergasång"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Stensång"
-        ],
-        "min_antal": 1
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    ]
   },
-  {
+    {
     "id": "elit20",
     "namn": "Ulvahedna",
     "beskrivning": "*”Björnen slår i blindo, vargen väljer var bettet ska ta.”*\n\n”Han är älskad av månen” väste häxan Grindock och ryggade tillbaka inför den väldige krigaren. Jakaarskinnet över hans axlar var styvt av koagulerat blod och svärdet i hans hand vilade tungt men stadigt, trots den stridens hetta som fortfarande ångade från hans kropp.\n\nEn Ulvahedna är bärsärkagångens förädlade form; skogens främsta rovdjur och en levande mardröm för både ambriernas disciplinerade led och de vilda klanernas otyglade slagskämpar. Där en vanlig bärsärk förlorar sig i en röd dimma av vansinne, finner Ulvahednan en skrämmande klarhet i sitt raseri. Vreden är inte en eld som förtär förståndet, utan en slipsten som skärper sinnena till det yttersta. Likt vargflockens ledare som med skoningslös precision urskiljer svagheten i bytet, kanaliserar Ulvahednan sin inre storm till ett enda, dödligt fokus. Häxorna viskar om att en sådan mordlystnad inte är mänsklig; det är ett ursinne tvingat till lydnad, ett sätt att binda naturens vildhet i kedjor av vilja och rikta den med tvärsäker precision. Det farligaste odjuret är inte det som vrålar av smärta, utan det som mördar med blicken fäst vid strupen oavsett vad. Ulvahedna, det riktade raseriet.",
@@ -1768,11 +596,10 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Ulvahedna", 
-        "Krigare"
+        "Ulvahedna"
       ]
     },
-    "krav_formagor": "",
+    "krav_formagor": "Bärsärk, Tvåhandskraft eller Tvillingattack eller Naturlig Krigare, Järnnäve eller Dominera, Kraftprov",
     "viktiga_karaktarsdrag": "Stark 15+, Viljestark 13+",
     "Elityrkesförmågor": [
       "Hungerlopp",
@@ -1792,194 +619,6 @@
       "Bestialisk",
       "Blodtörstig",
       "Mardrömmar"
-    ],
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Bärsärk",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Tvåhandskraft",
-            "Tvillingattack",
-            "Naturlig krigare"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        },
-        {
-          "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Järnnäve",
-            "Dominera"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Kraftprov"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
-  },
-  {
-    "id": "elit_placeholder",
-    "namn": "Placeholder",
-    "beskrivning": "Teknisk mall for ny kravstruktur for elityrken.",
-    "taggar": {
-      "typ": [
-        "Elityrke"
-      ],
-      "ark_trad": [
-        "Placeholder"
-      ]
-    },
-    "krav_formagor": "",
-    "viktiga_karaktarsdrag": "",
-    "Elityrkesförmågor": [
-      "Signaturförmågor"
-    ],
-    "mojliga_fordelar": [
-      "Fördel A",
-      "Fördel B"
-    ],
-    "tankbara_nackdelar": [
-      "Nackdel A",
-      "Nackdel B"
-    ],
-    "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
-      "primarformaga": {
-        "namn": "Primärförmåga",
-        "min_niva": "Mästare"
-      },
-      "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [
-          "PlaceholderPrimartagg"
-        ],
-        "krav_erf": 60
-      },
-      "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "test",
-        "taggar": [],
-        "krav_erf": 40
-      },
-      "valfri_inom_tagg": [
-        {
-          "typ": "Förmåga",
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "PlaceholderValfriTagg"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
-        },
-        {
-          "typ": "Mystisk kraft",
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "PlaceholderValfriMystikTagg"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 0
-        },
-        {
-          "typ": "Ritual",
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "PlaceholderValfriRitualTagg"
-          ],
-          "min_antal": 0
-        }
-      ],
-      "specifika_formagor": {
-        "namn": [
-          "Kravförmåga A",
-          "Kravförmåga B"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 1
-      },
-      "specifika_mystiska_krafter": {
-        "namn": [
-          "Mystisk kraft A",
-          "Mystisk kraft B"
-        ],
-        "min_niva": "Novis",
-        "min_antal": 0
-      },
-      "specifika_ritualer": {
-        "namn": [
-          "Ritual A",
-          "Ritual B"
-        ],
-        "min_antal": 0
-      },
-      "specifika_fordelar": {
-        "namn": [
-          "Fördelkrav A",
-          "Fördelkrav B"
-        ],
-        "min_antal": 0
-      },
-      "specifika_nackdelar": {
-        "namn": [
-          "Nackdelkrav A",
-          "Nackdelkrav B"
-        ],
-        "min_antal": 0
-      },
-      "min_total_erf": 0
-    }
+    ]
   }
 ]

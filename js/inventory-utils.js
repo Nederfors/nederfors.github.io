@@ -44,16 +44,6 @@
   const WEAPON_QUALITY_TARGET_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Pil/Lod'];
   const INDIVIDUAL_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'];
   const LEGACY_STACKABLE_ID_SET = new Set(['l1', 'l11', 'l27', 'l6', 'l12', 'l13', 'l28', 'l30']);
-  const LEGACY_BUNDLE_BY_ENTRY_ID = Object.freeze({
-    di79: [
-      { id: 'di10', qty: 1 },
-      { id: 'di11', qty: 1 },
-      { id: 'di12', qty: 1 },
-      { id: 'di13', qty: 1 },
-      { id: 'di14', qty: 1 },
-      { id: 'di15', qty: 1 }
-    ]
-  });
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -956,7 +946,7 @@
                 </div>
                 <div class="confirm-row">
                   <button id="vehicleRemoveCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
-                  <button id="vehicleRemoveApply" class="db-btn" type="button">Lasta ur</button>
+                  <button id="vehicleRemoveApply" class="db-btn db-btn--danger" type="button">Lasta ur</button>
                 </div>
               </section>
             </div>
@@ -1730,17 +1720,6 @@
     return { id, name, qty };
   }
 
-  function getLegacyBundleRefs(entry) {
-    const id = entry?.id === undefined || entry?.id === null ? '' : String(entry.id).trim();
-    const legacy = id ? LEGACY_BUNDLE_BY_ENTRY_ID[id] : null;
-    if (!Array.isArray(legacy)) return [];
-    return legacy.map(item => ({
-      id: String(item?.id || '').trim(),
-      name: String(item?.name || '').trim(),
-      qty: normalizePositiveInt(item?.qty ?? item?.antal, 1)
-    })).filter(item => (item.id || item.name) && item.qty > 0);
-  }
-
   function getInventoryBundleItems(entry, options = {}) {
     if (!entry || typeof entry !== 'object') return [];
     const level = options?.level ?? entry.nivå;
@@ -1774,17 +1753,7 @@
     });
 
     const fromRules = Array.from(aggregate.values()).filter(item => item.qty > 0);
-    if (fromRules.length) return fromRules;
-
-    return getLegacyBundleRefs(entry).map(item => {
-      const resolved = getEntry(item.id || item.name);
-      return {
-        id: resolved?.id ? String(resolved.id).trim() : (item.id || undefined),
-        name: (resolved?.namn && String(resolved.namn).trim()) || item.name,
-        qty: item.qty,
-        entry: resolved && resolved.namn ? resolved : null
-      };
-    }).filter(item => (item.id || item.name) && item.qty > 0);
+    return fromRules;
   }
 
   function isInventoryBundleEntry(entry, options = {}) {
@@ -2518,7 +2487,7 @@
           <span class="inventory-batch-item-label">${safeLabel}</span>
           ${safeMeta}
         </span>
-        <button type="button" class="db-btn vehicle-money-action" data-path="${path}">${safeAction}</button>
+        <button type="button" class="db-btn db-btn--danger vehicle-money-action" data-path="${path}">${safeAction}</button>
       </div>
     `;
   }
@@ -5707,7 +5676,6 @@
 
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.abs(diffO));
-    const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
     const unusedMoney = oToMoney(Math.max(0, diffO));
     const moneyWeight = calcMoneyWeight(unusedMoney);
 
@@ -5815,35 +5783,84 @@
 
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
 
-    // --- Weight-by-category breakdown ---
-    const weightGroups = { vapen: 0, rustning: 0, proviant: 0, mynt: 0, övrigt: 0 };
+    // --- Weight-by-type breakdown ---
+    const chartTypeIcons = {
+      'Närstridsvapen': 'skadetyp',
+      'Avståndsvapen': 'skadetyp',
+      Vapen: 'skadetyp',
+      'Pil/Lod': 'skadetyp',
+      Sköld: 'forsvar',
+      Rustning: 'forsvar',
+      Mat: 'grain',
+      Dryck: 'grain',
+      Mynt: 'money-bag',
+      Skatt: 'money-bag',
+      Kuriositet: 'basket',
+      Diverse: 'basket',
+      Specialverktyg: 'tool-box',
+      Förvaring: 'basket',
+      Fälla: 'basket',
+      Elixir: 'alkemi',
+      Artefakt: 'artefakt',
+      'Lägre Artefakt': 'artefakt',
+      Hemmagjort: 'basket',
+      Övrigt: 'basket'
+    };
+    const chartTypeSkip = new Set(['Hemmagjort']);
+    const getChartType = (row, entry) => {
+      if (row?.typ === 'currency' && row.money) return 'Mynt';
+      const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ.filter(Boolean) : [];
+      return types.find(type => !chartTypeSkip.has(type)) || types[0] || 'Övrigt';
+    };
+    const getChartIcon = (type) => {
+      if (chartTypeIcons[type]) return chartTypeIcons[type];
+      if (hasWeaponType([type])) return 'skadetyp';
+      return 'basket';
+    };
+    const weightGroups = new Map();
+    const addWeightGroup = (type, weight) => {
+      const key = type || 'Övrigt';
+      weightGroups.set(key, (weightGroups.get(key) || 0) + weight);
+    };
     allInv.forEach(r => {
       const entry = getEntry(r.id || r.name);
       const types = entry.taggar?.typ || [];
       if (types.includes('Färdmedel')) return;
       const w = calcRowWeight(r, list);
-      if (hasWeaponType(types)) weightGroups.vapen += w;
-      else if (types.includes('Rustning')) weightGroups.rustning += w;
-      else if (types.some(t => { const lc = t.toLowerCase(); return lc === 'mat' || lc === 'dryck'; })) weightGroups.proviant += w;
-      else weightGroups['övrigt'] += w;
+      if (w > 0) addWeightGroup(getChartType(r, entry), w);
     });
-    weightGroups.mynt = moneyWeight;
+    if (moneyWeight > 0) addWeightGroup('Mynt', moneyWeight);
 
     const capPct = maxCapacity > 0 ? Math.round((usedWeight / maxCapacity) * 100) : 0;
     const capProgressPct = Math.min(capPct, 100);
     const isOverCap = remainingCap < 0;
+    const fmtDashWeight = value => formatWeight(value).replace('.', ',');
+    const fmtDashMoney = (money, sign = '') => {
+      const normalized = storeHelper.normalizeMoney(money);
+      return `${sign}${normalized.daler} D <span aria-hidden="true">·</span> ${normalized.skilling} S <span aria-hidden="true">·</span> ${normalized['örtegar']} Ö`;
+    };
+    const capTone = isOverCap ? 'crit' : capPct >= 90 ? 'warn' : 'ok';
+    const capStatusLabel = isOverCap ? 'Över max' : capPct >= 90 ? 'Nära max' : 'Stabil';
+    const kpiCapStatusLabel = isOverCap ? 'Över max' : capPct >= 80 ? 'Nära full' : 'Stabil';
 
     // --- Build weight chart bars ---
-    const chartLabels = { vapen: 'Vapen', rustning: 'Rustning', proviant: 'Proviant', mynt: 'Mynt', 'övrigt': 'Övrigt' };
-    const maxGroupWeight = Math.max(...Object.values(weightGroups), 0.01);
-    const chartBarsHtml = Object.entries(weightGroups)
+    const weightGroupEntries = Array.from(weightGroups.entries())
       .filter(([, w]) => w > 0)
-      .map(([key, w]) => {
+      .sort((a, b) => {
+        const byWeight = b[1] - a[1];
+        if (Math.abs(byWeight) > 0.0001) return byWeight;
+        return typeof catComparator === 'function' ? catComparator(a[0], b[0]) : a[0].localeCompare(b[0]);
+      });
+    const maxGroupWeight = Math.max(...weightGroupEntries.map(([, w]) => w), 0.01);
+    const chartBarsHtml = weightGroupEntries
+      .filter(([, w]) => w > 0)
+      .map(([type, w]) => {
         const pct = Math.round((w / maxGroupWeight) * 100);
+        const label = typeof catName === 'function' ? catName(type) : type;
         return `<div class="dash-chart-row">
-          <span class="dash-chart-label">${chartLabels[key]}</span>
+          <span class="dash-chart-label"><span class="dash-chart-icon" aria-hidden="true">${icon(getChartIcon(type), { alt: '', width: 22, height: 22 })}</span><span class="dash-chart-label-text">${escapeHtml(label)}</span></span>
           <div class="db-progress dash-chart-bar"><div class="db-progress__bar" style="--db-progress:${pct}%"></div></div>
-          <span class="dash-chart-val">${formatWeight(w)}</span>
+          <span class="dash-chart-val">${fmtDashWeight(w)}</span>
         </div>`;
       }).join('');
 
@@ -5854,15 +5871,14 @@
 
     // --- Capacity status text ---
     const capStatusText = isOverCap
-      ? `Över kapacitet med ${formatWeight(Math.abs(remainingCap))}`
+      ? `Över kapacitet med ${fmtDashWeight(Math.abs(remainingCap))}`
       : remainingCap === 0
         ? 'Exakt på gränsen'
-        : `${formatWeight(remainingCap)} kvar`;
+        : `${fmtDashWeight(remainingCap)} kvar`;
 
     // --- KPI card sub-texts ---
-    const moneyWeightNote = moneyWeight ? `Myntvikt: ${formatWeight(moneyWeight)}` : '';
+    const moneyWeightNote = moneyWeight ? `Myntvikt: ${fmtDashWeight(moneyWeight)}` : '';
     const foodNote = foodCount === 0 ? '0 proviant' : `${foodCount} proviant`;
-    const capNote = `${capPct}% full`;
 
 
     // --- Dashboard HTML for KPI sidebar panel (shadow DOM) ---
@@ -5870,38 +5886,53 @@
       <div class="formal-dashboard-content">
         <!-- KPI row -->
         <div class="dash-kpi-row">
-          <div class="db-card dash-kpi">
+          <div class="db-card dash-kpi dash-kpi-money">
+            <div class="dash-card-head">
+              <span class="dash-card-icon dash-card-icon--accent" aria-hidden="true">${icon('money-bag', { alt: '', width: 26, height: 26 })}</span>
+              <div class="db-stat__label">Kontanter</div>
+              <span class="dash-kpi-actions" aria-label="Justera mynt">
+                <button data-act="moneyMinus" class="dash-money-btn" aria-label="Minska mynt" title="Minska mynt">${icon('minus', { alt: '', width: 20, height: 20 }) || '&minus;'}</button>
+                <button data-act="moneyPlus" class="dash-money-btn" aria-label="Öka mynt" title="Öka mynt">${icon('plus', { alt: '', width: 20, height: 20 }) || '&plus;'}</button>
+              </span>
+            </div>
             <div class="db-stat">
-              <div class="db-stat__label">Kontant
-                <span class="dash-kpi-actions">
-                  <button data-act="moneyMinus" class="dash-money-btn" aria-label="Minska mynt" title="Minska mynt">&minus;</button>
-                  <button data-act="moneyPlus" class="dash-money-btn" aria-label="Öka mynt" title="Öka mynt">&plus;</button>
-                </span>
-              </div>
-              <div class="db-stat__value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</div>
+              <div class="db-stat__value">${fmtDashMoney(cash)}</div>
               ${moneyWeightNote ? `<div class="db-caption db-text-muted">${moneyWeightNote}</div>` : ''}
             </div>
-            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageEconomyBtn" type="button">Hantera ekonomi</button>
+            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn dash-kpi-action-btn--primary" data-dash-trigger="manageEconomyBtn" type="button"><span aria-hidden="true">${icon('money-bag', { alt: '', width: 21, height: 21 })}</span>Hantera ekonomi</button>
           </div>
 
           <div class="db-card dash-kpi">
+            <div class="dash-card-head">
+              <span class="dash-card-icon" aria-hidden="true">${icon('inventarie', { alt: '', width: 25, height: 25 })}</span>
+              <div class="db-stat__label">Tillgängligt</div>
+            </div>
             <div class="db-stat">
-              <div class="db-stat__label">Oanvänt</div>
-              <div class="db-stat__value dash-unused-out">0D 0S 0Ö</div>
+              <div class="db-stat__value dash-unused-out">${fmtDashMoney(unusedMoney)}</div>
             </div>
             ${vehicleStatHtml ? `<div class="dash-kpi-extra">${vehicleStatHtml}</div>` : ''}
           </div>
 
           <div class="db-card dash-kpi ${charCapClass}">
-            <div class="db-stat">
+            <div class="dash-card-head">
+              <span class="dash-card-icon dash-card-icon--warn" aria-hidden="true">${icon('inventarie', { alt: '', width: 25, height: 25 })}</span>
               <div class="db-stat__label">Kapacitet</div>
-              <div class="db-stat__value">${capStatusText}</div>
+              <button id="clearInvBtn" class="db-btn db-btn--icon db-btn--danger dash-clear-inv-btn" type="button" title="Töm inventarie" aria-label="Töm inventarie">
+                ${icon('broom', { alt: '', width: 20, height: 20 })}
+              </button>
             </div>
-            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageItemsBtn" type="button">Hantera föremål</button>
+            <div class="db-stat">
+              <div class="db-stat__value">${capStatusText}</div>
+              <span class="dash-status-badge dash-status-badge--${capTone}">${kpiCapStatusLabel}</span>
+            </div>
+            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageItemsBtn" type="button"><span aria-hidden="true">${icon('tool-box', { alt: '', width: 21, height: 21 })}</span>Hantera föremål</button>
           </div>
 
           <div class="db-card dash-kpi dash-kpi-live-card">
-            <div class="db-stat__label">Dra pengar vid inköp</div>
+            <div class="dash-card-head">
+              <span class="dash-card-icon" aria-hidden="true">${icon('basket', { alt: '', width: 25, height: 25 })}</span>
+              <div class="db-stat__label">Dra automatiskt vid inköp</div>
+            </div>
             <div class="dash-live-inline">
               <div class="db-stat__value">${liveModeEnabled ? 'På' : 'Av'}</div>
               <button class="db-switch inventory-live-switch dash-live-switch dash-live-toggle" type="button" role="switch"
@@ -5915,23 +5946,24 @@
         <!-- Hero capacity card -->
         <div class="db-card dash-hero-cap ${charCapClass}">
           <div class="db-card__header dash-hero-header">
-            <h3 class="db-card__title">Bärkapacitet</h3>
-            <span class="db-badge${foodCount === 0 ? ' db-badge--warning' : ''}">${foodNote}</span>
+            <h3 class="db-card__title"><span class="dash-card-icon" aria-hidden="true">${icon('inventarie', { alt: '', width: 25, height: 25 })}</span>Bärkapacitet</h3>
+            <span class="dash-status-badge dash-status-badge--${capTone}">${capStatusLabel}</span>
           </div>
           <div class="db-card__body dash-hero-body">
             <div class="dash-cap-meter">
+              <div class="dash-cap-labels">
+                <span>${fmtDashWeight(usedWeight)} / ${fmtDashWeight(maxCapacity)}</span>
+                <span>${capPct}%</span>
+              </div>
               <div class="db-progress${isOverCap ? ' dash-progress-danger' : ''}">
                 <div class="db-progress__bar" style="--db-progress:${capProgressPct}%"></div>
               </div>
-              <div class="dash-cap-labels">
-                <span>${formatWeight(usedWeight)} / ${formatWeight(maxCapacity)}</span>
-                <span>${capPct}%</span>
-              </div>
             </div>
-            ${isOverCap ? `<div class="db-alert db-alert--error dash-cap-alert"><div class="db-alert__content">Över kapacitet med <strong>${formatWeight(Math.abs(remainingCap))}</strong></div></div>` : ''}
+            <span class="db-badge dash-food-badge${foodCount === 0 ? ' db-badge--warning' : ''}">${icon('grain', { alt: '', width: 18, height: 18 })}${foodNote}</span>
+            ${isOverCap ? `<div class="db-alert db-alert--error dash-cap-alert"><div class="db-alert__content">Över kapacitet med <strong>${fmtDashWeight(Math.abs(remainingCap))}</strong></div></div>` : ''}
             ${chartBarsHtml ? `
               <div class="dash-weight-chart">
-                <div class="db-caption db-text-muted dash-chart-title">Vikt per kategori</div>
+                <div class="db-caption db-text-muted dash-chart-title">Vikt per typ</div>
                 ${chartBarsHtml}
               </div>
             ` : ''}
@@ -6414,7 +6446,9 @@
       // Update unusedOut inside shadow DOM
       const tbRoot = getToolbarRoot();
       const unusedEl = tbRoot?.querySelector('.dash-unused-out');
-      if (unusedEl) unusedEl.textContent = diffText;
+      if (unusedEl) {
+        unusedEl.innerHTML = `${diffO < 0 ? '-' : ''}${diff.d} D <span aria-hidden="true">·</span> ${diff.s} S <span aria-hidden="true">·</span> ${diff.o} Ö`;
+      }
       bindInv();
       bindMoney();
     }, {
@@ -7181,8 +7215,17 @@
         // Delegate trigger buttons to their real targets (outside shadow DOM)
         const trigger = e.target.closest('button[data-dash-trigger]');
         if (trigger) {
-          const target = getEl(trigger.dataset.dashTrigger);
-          if (target) target.click();
+          e.preventDefault();
+          e.stopPropagation();
+          const action = trigger.dataset.dashTrigger;
+          if (action === 'manageItemsBtn') {
+            openInventoryItemsHub('custom-item');
+          } else if (action === 'manageEconomyBtn') {
+            openInventoryEconomyHub('money');
+          } else {
+            const target = getEl(action);
+            if (target) target.click();
+          }
           return;
         }
         const btn = e.target.closest('button[data-act]');

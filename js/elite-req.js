@@ -144,7 +144,9 @@
   function matchesAlternative(token, alternative) {
     if (!token || !alternative) return false;
     if (!alternative.namn) return false;
-    if (token.key !== normalizeKey(alternative.namn)) return false;
+    const altKey = normalizeKey(alternative.namn);
+    const wildcard = altKey === '*' || altKey === 'valfri';
+    if (!wildcard && token.key !== altKey) return false;
     if (!matchesType(token.item, alternative.typ)) return false;
     return true;
   }
@@ -210,6 +212,21 @@
     }
     const one = String(rawName || '').trim();
     return one ? [one] : [];
+  }
+
+  function parsePrimaryAlternatives(krav) {
+    const alternatives = toArray(krav?.primarformaga?.alternativ)
+      .map(normalizeAlternative)
+      .filter(Boolean);
+    if (alternatives.length) return alternatives;
+    return parsePrimaryNames(krav).map(name => ({ typ: '', namn: name }));
+  }
+
+  function primaryAlternativeLabel(alternative) {
+    const name = String(alternative?.namn || '').trim();
+    const type = normalizeType(alternative?.typ);
+    if ((name === '*' || normalizeKey(name) === 'valfri') && type) return `Valfri ${type.toLowerCase()}`;
+    return name;
   }
 
   function alternativesLabel(alternatives = []) {
@@ -287,12 +304,12 @@
     const totalMissing = Math.max(0, totalRequired - totalErf);
 
     const primaryNames = parsePrimaryNames(krav);
+    const primaryAlternatives = parsePrimaryAlternatives(krav);
     const primaryRequiredErf = toInt(krav?.primarformaga?.krav_erf, 0);
-    const primaryNameSet = new Set(primaryNames.map(normalizeKey));
     const primaryMatches = tokens.filter(token =>
       !token.isBenefit
       && !token.isDrawback
-      && primaryNameSet.has(token.key)
+      && primaryAlternatives.some(alternative => matchesAlternative(token, alternative))
     );
     const primaryHintedMatches = primaryMatches.filter(token => normalizeSourceHint(token.sourceHint) === 'primarformaga');
     const primaryPool = primaryHintedMatches.length ? primaryHintedMatches : primaryMatches;
@@ -301,8 +318,13 @@
       .sort((a, b) => b.xp - a.xp)[0] || null;
     const primarySelectedErf = Math.max(0, Number(primaryBestToken?.xp) || 0);
     const primaryTokenId = String(primaryBestToken?.id || '').trim();
-    const primaryOk = primaryNames.length > 0 && (primarySelectedErf >= primaryRequiredErf);
+    const primarySelectedAlternative = primaryBestToken
+      ? primaryAlternatives.find(alternative => matchesAlternative(primaryBestToken, alternative))
+      : null;
+    const primaryOk = primaryAlternatives.length > 0 && (primarySelectedErf >= primaryRequiredErf);
     const primaryMissing = Math.max(0, primaryRequiredErf - primarySelectedErf);
+    const countsPrimaryBaseline = Boolean(krav?.primarformaga?.counts_primary_baseline);
+    let primaryBaselineUsed = false;
 
     const specificRules = parseSpecificRules(krav);
     const tokenById = new Map(tokens.map(token => [token.id, token]));
@@ -314,6 +336,8 @@
       requiredErf: Math.max(0, Number(rule.requiredErf) || 0),
       requiredCount: Math.max(0, Number(rule.minCount) || 0),
       candidateCount: 0,
+      primaryCreditErf: 0,
+      primaryTokenId: '',
       pickedIds: [],
       selectedCount: 0,
       selectedErf: 0
@@ -349,6 +373,22 @@
       });
       row.candidateCount = count;
     });
+
+    if (countsPrimaryBaseline && primaryBestToken) {
+      const primarySpecificRow = specificRowsWork.find(row =>
+        row
+        && row.requiredErf > 0
+        && toArray(row.alternatives).some(alt => matchesAlternative(primaryBestToken, alt))
+      );
+      if (primarySpecificRow) {
+        const creditedErf = Math.min(primarySelectedErf, primarySpecificRow.requiredErf);
+        primarySpecificRow.primaryCreditErf = creditedErf;
+        primarySpecificRow.primaryTokenId = primaryTokenId;
+        primarySpecificRow.selectedCount += 1;
+        primarySpecificRow.selectedErf += creditedErf;
+        primaryBaselineUsed = true;
+      }
+    }
 
     const assignables = specificCandidates
       .filter(token => matchedRowsByToken.has(token.id))
@@ -425,6 +465,8 @@
         ok,
         missingCount: Math.max(0, row.requiredCount - row.selectedCount),
         missingErf: Math.max(0, row.requiredErf - row.selectedErf),
+        primaryCreditErf: row.primaryCreditErf,
+        primaryTokenId: row.primaryTokenId,
         pickedIds: row.pickedIds.slice()
       };
     });
@@ -488,12 +530,35 @@
           typ: rule.typ,
           krav_erf: requiredErf
         },
+        selectedFromPrimary: 0,
         selectedFromOverflow: 0,
         selectedFromPool: 0,
+        primarySources: [],
         overflowSources: [],
         poolSources: []
       };
     });
+
+    if (countsPrimaryBaseline && primaryBestToken && !primaryBaselineUsed) {
+      const primaryValfriRow = valfriRowsWork.find(row =>
+        row
+        && row.requiredErf > 0
+        && row.taggfalt
+        && toArray(row.taggar).length
+        && matchesValfriRule(primaryBestToken, row.normalizedRule)
+      );
+      if (primaryValfriRow) {
+        const creditedErf = Math.min(primarySelectedErf, primaryValfriRow.requiredErf);
+        primaryValfriRow.selectedFromPrimary = creditedErf;
+        primaryValfriRow.primarySources = [{
+          tokenId: primaryTokenId,
+          name: primaryBestToken.name,
+          usedErf: creditedErf,
+          reason: 'primarformaga->baseline'
+        }];
+        primaryBaselineUsed = true;
+      }
+    }
 
     const valfriRemainingNeed = (row) => Math.max(
       0,
@@ -614,13 +679,14 @@
     const optionalValfriOverflowSources = [];
     const valfriRows = valfriRowsWork.map(row => {
       const requiredErf = Math.max(0, Number(row.requiredErf) || 0);
+      const selectedFromPrimary = Math.max(0, Number(row.selectedFromPrimary) || 0);
       const selectedFromOverflow = Math.max(0, Number(row.selectedFromOverflow) || 0);
       const selectedFromPool = Math.max(0, Number(row.selectedFromPool) || 0);
-      const selectedErf = selectedFromOverflow + selectedFromPool;
+      const selectedErf = selectedFromPrimary + selectedFromOverflow + selectedFromPool;
       const ok = requiredErf <= 0 || selectedErf >= requiredErf;
-      const overflowAnnotated = annotateRequiredShare(row.overflowSources, requiredErf);
+      const overflowAnnotated = annotateRequiredShare(row.overflowSources, Math.max(0, requiredErf - selectedFromPrimary));
       const overflowApplied = overflowAnnotated.reduce((sum, source) => sum + Math.max(0, Number(source?.appliedErf) || 0), 0);
-      const poolAnnotated = annotateRequiredShare(row.poolSources, Math.max(0, requiredErf - overflowApplied));
+      const poolAnnotated = annotateRequiredShare(row.poolSources, Math.max(0, requiredErf - selectedFromPrimary - overflowApplied));
       const rowOverflowErf = Math.max(0, selectedErf - requiredErf);
       if (rowOverflowErf > 0) {
         optionalFromValfriOverflow += rowOverflowErf;
@@ -645,9 +711,11 @@
         taggfalt: row.taggfalt,
         taggar: row.taggar,
         typ: row.typ,
+        selectedFromPrimary,
         selectedFromOverflow,
         selectedFromPool,
         overflowErf: rowOverflowErf,
+        primarySources: row.primarySources,
         overflowSources: overflowAnnotated,
         poolSources: poolAnnotated
       };
@@ -697,9 +765,12 @@
       missing.push(`Total ERF exkl. Fördel/Nackdel (${totalErf}/${totalRequired} ERF)`);
     }
     if (!primaryOk) {
-      const label = primaryNames.length > 1
-        ? primaryNames.join(' eller ')
-        : (primaryNames[0] || 'Primärförmåga');
+      const primaryLabels = primaryAlternatives
+        .map(primaryAlternativeLabel)
+        .filter(Boolean);
+      const label = primaryLabels.length > 1
+        ? primaryLabels.join(' eller ')
+        : (primaryLabels[0] || 'Primärförmåga');
       missing.push(`${label} (${primarySelectedErf}/${primaryRequiredErf} ERF)`);
     }
 
@@ -737,8 +808,8 @@
           missingErf: totalMissing
         },
         primary: {
-          names: primaryNames,
-          name: primaryNames[0] || '',
+          names: primaryAlternatives.map(primaryAlternativeLabel).filter(Boolean),
+          name: primaryAlternativeLabel(primarySelectedAlternative || primaryAlternatives[0]) || '',
           selectedErf: primarySelectedErf,
           requiredErf: primaryRequiredErf,
           missingErf: primaryMissing,

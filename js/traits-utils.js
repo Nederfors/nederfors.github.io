@@ -1078,10 +1078,10 @@
           <div class="trait-label">${k}: ${val}</div>
         </div>
         <div class="trait-controls" role="group" aria-label="Justera ${k}">
-          <button class="trait-btn" data-d="-5">−5</button>
-          <button class="trait-btn" data-d="-1">−1</button>
-          <button class="trait-btn" data-d="1">+1</button>
-          <button class="trait-btn" data-d="5">+5</button>
+          <button class="trait-btn trait-btn--down" data-d="-5" aria-label="Minska ${k} med 5">−5</button>
+          <button class="trait-btn trait-btn--down" data-d="-1" aria-label="Minska ${k} med 1">−1</button>
+          <button class="trait-btn trait-btn--up" data-d="1" aria-label="Öka ${k} med 1">+1</button>
+          <button class="trait-btn trait-btn--up" data-d="5" aria-label="Öka ${k} med 5">+5</button>
         </div>
         <div class="trait-count-row">
           ${countMarkup}
@@ -1123,7 +1123,11 @@
         if (trait) {
           try { sessionStorage.setItem('__pendingTraitFilter', trait); } catch {}
         }
-        location.hash = '#/character';
+        if (window.appRouter?.navigateTo) {
+          window.appRouter.navigateTo('index');
+        } else {
+          location.hash = '#/index';
+        }
         return;
       }
       const btn = e.target.closest('.trait-btn');

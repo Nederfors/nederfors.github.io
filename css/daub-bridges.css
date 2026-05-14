@@ -349,8 +349,8 @@
   width: 18px;
   height: 18px;
   font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--db-color-text-secondary, #bcae9e);
+  background: var(--danger);
+  color: #fff;
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -363,8 +363,8 @@
   line-height: 1;
 }
 .db-chip.removable .db-chip__close:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: var(--db-color-text, #fff3e4);
+  background: #a83830;
+  color: #fff;
 }
 
 /* Compact chips inside cards */

@@ -22,12 +22,14 @@ HTML_EXCLUDES = {
 }
 ENTRY_DATA_EXCLUDES = {
     "all.json",
+    "legacy-import-map.json",
     "pdf-list.json",
     "struktur.json",
     "tabeller.json",
     "vapen.json",
 }
 SPECIAL_DATA_FILES = [
+    "legacy-import-map.json",
     "pdf-list.json",
 ]
 BUNDLED_DATA_FILES = [
@@ -110,6 +112,7 @@ def render_refresh_targets() -> str:
             "  { url: 'index.html', cacheName: CORE_CACHE },",
             "  { url: 'webapp.html', cacheName: CORE_CACHE },",
             "  { url: 'manifest.json', cacheName: CORE_CACHE },",
+            "  { url: 'data/legacy-import-map.json', cacheName: JSON_CACHE },",
             "  { url: 'data/pdf-list.json', cacheName: JSON_CACHE },",
             "  { url: 'data/index-catalog.json', cacheName: JSON_CACHE }",
         ]

@@ -3,8 +3,8 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-29T17:07:33.894305+00:00",
-      "antal_typer_hittade": 58,
+      "genererad": "2026-05-12T08:26:59.529858+00:00",
+      "antal_typer_hittade": 57,
       "källfiler": [
         "data/diverse.json",
         "data/kuriositeter.json",
@@ -14,7 +14,6 @@
         "data/formaga.json",
         "data/basformagor.json",
         "data/kvalitet.json",
-        "data/mystisk-kraft.json",
         "data/mystisk-kvalitet.json",
         "data/neutral-kvalitet.json",
         "data/negativ-kvalitet.json",
@@ -42,6 +41,9 @@
         "data/fallor.json",
         "data/avstandsvapen.json",
         "data/narstridsvapen.json"
+      ],
+      "överhoppade_filer": [
+        "mystisk-kraft.json.entries[4].beskrivning: unknown entry key"
       ]
     },
     "Allmän kvalitet": {
@@ -145,7 +147,7 @@
       ],
       "exempel": [
         {
-          "id": "v21",
+          "id": "av1",
           "name": "Armborst",
           "description": "Ett mekaniskt vapen som avfyrar lod med stor kraft.",
           "tags": {
@@ -167,7 +169,7 @@
           }
         },
         {
-          "id": "v22",
+          "id": "av2",
           "name": "Arbalest",
           "description": "Arbalest är ett tungt ambriskt armborst med båge av fjäderstål vilket ger dess lod extra kraft.",
           "tags": {
@@ -192,7 +194,7 @@
           }
         },
         {
-          "id": "v38",
+          "id": "av14",
           "name": "Handarmborst",
           "description": "Bland Yndaros gäng och tjuvgillen förekommer en lättdold variant av armborstet, som kan skjutas med en hand men som kräver två för att ladda. Genom 5äderstålsbågen är kraften i skottet lika tung som det vanliga armborstets. Lönnmördare applicerar dessutom ofta gift på loden vilket blir synnerligen effektivt.",
           "tags": {
@@ -611,7 +613,7 @@
       ],
       "exempel": [
         {
-          "id": "v32",
+          "id": "av9",
           "name": "Ballista",
           "description": "Ballistan utgörs av ett massivt och stationärt armborst, avsett för beskjutande av fasta mål, truppformationer på slagfält – samt monster av mest robusta sort.\nRedan under Det stora kriget användes ballistan mot mörkermästarnas odöda dragbestar, i syfte att stoppa deras belägringstorn från att nå försvararnas murar. Den praktiken fortsatte vid koloniseringen av Ambria där framför allt häxornas fasansfulla kolosser utgjorde måltavlor. Även idag riktas ballistor mot Davokars mörka bryn från utposter och fort.",
           "tags": {
@@ -637,7 +639,7 @@
           }
         },
         {
-          "id": "v36",
+          "id": "av12",
           "name": "Bräschkruka (på marken)",
           "description": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
           "tags": {
@@ -663,7 +665,7 @@
           }
         },
         {
-          "id": "v37",
+          "id": "av13",
           "name": "Bräschkruka (nedgrävd)",
           "description": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
           "tags": {
@@ -696,7 +698,7 @@
       ],
       "exempel": [
         {
-          "id": "v34",
+          "id": "av10",
           "name": "Blåsrör",
           "description": "Blåsrörets enda funktion är att med en liten pil leverera gift till målet. Blåsrörspilen i sig ger ingen skada, men penetrerar rustning om man slår över målets skydd med 1T8 (rollpersoner med förmågan Prickskytt slår 1T10).",
           "tags": {
@@ -937,7 +939,7 @@
           "levels": {},
           "rules": {},
           "elite_requirements": {
-            "total_xp": 150,
+            "total_xp": 130,
             "stages": [
               {
                 "id": "primary",
@@ -946,52 +948,24 @@
                 "min_count": 1,
                 "options": [
                   {
-                    "type": "",
-                    "name": "Prickskytt"
-                  },
-                  {
-                    "type": "",
-                    "name": "Tvillingattack"
-                  },
-                  {
-                    "type": "",
-                    "name": "Spjutdans"
+                    "type": "Förmåga",
+                    "name": "Akrobatik"
                   }
                 ]
               },
               {
                 "id": "specific_choice_0",
                 "kind": "specific_choice",
-                "min_xp": 40,
+                "min_xp": 30,
                 "min_count": 1,
                 "options": [
                   {
                     "type": "Förmåga",
-                    "name": "Prickskytt"
+                    "name": "Sjätte sinne"
                   },
                   {
                     "type": "Förmåga",
                     "name": "Spjutdans"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Tvillingattack"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Prickskytt"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Akrobatik"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Lärd"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Monsterlärd"
                   }
                 ]
               },
@@ -1003,12 +977,29 @@
                 "field": "traditions",
                 "values": [
                   "Jägare"
+                ],
+                "allowed_entry_types": [
+                  "Förmåga",
+                  "Ritual",
+                  "Fördel",
+                  "Mystisk kraft"
                 ]
               },
               {
-                "id": "optional_pool",
-                "kind": "optional_pool",
-                "min_xp": 20
+                "id": "tag_pool_1",
+                "kind": "tag_pool",
+                "min_xp": 10,
+                "entry_type": "",
+                "field": "traditions",
+                "values": [
+                  "Häxkonst"
+                ],
+                "allowed_entry_types": [
+                  "Förmåga",
+                  "Ritual",
+                  "Fördel",
+                  "Mystisk kraft"
+                ]
               },
               {
                 "id": "specific_benefits",
@@ -1016,16 +1007,6 @@
                 "entry_type": "Fördel",
                 "names": [
                   "Vildmarksvana"
-                ],
-                "min_count": 2
-              },
-              {
-                "id": "specific_drawbacks",
-                "kind": "named_count",
-                "entry_type": "Nackdel",
-                "names": [
-                  "Paria",
-                  "Edsbunden"
                 ],
                 "min_count": 2
               }
@@ -1068,17 +1049,17 @@
           "levels": {},
           "rules": {},
           "elite_requirements": {
-            "total_xp": 150,
+            "total_xp": 90,
             "stages": [
               {
                 "id": "primary",
                 "kind": "primary",
-                "min_xp": 10,
+                "min_xp": 60,
                 "min_count": 1,
                 "options": [
                   {
-                    "type": "",
-                    "name": "Teurg"
+                    "type": "Förmåga",
+                    "name": "Teurgi"
                   }
                 ]
               },
@@ -1098,6 +1079,7 @@
                 "id": "tag_pool_0",
                 "kind": "tag_pool",
                 "min_xp": 10,
+                "min_count": 1,
                 "entry_type": "Förmåga",
                 "field": "name",
                 "values": [
@@ -1109,31 +1091,13 @@
                 "id": "tag_pool_1",
                 "kind": "tag_pool",
                 "min_xp": 10,
+                "min_count": 1,
                 "entry_type": "Mystisk kraft",
                 "field": "name",
                 "values": [
                   "Häxhammare",
                   "Helig aura"
                 ]
-              },
-              {
-                "id": "optional_pool",
-                "kind": "optional_pool",
-                "min_xp": 10
-              },
-              {
-                "id": "specific_benefits",
-                "kind": "named_count",
-                "entry_type": "Fördel",
-                "names": [],
-                "min_count": 0
-              },
-              {
-                "id": "specific_drawbacks",
-                "kind": "named_count",
-                "entry_type": "Nackdel",
-                "names": [],
-                "min_count": 0
               }
             ]
           },
@@ -1172,7 +1136,7 @@
           "levels": {},
           "rules": {},
           "elite_requirements": {
-            "total_xp": 150,
+            "total_xp": 90,
             "stages": [
               {
                 "id": "primary",
@@ -1181,7 +1145,7 @@
                 "min_count": 1,
                 "options": [
                   {
-                    "type": "",
+                    "type": "Förmåga",
                     "name": "Järnnäve"
                   }
                 ]
@@ -1190,7 +1154,7 @@
                 "id": "specific_choice_0",
                 "kind": "specific_choice",
                 "min_xp": 20,
-                "min_count": 1,
+                "min_count": 2,
                 "options": [
                   {
                     "type": "Förmåga",
@@ -1206,31 +1170,13 @@
                 "id": "tag_pool_0",
                 "kind": "tag_pool",
                 "min_xp": 10,
+                "min_count": 1,
                 "entry_type": "Förmåga",
                 "field": "name",
                 "values": [
                   "Sköldkamp",
                   "Tvillingattack"
                 ]
-              },
-              {
-                "id": "optional_pool",
-                "kind": "optional_pool",
-                "min_xp": 10
-              },
-              {
-                "id": "specific_benefits",
-                "kind": "named_count",
-                "entry_type": "Fördel",
-                "names": [],
-                "min_count": 0
-              },
-              {
-                "id": "specific_drawbacks",
-                "kind": "named_count",
-                "entry_type": "Nackdel",
-                "names": [],
-                "min_count": 0
               }
             ]
           },
@@ -1256,11 +1202,10 @@
       ]
     },
     "Elityrkesförmåga": {
-      "antal": 64,
+      "antal": 42,
       "källfiler": [
         "data/formaga.json",
         "data/monstruost-sardrag.json",
-        "data/mystisk-kraft.json",
         "data/ritual.json"
       ],
       "exempel": [
@@ -3605,120 +3550,6 @@
         }
       ]
     },
-    "Mystisk kraft": {
-      "antal": 85,
-      "källfiler": [
-        "data/mystisk-kraft.json"
-      ],
-      "exempel": [
-        {
-          "id": "mystiskkr1",
-          "name": "Anatema",
-          "description": "Material: En liten silverklocka  \nMystikern har studerat motmagins hemligheter och kan upplösa andra krafters verkan. Anatema påverkar inte ritualer – deras mystiska band är alltför grundligt vävda och kan endast motverkas med andra ritualer.",
-          "tags": {
-            "types": [
-              "Mystisk kraft"
-            ],
-            "traditions": [
-              "Ordensmagiker",
-              "Stavmagiker",
-              "Teurg"
-            ],
-            "tests": [
-              "Viljestark"
-            ]
-          },
-          "levels": {
-            "Novis": {
-              "description": "Handling: Aktiv. Mystikern kan med ett lyckat [Viljestark←Viljestark] skingra en pågående effekt på en varelse, även på sig själv under förutsättning att mystikern är i stånd att använda magi. Det är den påverkande mystikerns Viljestark som används som motstånd.",
-              "actions": "Aktiv",
-              "damage_type": "Ingen"
-            },
-            "Gesäll": {
-              "description": "Handling: Aktiv. Mystikern kan skingra pågående effekter på flera varelser i en kedja, slag slås för ett mål i taget.",
-              "actions": "Aktiv",
-              "damage_type": "Ingen"
-            },
-            "Mästare": {
-              "description": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark skingra alla verksamma magiska effekter oavsett sort, inklusive frammanade effekter och varelser.",
-              "actions": "Aktiv",
-              "damage_type": "Ingen"
-            }
-          },
-          "rules": {}
-        },
-        {
-          "id": "mystiskkr2",
-          "name": "Andeplåga",
-          "description": "Tradition: Endast tillgänglig för Andebesvärjare\nMaterial: En bit av en liksvepning\nVärlden är gammal och många andar dröjer kvar från forna tider; naturandar i mark och vatten eller döda hjältar som ännu inte har passerat till andra sidan. Vissa mystiker kan väcka andar till liv för en stund och få dem att anfalla fiender. Fienden ansätts av dessa ettriga andar som sliter kläder, utrustning, hår och kött. I bästa fall kan fienden inte agera alls, i värsta fall drivs fienden till vansinne eller död av de vilda andarnas angrepp.",
-          "tags": {
-            "types": [
-              "Mystisk kraft",
-              "Elityrkesförmåga"
-            ],
-            "traditions": [
-              "Andebesvärjare"
-            ],
-            "tests": [
-              "Viljestark"
-            ]
-          },
-          "levels": {
-            "Novis": {
-              "description": "Aktiv. Mystikern kallar andar till sin hjälp och dessa transparenta skepnader anfaller en fiende. Fienden misslyckas automatiskt med alla slag för koncentration gällande mystiska krafter; alla andra framgångsslag får en andra chans att misslyckas. Mystikern måste klara ett Viljestark varje runda för att vidmakthålla andarnas hjälp.",
-              "actions": "Aktiv",
-              "damage_type": "Ingen"
-            },
-            "Gesäll": {
-              "description": "Aktiv. Mystikern kan kräva mer substantiell hjälp av traktens andar. De anfaller frenetiskt och ger skada på Viljestark utöver effekten på novisnivå. Skadan på Viljestark är 1T4 per runda, rustning skyddar ej. Når Viljestark noll dör offret, om det inte får slå Dödsslag som rollpersoner. Rollpersoner blir tillfälligt vansinniga (katatoniska, hysteriska, eller på annat sätt oförmögna att agera) under tiden de slår sina Dödsslag. Den alternativa skadan läks annars som annan skada. Mystikern måste klara ett Viljestark varje runda för att vidmakthålla andarnas hjälp och koncentrationen riskerar dessutom att brytas när mystikern tar skada, [Viljestark – Skada].",
-              "actions": "Aktiv",
-              "damage_type": "Mystisk"
-            },
-            "Mästare": {
-              "description": "Aktiv. Andarnas angrepp gör 1T6 i skada på Viljestark.",
-              "actions": "Aktiv",
-              "damage_type": "Mystisk"
-            }
-          },
-          "rules": {}
-        },
-        {
-          "id": "mystiskkr3",
-          "name": "Beskyddande runor",
-          "description": "Tradition: Stavmagi, Symbolism\nMaterial: Ristade runor\nMystikerns runor släpper lös beskyddande energier, vilka omsveper mystikern och på högre nivåer också dennes allierade.",
-          "tags": {
-            "types": [
-              "Mystisk kraft"
-            ],
-            "traditions": [
-              "Stavmagiker",
-              "Symbolist"
-            ],
-            "tests": [
-              "Viljestark"
-            ]
-          },
-          "levels": {
-            "Novis": {
-              "description": "Aktiv. Runornas kraft ger 1T4 extra i skydd tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada]. Skyddstärningen slås separat vid varje träff och adderas till målets rustning, om någon.",
-              "actions": "Aktiv",
-              "damage_type": "Ingen"
-            },
-            "Gesäll": {
-              "description": "Aktiv. Runorna ger 1T4 extra i skydd. En hämnande verkan medför också 1T4 i skada på varje fiende som skadar den beskyddade varelsen, rustning skyddar ej. Effekten varar tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada].",
-              "actions": "Aktiv",
-              "damage_type": "Mystisk"
-            },
-            "Mästare": {
-              "description": "Aktiv. Den skyddande och hämnande effekten slås med 1T6 istället för 1T4 och varar tills mystikern misslyckas med ett Viljestark.",
-              "actions": "Aktiv",
-              "damage_type": "Mystisk"
-            }
-          },
-          "rules": {}
-        }
-      ]
-    },
     "Mystisk kvalitet": {
       "antal": 29,
       "källfiler": [
@@ -4062,7 +3893,7 @@
           "qualities": []
         },
         {
-          "id": "v12",
+          "id": "nv12",
           "name": "Obeväpnad attack",
           "description": "Obeväpnade attacker används vanligen som desperata kulturvarelsers sista utväg och de är i alla hänseenden mindre effektiva än rovbestars och styggelsers naturliga vapen. Tillsammans med förmågan Naturlig krigare kan dock även en obeväpnad rollperson tillfoga sina fiender ansenlig skada. Exempel på obeväpnade attacker omfattar armbåge, bett, knytnäve, skallning, knogjärn och spark.",
           "tags": {
@@ -4087,7 +3918,7 @@
           }
         },
         {
-          "id": "v13",
+          "id": "nv13",
           "name": "Stridsklo",
           "description": "Kariterna i Davokar har utvecklat en stridsklo som träs på handen och vars långa blad simulerar marakattens klor.",
           "tags": {
@@ -4120,7 +3951,7 @@
       ],
       "exempel": [
         {
-          "id": "v58",
+          "id": "av25",
           "name": "Vanlig pil/lod",
           "description": "En vanlig pil eller ett lod som används till båge eller armborst. Standardprojektil utan särskilda kvaliteter.",
           "tags": {
@@ -4141,7 +3972,7 @@
           }
         },
         {
-          "id": "v59",
+          "id": "av26",
           "name": "Precisionspil",
           "description": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precist.",
           "tags": {
@@ -4165,7 +3996,7 @@
           }
         },
         {
-          "id": "v60",
+          "id": "av27",
           "name": "Brandpil",
           "description": "Projektil med ett brandstycke invid spetsen. Används oftast för att sätta eld på målet, må det vara en levande varelse, byggnader eller terräng, se kvaliteten Brinnande.",
           "tags": {
@@ -4276,7 +4107,7 @@
           ]
         },
         {
-          "id": "v23",
+          "id": "av3",
           "name": "Pilbåge",
           "description": "Pilbågen är ett bågvapen som skjuter pilar snabbt.",
           "tags": {
@@ -4812,9 +4643,10 @@
       ]
     },
     "Sköld": {
-      "antal": 3,
+      "antal": 6,
       "källfiler": [
-        "data/artefakter.json"
+        "data/artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
         {
@@ -5012,7 +4844,7 @@
       ],
       "exempel": [
         {
-          "id": "v26",
+          "id": "av6",
           "name": "Spjutslunga",
           "description": "Östra Davokars barbarklaner använder gärna spjutslungor – en kastarm med hake som fäster i änden på ett kort spjut och kastar det med stor kraft.",
           "tags": {
@@ -5037,7 +4869,7 @@
           }
         },
         {
-          "id": "v56",
+          "id": "av23",
           "name": "Alkemiskt eldrör, bärbart",
           "description": "Det bärbara alkemiska eldröret är en portabel version av det stationära belägringsvapnet med samma namn. Det bärbara eldröret består av ett gjutet rör som laddas med alkemiska eldämnen, vilka vid antändning förvandlar eldröret till en förödande eldkastare. Eldröret kan svepas och kan träffa alla fiender framför skytten, ett slag slås för varje mål. De som träffas tar full skadetärning i skada och drabbas av eld som pågående effekt. De som lyckas försvara sig tar halv skada och drabbas inte av någon pågående effekt.\nVem som helst kan använda ett bärbart alkemiskt eldrör, men en användare som saknar förmågan Belägringskonst (gesällnivå) riskerar ett katastrofalt förlopp. Se reglerna för Alkemiska vapen på sidan 98 i Spelarens Handbok.\nEtt bärbart alkemiskt eldrör som svingas i närstrid räknas som en kampslägga.",
           "tags": {

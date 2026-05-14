@@ -308,10 +308,21 @@
     const source = rawPrimary && typeof rawPrimary === 'object'
       ? rawPrimary
       : { namn: rawPrimary };
-    const names = normalizePrimaryNames(source);
+    const rawNames = normalizePrimaryNames(source);
+    let alternatives = toArray(source.alternativ || source.options)
+      .map(normalizeSpecificAlternative)
+      .filter(Boolean);
+    if (!alternatives.length) {
+      alternatives = rawNames.map(name => ({ typ: '', namn: name }));
+    }
+    const names = alternatives.length
+      ? uniqStrings(alternatives.map(item => item.namn))
+      : rawNames;
     return {
       namn: names.length === 1 ? names[0] : names,
       namn_lista: names,
+      alternativ: alternatives,
+      counts_primary_baseline: Boolean(source.counts_primary_baseline),
       krav_erf: toInt(source.krav_erf, 0)
     };
   }
@@ -384,7 +395,12 @@
 
       if (kind === 'primary') {
         base.primarformaga = normalizePrimary({
+          alternativ: toArray(stage?.options).map(option => ({
+            typ: option?.type ?? option?.typ,
+            namn: option?.name ?? option?.namn
+          })),
           namn_lista: toArray(stage?.options).map(option => option?.name ?? option?.namn),
+          counts_primary_baseline: stage?.counts_primary_baseline,
           krav_erf: stage?.min_xp
         });
         return;
@@ -622,6 +638,15 @@
     add(getValueCaseInsensitive(entry, tagField));
     add(getValueCaseInsensitive(entry?.taggar, tagField));
     add(getValueCaseInsensitive(entry?.tags, tagField));
+    if (tagField.toLowerCase() === 'types') {
+      add(getValueCaseInsensitive(entry, 'typ'));
+      add(getValueCaseInsensitive(entry?.taggar, 'typ'));
+      add(getValueCaseInsensitive(entry?.tags, 'typ'));
+    } else if (tagField.toLowerCase() === 'typ') {
+      add(getValueCaseInsensitive(entry, 'types'));
+      add(getValueCaseInsensitive(entry?.taggar, 'types'));
+      add(getValueCaseInsensitive(entry?.tags, 'types'));
+    }
     return values;
   }
 
@@ -707,6 +732,41 @@
     };
   }
 
+  function buildPrimaryOptions(krav, options = {}) {
+    const explicitMinErf = krav?.primarformaga?.krav_erf;
+    const alternatives = toArray(krav?.primarformaga?.alternativ)
+      .map(normalizeSpecificAlternative)
+      .filter(Boolean);
+    if (alternatives.length) {
+      const expanded = [];
+      alternatives.forEach(alternative => {
+        const name = String(alternative?.namn || '').trim();
+        const type = normalizeType(alternative?.typ);
+        const wildcard = normalizeKey(name) === '*' || normalizeKey(name) === 'valfri';
+        if (wildcard && type) {
+          getDBList(options)
+            .filter(entry => !isEliteSkillEntry(entry))
+            .filter(entry => entryHasType(entry, type))
+            .forEach(entry => {
+              const option = buildPrimaryOption(String(entry?.namn || entry?.name || '').trim(), options, explicitMinErf);
+              if (option) expanded.push({ ...option, type });
+            });
+          return;
+        }
+        const option = buildPrimaryOption(name, options, explicitMinErf);
+        if (option) expanded.push(type ? { ...option, type } : option);
+      });
+      return expanded;
+    }
+    return uniqStrings(
+      toArray(krav?.primarformaga?.namn_lista).length
+        ? krav.primarformaga.namn_lista
+        : [krav?.primarformaga?.namn]
+    )
+      .map(name => buildPrimaryOption(name, options, explicitMinErf))
+      .filter(Boolean);
+  }
+
   function buildNamedCountGroup(source, type, config = {}, options = {}) {
     const normType = normalizeType(type);
     const names = uniqStrings(config?.namn);
@@ -729,14 +789,7 @@
   function getKravGroups(rawKrav, options = {}) {
     const krav = normalizeKrav(rawKrav);
     const groups = [];
-    const primaryNames = uniqStrings(
-      toArray(krav?.primarformaga?.namn_lista).length
-        ? krav.primarformaga.namn_lista
-        : [krav?.primarformaga?.namn]
-    );
-    const primaryOptions = primaryNames
-      .map(name => buildPrimaryOption(name, options, krav?.primarformaga?.krav_erf))
-      .filter(Boolean);
+    const primaryOptions = buildPrimaryOptions(krav, options);
     if (primaryOptions.length) {
       const types = uniqStrings(primaryOptions.map(opt => normalizeType(opt.type)).filter(Boolean));
       const minErf = Math.max(

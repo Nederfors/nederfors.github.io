@@ -301,7 +301,7 @@ const renderInventoryPopupSurfaces = () => `
           </div>
           <div class="confirm-row">
             <button id="vehicleMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="vehicleMoneyConfirm" class="db-btn">Ta ut</button>
+            <button id="vehicleMoneyConfirm" class="db-btn db-btn--danger">Ta ut</button>
           </div>
         </div>
       </div>
@@ -331,7 +331,7 @@ const renderInventoryPopupSurfaces = () => `
           </div>
           <div class="confirm-row">
             <button id="advMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="advMoneyConfirm" class="db-btn">Nollställ och fortsätt</button>
+            <button id="advMoneyConfirm" class="db-btn db-btn--danger">Nollställ och fortsätt</button>
           </div>
         </div>
       </div>
@@ -346,8 +346,8 @@ const renderInventoryPopupSurfaces = () => `
           </div>
           <div class="confirm-row">
             <button id="deleteContainerCancel" class="db-btn db-btn--danger">Avbryt</button>
-            <button id="deleteContainerOnly" class="db-btn db-btn--secondary">Ta bara bort färdmedlet</button>
-            <button id="deleteContainerAll" class="db-btn">Ta bort allt</button>
+            <button id="deleteContainerOnly" class="db-btn db-btn--danger">Ta bara bort färdmedlet</button>
+            <button id="deleteContainerAll" class="db-btn db-btn--danger">Ta bort allt</button>
           </div>
         </div>
       </div>
@@ -622,7 +622,7 @@ class SharedToolbar extends HTMLElement {
       },
       {
         label: 'Paneler',
-        value: 'Verktygsraden leder vidare till Egenskaper, Inventarie, Index, Rollperson och Filter.'
+        value: 'Verktygsraden leder vidare till Egenskaper, Inventarie, Index, Rollperson och Funktioner.'
       },
       {
         label: 'Lagring',
@@ -635,7 +635,7 @@ class SharedToolbar extends HTMLElement {
         items: [
           'Sök i fältet ovan och tryck Enter för att filtrera.',
           'Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".',
-          `Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Filter.`
+          `Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Funktioner.`
         ]
       },
       {
@@ -643,7 +643,7 @@ class SharedToolbar extends HTMLElement {
         items: [
           '▼: Minimerar eller expanderar alla kategorier i listor.',
           `${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.`,
-          `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter. ${icon('settings')}: Öppnar filterpanelen.`,
+          `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter. ${icon('settings')}: Öppnar funktionspanelen.`,
           `${icon('anteckningar')}: Öppnar anteckningssidan i rollpersonens sidhuvud.`,
           'XP: Visar dina totala erfarenhetspoäng.',
           'Sök: Skriv och tryck Enter för att lägga till ett filter. Skriv ett ord inom citattecken för att tvinga fritextsökning. Klicka på taggarna under sökfältet för att ta bort filter.',
@@ -659,7 +659,7 @@ class SharedToolbar extends HTMLElement {
         ]
       },
       {
-        title: 'Filtermeny',
+        title: 'Funktionsmeny',
         items: [
           'Välj rollperson: Byter aktiv rollperson.',
           'Aktiv mapp: Begränsar listan "Välj rollperson". "Alla" visar alla mappar.',
@@ -753,7 +753,7 @@ class SharedToolbar extends HTMLElement {
         title: 'Data & lagring',
         items: [
           'Allt sparas lokalt i din webbläsare (localStorage).',
-          'Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.',
+          'Använd Export/Import under Funktioner för säkerhetskopior och flytt mellan enheter.',
           'Rensar du webbläsardata tas lokala rollpersoner bort.'
         ]
       },
@@ -1205,6 +1205,7 @@ class SharedToolbar extends HTMLElement {
           margin: .15rem 0 .35rem;
         }
         .char-btn,
+        .db-btn,
         .toolbar button,
         .toolbar a {
           padding: .55rem 1.1rem;
@@ -1220,10 +1221,21 @@ class SharedToolbar extends HTMLElement {
           text-align: center;
           transition: transform .1s ease, opacity .1s ease;
         }
-        .char-btn.danger { background: var(--danger); }
-        .char-btn.icon   { font-size: 1.1rem; }
-        .char-btn:hover  { opacity: .85; }
-        .char-btn:active { transform: scale(.95); opacity: .7; }
+        .char-btn.danger,
+        .db-btn--danger,
+        button.db-btn--danger,
+        .db-card button.db-btn--danger:not(.entry-collapse-btn),
+        .toolbar button.db-btn--danger {
+          background: #a83830;
+          color: #fff;
+        }
+        .db-btn--secondary { background: var(--border); color: var(--txt); }
+        .char-btn.icon,
+        .db-btn--icon { font-size: 1.1rem; }
+        .char-btn:hover,
+        .db-btn:hover { opacity: .85; }
+        .char-btn:active,
+        .db-btn:active { transform: scale(.95); opacity: .7; }
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
@@ -1266,9 +1278,9 @@ class SharedToolbar extends HTMLElement {
             ${icon('character')}
             <span class="db-bottom-nav__label">Rollperson</span>
           </a>
-          <button id="filterToggle" class="db-bottom-nav__item" type="button" title="Filter">
+          <button id="filterToggle" class="db-bottom-nav__item" type="button" title="Funktioner">
             ${icon('settings')}
-            <span class="db-bottom-nav__label">Filter</span>
+            <span class="db-bottom-nav__label">Funktioner</span>
           </button>
         </div>
       </nav>
@@ -1276,7 +1288,7 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Filter ---------- -->
       <aside id="filterPanel" class="db-drawer offcanvas" data-touch-profile="panel-right">
         <header class="inv-header">
-          <h2>Filter</h2>
+          <h2>Funktioner</h2>
           <div class="inv-actions">
             <button id="collapseAllFilters" class="db-btn db-btn--icon chevron-toggle" title="Öppna alla"><span class="chevron-icon collapsed"></span></button>
             <button class="db-btn db-btn--icon" data-close="filterPanel">✕</button>
@@ -1384,6 +1396,13 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
         </ul>
+        <!-- Snabbspendera-kort (visible only on inventory view, replaces Sökfilter) -->
+        <div class="db-card filter-panel-static-card" id="invSpendCard" hidden>
+          <div class="card-title">Snabbspendera</div>
+          <div class="card-desc">
+            <div id="invSpendInner"></div>
+          </div>
+        </div>
         <!-- Sökfilter-kort som samlar relaterade dropdowns (hidden on inventory view) -->
         <div class="db-card filter-panel-static-card" id="searchFiltersCard">
           <div class="card-title">Sökfilter</div>
@@ -1400,13 +1419,6 @@ class SharedToolbar extends HTMLElement {
               <label for="testFilter">Karaktärsdrag</label>
               <select id="testFilter"></select>
             </div>
-          </div>
-        </div>
-        <!-- Snabbspendera-kort (visible only on inventory view, replaces Sökfilter) -->
-        <div class="db-card filter-panel-static-card" id="invSpendCard" hidden>
-          <div class="card-title">Snabbspendera</div>
-          <div class="card-desc">
-            <div id="invSpendInner"></div>
           </div>
         </div>
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
@@ -1455,7 +1467,6 @@ class SharedToolbar extends HTMLElement {
           <p id="qualEmpty" class="qual-popup-empty" hidden>Inga alternativ matchar sökningen.</p>
           <div class="confirm-row qual-popup-actions">
             <button id="qualApply" class="db-btn" type="button" hidden disabled>Lägg till valda</button>
-            <button id="qualCancel" class="db-btn db-btn--danger" type="button">Avbryt</button>
           </div>
         </div>
       </div>
@@ -1609,7 +1620,6 @@ class SharedToolbar extends HTMLElement {
           </div>
           <div class="confirm-row defense-calc-actions">
             <button id="defenseCalcReset" class="db-btn db-btn--danger" type="button">Återställ</button>
-            <button id="defenseCalcCancel" class="db-btn" type="button">Stäng</button>
             <button id="defenseCalcApply" class="db-btn" type="button">Verkställ</button>
           </div>
         </div>
@@ -1736,10 +1746,6 @@ class SharedToolbar extends HTMLElement {
               </div>
             </div>
           </section>
-
-          <div class="popup-footer">
-            <button id="folderManagerDone" class="db-btn">Klar</button>
-          </div>
         </div>
       </div>
 
@@ -1928,9 +1934,9 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Inventarie Dashboard (KPI sidebar) ---------- -->
       <aside id="invDashPanel" class="db-drawer offcanvas inv-dash-drawer" data-touch-profile="panel-right">
         <header class="inv-header">
-          <h2>Inventarie</h2>
+          <h2>Inventarium</h2>
           <div class="inv-actions">
-            <button class="db-btn db-btn--icon" data-close="invDashPanel">✕</button>
+            <button class="db-btn db-btn--icon" data-close="invDashPanel" aria-label="Stäng inventarium">${icon('cross', { alt: '', width: 24, height: 24 }) || '✕'}</button>
           </div>
         </header>
         <div class="inv-dash-panel-content">
@@ -2470,8 +2476,19 @@ class SharedToolbar extends HTMLElement {
         window.popupManager?.register?.(overlay, popupMeta);
       }
 
-      const bodyEl = overlay.querySelector('.db-modal__body');
-      const footerEl = overlay.querySelector('.db-modal__footer');
+      const modalEl = overlay.querySelector('.db-modal');
+      const bodyEl = overlay.querySelector('.db-modal__body') || (() => {
+        const el = document.createElement('div');
+        el.className = 'db-modal__body popup-modal-body';
+        modalEl?.appendChild(el);
+        return el;
+      })();
+      const footerEl = overlay.querySelector('.db-modal__footer') || (() => {
+        const el = document.createElement('div');
+        el.className = 'db-modal__footer popup-modal-footer';
+        modalEl?.appendChild(el);
+        return el;
+      })();
       bodyEl.textContent = message;
       footerEl.innerHTML = footerHtml;
       footerEl.hidden = !footerHtml.trim();

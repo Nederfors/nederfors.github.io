@@ -773,8 +773,41 @@ function refreshDomReferences() {
   dom.xpTotal = getDom('xpTotal');
   dom.xpUsed = getDom('xpUsed');
   dom.xpFree = getDom('xpFree');
+  bindXpControls();
+  if (dom.xpSum || dom.xpIn || dom.xpTotal || dom.xpUsed || dom.xpFree) {
+    updateXP({ source: 'dom-refresh' });
+  }
 }
 window.refreshDomReferences = refreshDomReferences;
+
+function bindXpControls() {
+  if (dom.xpIn && dom.xpIn.dataset.xpBound !== '1') {
+    dom.xpIn.dataset.xpBound = '1';
+    dom.xpIn.addEventListener('change', () => {
+      const xp = Number(dom.xpIn.value) || 0;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+
+  if (dom.xpPlus && dom.xpPlus.dataset.xpBound !== '1') {
+    dom.xpPlus.dataset.xpBound = '1';
+    dom.xpPlus.addEventListener('click', () => {
+      const xp = storeHelper.getBaseXP(store) + 1;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+
+  if (dom.xpMinus && dom.xpMinus.dataset.xpBound !== '1') {
+    dom.xpMinus.dataset.xpBound = '1';
+    dom.xpMinus.addEventListener('click', () => {
+      const xp = Math.max(0, storeHelper.getBaseXP(store) - 1);
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+}
 
 function isSecretDanielTerm(term) {
   if (!term) return false;
@@ -1637,11 +1670,13 @@ const DATA_FILES = [
 
 const ALL_DATA_FILE = 'data/all.json';
 const INDEX_CATALOG_FILE = 'data/index-catalog.json';
+const LEGACY_IMPORT_MAP_FILE = 'data/legacy-import-map.json';
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
 let databaseMode = 'empty';
 let databaseLoadPromise = null;
 let fullDatabaseLoadPromise = null;
+let legacyImportMapPromise = null;
 const sourceChunkPromises = new Map();
 
 function normalizeTableMatrixCell(value) {
@@ -1796,6 +1831,30 @@ function loadTablesDataFromFile() {
       console.warn(`Kunde inte läsa ${TABELLER_FILE}.`, err);
       return [];
     });
+}
+
+function loadLegacyImportMap() {
+  if (!legacyImportMapPromise) {
+    legacyImportMapPromise = fetch(LEGACY_IMPORT_MAP_FILE)
+      .then(r => {
+        if (!r.ok) throw new Error(`${LEGACY_IMPORT_MAP_FILE} (${r.status})`);
+        return r.json();
+      })
+      .then(payload => {
+        if (storeHelper?.setLegacyImportMap) {
+          storeHelper.setLegacyImportMap(payload);
+        }
+        return payload;
+      })
+      .catch(err => {
+        console.warn(`Kunde inte läsa ${LEGACY_IMPORT_MAP_FILE}.`, err);
+        if (storeHelper?.setLegacyImportMap) {
+          storeHelper.setLegacyImportMap({});
+        }
+        return {};
+      });
+  }
+  return legacyImportMapPromise;
 }
 
 function collectEntriesFromPayloads(items, sources = []) {
@@ -2020,6 +2079,24 @@ function loadCatalogSource(sourceFile) {
   return promise;
 }
 
+function hasHydratedTablesData() {
+  if (!Array.isArray(TABELLER) || !TABELLER.length) return false;
+  if (TABELLER.some(entry => entry?.__catalogSummary)) return false;
+  const bepansring = TABELLER.find(entry => String(entry?.id || '').toLowerCase() === 'ta25')
+    || TABELLER.find(entry => searchNormalize(String(entry?.namn || '').toLowerCase()).includes('bepansring'));
+  if (bepansring && (!Array.isArray(bepansring.kolumner) || !bepansring.kolumner.length || !Array.isArray(bepansring.rader) || !bepansring.rader.length)) {
+    return false;
+  }
+  return true;
+}
+
+function ensureTablesData() {
+  if (hasHydratedTablesData()) {
+    return Promise.resolve(TABELLER);
+  }
+  return loadCatalogSource(TABELLER_FILE).then(() => TABELLER);
+}
+
 function findEntryInCollections(ref) {
   if (typeof window.lookupEntry === 'function') {
     const hit = window.lookupEntry(ref);
@@ -2087,8 +2164,8 @@ function ensureFullDatabase() {
     return Promise.resolve({ entries: DB, tables: TABELLER, catalogOnly: false });
   }
   if (!fullDatabaseLoadPromise) {
-    fullDatabaseLoadPromise = loadDatabaseData()
-      .then(payload => {
+    fullDatabaseLoadPromise = Promise.all([loadDatabaseData(), loadLegacyImportMap()])
+      .then(([payload]) => {
         const applied = applyDatabaseData(payload, { catalogOnly: false });
         runQueuedPostUpdateEntrySync();
         dispatchDatabaseReady({ catalogOnly: false });
@@ -2103,6 +2180,7 @@ window.catalogLoader = Object.freeze({
   ensureEntryData,
   ensureEntriesData,
   ensureFullDatabase,
+  ensureTablesData,
   ensureSource: loadCatalogSource,
   isCatalogSummary: entry => Boolean(entry?.__catalogSummary),
   get mode() { return databaseMode; }
@@ -2120,7 +2198,8 @@ databaseLoadPromise = (isInitialIndexRole()
         return loadDatabaseData();
       })
   : loadDatabaseData())
-  .then(payload => {
+  .then(payload => Promise.all([payload, loadLegacyImportMap()]))
+  .then(([payload]) => {
     const catalogOnly = Boolean(payload?.catalogOnly);
     const normalizedEntries = catalogOnly ? normalizeCatalogEntries(payload.entries) : payload.entries;
     const normalizedTables = catalogOnly ? normalizeCatalogEntries(payload.tables, true) : payload.tables;
@@ -3014,29 +3093,7 @@ function bindToolbar() {
     if (typeof renderTraits === 'function') renderTraits();
   });
 
-  /* Ändra total erf direkt när värdet byts */
-  if (dom.xpIn) {
-    dom.xpIn.addEventListener('change', () => {
-      const xp = Number(dom.xpIn.value) || 0;
-      storeHelper.setBaseXP(store, xp);
-      updateXP();
-    });
-  }
-
-  if (dom.xpPlus) {
-    dom.xpPlus.addEventListener('click', () => {
-      const xp = storeHelper.getBaseXP(store) + 1;
-      storeHelper.setBaseXP(store, xp);
-      updateXP();
-    });
-  }
-  if (dom.xpMinus) {
-    dom.xpMinus.addEventListener('click', () => {
-      const xp = Math.max(0, storeHelper.getBaseXP(store) - 1);
-      storeHelper.setBaseXP(store, xp);
-      updateXP();
-    });
-  }
+  bindXpControls();
 
   if (dom.forgeBtn) {
     if (storeHelper.getPartySmith(store)) dom.forgeBtn.classList.add('active');

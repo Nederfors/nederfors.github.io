@@ -22,12 +22,14 @@ ENTRY_DATA_EXCLUDES = {
     "ai-plugin.json",
     "all.json",
     "index-catalog.json",
+    "legacy-import-map.json",
     "pdf-list.json",
     "struktur.json",
     "tabeller.json",
     "vapen.json",
 }
 SPECIAL_DATA_FILES = [
+    "legacy-import-map.json",
     "pdf-list.json",
     "tabeller.json",
 ]

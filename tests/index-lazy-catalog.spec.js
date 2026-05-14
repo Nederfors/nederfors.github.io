@@ -112,6 +112,28 @@ test('searching the catalog hydrates matching info without loading all.json', as
   expect([...new Set(requests)]).not.toContain('data/all.json');
 });
 
+test('damage type tabs hydrate table data without loading all.json', async ({ page }) => {
+  const requests = trackDataRequests(page);
+  await waitForIndex(page);
+
+  await page.evaluate(() => {
+    window.handleIndexSearchTerm?.('Bärsärk', { scroll: false });
+  });
+  await page.locator('#lista li.entry-card[data-name="Bärsärk"] button[data-info]').click();
+  await page.locator('#yrkePanel.open .info-tab[data-tab="skadetyp"]').click();
+
+  await expect(page.locator('#yrkePanel.open [data-tab-panel="skadetyp"]')).toContainText('Skadetyper och penetrering');
+  await expect(page.locator('#yrkePanel.open [data-tab-panel="skadetyp"]')).toContainText('Rustningar');
+  await expect(page.locator('#yrkePanel.open [data-tab-panel="skadetyp"]')).toContainText('Skyddar');
+
+  expect([...new Set(requests)]).toEqual(expect.arrayContaining([
+    'data/index-catalog.json',
+    'data/formaga.json',
+    'data/tabeller.json'
+  ]));
+  expect([...new Set(requests)]).not.toContain('data/all.json');
+});
+
 test('hydrated index cards can still add entries without loading all.json', async ({ page }) => {
   await seedProfileStore(page);
   const requests = trackDataRequests(page);

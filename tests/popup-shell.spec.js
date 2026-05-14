@@ -176,6 +176,27 @@ test('inventory managers use the Rollpersonshantering shell and shared tools str
   expect(characterState.hasToolsCard).toBe(true);
 });
 
+test('inventory dashboard manager buttons keep their popups open', async ({ page }) => {
+  await waitForApp(page, '/#/inventory');
+  await seedInventoryFixtures(page);
+
+  await page.locator('#invDashFloatBtn').click();
+  await expect(page.locator('#invDashPanel')).toBeVisible();
+
+  await page.locator('#invDashPanel button[data-dash-trigger="manageEconomyBtn"]').click();
+  await expect(page.locator('#inventoryEconomyPopup')).toBeVisible();
+  await page.waitForTimeout(250);
+  await expect(page.locator('#inventoryEconomyPopup')).toBeVisible();
+
+  await page.locator('#inventoryEconomyPopup .db-modal__close').click();
+  await expect(page.locator('#inventoryEconomyPopup')).toBeHidden();
+
+  await page.locator('#invDashPanel button[data-dash-trigger="manageItemsBtn"]').click();
+  await expect(page.locator('#inventoryItemsPopup')).toBeVisible();
+  await page.waitForTimeout(250);
+  await expect(page.locator('#inventoryItemsPopup')).toBeVisible();
+});
+
 test('dynamic and legacy-created popups close through the unified header close', async ({ page }) => {
   await waitForApp(page, '/#/index');
 

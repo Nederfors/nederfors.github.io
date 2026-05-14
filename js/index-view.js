@@ -697,6 +697,40 @@
 
     const getEntries = () => buildFilteredEntries();
 
+    const consumePendingTraitFilter = () => {
+      let trait = '';
+      try {
+        trait = String(sessionStorage.getItem('__pendingTraitFilter') || '').trim();
+        if (trait) sessionStorage.removeItem('__pendingTraitFilter');
+      } catch {}
+      if (!trait) return false;
+
+      F.search = [];
+      F.typ = [];
+      F.ark = [];
+      F.test = [trait];
+      storeHelper.setOnlySelected(store, true);
+
+      const matchingCats = new Set();
+      const currentList = storeHelper.getCurrentList(store);
+      currentList.forEach(entry => {
+        const tests = typeof window.getEntryTestTags === 'function'
+          ? window.getEntryTestTags(entry, { level: entry?.nivå })
+          : (ensureEntryMeta(entry)?.testList || []);
+        if (!Array.isArray(tests) || !tests.includes(trait)) return;
+        const meta = ensureEntryMeta(entry) || {};
+        const cat = meta.primaryType || entry?.taggar?.typ?.[0] || '';
+        if (cat) matchingCats.add(cat);
+      });
+      matchingCats.forEach(cat => openCatsOnce.add(cat));
+
+      invalidateFilteredResults();
+      saveState();
+      return true;
+    };
+
+    consumePendingTraitFilter();
+
     const hasArtifactTag = entry => {
       const meta = ensureEntryMeta(entry);
       return (meta?.typList || []).some(t => t.toLowerCase() === 'artefakt');
@@ -2198,6 +2232,10 @@
           visibleEntriesByCat.set(cat, entries.map(entry => hydratedBySource.get(entry) || entry));
         });
       }
+      if (hydrationQueue.length && typeof window.catalogLoader?.ensureTablesData === 'function') {
+        await window.catalogLoader.ensureTablesData();
+        if (renderSequence !== renderListSequence) return;
+      }
       timeActiveAddStage('dom-patch', () => {
         const fragment = document.createDocumentFragment();
         catKeys.forEach(cat => {
@@ -2525,7 +2563,9 @@
             classes: ['hoppsan-card'],
             dataset: { name: 'Hoppsan' },
             nameHtml: 'Hoppsan, här tog det slut.',
-            buttonSections: ['<button class="db-btn" data-clear-filters="1">Börja om?</button>'],
+            buttonSections: hasActiveIndexFilters()
+              ? ['<button class="db-btn db-btn--danger" data-clear-filters="1">Börja om?</button>']
+              : [],
             collapsible: false
           });
           listEl.appendChild(hopCard);
@@ -3048,13 +3088,27 @@
       // Special clear-filters action inside the Hoppsan category
       const clearBtn = e.target.closest('button[data-clear-filters]');
       if (clearBtn) {
-        // Reset all filters and state
+        // Reset all filters and state before any pending render can persist the old filters again.
+        F.search = [];
+        F.typ = [];
+        F.ark = [];
+        F.test = [];
+        catState = {};
+        fixedRandomEntries = null;
+        fixedRandomInfo = null;
+        clearSearchInput({ blur: false });
+        ['typSel', 'arkSel', 'tstSel'].forEach(key => {
+          if (dom[key]) dom[key].value = '';
+        });
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
         try { removeUiPref(STATE_KEY); sessionStorage.setItem('hoppsanReset', '1'); } catch { }
-        // Scroll to top immediately, then refresh the page to restore default state
+        invalidateFilteredResults();
+        activeTags();
+        scheduleRenderList();
         window.scrollTo(0, 0);
-        location.reload();
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
       const infoBtn = e.target.closest('button[data-info]');
@@ -3062,6 +3116,32 @@
         let html = decodeURIComponent(infoBtn.dataset.info || '');
         const liEl = infoBtn.closest('li');
         const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
+        if (
+          html.includes('data-tab-panel="skadetyp"')
+          && typeof buildSkadetypPanelHtml === 'function'
+          && typeof window.catalogLoader?.ensureTablesData === 'function'
+        ) {
+          await window.catalogLoader.ensureTablesData();
+          const entryName = liEl?.dataset.name || title;
+          const sourceEntry = getEntries().find(entry => entry?.namn === entryName) || null;
+          const hydratedEntry = typeof window.catalogLoader?.ensureEntryData === 'function'
+            ? await window.catalogLoader.ensureEntryData(sourceEntry || entryName)
+            : sourceEntry;
+          const level = liEl?.querySelector('select.level')?.value || hydratedEntry?.nivå || '';
+          const skadetypHtml = hydratedEntry
+            ? buildSkadetypPanelHtml(hydratedEntry, { level, tables: window.TABELLER })
+            : '';
+          if (skadetypHtml) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            const skadePanel = tmp.querySelector('[data-tab-panel="skadetyp"]');
+            if (skadePanel) {
+              skadePanel.innerHTML = skadetypHtml;
+              html = tmp.innerHTML;
+              infoBtn.dataset.info = encodeURIComponent(html);
+            }
+          }
+        }
         if (infoBtn.dataset.tabell != null) {
           const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
           if (terms.length) {
@@ -3478,9 +3558,21 @@
           const disBefore = storeHelper.countDisadvantages(list);
           let requiresFullRefresh = hasActiveIndexFilters();
           let requirementAffectedEntries = [];
-          const checkDisadvWarning = async () => {
-            if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
+          const getDisadvWarning = () => {
+            const cap = Number(storeHelper.getErfRules?.()?.disadvantageCap || 5);
+            const disAfter = storeHelper.countDisadvantages(list);
+            if (disAfter >= cap && disBefore < cap) {
+              return 'cap';
+            }
+            if (disAfter > cap && disBefore <= cap) return 'over-cap';
+            return '';
+          };
+          const showDisadvWarning = async warning => {
+            if (warning === 'cap') {
+              await new Promise(resolve => setTimeout(resolve, 120));
               await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+            } else if (warning === 'over-cap') {
+              window.toast?.('Nackdelar över fem ger +0 Erf.');
             }
           };
           const levelCandidate = { ...p, nivå: lvl };
@@ -3600,7 +3692,7 @@
               if (existing) {
                 existing.nivå = lvl;
                 if (forceRuleOverride) existing.manualRuleOverride = true;
-                await checkDisadvWarning();
+                const disadvWarning = getDisadvWarning();
                 const mutationSummary = await withBusyInteraction(btn, () => (
                   runDeferredCurrentCharacterMutation(() => (
                     timeActiveAddStage('store-mutation', () => (
@@ -3652,6 +3744,7 @@
                 });
                 flashAdded(existing.namn, existing.trait);
                 await waitForCharacterMutationRefresh();
+                await showDisadvWarning(disadvWarning);
                 await completeAddScenario({
                   mode: 'replace-existing'
                 });
@@ -3661,7 +3754,7 @@
           }
 
           const finishAdd = async added => {
-            await checkDisadvWarning();
+            const disadvWarning = getDisadvWarning();
             const mutationSummary = await withBusyInteraction(btn, () => (
               runDeferredCurrentCharacterMutation(() => (
                 timeActiveAddStage('store-mutation', () => (
@@ -3722,6 +3815,7 @@
               mode: 'add',
               surface: 'index'
             });
+            await showDisadvWarning(disadvWarning);
           };
           const added = { ...addedBase };
           if (!Object.prototype.hasOwnProperty.call(added, 'form')) {

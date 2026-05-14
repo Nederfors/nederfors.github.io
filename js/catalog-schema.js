@@ -1014,7 +1014,7 @@
       const names = toArray(primary.namn_lista).length
         ? toArray(primary.namn_lista)
         : toArray(primary.namn);
-      stages.push({
+      const primaryStage = {
         id: 'primary',
         kind: 'primary',
         min_xp: Number(primary.krav_erf) || 0,
@@ -1023,7 +1023,9 @@
           type: '',
           name: String(name || '').trim()
         })).filter(option => option.name)
-      });
+      };
+      if (primary.counts_primary_baseline) primaryStage.counts_primary_baseline = true;
+      stages.push(primaryStage);
     }
     toArray(raw.specifikt_val).forEach((rule, idx) => {
       stages.push({

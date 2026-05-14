@@ -352,6 +352,7 @@ Canonical shape:
       {
         "id": "primary",
         "kind": "primary",
+        "counts_primary_baseline": true,
         "min_xp": 60,
         "min_count": 1,
         "options": [
@@ -369,6 +370,8 @@ Allowed stage kinds:
 - `tag_pool`
 - `optional_pool`
 - `named_count`
+
+Use `counts_primary_baseline: true` on migrated elite profiles where the Master-level pick is also one of the required Novis baseline requirements. Without this marker the primary stage remains isolated from other requirement pools.
 
 Do not replace elite requirements with generic `require` rules. The elite builder depends on staged overflow logic and is intentionally separate.
 
