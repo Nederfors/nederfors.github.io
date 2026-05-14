@@ -1727,139 +1727,110 @@
     "extra": "När det effektiva värdet (Förmåga + Modifikation) överstiger 20, börjar chansen för perfekt slag att öka. För varje poäng över 20 (överskottet) utökas intervallet för perfekt slag med 1. Vid värde 21 lyckas man alltså perfekt på 1–2."
   },
   {
-    "id": "ta25",
-    "namn": "Bepansring och skydd",
-    "taggar": {
-      "typ": [
-        "Tabell"
-      ]
-    },
-    "matris": {
-      "rowLabel": "Bepansringstyp",
-      "columnLabel": "Skadetyp",
-      "columns": [
-        "Yttre fysisk",
-        "Mystiska vapen",
-        "Elementär",
-        "Mystisk",
-        "Alternativ skada",
-        "Ignorerar bepansring",
-        "Inre fysisk",
-        "Gift",
-        "Fallskada"
-      ],
-      "rows": [
-        {
-          "label": "Rustningar",
-          "values": {
-            "Yttre fysisk": "Skyddar",
-            "Mystiska vapen": "Skyddar",
-            "Elementär": "Skyddar inte",
-            "Mystisk": "Skyddar inte",
-            "Alternativ skada": "Skyddar inte",
-            "Ignorerar bepansring": "Skyddar inte",
-            "Inre fysisk": "Skyddar inte",
-            "Gift": "Skyddar inte",
-            "Fallskada": "Skyddar inte"
-          }
-        },
-        {
-          "label": "Naturligt pansar",
-          "values": {
-            "Yttre fysisk": "Skyddar",
-            "Mystiska vapen": "Skyddar",
-            "Elementär": "Skyddar inte",
-            "Mystisk": "Skyddar inte",
-            "Alternativ skada": "Skyddar inte",
-            "Ignorerar bepansring": "Skyddar inte",
-            "Inre fysisk": "Skyddar inte",
-            "Gift": "Skyddar inte",
-            "Fallskada": "Skyddar inte"
-          }
-        },
-        {
-          "label": "Mystisk bepansring",
-          "values": {
-            "Yttre fysisk": "Skyddar",
-            "Mystiska vapen": "Skyddar",
-            "Elementär": "Skyddar",
-            "Mystisk": "Skyddar",
-            "Alternativ skada": "Skyddar",
-            "Ignorerar bepansring": "Skyddar",
-            "Inre fysisk": "Skyddar inte",
-            "Gift": "Skyddar inte",
-            "Fallskada": "Skyddar inte"
-          }
-        },
-        {
-          "label": "Ignorerar skada",
-          "values": {
-            "Yttre fysisk": "Skyddar",
-            "Mystiska vapen": "Skyddar",
-            "Elementär": "Skyddar",
-            "Mystisk": "Skyddar",
-            "Alternativ skada": "Skyddar inte",
-            "Ignorerar bepansring": "Skyddar",
-            "Inre fysisk": "Skyddar",
-            "Gift": "Skyddar",
-            "Fallskada": "Skyddar inte"
-          }
-        },
-        {
-          "label": "Väldig",
-          "values": {
-            "Yttre fysisk": "N/G: Full skada, M: Ingen skada",
-            "Mystiska vapen": "N/G/M: Full skada",
-            "Elementär": "N/G: Full skada, M: Ingen skada",
-            "Mystisk": "N/G/M: Full skada",
-            "Alternativ skada": "N/G/M: Full skada",
-            "Ignorerar bepansring": "N/G: Full skada, M: Ingen skada",
-            "Inre fysisk": "N/G: Full skada, M: Ingen skada",
-            "Gift": "N/G: Full skada, M: Ingen skada",
-            "Fallskada": "N/G/M: Full skada"
-          }
-        },
-        {
-          "label": "Vandödhet",
-          "values": {
-            "Yttre fysisk": "N: Full skada, G/M: Halv skada",
-            "Mystiska vapen": "N/G/M: Full skada",
-            "Elementär": "N: Full skada, G/M: Halv skada",
-            "Mystisk": "N/G: Full skada, M: Halv skada",
-            "Alternativ skada": "N/G: Full skada, M: Halv skada",
-            "Ignorerar bepansring": "N: Full skada, G/M: Halv skada",
-            "Inre fysisk": "N/G/M: Ingen skada",
-            "Gift": "N/G/M: Ingen skada",
-            "Fallskada": "N: Full skada, G/M: Halv skada"
-          }
-        },
-        {
-          "label": "Andeform",
-          "values": {
-            "Yttre fysisk": "N/G: Halv skada, M: Ingen skada",
-            "Mystiska vapen": "N: Full skada, G/M: Halv skada",
-            "Elementär": "N: Full skada, G/M: Halv skada",
-            "Mystisk": "N: Full skada, G/M: Halv skada",
-            "Alternativ skada": "N: Full skada, G/M: Halv skada",
-            "Ignorerar bepansring": "N/G: Halv skada, M: Ingen skada",
-            "Inre fysisk": "N/G/M: Ingen skada",
-            "Gift": "N/G/M: Ingen skada",
-            "Fallskada": "N/G/M: Ingen skada"
-          }
-        }
-      ]
-    },
-    "tabellvyer": [
-      {
-        "id": "ta25",
-        "namn": "Bepansring och skydd",
-        "orientation": "rows"
-      },
-      {
-        "id": "ta26",
-        "namn": "Skadetyper och penetrering",
-        "orientation": "columns"
-      }
+  "id": "ta25",
+  "namn": "Bepansring och skydd",
+  "taggar": {
+    "typ": [
+      "Tabell"
     ]
-  }
+  },
+  "kolumner": [
+    "bepansringstyp",
+    "yttre fysisk",
+    "mystiska vapen",
+    "elementär",
+    "mystisk",
+    "alternativ skada",
+    "ignorerar bepansring",
+    "inre fysisk",
+    "gift",
+    "fallskada"
+  ],
+  "rader": [
+    {
+      "bepansringstyp": "Rustningar",
+      "yttre fysisk": "Skyddar",
+      "mystiska vapen": "Skyddar",
+      "elementär": "Skyddar inte",
+      "mystisk": "Skyddar inte",
+      "alternativ skada": "Skyddar inte",
+      "ignorerar bepansring": "Skyddar inte",
+      "inre fysisk": "Skyddar inte",
+      "gift": "Skyddar inte",
+      "fallskada": "Skyddar inte"
+    },
+    {
+      "bepansringstyp": "Naturligt pansar",
+      "yttre fysisk": "Skyddar",
+      "mystiska vapen": "Skyddar",
+      "elementär": "Skyddar inte",
+      "mystisk": "Skyddar inte",
+      "alternativ skada": "Skyddar inte",
+      "ignorerar bepansring": "Skyddar inte",
+      "inre fysisk": "Skyddar inte",
+      "gift": "Skyddar inte",
+      "fallskada": "Skyddar inte"
+    },
+    {
+      "bepansringstyp": "Mystisk bepansring",
+      "yttre fysisk": "Skyddar",
+      "mystiska vapen": "Skyddar",
+      "elementär": "Skyddar",
+      "mystisk": "Skyddar",
+      "alternativ skada": "Skyddar",
+      "ignorerar bepansring": "Skyddar",
+      "inre fysisk": "Skyddar inte",
+      "gift": "Skyddar inte",
+      "fallskada": "Skyddar inte"
+    },
+    {
+      "bepansringstyp": "Ignorerar skada",
+      "yttre fysisk": "Skyddar",
+      "mystiska vapen": "Skyddar",
+      "elementär": "Skyddar",
+      "mystisk": "Skyddar",
+      "alternativ skada": "Skyddar inte",
+      "ignorerar bepansring": "Skyddar",
+      "inre fysisk": "Skyddar",
+      "gift": "Skyddar",
+      "fallskada": "Skyddar inte"
+    },
+    {
+      "bepansringstyp": "Väldig",
+      "yttre fysisk": "N/G: Full skada, M: Ingen skada",
+      "mystiska vapen": "N/G/M: Full skada",
+      "elementär": "N/G: Full skada, M: Ingen skada",
+      "mystisk": "N/G/M: Full skada",
+      "alternativ skada": "N/G/M: Full skada",
+      "ignorerar bepansring": "N/G: Full skada, M: Ingen skada",
+      "inre fysisk": "N/G: Full skada, M: Ingen skada",
+      "gift": "N/G: Full skada, M: Ingen skada",
+      "fallskada": "N/G/M: Full skada"
+    },
+    {
+      "bepansringstyp": "Vandödhet",
+      "yttre fysisk": "N: Full skada, G/M: Halv skada",
+      "mystiska vapen": "N/G/M: Full skada",
+      "elementär": "N: Full skada, G/M: Halv skada",
+      "mystisk": "N/G: Full skada, M: Halv skada",
+      "alternativ skada": "N/G: Full skada, M: Halv skada",
+      "ignorerar bepansring": "N: Full skada, G/M: Halv skada",
+      "inre fysisk": "N/G/M: Ingen skada",
+      "gift": "N/G/M: Ingen skada",
+      "fallskada": "N: Full skada, G/M: Halv skada"
+    },
+    {
+      "bepansringstyp": "Andeform",
+      "yttre fysisk": "N/G: Halv skada, M: Ingen skada",
+      "mystiska vapen": "N: Full skada, G/M: Halv skada",
+      "elementär": "N: Full skada, G/M: Halv skada",
+      "mystisk": "N: Full skada, G/M: Halv skada",
+      "alternativ skada": "N: Full skada, G/M: Halv skada",
+      "ignorerar bepansring": "N/G: Halv skada, M: Ingen skada",
+      "inre fysisk": "N/G/M: Ingen skada",
+      "gift": "N/G/M: Ingen skada",
+      "fallskada": "N/G/M: Ingen skada"
+    }
+  ]
+}
 ]
