@@ -1,9 +1,0 @@
-dist/
-.generated-public/
-node_modules/
-playwright-report/
-test-results/
-.artifacts/
-__pycache__/
-*.pyc
-.DS_Store

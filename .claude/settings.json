@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -h '\"\"mal\"\"' data/*.json)",
-      "Bash(git stash -- data/monstruost-sardrag.json)",
-      "Bash(osascript -l JavaScript -e ':*)"
-    ]
-  }
-}

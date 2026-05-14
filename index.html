@@ -6,8 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Symbapedia">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon_DA">
+  <link rel="manifest" href="/assets/manifest-CJlEf1Oe.json">
+  <link rel="icon" href="/assets/icon_DA-DVPW7uB_.">
   <meta name="theme-color" content="#2D2C21">
   <title>Symbapedia</title>
 
@@ -60,14 +60,7 @@
       }, 8000);
     });
   </script>
-  <script type="importmap">
-    {
-      "imports": {
-        "ssr-window": "./js/vendor/ssr-window.js"
-      }
-    }
-  </script>
-  <link rel="stylesheet" href="css/style.css">
+
   <script src="js/vendor/daub.js"></script>
   <script>
     DAUB.setTemperature('auto');
@@ -76,7 +69,17 @@
     DAUB.setScheme('dark');
     DAUB.setAccent('#B97A52');
   </script>
-  <script type="module" src="js/app-bootstrap.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "ssr-window": "./js/vendor/ssr-window.js"
+      }
+    }
+  </script>
+  <script type="module" crossorigin src="/assets/index-D9GwJImj.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/pwa-ztPEuxoM.js">
+  <link rel="modulepreload" crossorigin href="/assets/legacy-loader-D3QmkZjc.js">
+  <link rel="stylesheet" crossorigin href="/assets/pwa-BTRVlOqg.css">
 </head>
 <body data-role="index">
 

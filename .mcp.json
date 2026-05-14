@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "daub": {
-      "type": "http",
-      "url": "https://daub.dev/api/mcp"
-    }
-  }
-}
