@@ -3,7 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-05-12T08:26:59.529858+00:00",
+      "genererad": "2026-05-14T09:44:25.424697+00:00",
       "antal_typer_hittade": 57,
       "källfiler": [
         "data/diverse.json",
@@ -939,76 +939,88 @@
           "levels": {},
           "rules": {},
           "elite_requirements": {
-            "total_xp": 130,
+            "total_xp": 90,
             "stages": [
               {
                 "id": "primary",
                 "kind": "primary",
+                "counts_primary_baseline": true,
                 "min_xp": 60,
                 "min_count": 1,
                 "options": [
                   {
                     "type": "Förmåga",
-                    "name": "Akrobatik"
+                    "name": "Lärd"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Monsterlärd"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Prickskytt"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Stångverkan"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Tvillingattack"
                   }
                 ]
               },
               {
-                "id": "specific_choice_0",
+                "id": "baseline_0",
                 "kind": "specific_choice",
-                "min_xp": 30,
+                "min_xp": 10,
                 "min_count": 1,
                 "options": [
                   {
                     "type": "Förmåga",
-                    "name": "Sjätte sinne"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Spjutdans"
+                    "name": "Lärd"
                   }
                 ]
               },
               {
-                "id": "tag_pool_0",
-                "kind": "tag_pool",
-                "min_xp": 30,
-                "entry_type": "",
-                "field": "traditions",
-                "values": [
-                  "Jägare"
-                ],
-                "allowed_entry_types": [
-                  "Förmåga",
-                  "Ritual",
-                  "Fördel",
-                  "Mystisk kraft"
-                ]
-              },
-              {
-                "id": "tag_pool_1",
-                "kind": "tag_pool",
+                "id": "baseline_1",
+                "kind": "specific_choice",
                 "min_xp": 10,
-                "entry_type": "",
-                "field": "traditions",
-                "values": [
-                  "Häxkonst"
-                ],
-                "allowed_entry_types": [
-                  "Förmåga",
-                  "Ritual",
-                  "Fördel",
-                  "Mystisk kraft"
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Monsterlärd"
+                  }
                 ]
               },
               {
-                "id": "specific_benefits",
-                "kind": "named_count",
-                "entry_type": "Fördel",
-                "names": [
-                  "Vildmarksvana"
-                ],
-                "min_count": 2
+                "id": "baseline_2",
+                "kind": "specific_choice",
+                "min_xp": 10,
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Prickskytt"
+                  }
+                ]
+              },
+              {
+                "id": "baseline_3",
+                "kind": "specific_choice",
+                "min_xp": 10,
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Stångverkan"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Tvillingattack"
+                  }
+                ]
               }
             ]
           },
@@ -1031,7 +1043,8 @@
             "Blodtörstig",
             "Mardrömmar",
             "Paria"
-          ]
+          ],
+          "requirement_abilities": "Lärd, Monsterlärd, Prickskytt, Stångverkan eller Tvillingattack"
         },
         {
           "id": "elit2",
@@ -1054,9 +1067,30 @@
               {
                 "id": "primary",
                 "kind": "primary",
+                "counts_primary_baseline": true,
                 "min_xp": 60,
                 "min_count": 1,
                 "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Tvåhandskraft"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Sköldkamp"
+                  },
+                  {
+                    "type": "Mystisk kraft",
+                    "name": "Häxhammare"
+                  },
+                  {
+                    "type": "Mystisk kraft",
+                    "name": "Helig aura"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Rustmästare"
+                  },
                   {
                     "type": "Förmåga",
                     "name": "Teurgi"
@@ -1064,7 +1098,39 @@
                 ]
               },
               {
-                "id": "specific_choice_0",
+                "id": "baseline_0",
+                "kind": "specific_choice",
+                "min_xp": 10,
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Tvåhandskraft"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Sköldkamp"
+                  }
+                ]
+              },
+              {
+                "id": "baseline_1",
+                "kind": "specific_choice",
+                "min_xp": 10,
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Mystisk kraft",
+                    "name": "Häxhammare"
+                  },
+                  {
+                    "type": "Mystisk kraft",
+                    "name": "Helig aura"
+                  }
+                ]
+              },
+              {
+                "id": "baseline_2",
                 "kind": "specific_choice",
                 "min_xp": 10,
                 "min_count": 1,
@@ -1076,27 +1142,15 @@
                 ]
               },
               {
-                "id": "tag_pool_0",
-                "kind": "tag_pool",
+                "id": "baseline_3",
+                "kind": "specific_choice",
                 "min_xp": 10,
                 "min_count": 1,
-                "entry_type": "Förmåga",
-                "field": "name",
-                "values": [
-                  "Tvåhandskraft",
-                  "Sköldkamp"
-                ]
-              },
-              {
-                "id": "tag_pool_1",
-                "kind": "tag_pool",
-                "min_xp": 10,
-                "min_count": 1,
-                "entry_type": "Mystisk kraft",
-                "field": "name",
-                "values": [
-                  "Häxhammare",
-                  "Helig aura"
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Teurgi"
+                  }
                 ]
               }
             ]
@@ -1118,7 +1172,7 @@
             "Hederskod",
             "Mörk hemlighet"
           ],
-          "requirement_abilities": ""
+          "requirement_abilities": "Tvåhandskraft eller Sköldkamp, Mystisk kraft (Häxhammare) eller Mystisk kraft (Helig aura), Rustmästare, Teurgi"
         },
         {
           "id": "elit3",
@@ -1141,7 +1195,36 @@
               {
                 "id": "primary",
                 "kind": "primary",
+                "counts_primary_baseline": true,
                 "min_xp": 60,
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Järnnäve"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Rustmästare"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Sköldkamp"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Tvillingattack"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Återhämtning"
+                  }
+                ]
+              },
+              {
+                "id": "baseline_0",
+                "kind": "specific_choice",
+                "min_xp": 10,
                 "min_count": 1,
                 "options": [
                   {
@@ -1151,31 +1234,43 @@
                 ]
               },
               {
-                "id": "specific_choice_0",
+                "id": "baseline_1",
                 "kind": "specific_choice",
-                "min_xp": 20,
-                "min_count": 2,
+                "min_xp": 10,
+                "min_count": 1,
                 "options": [
                   {
                     "type": "Förmåga",
                     "name": "Rustmästare"
-                  },
-                  {
-                    "type": "Förmåga",
-                    "name": "Återhämtning"
                   }
                 ]
               },
               {
-                "id": "tag_pool_0",
-                "kind": "tag_pool",
+                "id": "baseline_2",
+                "kind": "specific_choice",
                 "min_xp": 10,
                 "min_count": 1,
-                "entry_type": "Förmåga",
-                "field": "name",
-                "values": [
-                  "Sköldkamp",
-                  "Tvillingattack"
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Sköldkamp"
+                  },
+                  {
+                    "type": "Förmåga",
+                    "name": "Tvillingattack"
+                  }
+                ]
+              },
+              {
+                "id": "baseline_3",
+                "kind": "specific_choice",
+                "min_xp": 10,
+                "min_count": 1,
+                "options": [
+                  {
+                    "type": "Förmåga",
+                    "name": "Återhämtning"
+                  }
                 ]
               }
             ]
@@ -1197,7 +1292,7 @@
             "Bestialisk",
             "Blodtörstig"
           ],
-          "requirement_abilities": ""
+          "requirement_abilities": "Järnnäve, Rustmästare, Sköldkamp eller Tvillingattack, Återhämtning; Andra krav: Barbarättad människa"
         }
       ]
     },
