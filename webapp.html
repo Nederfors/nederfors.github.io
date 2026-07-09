@@ -2,12 +2,12 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Symbapedia">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon_DA">
+  <link rel="icon" href="icons/icon-192.png">
   <meta name="theme-color" content="#2D2C21">
   <title>Symbapedia - Installera som webapp</title>
   <style>html[data-preload] body { visibility:hidden; opacity:0; } html.is-ready body { visibility:visible; opacity:1; transition:opacity .2s; }</style>
@@ -98,7 +98,7 @@
       window.requestAnimationFrame?.(renderSection);
     })();
   </script>
-  <script src="node_modules/daub-ui/daub.js"></script>
+  <script src="js/vendor/daub.js"></script>
   <script>
     DAUB.setTemperature('auto');
     DAUB.setTexture('glass');

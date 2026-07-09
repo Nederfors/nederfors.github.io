@@ -1,0 +1,119 @@
+/*
+ * Canonical overlay layer.
+ *
+ * Legacy views still use the .open class for history integration, while
+ * DAUB's drawer state is mirrored with .db-drawer--open.  This final layer
+ * owns the geometry so old right-panel declarations cannot override it.
+ */
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: block;
+  width: auto;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  transform: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.open,
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.db-drawer--open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: var(--db-color-overlay, rgba(8, 4, 2, 0.68));
+  transition: opacity 0.22s ease;
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.open::before,
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.db-drawer--open::before {
+  opacity: 1;
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__panel {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: min(27.5rem, 88vw);
+  height: 100%;
+  max-height: none;
+  padding: 1.2rem 1rem 2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  color: var(--db-color-text, var(--txt));
+  background:
+    radial-gradient(circle at top right, rgba(194, 163, 106, .12), transparent 32%),
+    var(--db-color-surface, var(--panel));
+  border-left: 1px solid var(--db-color-border, rgba(255, 243, 228, .08));
+  box-shadow: var(--db-shadow-3, -24px 0 56px rgba(0, 0, 0, .36));
+  z-index: 1;
+  transform: translate3d(100%, 0, 0);
+  transition: transform .25s ease;
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.open > .db-drawer__panel,
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.db-drawer--open > .db-drawer__panel {
+  transform: translate3d(0, 0, 0);
+}
+
+#invDashPanel.db-drawer--structured.inv-dash-drawer > .db-drawer__panel {
+  width: min(32.5rem, 90vw);
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header {
+  position: sticky;
+  top: -1.2rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin: -1.2rem -1rem 1rem;
+  padding: 1rem 1rem .9rem;
+  background: rgba(24, 22, 20, .92);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  backdrop-filter: blur(14px);
+}
+
+:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header h2 {
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 640px) {
+  :is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__panel {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    padding: calc(1rem + var(--app-safe-top)) 1rem calc(1rem + var(--app-safe-bottom));
+  }
+
+  :is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header {
+    top: calc(-1rem - var(--app-safe-top));
+    margin: calc(-1rem - var(--app-safe-top)) -1rem 1rem;
+    padding: calc(1rem + var(--app-safe-top)) 1rem .9rem;
+  }
+}

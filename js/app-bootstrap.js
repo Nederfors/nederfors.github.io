@@ -12,6 +12,44 @@ import {
   loadInitialLegacyApp
 } from './shell/legacy-loader.js';
 
+window.__symbaroumAssetMode = import.meta.env?.PROD ? 'production' : 'development';
+
+const runWhenIdle = (callback, timeout = 10000) => new Promise(resolve => {
+  const run = () => {
+    Promise.resolve()
+      .then(callback)
+      .then(resolve)
+      .catch(error => {
+        console.error('Deferred bootstrap task failed', error);
+        resolve(false);
+      });
+  };
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(run, { timeout });
+    return;
+  }
+
+  window.setTimeout(run, Math.min(timeout, 1200));
+});
+
+const RULES_WORKER_WARMUP_DELAY_MS = 3000;
+let rulesWorkerWarmupStarted = false;
+const warmRulesWorker = () => {
+  if (!rulesWorkerWarmupStarted) {
+    rulesWorkerWarmupStarted = true;
+    window.symbaroumRulesWorkerReady = new Promise(resolve => {
+      window.setTimeout(() => {
+        runWhenIdle(() => rulesWorker.init(), 10000).then(resolve);
+      }, RULES_WORKER_WARMUP_DELAY_MS);
+    });
+  }
+  return window.symbaroumRulesWorkerReady;
+};
+
+window.symbaroumRulesWorkerReady = null;
+window.ensureSymbaroumRulesWorkerReady = warmRulesWorker;
+
 // --- Router init (sets hash default, parses initial route) ---
 router.init();
 const INITIAL_ROLE = router.currentRole;
@@ -77,7 +115,6 @@ try {
 // --- Expose router globally for legacy scripts ---
 window.appRouter = router;
 exposeLegacyLoaders();
-window.symbaroumRulesWorkerReady = rulesWorker.init();
 
 // --- Load the initial route and shared runtime only ---
 await persistence.init();
@@ -105,6 +142,7 @@ const finishBoot = () => {
   }
   revealApp();
   finishBootMetrics();
+  warmRulesWorker();
 };
 
 if (window.__symbaroumBootCompleted) {

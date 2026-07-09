@@ -24,6 +24,9 @@ const removeToolbarUiPref = (key) => {
     toolbarUiPrefsStorage?.removeItem?.(key);
   } catch {}
 };
+const SHADOW_STYLESHEET_HREF = window.__symbaroumAssetMode === 'production'
+  ? 'css/shadow.css'
+  : 'css/style.css';
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 const LEVEL_OPTION_SPECS = Object.freeze([
@@ -373,6 +376,18 @@ class SharedToolbar extends HTMLElement {
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
+    if (toolbar && typeof ResizeObserver === 'function') {
+      const syncToolbarHeight = () => {
+        const height = Math.ceil(toolbar.getBoundingClientRect().height);
+        if (height > 0) {
+          document.documentElement.style.setProperty('--app-toolbar-height', `${height}px`);
+        }
+      };
+      syncToolbarHeight();
+      this._toolbarResizeObserver = new ResizeObserver(syncToolbarHeight);
+      this._toolbarResizeObserver.observe(toolbar);
+    }
+
     if (window.visualViewport && toolbar) {
       this._toolbarElement = toolbar;
       this._largeViewportHeight = null;
@@ -589,6 +604,8 @@ class SharedToolbar extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._toolbarResizeObserver?.disconnect();
+    this._toolbarResizeObserver = null;
     this._vvCleanup?.forEach(cleanup => cleanup());
     this._vvCleanup = null;
     this._vvFallbackCleanup?.forEach(cleanup => cleanup());
@@ -1249,8 +1266,7 @@ class SharedToolbar extends HTMLElement {
           margin: 0 .25em 0 0;
         }
       </style>
-      <link rel="stylesheet" href="css/style.css">
-
+      <link rel="stylesheet" href="${SHADOW_STYLESHEET_HREF}">
       <!-- ---------- Verktygsrad ---------- -->
       <nav class="toolbar db-bottom-nav db-bottom-nav--always" aria-label="Primär navigering">
         <div class="toolbar-top">
@@ -1286,9 +1302,11 @@ class SharedToolbar extends HTMLElement {
       </nav>
 
       <!-- ---------- Filter ---------- -->
-      <aside id="filterPanel" class="db-drawer offcanvas" data-touch-profile="panel-right">
+      <div id="filterPanel" class="db-drawer db-drawer--structured offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="filterPanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="filterPanelTitle">
         <header class="inv-header">
-          <h2>Funktioner</h2>
+          <h2 id="filterPanelTitle">Funktioner</h2>
           <div class="inv-actions">
             <button id="collapseAllFilters" class="db-btn db-btn--icon chevron-toggle" title="Öppna alla"><span class="chevron-icon collapsed"></span></button>
             <button class="db-btn db-btn--icon" data-close="filterPanel">✕</button>
@@ -1439,7 +1457,8 @@ class SharedToolbar extends HTMLElement {
         </div>
           </div>
         </div>
-      </aside>
+        </aside>
+      </div>
 
       <!-- ---------- Popup Kvalitet ---------- -->
       <div id="qualPopup" class="db-modal-overlay popup" aria-hidden="true">
@@ -1910,18 +1929,23 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Hj\u00e4lp ---------- -->
-      <aside id="infoPanel" class="db-drawer offcanvas" data-touch-profile="panel-right">
+      <div id="infoPanel" class="db-drawer db-drawer--structured offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="infoPanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="infoPanelTitle">
         <header class="inv-header">
-          <h2>Hjälp</h2>
+          <h2 id="infoPanelTitle">Hjälp</h2>
           <button class="db-btn db-btn--icon" data-close="infoPanel">✕</button>
         </header>
         ${helpPanelHtml}
-      </aside>
+        </aside>
+      </div>
 
       <!-- ---------- Översikt (XP slide-in) ---------- -->
-      <aside id="summarySlidePanel" class="db-drawer offcanvas" data-touch-profile="panel-right">
+      <div id="summarySlidePanel" class="db-drawer db-drawer--structured offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="summarySlidePanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="summarySlidePanelTitle">
         <header class="inv-header">
-          <h2>Översikt</h2>
+          <h2 id="summarySlidePanelTitle">Översikt</h2>
           <div class="inv-actions">
             <button class="db-btn db-btn--icon" data-close="summarySlidePanel">✕</button>
           </div>
@@ -1929,12 +1953,15 @@ class SharedToolbar extends HTMLElement {
         <div class="summary-slide-content summary-content">
           <div id="summarySlideInner"></div>
         </div>
-      </aside>
+        </aside>
+      </div>
 
       <!-- ---------- Inventarie Dashboard (KPI sidebar) ---------- -->
-      <aside id="invDashPanel" class="db-drawer offcanvas inv-dash-drawer" data-touch-profile="panel-right">
+      <div id="invDashPanel" class="db-drawer db-drawer--structured offcanvas inv-dash-drawer" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="invDashPanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="invDashPanelTitle">
         <header class="inv-header">
-          <h2>Inventarium</h2>
+          <h2 id="invDashPanelTitle">Inventarium</h2>
           <div class="inv-actions">
             <button class="db-btn db-btn--icon" data-close="invDashPanel" aria-label="Stäng inventarium">${icon('cross', { alt: '', width: 24, height: 24 }) || '✕'}</button>
           </div>
@@ -1942,7 +1969,8 @@ class SharedToolbar extends HTMLElement {
         <div class="inv-dash-panel-content">
           <div id="invDashInner"></div>
         </div>
-      </aside>
+        </aside>
+      </div>
 
 
     `;
@@ -2030,7 +2058,7 @@ class SharedToolbar extends HTMLElement {
     if (inner) {
       inner.innerHTML = '<section class="summary-section"><ul class="summary-list summary-text"><li>Beräknar…</li></ul></section>';
     }
-    this.toggle('summarySlidePanel');
+    this.toggle('summarySlidePanel', toggleBtn);
 
     const previousDisabled = Boolean(toggleBtn?.disabled);
     if (toggleBtn) toggleBtn.disabled = true;
@@ -2053,6 +2081,12 @@ class SharedToolbar extends HTMLElement {
 
   /* ------------------------------------------------------- */
   handleClick(e) {
+    const closeTarget = e.target.closest('[data-close]');
+    if (closeTarget) {
+      this.close(closeTarget.dataset.close);
+      return;
+    }
+
     const btn = e.target.closest('button, a');
     if (!btn) {
       // Support toggling special cards in Filter via title click
@@ -2087,16 +2121,14 @@ class SharedToolbar extends HTMLElement {
     }
 
     /* öppna/stäng (toggle) */
-    if (btn.id === 'filterToggle') return this.toggle('filterPanel');
-    if (btn.id === 'infoToggle') return this.toggle('infoPanel');
-    if (btn.id === 'invDashToggle') return this.toggle('invDashPanel');
+    if (btn.id === 'filterToggle') return this.toggle('filterPanel', btn);
+    if (btn.id === 'infoToggle') return this.toggle('infoPanel', btn);
+    if (btn.id === 'invDashToggle') return this.toggle('invDashPanel', btn);
     if (btn.id === 'xpToggle') {
       void this.openSummarySlide();
       return;
     }
     /* stäng */
-    if (btn.dataset.close) return this.close(btn.dataset.close);
-
     if (btn.id === 'checkForUpdates') {
       if (typeof window.requestPwaUpdate !== 'function') {
         window.toast?.('Uppdateringsfunktionen är inte tillgänglig.');
@@ -2315,11 +2347,42 @@ class SharedToolbar extends HTMLElement {
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
     if (openPanel && !containsInPath(openPanel)) {
-      openPanel.classList.remove('open');
+      this.setPanelState(openPanel, false);
     }
   }
 
-  toggle(id) {
+  setPanelState(panel, isOpen, trigger = null) {
+    if (!panel) return;
+    const surface = panel.querySelector('.db-drawer__panel') || panel;
+    const wasOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', isOpen);
+    panel.classList.toggle('db-drawer--open', isOpen);
+    panel.setAttribute('aria-hidden', String(!isOpen));
+
+    if (isOpen) {
+      panel.removeAttribute('inert');
+      panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
+      surface.scrollTop = 0;
+      requestAnimationFrame(() => {
+        const focusTarget = surface.querySelector(
+          'button[data-close], [autofocus], button:not([disabled]), [href], input:not([disabled]), select:not([disabled])'
+        );
+        try { focusTarget?.focus?.({ preventScroll: true }); } catch { focusTarget?.focus?.(); }
+      });
+      return;
+    }
+
+    panel.setAttribute('inert', '');
+    const restoreFocus = panel._restoreFocus;
+    panel._restoreFocus = null;
+    if (wasOpen && restoreFocus?.isConnected) {
+      requestAnimationFrame(() => {
+        try { restoreFocus.focus?.({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
+      });
+    }
+  }
+
+  toggle(id, trigger = null) {
     const panel = this.panels[id];
     if (!panel) return;
 
@@ -2337,7 +2400,7 @@ class SharedToolbar extends HTMLElement {
 
     // 3. SYNCHRONOUS CLOSE
     // Always close other panels immediately.
-    Object.values(this.panels).forEach(p => p.classList.remove('open'));
+    Object.values(this.panels).forEach(p => this.setPanelState(p, false));
 
     // 4. ASYNC OPEN
     // If we need to open, we WAIT 50ms.
@@ -2355,13 +2418,12 @@ class SharedToolbar extends HTMLElement {
 
       // The Magic Delay
       setTimeout(() => {
-        panel.classList.add('open');
-        panel.scrollTop = 0;
+        this.setPanelState(panel, true, trigger);
       }, 50);
     }
   }
-  open(id) {
-    Object.values(this.panels).forEach(p => p.classList.remove('open'));
+  open(id, trigger = null) {
+    Object.values(this.panels).forEach(p => this.setPanelState(p, false));
     const panel = this.panels[id];
     if (panel) {
       if (id === 'filterPanel') {
@@ -2372,11 +2434,10 @@ class SharedToolbar extends HTMLElement {
         }
         this.updateFilterCollapseBtn();
       }
-      panel.classList.add('open');
-      panel.scrollTop = 0;
+      this.setPanelState(panel, true, trigger);
     }
   }
-  close(id) { this.panels[id]?.classList.remove('open'); }
+  close(id) { this.setPanelState(this.panels[id], false); }
 
   bindPerfHooks() {
     const perf = window.symbaroumPerf;

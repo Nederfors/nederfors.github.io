@@ -2,7 +2,12 @@ if ('serviceWorker' in navigator) {
   let reloadOnControllerChange = false;
   let latestRegistration = null;
   let registrationStarted = false;
+  let lastUpdateCheckAt = 0;
   const storageKeyPrefix = 'pwa-dismissed:';
+  const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+  const REGISTRATION_IDLE_TIMEOUT_MS = 4000;
+  const REGISTRATION_START_DELAY_MS = 2500;
+  const APP_READY_TIMEOUT_MS = 6000;
 
   const buildStorageKey = id => (id ? `${storageKeyPrefix}${id}` : null);
 
@@ -79,6 +84,45 @@ if ('serviceWorker' in navigator) {
 
   const clearAllWorkerDismissals = () => {
     clearDismissalsExcept(null);
+  };
+
+  const runWhenIdle = callback => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(callback, { timeout: REGISTRATION_IDLE_TIMEOUT_MS });
+      return;
+    }
+    window.setTimeout(callback, 800);
+  };
+
+  const waitForAppReady = () => new Promise(resolve => {
+    if (window.__symbaroumBootCompleted || !document.documentElement.hasAttribute('data-preload')) {
+      resolve();
+      return;
+    }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener('symbaroum-view-boot', finish);
+      resolve();
+    };
+    window.addEventListener('symbaroum-view-boot', finish, { once: true });
+    window.setTimeout(finish, APP_READY_TIMEOUT_MS);
+  });
+
+  const maybeUpdateRegistration = async (registration, { force = false } = {}) => {
+    if (!registration || typeof registration.update !== 'function') return null;
+    const now = Date.now();
+    if (!force && now - lastUpdateCheckAt < UPDATE_CHECK_INTERVAL_MS) {
+      return null;
+    }
+    lastUpdateCheckAt = now;
+    try {
+      return await registration.update();
+    } catch (error) {
+      console.warn('Service worker update check failed', error);
+      return null;
+    }
   };
 
   const flushPendingWrites = async reason => {
@@ -259,7 +303,7 @@ if ('serviceWorker' in navigator) {
         await applyWaitingWorker(registration);
         status = 'applied';
       } else {
-        await registration.update();
+        await maybeUpdateRegistration(registration, { force: true });
         const waiting = await waitForInstallingWorker(registration);
         if (waiting) {
           await applyWaitingWorker(registration);
@@ -305,11 +349,11 @@ if ('serviceWorker' in navigator) {
     registrationStarted = true;
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(registration => {
       latestRegistration = registration;
-      // Proactively check for updates
-      registration.update();
+      // Check for updates, but do not do it on every foreground transition.
+      maybeUpdateRegistration(registration);
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-          registration.update();
+          maybeUpdateRegistration(registration);
         }
       });
 
@@ -365,10 +409,18 @@ if ('serviceWorker' in navigator) {
     });
   };
 
+  const scheduleServiceWorkerRegistration = () => {
+    waitForAppReady().then(() => {
+      window.setTimeout(() => {
+        runWhenIdle(startServiceWorkerRegistration);
+      }, REGISTRATION_START_DELAY_MS);
+    });
+  };
+
   if (document.readyState === 'complete') {
-    startServiceWorkerRegistration();
+    scheduleServiceWorkerRegistration();
   } else {
-    window.addEventListener('load', startServiceWorkerRegistration, { once: true });
+    window.addEventListener('load', scheduleServiceWorkerRegistration, { once: true });
   }
 }
 

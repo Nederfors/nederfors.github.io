@@ -304,7 +304,7 @@ npm run build
 osascript -l JavaScript scripts/verify_rules_helper.js
 ```
 
-Appen byggs nu via Vite från repo-roten. `npm run build` kör först `scripts/sync_static_assets.py`, som återskapar `.generated-public/` från rootens `css/`, `js/`, `data/`, `icons/`, `pdf/`, `manifest.json` och `sw.js`.
+Appen byggs via Vite från repo-roten. `npm run build` genererar legacy-bundles och PWA-ikoner, och kör sedan `scripts/sync_static_assets.py`, som återskapar `.generated-public/` från utvalda statiska assets, data, PDF:er, manifestet och service workern.
 
 `npm run test:unit` kör den portabla Vitest-sviten för regler/helper-logik. `osascript -l JavaScript scripts/verify_rules_helper.js` finns kvar som den äldre, macOS-specifika regressionssviten. För bundle-inspektion kan du köra `npm run build:analyze`, som skriver `dist/bundle-analysis.html`.
 

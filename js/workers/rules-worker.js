@@ -1,5 +1,10 @@
 import { expose } from '../vendor/comlink.mjs';
-import { computeDerivedCharacter, filterEntries } from './rules-runtime.js';
+import {
+  computeDerivedCharacter,
+  filterEntries,
+  initIndexCatalog,
+  queryIndexCatalog
+} from './rules-runtime.js';
 
 let legacyRuntimePromise = null;
 
@@ -75,6 +80,16 @@ const api = {
   async filterEntries(payload) {
     const runtime = await ensureLegacyRuntime();
     return filterEntries(payload, runtime);
+  },
+
+  async initIndexCatalog(payload) {
+    await ensureLegacyRuntime();
+    return initIndexCatalog(payload);
+  },
+
+  async queryIndexCatalog(payload) {
+    await ensureLegacyRuntime();
+    return queryIndexCatalog(payload);
   }
 };
 

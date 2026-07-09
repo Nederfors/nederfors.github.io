@@ -42,3 +42,25 @@ test('webapp installation page survives an offline reload after service worker a
 
   await context.setOffline(false);
 });
+
+test('pdf cache stays empty until a pdf is opened', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted));
+  await waitForServiceWorker(page);
+
+  const countPdfEntries = () => page.evaluate(async () => {
+    const key = (await caches.keys()).find((cacheKey) => cacheKey.endsWith('-pdf'));
+    if (!key) return 0;
+    return (await caches.open(key)).keys().then((requests) => requests.length);
+  });
+
+  await expect.poll(countPdfEntries).toBe(0);
+
+  await page.evaluate(async () => {
+    const response = await fetch('pdf/karta.pdf');
+    if (!response.ok) throw new Error(`PDF fetch failed: ${response.status}`);
+    await response.arrayBuffer();
+  });
+
+  await expect.poll(countPdfEntries).toBe(1);
+});

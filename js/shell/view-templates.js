@@ -221,9 +221,9 @@ export const VIEW_TEMPLATES = Object.freeze({
 
     <div class="db-tabs traits-tabs-shell">
       <nav class="db-tabs__list traits-tabs" aria-label="Egenskapsnavigering" role="tablist">
-        <a id="traitsTabTraits" class="db-tabs__tab traits-tab active" href="#tab-traits" data-traits-tab="traits" role="tab" aria-controls="traitsTabPanel" aria-selected="true" aria-current="page">Karaktärsdrag</a>
-        <a id="traitsTabSummary" class="db-tabs__tab traits-tab" href="#tab-summary" data-traits-tab="summary" role="tab" aria-controls="summaryTabPanel" aria-selected="false" tabindex="-1">Översikt</a>
-        <a id="traitsTabEffects" class="db-tabs__tab traits-tab" href="#tab-effects" data-traits-tab="effects" role="tab" aria-controls="effectsTabPanel" aria-selected="false" tabindex="-1">Effekter</a>
+        <a id="traitsTabTraits" class="db-tabs__tab traits-tab active" href="#tab-traits" data-traits-tab="traits" role="tab" aria-label="Karaktärsdrag" aria-controls="traitsTabPanel" aria-selected="true" aria-current="page"><span class="traits-tab__label-full">Karaktärsdrag</span><span class="traits-tab__label-compact" aria-hidden="true">Drag</span></a>
+        <a id="traitsTabSummary" class="db-tabs__tab traits-tab" href="#tab-summary" data-traits-tab="summary" role="tab" aria-label="Översikt" aria-controls="summaryTabPanel" aria-selected="false" tabindex="-1"><span class="traits-tab__label-full">Översikt</span><span class="traits-tab__label-compact" aria-hidden="true">Översikt</span></a>
+        <a id="traitsTabEffects" class="db-tabs__tab traits-tab" href="#tab-effects" data-traits-tab="effects" role="tab" aria-label="Effekter" aria-controls="effectsTabPanel" aria-selected="false" tabindex="-1"><span class="traits-tab__label-full">Effekter</span><span class="traits-tab__label-compact" aria-hidden="true">Effekter</span></a>
       </nav>
 
       <div class="db-card__body traits-tab-panels">

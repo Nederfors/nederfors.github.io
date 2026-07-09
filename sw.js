@@ -1,4 +1,4 @@
-const SW_VERSION = 'symbaroum-pwa-v25';
+const SW_VERSION = 'symbaroum-pwa-v26';
 const CORE_CACHE = `${SW_VERSION}-core`;
 const JSON_CACHE = `${SW_VERSION}-json`;
 const STATIC_CACHE = `${SW_VERSION}-static`;
@@ -14,15 +14,6 @@ const CORE_PRECACHE_URLS = [
   'index.html',
   'webapp.html',
   'manifest.json',
-  'css/app-shell.css',
-  'css/components.css',
-  'css/daub-bridges.css',
-  'css/daub-overrides.css',
-  'css/daub-theme.css',
-  'css/motion.css',
-  'css/style.css',
-  'css/style.legacy.css',
-  'css/theme.css',
   'data/index-catalog.json',
   'data/legacy-import-map.json',
   'data/pdf-list.json',
@@ -66,7 +57,7 @@ async function precacheCore() {
   const cache = await caches.open(CORE_CACHE);
   const urlsToCache = [...new Set([...CORE_PRECACHE_URLS, ...BUILD_PRECACHE_URLS])];
   await cache.addAll(
-    urlsToCache.map(url => new Request(url, { cache: 'reload' }))
+    urlsToCache.map(url => new Request(url))
   );
 }
 
@@ -78,30 +69,42 @@ async function cleanupOldCaches() {
   );
 }
 
-async function networkFirst(request, cacheName, fallbackUrl = '') {
+function isCacheableResponse(response) {
+  return response && (response.ok || response.type === 'opaque');
+}
+
+async function refreshCache(request, cacheName, fallbackUrl = '') {
   const cache = await caches.open(cacheName);
-  try {
-    const response = await fetch(request, { cache: 'reload' });
-    if (response && (response.ok || response.type === 'opaque')) {
-      await cache.put(request, response.clone());
-      if (fallbackUrl) {
-        await cache.put(fallbackUrl, response.clone());
-      }
+  const response = await fetch(request);
+  if (isCacheableResponse(response)) {
+    await cache.put(request, response.clone());
+    if (fallbackUrl) {
+      await cache.put(fallbackUrl, response.clone());
     }
-    return response;
-  } catch (error) {
-    const cached = await cache.match(request) || (fallbackUrl ? await cache.match(fallbackUrl) : null);
-    if (cached) return cached;
-    throw error;
   }
+  return response;
+}
+
+async function navigationStaleWhileRevalidate(request, fallbackUrl = '') {
+  const cache = await caches.open(CORE_CACHE);
+  const cached = await cache.match(request) || (fallbackUrl ? await cache.match(fallbackUrl) : null);
+  const refresh = refreshCache(request, CORE_CACHE, fallbackUrl).catch(() => null);
+  if (cached) {
+    return { response: cached, refresh };
+  }
+  const response = await refresh;
+  if (response) {
+    return { response, refresh: Promise.resolve(response) };
+  }
+  throw new Error(`Offline and uncached navigation: ${request.url}`);
 }
 
 async function staleWhileRevalidate(request, cacheName, fallbackCacheNames = []) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const networkPromise = fetch(request, { cache: 'reload' })
+  const networkPromise = fetch(request)
     .then(async response => {
-      if (response && (response.ok || response.type === 'opaque')) {
+      if (isCacheableResponse(response)) {
         await cache.put(request, response.clone());
       }
       return response;
@@ -126,8 +129,8 @@ async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const response = await fetch(request, { cache: 'reload' });
-  if (response && (response.ok || response.type === 'opaque')) {
+  const response = await fetch(request);
+  if (isCacheableResponse(response)) {
     await cache.put(request, response.clone());
   }
   return response;
@@ -161,11 +164,15 @@ self.addEventListener('fetch', event => {
   if (!isSameScope(url)) return;
 
   if (isNavigationRequest(request)) {
+    const fallbackUrl = url.pathname === WEBAPP_PATH ? 'webapp.html' : 'index.html';
+    const navigationPromise = navigationStaleWhileRevalidate(request, fallbackUrl);
     if (url.pathname === WEBAPP_PATH) {
-      event.respondWith(networkFirst(request, CORE_CACHE, 'webapp.html'));
+      event.respondWith(navigationPromise.then(result => result.response));
+      event.waitUntil(navigationPromise.then(result => result.refresh).catch(() => null));
       return;
     }
-    event.respondWith(networkFirst(request, CORE_CACHE, 'index.html'));
+    event.respondWith(navigationPromise.then(result => result.response));
+    event.waitUntil(navigationPromise.then(result => result.refresh).catch(() => null));
     return;
   }
 

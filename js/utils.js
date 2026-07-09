@@ -37,7 +37,8 @@
     remove    : 'icons/remove.svg',
     skadetyp  : 'icons/skadetyp.svg',
     settings  : 'icons/settings.svg',
-    smithing  : 'icons/smithing.svg'
+    smithing  : 'icons/smithing.svg',
+    grain     : 'icons/grain-icon.svg'
   });
 
   const DEFAULT_CHARACTER_ICON = ICON_SOURCES.character;

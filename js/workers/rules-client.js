@@ -1,5 +1,10 @@
 import * as Comlink from '../vendor/comlink.mjs';
-import { computeDerivedCharacter, filterEntries } from './rules-runtime.js';
+import {
+  computeDerivedCharacter,
+  filterEntries,
+  initIndexCatalog,
+  queryIndexCatalog
+} from './rules-runtime.js';
 
 let workerInstance = null;
 let workerProxyPromise = null;
@@ -66,6 +71,14 @@ const rulesClient = {
     return filterEntries(payload, getRuntimeOptions());
   },
 
+  initIndexCatalogSync(payload) {
+    return initIndexCatalog(payload);
+  },
+
+  queryIndexCatalogSync(payload) {
+    return queryIndexCatalog(payload);
+  },
+
   async computeDerivedCharacter(payload) {
     try {
       const proxy = await ensureWorkerProxy();
@@ -91,6 +104,34 @@ const rulesClient = {
       this.mode = 'fallback';
       this.ready = true;
       return this.filterEntriesSync(payload);
+    }
+  },
+
+  async initIndexCatalog(payload) {
+    try {
+      const proxy = await ensureWorkerProxy();
+      this.mode = 'worker';
+      this.ready = true;
+      return await proxy.initIndexCatalog(payload);
+    } catch (error) {
+      initError = error;
+      this.mode = 'fallback';
+      this.ready = true;
+      return this.initIndexCatalogSync(payload);
+    }
+  },
+
+  async queryIndexCatalog(payload) {
+    try {
+      const proxy = await ensureWorkerProxy();
+      this.mode = 'worker';
+      this.ready = true;
+      return await proxy.queryIndexCatalog(payload);
+    } catch (error) {
+      initError = error;
+      this.mode = 'fallback';
+      this.ready = true;
+      return this.queryIndexCatalogSync(payload);
     }
   },
 

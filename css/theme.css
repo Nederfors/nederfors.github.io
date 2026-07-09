@@ -58,6 +58,11 @@
   --entry-card-action-size: var(--ctrl-btn-size);
   --ctrl-btn-font-size: 1.35rem;
   --entry-tag-row: 1.35rem;
+  --app-page-gutter: 0.8rem;
+  --app-touch-target: 44px;
+  --app-toolbar-height: 7.75rem;
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* -- Game-semantic colours (no DAUB equivalent) ----------- */
   --mystic: #a88fcc;
@@ -80,7 +85,8 @@
 
 @media (max-width: 640px) {
   :root {
-    --ctrl-btn-size: 36px;
+    --shell-width: calc(100vw - var(--app-page-gutter) - var(--app-page-gutter));
+    --ctrl-btn-size: var(--app-touch-target);
     --ctrl-btn-font-size: 1.1rem;
   }
 }

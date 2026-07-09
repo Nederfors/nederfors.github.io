@@ -3,9 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:legacy": "node ./scripts/build_legacy_bundles.mjs",
+    "icons:pwa": "node ./scripts/generate_pwa_icons.mjs",
     "sync:static": "python3 ./scripts/sync_static_assets.py",
     "dev": "vite --config ./vite.config.js",
-    "prebuild": "npm run sync:static",
+    "prebuild": "npm run build:legacy && npm run icons:pwa && npm run sync:static",
     "build": "vite build --config ./vite.config.js",
     "build:analyze": "npm run build -- --mode analyze",
     "preview": "vite preview --config ./vite.config.js",
@@ -14,6 +16,7 @@
     "test:unit:watch": "vitest --config ./vitest.config.js",
     "test:e2e": "npm run build && playwright test --config=./playwright.config.js",
     "test:lighthouse": "npm run build && node ./scripts/run-lighthouse.mjs",
+    "test:online-perf": "node ./scripts/run-online-perf.mjs",
     "test:scenarios": "npm run build && node ./scripts/run-scenario-metrics.mjs",
     "test:perf": "npm run build && node ./scripts/run-perf-baseline.mjs"
   },
@@ -29,6 +32,7 @@
     "eslint": "^10.1.0",
     "lighthouse": "^12.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
+    "sharp": "^0.35.3",
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.0"

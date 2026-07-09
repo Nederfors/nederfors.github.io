@@ -57,6 +57,19 @@ const POST_SCRIPTS = [
   'js/main.js'
 ];
 
+const BUNDLE_SCRIPTS = Object.freeze({
+  shared: 'js/legacy/shared.js',
+  index: 'js/legacy/index.js',
+  character: 'js/legacy/character.js',
+  inventory: 'js/legacy/inventory.js',
+  notes: 'js/legacy/notes.js',
+  traits: 'js/legacy/traits.js',
+  post: 'js/legacy/post.js'
+});
+
+const USE_LEGACY_BUNDLES = Boolean(import.meta.env?.PROD)
+  && !new URLSearchParams(window.location.search).has('debugSources');
+
 const pendingScripts = new Map();
 const loadedRoutes = new Set();
 let sharedScriptsPromise = null;
@@ -70,6 +83,10 @@ export function normalizeRole(role = 'index') {
 }
 
 const toAbsoluteSrc = (src) => new URL(src, document.baseURI).href;
+
+function markScriptLoaded(src) {
+  pendingScripts.set(toAbsoluteSrc(src), Promise.resolve());
+}
 
 export function loadClassicScript(src) {
   const absoluteSrc = toAbsoluteSrc(src);
@@ -97,9 +114,26 @@ export async function loadScriptBatch(sources = []) {
   }
 }
 
+async function loadBundleOrScripts(bundleSrc, sources = []) {
+  if (!USE_LEGACY_BUNDLES || !bundleSrc) {
+    await loadScriptBatch(sources);
+    return;
+  }
+  try {
+    await loadClassicScript(bundleSrc);
+    sources.forEach(markScriptLoaded);
+  } catch (error) {
+    console.warn(`Failed to load ${bundleSrc}; falling back to ordered legacy sources.`, error);
+    await loadScriptBatch(sources);
+  }
+}
+
 export function ensureSharedScripts() {
   if (!sharedScriptsPromise) {
-    sharedScriptsPromise = loadScriptBatch([...PRELOAD_SCRIPTS, ...CORE_SCRIPTS]);
+    sharedScriptsPromise = loadBundleOrScripts(
+      BUNDLE_SCRIPTS.shared,
+      [...PRELOAD_SCRIPTS, ...CORE_SCRIPTS]
+    );
   }
   return sharedScriptsPromise;
 }
@@ -109,13 +143,13 @@ export async function ensureRouteScripts(role = 'index') {
   await ensureSharedScripts();
   if (loadedRoutes.has(normalizedRole)) return;
   const sources = ROUTE_SCRIPTS[normalizedRole] || [];
-  await loadScriptBatch(sources);
+  await loadBundleOrScripts(BUNDLE_SCRIPTS[normalizedRole], sources);
   loadedRoutes.add(normalizedRole);
 }
 
 export function ensurePostScripts() {
   if (!postScriptsPromise) {
-    postScriptsPromise = loadScriptBatch(POST_SCRIPTS);
+    postScriptsPromise = loadBundleOrScripts(BUNDLE_SCRIPTS.post, POST_SCRIPTS);
   }
   return postScriptsPromise;
 }

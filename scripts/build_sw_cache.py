@@ -56,11 +56,6 @@ def list_html_pages() -> list[str]:
     return sorted(pages, key=str.casefold)
 
 
-def list_css_files() -> list[str]:
-    files = [path.relative_to(ROOT_DIR).as_posix() for path in CSS_DIR.rglob("*.css")]
-    return sorted(files, key=str.casefold)
-
-
 def list_icon_files() -> list[str]:
     files = [
         path.relative_to(ROOT_DIR).as_posix()
@@ -102,7 +97,7 @@ def list_data_files() -> list[str]:
 
 def render_precache_block() -> str:
     html_pages = list_html_pages()
-    paths = [*html_pages, "manifest.json", *list_css_files(), *list_data_files()]
+    paths = [*html_pages, "manifest.json", *list_data_files()]
     return "\n".join(f"  '{path}'," for path in paths)
 
 
