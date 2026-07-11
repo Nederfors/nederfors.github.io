@@ -4,48 +4,10 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime, timezone
-from data_file_schema import build_payload, load_json, normalize_payload, validate_catalog_payload
+from collections import defaultdict
 
-DATA_FILES = [
-    # sync-data-manifest:start
-    'diverse.json',
-    'kuriositeter.json',
-    'skatter.json',
-    'elixir.json',
-    'fordel.json',
-    'formaga.json',
-    'basformagor.json',
-    'kvalitet.json',
-    'mystisk-kraft.json',
-    'mystisk-kvalitet.json',
-    'neutral-kvalitet.json',
-    'negativ-kvalitet.json',
-    'nackdel.json',
-    'anstallning.json',
-    'byggnader.json',
-    'yrke.json',
-    'ras.json',
-    'elityrke.json',
-    'fardmedel.json',
-    'forvaring.json',
-    'gardsdjur.json',
-    'instrument.json',
-    'klader.json',
-    'specialverktyg.json',
-    'tjanster.json',
-    'ritual.json',
-    'rustning.json',
-    'mat.json',
-    'dryck.json',
-    'sardrag.json',
-    'monstruost-sardrag.json',
-    'artefakter.json',
-    'lagre-artefakter.json',
-    'fallor.json',
-    'avstandsvapen.json',
-    'narstridsvapen.json',
-    # sync-data-manifest:end
-]
+from catalog_files import load_catalog_files
+from data_file_schema import build_payload, load_json, normalize_payload, validate_catalog_payload
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -54,6 +16,7 @@ INDEX_CATALOG_FILE = DATA_DIR / 'index-catalog.json'
 TABLES_FILE = DATA_DIR / 'tabeller.json'
 RITUAL_LEVELS = ('Enkel', 'Ordinär', 'Avancerad')
 MYSTIC_LEVELS = ('Novis', 'Gesäll', 'Mästare')
+WILDCARD_REFERENCE_NAMES = {'*'}
 
 
 def checksum(data) -> str:
@@ -220,9 +183,10 @@ def validate_entry_schema(entry, source_file, index, warnings):
             handling = str(simple.get('actions') or simple.get('handling') or '').strip()
             if handling.lower() != 'speciell':
                 warnings.append(f'{source_file}[{index}] ({name}) ritual bör ha handling "Speciell" på nivå Enkel.')
-            tests = simple.get('tests') or simple.get('test')
-            if not isinstance(tests, list):
-                warnings.append(f'{source_file}[{index}] ({name}) ritual bör ha test-lista på nivå Enkel.')
+            if 'tests' in simple or 'test' in simple:
+                tests = simple.get('tests') if 'tests' in simple else simple.get('test')
+                if not isinstance(tests, list):
+                    warnings.append(f'{source_file}[{index}] ({name}) ritualtest måste vara en lista när det anges.')
 
     if 'Basförmåga' in types:
         if not level_data:
@@ -240,24 +204,189 @@ def validate_entry_schema(entry, source_file, index, warnings):
             warnings.append(f'{source_file}[{index}] ({name}) mystisk kraft har oväntade nivånycklar: {", ".join(invalid)}.')
 
 
+def normalize_reference(value):
+    return str(value or '').strip().casefold()
+
+
+def validate_cross_catalog_integrity(entries_with_source):
+    errors = []
+    by_id = {}
+    by_name = defaultdict(list)
+
+    for entry, source_file, source_index in entries_with_source:
+        if not isinstance(entry, dict):
+            continue
+        entry_id = str(entry.get('id') or '').strip()
+        entry_name = str(entry.get('name') or entry.get('namn') or '').strip()
+        if entry_id:
+            previous = by_id.get(entry_id)
+            if previous:
+                errors.append(
+                    f'duplicate id {entry_id!r}: {previous[0]}[{previous[1]}] and {source_file}[{source_index}]'
+                )
+            else:
+                by_id[entry_id] = (source_file, source_index)
+        if entry_name:
+            by_name[normalize_reference(entry_name)].append((entry_name, entry_id, source_file, source_index))
+
+        fixture_probe = f'{entry_id} {entry_name}'.casefold()
+        if 'placeholder' in fixture_probe:
+            errors.append(f'{source_file}[{source_index}] ({entry_name or entry_id}) contains a production placeholder')
+
+    for rows in by_name.values():
+        if len(rows) < 2:
+            continue
+        locations = ', '.join(f'{row[2]}[{row[3]}] ({row[1]})' for row in rows)
+        errors.append(f'duplicate entry name {rows[0][0]!r}: {locations}')
+
+    known_ids = set(by_id)
+    known_names = set(by_name)
+
+    def require_id(raw, path):
+        entry_id = str(raw or '').strip()
+        if entry_id and entry_id not in known_ids:
+            errors.append(f'{path} references unknown entry id {entry_id!r}')
+
+    def require_name(raw, path):
+        name = str(raw or '').strip()
+        if not name or name in WILDCARD_REFERENCE_NAMES:
+            return
+        if normalize_reference(name) not in known_names:
+            errors.append(f'{path} references unknown entry name {name!r}')
+
+    def validate_grant(rule, path):
+        if not isinstance(rule, dict):
+            return
+        target = str(rule.get('target') or '').strip()
+        if target == 'entry':
+            names = rule.get('name')
+            if isinstance(names, list):
+                for index, name in enumerate(names):
+                    require_name(name, f'{path}.name[{index}]')
+            elif names is not None:
+                require_name(names, f'{path}.name')
+            if rule.get('id') is not None:
+                require_id(rule.get('id'), f'{path}.id')
+        if target == 'item':
+            items = rule.get('foremal')
+            if isinstance(items, list):
+                for index, item in enumerate(items):
+                    if isinstance(item, dict) and item.get('id') is not None:
+                        require_id(item.get('id'), f'{path}.foremal[{index}].id')
+
+    def walk_rules(value, path):
+        if isinstance(value, list):
+            for index, item in enumerate(value):
+                walk_rules(item, f'{path}[{index}]')
+            return
+        if not isinstance(value, dict):
+            return
+        for key, child in value.items():
+            child_path = f'{path}.{key}'
+            if key == 'grant' and isinstance(child, list):
+                for index, rule in enumerate(child):
+                    validate_grant(rule, f'{child_path}[{index}]')
+            walk_rules(child, child_path)
+
+    for entry, source_file, source_index in entries_with_source:
+        if not isinstance(entry, dict):
+            continue
+        base_path = f'{source_file}[{source_index}]'
+        walk_rules(entry.get('rules'), f'{base_path}.rules')
+        walk_rules(entry.get('levels'), f'{base_path}.levels')
+
+        requirements = entry.get('elite_requirements')
+        stages = requirements.get('stages') if isinstance(requirements, dict) else None
+        if isinstance(stages, list):
+            for stage_index, stage in enumerate(stages):
+                options = stage.get('options') if isinstance(stage, dict) else None
+                if not isinstance(options, list):
+                    continue
+                for option_index, option in enumerate(options):
+                    if isinstance(option, dict):
+                        require_name(
+                            option.get('name'),
+                            f'{base_path}.elite_requirements.stages[{stage_index}].options[{option_index}].name',
+                        )
+
+        elite_abilities = entry.get('elite_abilities')
+        if isinstance(elite_abilities, list):
+            for index, name in enumerate(elite_abilities):
+                require_name(name, f'{base_path}.elite_abilities[{index}]')
+
+    return errors
+
+
+def validate_table_integrity(table_entries, entries_with_source):
+    errors = []
+    seen_ids = {
+        str(entry.get('id')).strip(): f'{source_file}[{source_index}]'
+        for entry, source_file, source_index in entries_with_source
+        if isinstance(entry, dict) and str(entry.get('id') or '').strip()
+    }
+    for index, table in enumerate(table_entries):
+        if not isinstance(table, dict):
+            errors.append(f'tabeller.json[{index}] is not an object')
+            continue
+        table_id = str(table.get('id') or '').strip()
+        if not table_id:
+            errors.append(f'tabeller.json[{index}] is missing an id')
+            continue
+        previous = seen_ids.get(table_id)
+        if previous:
+            errors.append(f'duplicate id {table_id!r}: {previous} and tabeller.json[{index}]')
+        else:
+            seen_ids[table_id] = f'tabeller.json[{index}]'
+    return errors
+
+
+def payload_without_generated_at(payload):
+    if not isinstance(payload, dict):
+        return payload
+    return {key: value for key, value in payload.items() if key != 'generatedAt'}
+
+
+def stable_generated_at(bundle_body, index_body):
+    try:
+        existing_bundle = load_json(OUTPUT_FILE)
+        existing_index = load_json(INDEX_CATALOG_FILE)
+        if (
+            payload_without_generated_at(existing_bundle) == bundle_body
+            and payload_without_generated_at(existing_index) == index_body
+        ):
+            previous = existing_bundle.get('generatedAt')
+            if isinstance(previous, str) and previous:
+                return previous
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return datetime.now(timezone.utc).isoformat()
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Bygger data/all.json från datafiler.')
-    parser.add_argument('--strict', action='store_true', help='Avbryt med felkod om schema-varningar hittas.')
+    parser.add_argument('--strict', action='store_true', help='Avbryt vid schema-, integritets- eller innehållsfel.')
+    parser.add_argument('--check', action='store_true', help='Validera och bygg i minnet utan att skriva härledda filer.')
     parser.add_argument('--pretty', action='store_true', help='Skriv all.json med indentering.')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    try:
+        contract = load_catalog_files()
+    except ValueError as error:
+        print(error)
+        raise SystemExit(1) from error
+
+    data_files = list(contract.entry_data_files)
     entries = []
+    entries_with_source = []
     sources = []
     source_payloads = []
     warnings = []
     schema_errors = []
-    duplicate_ids = []
-    seen_ids = {}
 
-    for filename in DATA_FILES:
+    for filename in data_files:
         source_path = DATA_DIR / filename
         payload = load_json(source_path)
         current_schema_errors = validate_catalog_payload(payload, source=filename, strict=args.strict)
@@ -266,13 +395,7 @@ def main():
         data = parsed.entries
         for idx, entry in enumerate(data):
             validate_entry_schema(entry, filename, idx, warnings)
-            entry_id = entry.get('id') if isinstance(entry, dict) else None
-            if entry_id is not None:
-                if entry_id in seen_ids:
-                    prev_file, prev_idx = seen_ids[entry_id]
-                    duplicate_ids.append((entry_id, prev_file, prev_idx, filename, idx))
-                else:
-                    seen_ids[entry_id] = (filename, idx)
+            entries_with_source.append((entry, filename, idx))
         entries.extend(data)
         sources.append({
             'file': f'data/{filename}',
@@ -290,6 +413,8 @@ def main():
             )
         )
 
+    integrity_errors = validate_cross_catalog_integrity(entries_with_source)
+
     tables_payload = load_json(TABLES_FILE)
     table_catalog_entries = []
     if isinstance(tables_payload, list):
@@ -298,16 +423,57 @@ def main():
         table_source_entries = tables_payload.get('entries')
     else:
         table_source_entries = []
+    integrity_errors.extend(validate_table_integrity(table_source_entries, entries_with_source))
     for idx, entry in enumerate(table_source_entries):
         table_catalog_entries.append(summarize_entry(entry, 'tabeller.json', idx, table=True))
 
-    bundle = {
-        'generatedAt': datetime.now(timezone.utc).isoformat(),
+    bundle_body = {
         'totalCount': len(entries),
         'sources': sources,
         'sourcePayloads': source_payloads,
         'tables': tables_payload,
     }
+
+    index_body = {
+        'totalCount': len(entries),
+        'sources': sources,
+        'entries': [
+            summarize_entry(entry, filename, idx)
+            for filename, payload in zip(data_files, source_payloads)
+            for idx, entry in enumerate(payload.get('entries', []) if isinstance(payload, dict) else [])
+        ],
+        'tables': table_catalog_entries,
+    }
+
+    if schema_errors:
+        print(f'Schemafel: {len(schema_errors)}')
+        for row in schema_errors[:40]:
+            print(f'  - {row}')
+        if len(schema_errors) > 40:
+            print(f'  ... samt {len(schema_errors) - 40} till.')
+    if integrity_errors:
+        print(f'Integritetsfel: {len(integrity_errors)}')
+        for row in integrity_errors[:40]:
+            print(f'  - {row}')
+        if len(integrity_errors) > 40:
+            print(f'  ... samt {len(integrity_errors) - 40} till.')
+    if warnings:
+        print(f'Innehållsvarningar: {len(warnings)}')
+        for row in warnings[:40]:
+            print(f'  - {row}')
+        if len(warnings) > 40:
+            print(f'  ... samt {len(warnings) - 40} till.')
+
+    if args.strict and (schema_errors or integrity_errors or warnings):
+        raise SystemExit(1)
+
+    generated_at = stable_generated_at(bundle_body, index_body)
+    bundle = {'generatedAt': generated_at, **bundle_body}
+    index_catalog = {'generatedAt': generated_at, **index_body}
+
+    if args.check:
+        print(f'Validated {len(entries)} entries from {len(data_files)} catalog files; no derived files written.')
+        return
 
     with OUTPUT_FILE.open('w', encoding='utf-8') as handle:
         if args.pretty:
@@ -315,18 +481,6 @@ def main():
         else:
             json.dump(bundle, handle, ensure_ascii=False)
         handle.write('\n')
-
-    index_catalog = {
-        'generatedAt': bundle['generatedAt'],
-        'totalCount': len(entries),
-        'sources': sources,
-        'entries': [
-            summarize_entry(entry, filename, idx)
-            for filename, payload in zip(DATA_FILES, source_payloads)
-            for idx, entry in enumerate(payload.get('entries', []) if isinstance(payload, dict) else [])
-        ],
-        'tables': table_catalog_entries,
-    }
 
     with INDEX_CATALOG_FILE.open('w', encoding='utf-8') as handle:
         if args.pretty:
@@ -336,27 +490,6 @@ def main():
         handle.write('\n')
 
     print(f'Wrote {len(entries)} entries to {OUTPUT_FILE.relative_to(ROOT_DIR)}')
-    if duplicate_ids:
-        print(f'Varning: hittade {len(duplicate_ids)} dubblett-id:n.')
-        for dup in duplicate_ids[:20]:
-            entry_id, prev_file, prev_idx, cur_file, cur_idx = dup
-            print(f'  id "{entry_id}" i {prev_file}[{prev_idx}] och {cur_file}[{cur_idx}]')
-        if len(duplicate_ids) > 20:
-            print(f'  ... samt {len(duplicate_ids) - 20} till.')
-    if schema_errors:
-        print(f'Schemafel: {len(schema_errors)}')
-        for row in schema_errors[:40]:
-            print(f'  - {row}')
-        if len(schema_errors) > 40:
-            print(f'  ... samt {len(schema_errors) - 40} till.')
-    if warnings:
-        print(f'Innehållsvarningar: {len(warnings)}')
-        for row in warnings[:40]:
-            print(f'  - {row}')
-        if len(warnings) > 40:
-            print(f'  ... samt {len(warnings) - 40} till.')
-    if args.strict and schema_errors:
-        raise SystemExit(1)
 
 
 if __name__ == '__main__':

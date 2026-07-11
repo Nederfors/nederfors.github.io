@@ -168,7 +168,7 @@ async function collectUnhandledVisibleButtons(page) {
     const isVisible = button => {
       if (!(button instanceof HTMLElement)) return false;
       const rect = button.getBoundingClientRect();
-      const style = getComputedStyle(button);
+      const style = window.getComputedStyle(button);
       return rect.width > 0
         && rect.height > 0
         && style.display !== 'none'

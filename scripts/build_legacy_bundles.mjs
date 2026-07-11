@@ -42,8 +42,7 @@ const CORE_SCRIPTS = [
 const ROUTE_SCRIPTS = {
   index: [
     'js/entry-xp.js',
-    'js/index-view.js',
-    'js/elite-add.js'
+    'js/index-view.js'
   ],
   character: [
     'js/entry-xp.js',

@@ -132,7 +132,22 @@ test('debounces writes and flushes on explicit boundaries', async ({ page }) => 
     const store = window.storeHelper.load();
     window.storeHelper.setNotes(store, { ...window.storeHelper.getNotes(store), background: 'Switch flush' });
   });
-  await page.locator('shared-toolbar').locator('#charSelect').selectOption('queue-char-b');
+  const toolbar = page.locator('shared-toolbar');
+  await toolbar.locator('#filterToggle').click();
+  await expect(toolbar.locator('#filterPanel')).toHaveAttribute('aria-hidden', 'false');
+  const charSelect = toolbar.locator('#charSelect');
+  if (!(await charSelect.isVisible())) {
+    await toolbar.locator('#filterFormalCard .card-title').click();
+  }
+  await expect(charSelect).toBeVisible();
+  await expect(charSelect).toHaveValue('queue-char-a');
+  await expect(charSelect.locator('option').filter({ hasText: /^Queue Alpha$/ })).toHaveCount(1);
+  await expect(charSelect.locator('option').filter({ hasText: /^Queue Beta$/ })).toHaveCount(1);
+  await expect(page.locator('#charName')).toHaveText('Queue Alpha');
+
+  await charSelect.selectOption('queue-char-b');
+  await expect(charSelect).toHaveValue('queue-char-b');
+  await expect(page.locator('#charName')).toHaveText('Queue Beta');
   await expect.poll(async () => (
     (await readCharacterState(page, 'queue-char-a'))?.notes?.background || ''
   )).toBe('Switch flush');

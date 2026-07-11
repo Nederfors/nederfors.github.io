@@ -4,7 +4,7 @@
   "title": "Rule V3",
   "description": "Canonical English rule families for catalog schema v3.",
   "type": "object",
-  "definitions": {
+  "$defs": {
     "condition": {
       "$ref": "condition-v3.schema.json"
     },
@@ -19,6 +19,8 @@
         "op": { "type": "string", "enum": ["add", "subtract", "multiply", "divide", "set", "min", "max"] },
         "value": {},
         "formula": {},
+        "modifierare": { "type": "number" },
+        "snapshot": { "type": "boolean" },
         "tillat": {}
       },
       "additionalProperties": false
@@ -63,7 +65,7 @@
         "op": { "type": "string", "enum": ["add", "subtract", "multiply", "divide", "set", "min", "max"] },
         "value": {},
         "formula": {},
-        "name": { "type": "string" },
+        "name": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
         "id": { "type": "string" },
         "beviljad_niva": { "type": "string" },
         "foremal": {},
@@ -142,8 +144,5 @@
       },
       "additionalProperties": false
     }
-  },
-  "$defs": {
-    "condition": { "$ref": "condition-v3.schema.json" }
   }
 }

@@ -40,7 +40,7 @@ function notifyListeners(prev, next) {
   }
 }
 
-function applyRoute(pushState = false) {
+function applyRoute() {
   const { role, tab } = parseHash();
   const prev = { role: currentRole, tab: currentTab };
   if (role === currentRole && tab === currentTab) return;

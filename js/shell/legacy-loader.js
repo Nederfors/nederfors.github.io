@@ -35,8 +35,7 @@ const CORE_SCRIPTS = [
 const ROUTE_SCRIPTS = Object.freeze({
   index: [
     'js/entry-xp.js',
-    'js/index-view.js',
-    'js/elite-add.js'
+    'js/index-view.js'
   ],
   character: [
     'js/entry-xp.js',
@@ -177,6 +176,11 @@ export async function ensureCharacterGenerator() {
   return window.symbaroumGenerator || null;
 }
 
+export async function ensureEliteAdd() {
+  await loadClassicScript('js/elite-add.js');
+  return window.eliteAdd || null;
+}
+
 export async function ensureTabellPopup() {
   await loadClassicScript('js/tabell-popup.js');
   return window.tabellPopup || null;
@@ -232,6 +236,7 @@ export function exposeLegacyLoaders() {
   window.ensureRouteScripts = ensureRouteScripts;
   window.ensureJsZip = ensureJsZip;
   window.ensureCharacterGenerator = ensureCharacterGenerator;
+  window.ensureEliteAdd = ensureEliteAdd;
   window.ensureTabellPopup = ensureTabellPopup;
   window.ensurePdfLibrary = ensurePdfLibrary;
   window.openTablePopup = async (html, title) => {

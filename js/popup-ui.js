@@ -50,6 +50,7 @@
   });
   const DISMISS_ID_RE = /(cancel|close)$/i;
   const BODY_ACTION_CLASS_RE = /\b(confirm-row|button-row|popup-footer|requirement-popup-actions|picker-popup-actions|qual-popup-actions|header-actions)\b/;
+  let generatedTitleId = 0;
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -192,6 +193,31 @@
     title.textContent = options.titleText || DIALOG_TITLE_BY_ID[overlayId] || 'Symbapedia';
     header.insertBefore(title, header.firstChild || null);
     return title;
+  }
+
+  function ensureUniqueTitleId(overlay, title) {
+    if (!(title instanceof HTMLElement)) return '';
+    if (title.id) return title.id;
+
+    const root = overlay?.getRootNode?.() || document;
+    const base = overlay?.id
+      ? `${overlay.id}Title`
+      : `popupTitle${++generatedTitleId}`;
+    let candidate = base;
+    let suffix = 2;
+    while (typeof root.getElementById === 'function' && root.getElementById(candidate)) {
+      candidate = `${base}${suffix++}`;
+    }
+    title.id = candidate;
+    return candidate;
+  }
+
+  function applyDialogSemantics(overlay, modal, title) {
+    if (!(modal instanceof HTMLElement)) return;
+    const titleId = ensureUniqueTitleId(overlay, title);
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    if (titleId) modal.setAttribute('aria-labelledby', titleId);
   }
 
   function ensureHeader(overlay, modal, options = {}) {
@@ -445,6 +471,8 @@
     modal.classList.add('db-modal', 'popup-shell--daub');
     applyPopupMeta(overlay, modal, options);
     const header = ensureHeader(overlay, modal, options);
+    const title = ensureTitleNode(header, modal, String(overlay.id || '').trim(), options);
+    applyDialogSemantics(overlay, modal, title);
     ensureCloseButton(overlay, header);
     ensureFooter(modal);
     const body = ensureBody(modal);

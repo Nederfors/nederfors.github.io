@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectPortablePopupScreenshot } from './helpers/portable-popup-screenshot.js';
 
 async function waitForApp(page, route = '/#/index') {
   await page.goto(route);
@@ -55,6 +56,123 @@ async function seedInventoryFixtures(page) {
     window.invUtil.renderInventory();
   });
 }
+
+async function expectEconomyPanelReady(page, tabId, contentSelector) {
+  const popup = page.locator('#inventoryEconomyPopup');
+  const tab = popup.locator(`.tools-tab[data-tab="${tabId}"]`);
+  const panel = popup.locator(`.tools-panel[data-tab="${tabId}"]`);
+
+  await expect(tab).toHaveAttribute('aria-selected', 'true');
+  await expect(panel).not.toHaveAttribute('hidden', '');
+  await expect(panel.locator(contentSelector)).toBeVisible();
+
+  const geometry = await popup.evaluate((root, activeTab) => {
+    const panels = root.querySelector('.tools-panels');
+    const panel = root.querySelector(`.tools-panel[data-tab="${activeTab}"]`);
+    const card = panel?.querySelector('.tools-card');
+    const modal = root.querySelector('.db-modal');
+    const rect = element => element?.getBoundingClientRect() || null;
+    const panelsRect = rect(panels);
+    const panelRect = rect(panel);
+    const cardRect = rect(card);
+    const modalRect = rect(modal);
+    const visibleCardHeight = cardRect && modalRect
+      ? Math.max(0, Math.min(cardRect.bottom, modalRect.bottom) - Math.max(cardRect.top, modalRect.top))
+      : 0;
+    return {
+      activeTab: root.dataset.activeTab || '',
+      panelsHeight: panelsRect?.height || 0,
+      panelHeight: panelRect?.height || 0,
+      cardHeight: cardRect?.height || 0,
+      visibleCardHeight
+    };
+  }, tabId);
+
+  expect(geometry.activeTab).toBe(tabId);
+  expect(geometry.panelsHeight, `${tabId} panels host collapsed`).toBeGreaterThan(100);
+  expect(geometry.panelHeight, `${tabId} panel collapsed`).toBeGreaterThan(100);
+  expect(geometry.cardHeight, `${tabId} card collapsed`).toBeGreaterThan(100);
+  expect(geometry.visibleCardHeight, `${tabId} card is clipped out of the modal`).toBeGreaterThan(100);
+}
+
+test('desktop Traits tabs each expose one full-width panel', async ({ page }, testInfo) => {
+  test.skip(!['chromium', 'webkit'].includes(testInfo.project.name), 'Desktop release projects own this geometry contract.');
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await waitForApp(page, '/#/traits');
+  const host = page.locator('.traits-tab-panels');
+  await expect(host).not.toHaveAttribute('data-swipe-tabs', '1');
+
+  const tabs = [
+    { tabId: 'traitsTabTraits', panelId: 'traitsTabPanel' },
+    { tabId: 'traitsTabSummary', panelId: 'summaryTabPanel' },
+    { tabId: 'traitsTabEffects', panelId: 'effectsTabPanel' }
+  ];
+  for (const { tabId, panelId } of tabs) {
+    await page.locator(`#${tabId}`).click();
+    await expect(page.locator(`#${tabId}`)).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator(`#${tabId}`)).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator(`#${panelId}`)).toHaveAttribute('aria-hidden', 'false');
+    await expect(page.locator('.traits-tab-panel:visible')).toHaveCount(1);
+    await expect(page.locator(`#${panelId}`)).toBeVisible();
+
+    const geometry = await page.evaluate(activePanelId => {
+      const hostRect = document.querySelector('.traits-tab-panels')?.getBoundingClientRect() || null;
+      const panelRect = document.getElementById(activePanelId)?.getBoundingClientRect() || null;
+      return {
+        hostWidth: hostRect?.width || 0,
+        panelWidth: panelRect?.width || 0,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      };
+    }, panelId);
+    expect(geometry.hostWidth).toBeGreaterThan(0);
+    expect(Math.abs(geometry.panelWidth - geometry.hostWidth)).toBeLessThan(1);
+    expect(geometry.overflow).toBe(0);
+  }
+});
+
+test('desktop Character Tools is a 700px two-column dialog', async ({ page }, testInfo) => {
+  test.skip(!['chromium', 'webkit'].includes(testInfo.project.name), 'Desktop release projects own this geometry contract.');
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await waitForApp(page, '/#/character');
+  const toolbar = page.locator('shared-toolbar');
+  await toolbar.locator('#filterToggle').click();
+  await expect(toolbar.locator('#filterPanel')).toHaveAttribute('aria-hidden', 'false');
+  const toolsButton = toolbar.locator('#characterToolsBtn');
+  if (!(await toolsButton.isVisible())) {
+    await toolbar.locator('#filterFormalCard .card-title').click();
+  }
+  await expect(toolsButton).toBeVisible();
+  await toolsButton.click();
+  await expect(page.locator('#characterToolsPopup')).toBeVisible();
+  await expect(page.locator('#characterToolsPopup .tools-panel.active .tools-card')).toBeVisible();
+
+  const geometry = await page.locator('#characterToolsPopup').evaluate(popup => {
+    const modal = popup.querySelector('.db-modal');
+    const modalRect = modal?.getBoundingClientRect() || null;
+    const grids = [...popup.querySelectorAll('.tools-panel.active .tools-grid.two-col')]
+      .filter(grid => grid.getBoundingClientRect().height > 0);
+    return {
+      modalWidth: modalRect?.width || 0,
+      modalLeft: modalRect?.left ?? -1,
+      modalRight: modalRect?.right ?? -1,
+      columns: grids.map(grid => (
+        window.getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length
+      )),
+      modalOverflow: modal ? modal.scrollWidth - modal.clientWidth : 1,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+    };
+  });
+  expect(geometry.modalWidth).toBeGreaterThanOrEqual(699);
+  expect(geometry.modalWidth).toBeLessThanOrEqual(701);
+  expect(geometry.modalLeft).toBeGreaterThanOrEqual(0);
+  expect(geometry.modalRight).toBeLessThanOrEqual(1280);
+  expect(geometry.columns.length).toBeGreaterThan(0);
+  expect(geometry.columns.every(columns => columns === 2)).toBe(true);
+  expect(geometry.modalOverflow).toBeLessThanOrEqual(0);
+  expect(geometry.pageOverflow).toBe(0);
+});
 
 test('toolbar popups use unified DAUB shell and shared choice markup', async ({ page }) => {
   await waitForApp(page, '/#/inventory');
@@ -231,7 +349,62 @@ test('dynamic and legacy-created popups close through the unified header close',
   await expect(charPopup).toBeHidden();
 });
 
-test('inventory manager shells and representative dialogs stay visually aligned', async ({ page }) => {
+test('surface-less drawers keep descendant clicks open and dismiss on their root backdrop', async ({ page }) => {
+  await waitForApp(page, '/#/index');
+
+  await page.evaluate(() => {
+    const drawer = document.createElement('aside');
+    drawer.id = 'surfaceLessDrawerFixture';
+    drawer.className = 'offcanvas';
+    drawer.style.cssText = 'position:fixed;top:24px;right:24px;width:240px;height:240px;padding:16px;';
+    drawer.innerHTML = '<button type="button" data-drawer-action>Byt flik</button>';
+    drawer.querySelector('[data-drawer-action]').addEventListener('click', () => {
+      drawer.dataset.actionCount = String((Number(drawer.dataset.actionCount) || 0) + 1);
+    });
+    document.body.appendChild(drawer);
+    window.registerOverlayElement?.(drawer);
+    window.popupManager?.register?.(drawer, {
+      type: 'form',
+      touchProfile: 'panel-right'
+    });
+    window.popupManager?.open?.(drawer, {
+      type: 'form',
+      touchProfile: 'panel-right'
+    });
+  });
+
+  const drawer = page.locator('#surfaceLessDrawerFixture');
+  await expect(drawer).toHaveClass(/open/);
+  await drawer.locator('[data-drawer-action]').click();
+  await expect(drawer).toHaveAttribute('data-action-count', '1');
+  await expect(drawer).toHaveClass(/open/);
+
+  const drawerBox = await drawer.boundingBox();
+  expect(drawerBox).not.toBeNull();
+  await drawer.click({
+    position: {
+      x: Math.max(1, drawerBox.width - 8),
+      y: Math.max(1, drawerBox.height - 8)
+    }
+  });
+  await expect(drawer).not.toHaveClass(/open/);
+  await expect(drawer).toHaveAttribute('aria-hidden', 'true');
+
+  await page.evaluate(() => {
+    const fixture = document.getElementById('surfaceLessDrawerFixture');
+    if (!fixture) return;
+    window.popupManager?.open?.(fixture, {
+      type: 'form',
+      touchProfile: 'panel-right'
+    });
+  });
+  await expect(drawer).toHaveClass(/open/);
+  await drawer.evaluate(element => element.click());
+  await expect(drawer).not.toHaveClass(/open/);
+  await expect(drawer).toHaveAttribute('aria-hidden', 'true');
+});
+
+test('inventory manager shells and representative dialogs stay visually aligned', async ({ page }, testInfo) => {
   await waitForApp(page, '/#/inventory');
   await seedInventoryFixtures(page);
 
@@ -239,38 +412,64 @@ test('inventory manager shells and representative dialogs stay visually aligned'
     window.openCharacterToolsPopup?.('generate');
   });
   await expect(page.locator('#characterToolsPopup')).toBeVisible();
-  await expect(page.locator('#characterToolsPopup .db-modal')).toHaveScreenshot('character-tools-shell.png');
+  await expectPortablePopupScreenshot(
+    page.locator('#characterToolsPopup .db-modal'),
+    'character-tools-shell.png',
+    testInfo
+  );
   await page.locator('#characterToolsPopup .db-modal__close').click();
   await expect(page.locator('#characterToolsPopup')).toBeHidden();
 
   await page.locator('#manageItemsBtn').click();
   await expect(page.locator('#inventoryItemsPopup')).toBeVisible();
-  await expect(page.locator('#inventoryItemsPopup .db-modal')).toHaveScreenshot('inventory-items-custom.png');
+  await expectPortablePopupScreenshot(
+    page.locator('#inventoryItemsPopup .db-modal'),
+    'inventory-items-custom.png',
+    testInfo
+  );
 
   await page.evaluate(() => {
     window.openInventoryItemsHub?.('vehicle-load');
   });
   await expect(page.locator('#inventoryItemsPopup')).toBeVisible();
-  await expect(page.locator('#inventoryItemsPopup .db-modal')).toHaveScreenshot('inventory-items-vehicle.png');
+  await expectPortablePopupScreenshot(
+    page.locator('#inventoryItemsPopup .db-modal'),
+    'inventory-items-vehicle.png',
+    testInfo
+  );
 
   await page.locator('#inventoryItemsPopup .db-modal__close').click();
   await expect(page.locator('#inventoryItemsPopup')).toBeHidden();
 
   await page.locator('#manageEconomyBtn').click();
   await expect(page.locator('#inventoryEconomyPopup')).toBeVisible();
-  await expect(page.locator('#inventoryEconomyPopup .db-modal')).toHaveScreenshot('inventory-economy-money.png');
+  await expectEconomyPanelReady(page, 'money', '#moneyStatus');
+  await expectPortablePopupScreenshot(
+    page.locator('#inventoryEconomyPopup .db-modal'),
+    'inventory-economy-money.png',
+    testInfo
+  );
 
   await page.evaluate(() => {
     window.openInventoryEconomyHub?.('bulk-price');
   });
   await expect(page.locator('#inventoryEconomyPopup')).toBeVisible();
-  await expect(page.locator('#inventoryEconomyPopup .db-modal')).toHaveScreenshot('inventory-economy-price.png');
+  await expectEconomyPanelReady(page, 'bulk-price', '#priceItemList');
+  await expectPortablePopupScreenshot(
+    page.locator('#inventoryEconomyPopup .db-modal'),
+    'inventory-economy-price.png',
+    testInfo
+  );
 
   await page.evaluate(() => {
     window.invUtil.openSaveFreePopup?.();
   });
   await expect(page.locator('#saveFreePopup')).toBeVisible();
-  await expect(page.locator('#saveFreePopup .db-modal')).toHaveScreenshot('inventory-dialog-sm.png');
+  await expectPortablePopupScreenshot(
+    page.locator('#saveFreePopup .db-modal'),
+    'inventory-dialog-sm.png',
+    testInfo
+  );
   await page.locator('#saveFreePopup .db-modal__close').click();
   await expect(page.locator('#saveFreePopup')).toBeHidden();
 
@@ -281,5 +480,9 @@ test('inventory manager shells and representative dialogs stay visually aligned'
     }
   });
   await expect(page.locator('#liveBuyPopup')).toBeVisible();
-  await expect(page.locator('#liveBuyPopup .db-modal')).toHaveScreenshot('inventory-dialog-md.png');
+  await expectPortablePopupScreenshot(
+    page.locator('#liveBuyPopup .db-modal'),
+    'inventory-dialog-md.png',
+    testInfo
+  );
 });

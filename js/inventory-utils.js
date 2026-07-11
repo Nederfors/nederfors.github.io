@@ -664,12 +664,20 @@
       window.daubMotion.destroySwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey]);
       return false;
     }
+    const swipeKey = INVENTORY_HUB_SWIPE_KEYS[hubKey];
+    const activeIndex = Math.max(0, def.tabs.indexOf(activeTab));
+    if (window.daubMotion.hasSwipeTabs?.(swipeKey)) {
+      window.daubMotion.slideTabsTo?.(swipeKey, activeIndex, { animate: false });
+      window.requestAnimationFrame(() => window.daubMotion.refreshSwipeTabs?.(swipeKey));
+      return true;
+    }
     window.daubMotion.bindSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey], {
       host: panelsHost,
       selector: '.tools-panel',
-      initialIndex: Math.max(0, def.tabs.indexOf(activeTab)),
+      initialIndex: activeIndex,
       onIndexChange(index) {
         const nextTab = def.tabs[index] || def.defaultTab;
+        if (hub?.dataset.activeTab === nextTab) return;
         openInventoryHubTab(nextTab);
       }
     });
@@ -1038,6 +1046,7 @@
         return {
           id: tabId,
           label: def.titlesByTabId[tabId] || tabId,
+          panelClassName: 'inventory-hub-panel',
           build(panel) {
             panel.innerHTML = renderInventoryHubViewContent(sectionId);
             const section = panel.querySelector(`#${sectionId}`);
@@ -1047,6 +1056,7 @@
       }),
       ariaLabel: hubKey === 'items' ? 'Hantera föremål' : 'Hantera ekonomi',
       idPrefix: `${hubKey}Manager`,
+      panelsClassName: 'inventory-hub-panels',
       onTabChange(nextTab) {
         openInventoryHubTab(nextTab);
       }
@@ -1137,7 +1147,6 @@
       if (key !== hubKey) closeInventoryHub(key);
     });
     syncInventoryHubState();
-    syncInventoryHubSwipeTabs(hubKey, resolvedTab);
     setInventoryHubTab(hubKey, resolvedTab, { syncTouch: false });
     if (!hub.__hubSession) {
       hub.__hubSession = createPopupSession(hub, {
@@ -1159,6 +1168,7 @@
         }
       });
     }
+    const hasSwipeTabs = syncInventoryHubSwipeTabs(hubKey, resolvedTab);
     const inner = hub.querySelector(':scope > .popup-inner');
     if (inner) inner.scrollTop = 0;
     syncInventoryMotionTargets();
@@ -1168,6 +1178,16 @@
     }
     if (activateView) {
       openInventoryHubTab(resolvedTab);
+    }
+    if (hasSwipeTabs) {
+      window.requestAnimationFrame(() => {
+        window.daubMotion?.slideTabsTo?.(
+          INVENTORY_HUB_SWIPE_KEYS[hubKey],
+          Math.max(0, def.tabs.indexOf(resolvedTab)),
+          { animate: false }
+        );
+        window.daubMotion?.refreshSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey]);
+      });
     }
     return hub;
   }

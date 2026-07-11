@@ -6,15 +6,13 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const dataDir = path.join(repoRoot, 'data');
-
-const SKIP_FILES = new Set([
-  'all.json',
-  'struktur.json',
-  'ai-plugin.json',
-  'legacy-import-map.json',
-  'pdf-list.json',
-  'tabeller.json'
-]);
+const catalogContract = JSON.parse(
+  fs.readFileSync(path.join(repoRoot, 'config', 'catalog-files.json'), 'utf8')
+);
+const ENTRY_DATA_FILES = Array.isArray(catalogContract.entryDataFiles)
+  ? catalogContract.entryDataFiles
+  : [];
+const ENTRY_DATA_FILE_SET = new Set(ENTRY_DATA_FILES);
 
 const ROOT_FIELD_ORDER = [
   'id',
@@ -414,15 +412,16 @@ function getTargetFiles(args) {
   const requested = args.filter(Boolean);
   if (requested.length) {
     return requested.map((name) => {
-      if (path.isAbsolute(name)) return name;
       const normalized = String(name).startsWith('data/') ? String(name).slice(5) : String(name);
-      return path.join(dataDir, normalized);
+      const fullPath = path.isAbsolute(name) ? name : path.join(dataDir, normalized);
+      const fileName = path.basename(fullPath);
+      if (!ENTRY_DATA_FILE_SET.has(fileName) || path.dirname(fullPath) !== dataDir) {
+        throw new Error(`${name} is not classified as an authored entry catalog`);
+      }
+      return fullPath;
     });
   }
-  return fs.readdirSync(dataDir)
-    .filter((name) => name.endsWith('.json'))
-    .filter((name) => !SKIP_FILES.has(name))
-    .map((name) => path.join(dataDir, name));
+  return ENTRY_DATA_FILES.map((name) => path.join(dataDir, name));
 }
 
 function main() {

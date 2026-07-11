@@ -120,11 +120,15 @@ test('damage type tabs hydrate table data without loading all.json', async ({ pa
     window.handleIndexSearchTerm?.('Bärsärk', { scroll: false });
   });
   await page.locator('#lista li.entry-card[data-name="Bärsärk"] button[data-info]').click();
-  await page.locator('#yrkePanel.open .info-tab[data-tab="skadetyp"]').click();
+  const damageTab = page.locator('#yrkePanel.open .info-tab[data-tab="skadetyp"]');
+  await damageTab.click();
+  await expect(damageTab).toHaveClass(/active/);
 
-  await expect(page.locator('#yrkePanel.open [data-tab-panel="skadetyp"]')).toContainText('Skadetyper och penetrering');
-  await expect(page.locator('#yrkePanel.open [data-tab-panel="skadetyp"]')).toContainText('Rustningar');
-  await expect(page.locator('#yrkePanel.open [data-tab-panel="skadetyp"]')).toContainText('Skyddar');
+  const damagePanel = page.locator('#yrkePanel.open .skadetyp-panel');
+  await expect(damagePanel).toBeVisible();
+  await expect(damagePanel).toContainText('Skadetyper och penetrering');
+  await expect(damagePanel).toContainText('Rustningar');
+  await expect(damagePanel).toContainText('Skyddar');
 
   expect([...new Set(requests)]).toEqual(expect.arrayContaining([
     'data/index-catalog.json',

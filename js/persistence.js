@@ -197,15 +197,6 @@ function getFolderRows(folders = []) {
     }));
 }
 
-function getCharacterStateRows(data = {}, allowedIds = null) {
-  return Object.entries(data && typeof data === 'object' ? data : {})
-    .filter(([id, value]) => id && value && (!allowedIds || allowedIds.has(id)))
-    .map(([id, value]) => ({
-      id,
-      state: cloneValue(value)
-    }));
-}
-
 function getCharacterFieldRows(data = {}, allowedIds = null) {
   return Object.entries(data && typeof data === 'object' ? data : {})
     .filter(([id, value]) => id && value && typeof value === 'object' && (!allowedIds || allowedIds.has(id)))

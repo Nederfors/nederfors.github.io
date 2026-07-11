@@ -218,7 +218,6 @@
       "levels": {
         "Enkel": {
           "actions": "Speciell",
-          "tests": [],
           "damage_type": ""
         }
       }

@@ -101,7 +101,7 @@ page.on('response', response => {
 await page.addInitScript(() => {
   window.__symbaroumLongTasks = [];
   try {
-    const observer = new PerformanceObserver(list => {
+    const observer = new window.PerformanceObserver(list => {
       list.getEntries().forEach(entry => {
         window.__symbaroumLongTasks.push({
           name: entry.name,

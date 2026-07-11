@@ -1,0 +1,89 @@
+/* Styles owned by <shared-toolbar>; do not import the full app CSS here. */
+:host { color: var(--txt, #fff3e4); font: 500 1rem/1.45 var(--db-font-ui, system-ui, sans-serif); }
+*, *::before, *::after { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; }
+button, .db-btn, .char-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: .5rem .8rem; border: 1px solid var(--db-color-border, var(--border, #3e342e)); border-radius: .65rem; background: var(--db-color-bg-alt, var(--border, #3a312a)); color: var(--db-color-text, var(--txt, #fff3e4)); cursor: pointer; text-decoration: none; }
+.db-btn:hover, .char-btn:hover { border-color: var(--db-color-accent, var(--accent, #b97a52)); }
+.db-btn:disabled, .char-btn:disabled { cursor: wait; opacity: .58; }
+.db-btn--danger { background: var(--db-color-error, #a83830); color: #fff; }
+.db-btn--secondary { background: transparent; }
+.db-btn--icon { min-width: 2.5rem; padding-inline: .5rem; }
+.db-input, input, select, textarea { width: 100%; min-height: 2.5rem; padding: .45rem .6rem; border: 1px solid var(--db-color-border, var(--border, #3e342e)); border-radius: .6rem; background: var(--db-color-surface, var(--panel, #231e1a)); color: inherit; }
+.db-card { border: 1px solid var(--db-color-border, var(--card-border, #3e342e)); border-radius: .85rem; background: var(--db-color-surface, var(--card, #231e1a)); box-shadow: var(--db-shadow-1, 0 8px 22px rgba(0, 0, 0, .22)); }
+.card-list, .toggle-list, .summary-list { margin: 0; padding: 0; list-style: none; }
+.filter-group, .char-btn-row, .offline-controls-row { margin: .65rem 0; }
+.filter-group > label { display: block; margin-bottom: .3rem; color: var(--subtxt, #bcae9e); }
+.char-btn-row .db-btn { width: 100%; }
+.offline-status { margin: .2rem 0 .45rem; color: var(--subtxt, #bcae9e); font-size: .84rem; }
+.toggle-list { display: grid; gap: .55rem; }
+.toggle-list > li { display: flex; align-items: center; justify-content: space-between; gap: .65rem; }
+.party-toggle { min-width: 2.5rem; }
+.db-drawer--structured, .db-modal-overlay.popup { position: fixed; inset: 0; z-index: 1200; display: none; background: var(--db-color-overlay, rgba(8, 4, 2, .68)); }
+.db-drawer--structured.open, .db-drawer--structured.db-drawer--open, .db-modal-overlay.popup.open { display: block; }
+.db-drawer__panel { position: absolute; inset: 0 0 0 auto; z-index: 1; width: min(28rem, 90vw); overflow: auto; padding: 1rem 1rem calc(5rem + env(safe-area-inset-bottom, 0px)); background: var(--db-color-surface, var(--panel, #231e1a)); box-shadow: -18px 0 48px rgba(0, 0, 0, .42); }
+.db-drawer__overlay { position: absolute; inset: 0; }
+.inv-header, .inv-actions, .button-row, .confirm-row { display: flex; align-items: center; gap: .55rem; }
+.inv-header { justify-content: space-between; margin-bottom: .8rem; }
+.inv-header h2, .inv-header h3 { margin: 0; }
+.filter-panel-stack, .filter-card-list { display: grid; gap: .65rem; }
+.filter-card-list > .db-card { padding: .8rem; }
+.card-title { font-weight: 700; }
+.card-desc { margin-top: .7rem; }
+.db-card.compact .card-desc { display: none; }
+.db-modal-overlay.popup.open { display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.db-modal-overlay .db-modal { width: min(38rem, 100%); max-height: min(85vh, 48rem); overflow: auto; padding: 1rem; border: 1px solid var(--db-color-border, var(--border, #3e342e)); border-radius: .9rem; background: var(--db-color-surface, var(--panel, #231e1a)); box-shadow: var(--db-shadow-3, 0 22px 60px rgba(0, 0, 0, .48)); }
+.summary-section { margin: 0 0 .8rem; }
+.summary-section h3 { margin: 0 0 .4rem; }
+@media (max-width: 640px) {
+  .db-drawer__panel { width: min(100%, 32rem); padding-inline: .75rem; }
+  button, .db-btn, .char-btn { min-height: 2.75rem; }
+  #searchField { height: 44px; min-height: 44px; }
+}
+@media (pointer: coarse) {
+  button, .db-btn, .char-btn, input, select, textarea, .party-toggle, .suggestions .item {
+    min-height: 44px;
+  }
+  #searchField {
+    height: 44px;
+    min-height: 44px;
+  }
+}
+
+/* The inventory hubs live inside this shadow root, so the global motion
+   stylesheet cannot provide Swiper's layout contract here. Keep every slide
+   measurable while Swiper owns which full-width panel is in view. */
+.daub-swipe-tabs {
+  min-width: 0;
+  overflow: hidden;
+}
+.daub-swipe-tabs > .swiper-wrapper {
+  display: flex;
+  align-items: stretch;
+}
+.daub-swipe-tabs > .swiper-wrapper > .swiper-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel,
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel.active,
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel[hidden] {
+  display: block !important;
+}
+.inventory-hub-panels[data-swipe-tabs="1"] > .swiper-wrapper {
+  align-items: flex-start;
+}
+
+/* Preserve the full Swedish navigation labels at the 320px support floor.
+   Reclaim padding instead of reducing the already-compact label text. */
+@media (max-width: 340px) {
+  .toolbar.db-bottom-nav {
+    padding-inline: .5rem;
+  }
+
+  .toolbar .db-bottom-nav__item {
+    padding-inline: 0;
+  }
+}

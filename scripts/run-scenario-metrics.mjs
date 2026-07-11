@@ -544,6 +544,8 @@ async function prepareCharacterListEntry(page, options = {}) {
   }, options);
 }
 
+// Retained for targeted artifact-removal profiling runs.
+// eslint-disable-next-line no-unused-vars
 async function prepareCharacterArtifactRemove(page) {
   return page.evaluate(async () => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
@@ -698,6 +700,8 @@ async function prepareIndexInventoryEntry(page, options = {}) {
   }, options);
 }
 
+// Retained for targeted multi-entry profiling runs.
+// eslint-disable-next-line no-unused-vars
 async function pickMultiListEntryName(page) {
   return page.evaluate(() => {
     const entry = (window.DB || []).find((candidate) => (

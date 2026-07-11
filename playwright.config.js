@@ -7,11 +7,16 @@ export default defineConfig({
   expect: {
     timeout: 5000
   },
-  fullyParallel: true,
+  // The app and service-worker suites share one static server. Keeping files
+  // sequential within a worker avoids the connection collapse seen when the
+  // complete four-browser matrix starts every scenario at once.
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  workers: process.env.CI ? 1 : 2,
+  reporter: process.env.CI
+    ? [['line'], ['html', { open: 'never' }]]
+    : 'html',
   use: {
     actionTimeout: 0,
     baseURL: 'http://127.0.0.1:4186',
@@ -28,16 +33,17 @@ export default defineConfig({
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 16'] } 
+      use: { ...devices['iPhone 15'] }
     },
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 9'] }
+      use: { ...devices['Pixel 7'] }
     }
   ],
   webServer: {
     command: 'python3 -m http.server 4186 --bind 127.0.0.1 --directory dist',
     port: 4186,
-    reuseExistingServer: false
+    reuseExistingServer: false,
+    timeout: 120 * 1000
   }
 });

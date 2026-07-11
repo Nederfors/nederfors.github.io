@@ -53,6 +53,13 @@ shared-toolbar {
   display: block;
 }
 
+.offline-status {
+  margin: .15rem 0 .35rem;
+  color: var(--subtxt);
+  font-size: .84rem;
+  line-height: 1.35;
+}
+
 .db-sr-only {
   position: absolute !important;
   width: 1px !important;
@@ -2212,6 +2219,76 @@ input:focus, select:focus, textarea:focus {
   gap: .35rem;
   position: relative;
   transition: outline .1s ease, outline-offset .1s ease, box-shadow .1s ease;
+}
+
+@supports (content-visibility: auto) {
+  .cat-group > .db-accordion__item[open] .entry-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 5rem;
+  }
+}
+
+/* Release viewport guarantees: inventory controls reflow instead of clipping. */
+@media (max-width: 420px) {
+  .inventory-panel .panel-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: .65rem;
+  }
+
+  .inventory-panel .panel-header > .db-card__title {
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .inventory-panel .panel-header .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    margin-left: 0;
+    gap: .5rem;
+  }
+
+  .inventory-panel .panel-header .header-actions > :is(.db-btn, button) {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    white-space: normal;
+  }
+
+  .inventory-panel .inv-dash-float-btn {
+    position: static;
+    inset: auto;
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 44px;
+  }
+}
+
+@media (max-width: 340px) {
+  .inventory-panel .panel-header .header-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inventory-panel .inv-dash-float-btn {
+    grid-column: auto;
+  }
+}
+
+/* Touch target sizing follows input capability, including touch tablets. */
+@media (pointer: coarse) {
+  :where(button, [role='button'], a.db-btn, a.traits-tab, input:not([type='hidden']), select, .trait-count, .summary-chip-more) {
+    min-height: 44px;
+  }
+
+  :where(.trait-count, .summary-chip-more) {
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .entry-card-summary {

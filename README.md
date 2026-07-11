@@ -1,6 +1,6 @@
 # Symbapedia
 
-Symbapedia är nu en shell-baserad webbapp för Symbaroum. `index.html` bootar appen, och vyerna körs som rutter under samma entrypoint: `#/index`, `#/character`, `#/inventory`, `#/traits`, `#/summary`, `#/effects` och `#/notes`.
+Symbapedia är en centralt publicerad PWA för Symbaroum. Spelare använder och installerar den från [https://nederfors.github.io/](https://nederfors.github.io/); nya versioner publiceras därifrån utan att spelarna behöver klona repot, bygga appen eller köra en egen webbserver. `index.html` bootar appen, och vyerna körs som rutter under samma entrypoint: `#/index`, `#/character`, `#/inventory`, `#/traits`, `#/summary`, `#/effects` och `#/notes`.
 
 ## Innehåll
 - [Kom igång](#kom-igång)
@@ -13,12 +13,17 @@ Symbapedia är nu en shell-baserad webbapp för Symbaroum. `index.html` bootar a
 - [Dataflöde för utveckling](#dataflöde-för-utveckling)
 
 ## Kom igång
+
+För att använda appen, öppna [https://nederfors.github.io/](https://nederfors.github.io/) i webbläsaren. Den kan installeras som en PWA från webbläsarens meny. Appkod och regeldata uppdateras från den centralt publicerade webbplatsen; rollpersoner och andra personliga uppgifter sparas lokalt i spelarens webbläsare.
+
+För lokal utveckling:
+
 1. Klona eller ladda ner repot.
 2. Kör `npm install`.
 3. Kör `npm run dev` och öppna adressen som skrivs ut.
 4. Alternativt: kör `npm run build` följt av `npm run preview`.
 
-Allt körs lokalt i webbläsaren och sparas i `localStorage`.
+Den lokala servern behövs bara för utveckling och release-testning. Den publicerade PWA:n körs i spelarens webbläsare och sparar personliga data lokalt.
 
 ## Hur allt hänger ihop
 
@@ -301,11 +306,11 @@ python3 scripts/build_all.py --strict
 npm run lint
 npm run test:unit
 npm run build
-osascript -l JavaScript scripts/verify_rules_helper.js
+npm run verify:rules
 ```
 
 Appen byggs via Vite från repo-roten. `npm run build` genererar legacy-bundles och PWA-ikoner, och kör sedan `scripts/sync_static_assets.py`, som återskapar `.generated-public/` från utvalda statiska assets, data, PDF:er, manifestet och service workern.
 
-`npm run test:unit` kör den portabla Vitest-sviten för regler/helper-logik. `osascript -l JavaScript scripts/verify_rules_helper.js` finns kvar som den äldre, macOS-specifika regressionssviten. För bundle-inspektion kan du köra `npm run build:analyze`, som skriver `dist/bundle-analysis.html`.
+`npm run test:unit` kör den portabla Vitest-sviten för regler/helper-logik. `npm run verify:rules` kör samtliga äldre regelgrupper via Node och fungerar både lokalt och på Ubuntu-runnern i CI. För bundle-inspektion kan du köra `npm run build:analyze`, som skriver `dist/bundle-analysis.html`.
 
 Förslag och förbättringar tas via pull requests.

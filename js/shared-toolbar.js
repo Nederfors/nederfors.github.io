@@ -24,9 +24,8 @@ const removeToolbarUiPref = (key) => {
     toolbarUiPrefsStorage?.removeItem?.(key);
   } catch {}
 };
-const SHADOW_STYLESHEET_HREF = window.__symbaroumAssetMode === 'production'
-  ? 'css/shadow.css'
-  : 'css/style.css';
+const SHADOW_STYLESHEET_HREF = 'css/toolbar-shadow.css';
+const POPUP_STYLESHEET_HREF = 'css/popup-shell.css';
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 const LEVEL_OPTION_SPECS = Object.freeze([
@@ -364,6 +363,11 @@ class SharedToolbar extends HTMLElement {
     this._filterFirstOpenHandled = false;
     this._keyboardLikelyVisible = false;
     this._keyboardVisibilityTimer = null;
+    this._offlineUnsubscribe = null;
+    this._offlineDocumentCount = 0;
+    this._accessibilityObserver = null;
+    this._searchKeyTarget = null;
+    this._searchKeyHandler = null;
   }
 
   /* ------------------------------------------------------- */
@@ -373,6 +377,10 @@ class SharedToolbar extends HTMLElement {
     window.DAUB?.init?.(this.shadowRoot);
     window.autoResizeAll?.(this.shadowRoot);
     this.bindPopupManager();
+    this.bindOfflineControls();
+    this.bindAccessibilityState();
+    this._overlayKeyHandler = event => this.handleOverlayKeydown(event);
+    this.shadowRoot.addEventListener('keydown', this._overlayKeyHandler);
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
@@ -604,6 +612,17 @@ class SharedToolbar extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._offlineUnsubscribe?.();
+    this._offlineUnsubscribe = null;
+    this._accessibilityObserver?.disconnect();
+    this._accessibilityObserver = null;
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      this._searchKeyTarget.removeEventListener('keydown', this._searchKeyHandler, true);
+    }
+    this._searchKeyTarget = null;
+    this._searchKeyHandler = null;
+    if (this._overlayKeyHandler) this.shadowRoot?.removeEventListener('keydown', this._overlayKeyHandler);
+    this._overlayKeyHandler = null;
     this._toolbarResizeObserver?.disconnect();
     this._toolbarResizeObserver = null;
     this._vvCleanup?.forEach(cleanup => cleanup());
@@ -628,6 +647,191 @@ class SharedToolbar extends HTMLElement {
     this._toolbarElement = null;
     this._largeViewportHeight = null;
     document.removeEventListener('click', this._outsideHandler);
+  }
+
+  formatOfflineBytes(bytes) {
+    const value = Number(bytes) || 0;
+    if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} kB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  updateOfflineControls(detail = {}) {
+    const status = this.shadowRoot?.getElementById('offlineStatus');
+    const warmButton = this.shadowRoot?.getElementById('offlineRulesBtn');
+    const clearButton = this.shadowRoot?.getElementById('clearOfflineDocuments');
+    if (!status || !warmButton || !clearButton) return;
+
+    if (Number.isFinite(Number(detail.documents))) {
+      this._offlineDocumentCount = Math.max(0, Number(detail.documents));
+    }
+    const documentCount = this._offlineDocumentCount;
+    clearButton.disabled = documentCount === 0;
+    clearButton.textContent = documentCount
+      ? `Rensa ${documentCount} hämtad${documentCount === 1 ? '' : 'e'} PDF`
+      : 'Inga hämtade PDF:er';
+
+    if (detail.type === 'OFFLINE_RULES_PROGRESS') {
+      status.textContent = `Förbereder offline-regler: ${detail.completed || 0}/${detail.total || 0}`;
+      warmButton.disabled = true;
+      warmButton.textContent = 'Förbereder offline…';
+      return;
+    }
+    if (detail.type === 'OFFLINE_RULES_ERROR' || detail.status === 'error' || detail.status === 'timeout') {
+      status.textContent = 'Offline-regler kunde inte uppdateras. Försök igen när du är online.';
+      warmButton.disabled = false;
+      warmButton.textContent = 'Försök igen offline';
+      return;
+    }
+    if (detail.status === 'ready' || detail.rules?.revision) {
+      const size = this.formatOfflineBytes(detail.rules?.totalBytes);
+      status.textContent = `Offline-regler är redo (${detail.rules?.total || 0} filer, ${size}).`;
+      warmButton.disabled = false;
+      warmButton.textContent = 'Uppdatera offline-regler';
+      return;
+    }
+    status.textContent = 'Offline-regler förbereds automatiskt efter att appen har startat.';
+    warmButton.disabled = false;
+    warmButton.textContent = 'Förbered offline-regler';
+  }
+
+  bindOfflineControls() {
+    const offline = window.symbaroumOffline;
+    if (!offline) {
+      this.updateOfflineControls({ status: 'unavailable' });
+      return;
+    }
+    this._offlineUnsubscribe?.();
+    this._offlineUnsubscribe = offline.subscribe(detail => this.updateOfflineControls(detail));
+    offline.getStatus().then(detail => this.updateOfflineControls(detail));
+  }
+
+  bindAccessibilityState() {
+    this._accessibilityObserver?.disconnect();
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      this._searchKeyTarget.removeEventListener('keydown', this._searchKeyHandler, true);
+    }
+
+    const search = this.shadowRoot?.getElementById('searchField');
+    const suggestions = this.shadowRoot?.getElementById('searchSuggest');
+    const partyButtons = [
+      this.shadowRoot?.getElementById('partySmith'),
+      this.shadowRoot?.getElementById('partyAlchemist'),
+      this.shadowRoot?.getElementById('partyArtefacter')
+    ].filter(Boolean);
+
+    const syncSearch = () => {
+      if (!search || !suggestions) return;
+      const options = Array.from(suggestions.querySelectorAll('.item'));
+      const expanded = !suggestions.hidden && options.length > 0;
+      search.setAttribute('aria-expanded', String(expanded));
+      options.forEach((option, index) => {
+        option.id = `searchSuggestOption-${index}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', String(option.classList.contains('active')));
+      });
+      const active = options.find(option => option.classList.contains('active'));
+      if (expanded && active) search.setAttribute('aria-activedescendant', active.id);
+      else search.removeAttribute('aria-activedescendant');
+    };
+
+    this._searchKeyTarget = search || null;
+    this._searchKeyHandler = search
+      ? event => this.handleSearchComboboxKeydown(event)
+      : null;
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      // Capture on the input before the legacy raw-submit listener. An active
+      // option owns Enter; with no active option the event continues unchanged.
+      this._searchKeyTarget.addEventListener('keydown', this._searchKeyHandler, true);
+    }
+
+    const syncPartyButtons = () => {
+      partyButtons.forEach(button => {
+        button.setAttribute('aria-pressed', String(button.classList.contains('active')));
+      });
+    };
+
+    this._accessibilityObserver = new MutationObserver(() => {
+      syncSearch();
+      syncPartyButtons();
+    });
+    if (suggestions) {
+      this._accessibilityObserver.observe(suggestions, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['class', 'hidden']
+      });
+    }
+    partyButtons.forEach(button => {
+      this._accessibilityObserver.observe(button, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    });
+    syncSearch();
+    syncPartyButtons();
+  }
+
+  handleSearchComboboxKeydown(event) {
+    if (event?.key !== 'Enter') return false;
+    const search = this.shadowRoot?.getElementById('searchField');
+    if (!search || event.target !== search) return false;
+
+    const suggestions = this.shadowRoot?.getElementById('searchSuggest');
+    const activeOption = suggestions && !suggestions.hidden
+      ? suggestions.querySelector('.item.active')
+      : null;
+    if (!activeOption) return false;
+
+    const selectActive = window.globalSearch?.selectActiveSuggestion;
+    if (typeof selectActive !== 'function') return false;
+    let selected = false;
+    try {
+      selected = Boolean(selectActive.call(window.globalSearch));
+    } catch {
+      return false;
+    }
+    if (!selected) return false;
+
+    event.preventDefault?.();
+    // The legacy listener is on the same input and submits the raw query. Stop
+    // it only after the active option has been selected successfully.
+    event.stopImmediatePropagation?.();
+    search.focus?.({ preventScroll: true });
+    return true;
+  }
+
+  handleOverlayKeydown(event) {
+    if (event.key !== 'Tab') return;
+    const historyTop = window.peekTopOverlay?.();
+    const top = historyTop instanceof HTMLElement && this.shadowRoot.contains(historyTop)
+      ? historyTop
+      : Array.from(this.shadowRoot.querySelectorAll('.popup.open, .offcanvas.open')).at(-1);
+    if (!(top instanceof HTMLElement)) return;
+    const surface = top.querySelector('.popup-inner, .db-modal, .db-drawer__panel') || top;
+    const focusable = Array.from(surface.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+    )).filter(element => (
+      !element.closest('[inert]')
+      && element.getAttribute('aria-hidden') !== 'true'
+      && window.getComputedStyle(element).visibility !== 'hidden'
+      && window.getComputedStyle(element).display !== 'none'
+      && element.getClientRects().length > 0
+    ));
+    if (!focusable.length) return;
+    const active = this.shadowRoot.activeElement;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!active || !top.contains(active)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll: true });
+    } else if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
   }
 
   /* ------------------------------------------------------- */
@@ -1265,15 +1469,22 @@ class SharedToolbar extends HTMLElement {
           height: 1.15em;
           margin: 0 .25em 0 0;
         }
+        @media (max-width: 640px), (pointer: coarse) {
+          #searchField {
+            height: 44px;
+            min-height: 44px;
+          }
+        }
       </style>
       <link rel="stylesheet" href="${SHADOW_STYLESHEET_HREF}">
+      <link rel="stylesheet" href="${POPUP_STYLESHEET_HREF}">
       <!-- ---------- Verktygsrad ---------- -->
       <nav class="toolbar db-bottom-nav db-bottom-nav--always" aria-label="Primär navigering">
         <div class="toolbar-top">
           <button id="catToggle" class="db-btn db-btn--icon chevron-toggle" title="Minimera alla kategorier"><span class="chevron-icon"></span></button>
           <div class="search-wrap db-search" role="search">
-            <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off">
-            <div id="searchSuggest" class="suggestions" hidden></div>
+            <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest">
+            <div id="searchSuggest" class="suggestions" role="listbox" aria-label="Sökförslag" hidden></div>
           </div>
           <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
         </div>
@@ -1344,6 +1555,13 @@ class SharedToolbar extends HTMLElement {
               <div class="char-btn-row">
                 <button id="checkForUpdates" class="db-btn">Uppdatera appen</button>
               </div>
+              <div class="char-btn-row offline-controls-row">
+                <button id="offlineRulesBtn" class="db-btn">Förbered offline-regler</button>
+              </div>
+              <p id="offlineStatus" class="offline-status" role="status">Offline-regler förbereds automatiskt efter att appen har startat.</p>
+              <div class="char-btn-row offline-controls-row">
+                <button id="clearOfflineDocuments" class="db-btn db-btn--secondary" disabled>Inga hämtade PDF:er</button>
+              </div>
               <div class="char-btn-row">
                 <button id="deleteChar" class="db-btn db-btn--danger">Radera rollperson</button>
               </div>
@@ -1359,19 +1577,19 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle icon-only">${icon('smithing')}</button>
+                    <button id="partySmith" class="party-toggle icon-only" type="button" aria-label="Smed i partyt" aria-pressed="false" title="Ställ in smed i partyt">${icon('smithing')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Alkemist i partyt?</span>
                     </span>
-                    <button id="partyAlchemist" class="party-toggle icon-only">${icon('alkemi')}</button>
+                    <button id="partyAlchemist" class="party-toggle icon-only" type="button" aria-label="Alkemist i partyt" aria-pressed="false" title="Ställ in alkemist i partyt">${icon('alkemi')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Artefaktmakare i partyt?</span>
                     </span>
-                    <button id="partyArtefacter" class="party-toggle icon-only">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
+                    <button id="partyArtefacter" class="party-toggle icon-only" type="button" aria-label="Artefaktmakare i partyt" aria-pressed="false" title="Ställ in artefaktmakare i partyt">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
                   </li>
                   ${renderFilterSwitchRow({
                     id: 'filterUnion',
@@ -2225,6 +2443,55 @@ class SharedToolbar extends HTMLElement {
       return;
     }
 
+    if (btn.id === 'offlineRulesBtn') {
+      if (!window.symbaroumOffline) {
+        window.toast?.('Offline-funktionen är inte tillgänglig.');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Förbereder offline…';
+      window.symbaroumOffline.retryRules()
+        .then(result => {
+          this.updateOfflineControls(result);
+          if (result?.ok) window.toast?.('Offline-reglerna är uppdaterade.');
+        })
+        .catch(error => {
+          console.error('Offline rules update failed', error);
+          this.updateOfflineControls({ status: 'error' });
+        })
+        .finally(() => {
+          const current = this.shadowRoot?.getElementById('offlineRulesBtn');
+          if (current && current.textContent === 'Förbereder offline…') {
+            current.disabled = false;
+            current.textContent = originalText;
+          }
+        });
+      return;
+    }
+
+    if (btn.id === 'clearOfflineDocuments') {
+      if (!window.symbaroumOffline || !window.confirm('Rensa alla PDF:er som har hämtats för offline-läsning?')) return;
+      const previousDocumentCount = this._offlineDocumentCount;
+      btn.disabled = true;
+      window.symbaroumOffline.clearDocuments()
+        .then(result => {
+          if (result?.ok) {
+            this.updateOfflineControls(result);
+            window.toast?.('Hämtade PDF:er har rensats.');
+          } else {
+            this.updateOfflineControls({ documents: previousDocumentCount });
+            window.toast?.('Kunde inte rensa hämtade PDF:er.');
+          }
+        })
+        .catch(error => {
+          console.error('Offline document cleanup failed', error);
+          this.updateOfflineControls({ documents: previousDocumentCount });
+          window.toast?.('Kunde inte rensa hämtade PDF:er.');
+        });
+      return;
+    }
+
     if (btn.id === 'collapseAllFilters') {
       const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(#invSpendCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
@@ -2354,7 +2621,7 @@ class SharedToolbar extends HTMLElement {
   setPanelState(panel, isOpen, trigger = null) {
     if (!panel) return;
     const surface = panel.querySelector('.db-drawer__panel') || panel;
-    const wasOpen = panel.classList.contains('open');
+    const wasOpen = panel.classList.contains('open') || panel.getAttribute('aria-hidden') === 'false';
     panel.classList.toggle('open', isOpen);
     panel.classList.toggle('db-drawer--open', isOpen);
     panel.setAttribute('aria-hidden', String(!isOpen));
@@ -2362,6 +2629,7 @@ class SharedToolbar extends HTMLElement {
     if (isOpen) {
       panel.removeAttribute('inert');
       panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
+      window.registerOverlayCleanup?.(panel, () => this.setPanelState(panel, false));
       surface.scrollTop = 0;
       requestAnimationFrame(() => {
         const focusTarget = surface.querySelector(
@@ -2373,6 +2641,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     panel.setAttribute('inert', '');
+    window.registerOverlayCleanup?.(panel, null);
     const restoreFocus = panel._restoreFocus;
     panel._restoreFocus = null;
     if (wasOpen && restoreFocus?.isConnected) {

@@ -21,6 +21,9 @@ body.app-shell .popup[data-touch-profile="sheet-down"] .inventory-hub-ui {
 }
 
 .daub-swipe-tabs > .swiper-wrapper > .swiper-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -36,6 +39,9 @@ body.app-shell .popup[data-touch-profile="sheet-down"] .inventory-hub-ui {
 
 .traits-tab-panels[data-swipe-tabs="1"] .traits-tab-panel {
   display: flex !important;
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
   flex-direction: column;
   min-height: 0;
   animation: none;
@@ -52,12 +58,13 @@ body.app-shell .popup[data-touch-profile="sheet-down"] .inventory-hub-ui {
 
 .inventory-hub-panels[data-swipe-tabs="1"] > .swiper-wrapper {
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel,
-.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel.active {
-  display: block;
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel.active,
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel[hidden] {
+  display: block !important;
 }
 
 .inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel {

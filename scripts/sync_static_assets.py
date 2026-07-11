@@ -14,21 +14,14 @@ ICON_EXCLUDES = {"background.svg", "grain.svg", "icon_DA", ".DS_Store"}
 JS_FILES = (
     "js/vendor/daub.js",
     "js/vendor/ssr-window.js",
+    "js/elite-add.js",
     "js/pdf-library.js",
     "js/character-generator.js",
     "js/tabell-popup.js",
 )
+CSS_FILES = ("css/toolbar-shadow.css", "css/popup-shell.css")
 JS_DIRS = ("js/legacy",)
 STATIC_DIRS = ("data", "icons", "pdf")
-SHADOW_CSS_SOURCES = (
-    ("node_modules/daub-ui/daub.css", "daub"),
-    "css/theme.css",
-    "css/components.css",
-    "css/daub-bridges.css",
-    "css/overlays.css",
-    "css/mobile.css",
-    "css/motion.css",
-)
 
 
 def reset_staging_dir() -> None:
@@ -69,22 +62,6 @@ def copy_optional_tree(name: str) -> None:
     copy_tree(name)
 
 
-def build_shadow_stylesheet() -> None:
-    destination = STAGING_DIR / "css" / "shadow.css"
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    chunks = []
-    for item in SHADOW_CSS_SOURCES:
-        name, layer = item if isinstance(item, tuple) else (item, "")
-        source = ROOT_DIR / name
-        if not source.is_file():
-            raise FileNotFoundError(f"Missing stylesheet source: {source}")
-        contents = source.read_text(encoding='utf-8').strip()
-        if layer:
-            contents = f"@layer {layer} {{\n{contents}\n}}"
-        chunks.append(f"/* {name} */\n{contents}\n")
-    destination.write_text("\n".join(chunks), encoding="utf-8")
-
-
 def main() -> None:
     reset_staging_dir()
     for name in STATIC_DIRS:
@@ -93,7 +70,8 @@ def main() -> None:
         copy_optional_tree(name)
     for name in JS_FILES:
         copy_file(name)
-    build_shadow_stylesheet()
+    for name in CSS_FILES:
+        copy_file(name)
     for name in STATIC_FILES:
         copy_file(name)
     print(f"Rebuilt {STAGING_DIR.relative_to(ROOT_DIR).as_posix()} from root static assets.")

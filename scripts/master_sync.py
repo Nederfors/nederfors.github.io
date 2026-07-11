@@ -8,17 +8,18 @@ from _sync_utils import ROOT_DIR
 
 
 SCRIPT_SEQUENCE = [
-    ("Sync data manifest", "scripts/sync_data_manifest.py"),
-    ("Build service worker cache", "scripts/build_sw_cache.py"),
-    ("Update lampliga formagor", "scripts/update_lampliga_formagor.py"),
-    ("Build all.json", "scripts/build_all.py"),
-    ("Build struktur.json", "scripts/build_struktur.py"),
+    ("Sync data manifest", "scripts/sync_data_manifest.py", []),
+    ("Build service worker cache", "scripts/build_sw_cache.py", []),
+    ("Update lampliga formagor", "scripts/update_lampliga_formagor.py", []),
+    ("Build all.json", "scripts/build_all.py", ["--strict"]),
+    ("Build struktur.json", "scripts/build_struktur.py", ["--strict"]),
+    ("Build offline manifest", "scripts/build_offline_manifest.py", []),
 ]
 
 
-def run_step(label: str, script_path: str) -> None:
+def run_step(label: str, script_path: str, args: list[str]) -> None:
     print(f"[master-sync] {label}", flush=True)
-    subprocess.run([sys.executable, script_path], cwd=ROOT_DIR, check=True)
+    subprocess.run([sys.executable, script_path, *args], cwd=ROOT_DIR, check=True)
 
 
 def run_npm_build() -> None:
@@ -27,8 +28,8 @@ def run_npm_build() -> None:
 
 
 def main() -> None:
-    for label, script_path in SCRIPT_SEQUENCE:
-        run_step(label, script_path)
+    for label, script_path, args in SCRIPT_SEQUENCE:
+        run_step(label, script_path, args)
     run_npm_build()
     print("[master-sync] done", flush=True)
 

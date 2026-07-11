@@ -48,6 +48,39 @@ async function readCompletedAddScenario(page) {
   });
 }
 
+async function revealIndexTarget(page, query) {
+  const search = page.locator('shared-toolbar').locator('#searchField');
+  await search.fill(query);
+  await search.press('Enter');
+  await expect.poll(async () => page.locator('#lista button.add-btn:visible').count()).toBeGreaterThan(0);
+}
+
+async function revealIndexTargetByCategory(page, name) {
+  const category = await page.evaluate((entryName) => {
+    const entry = window.lookupEntry?.({ name: entryName })
+      || (window.DB || []).find(candidate => String(candidate?.namn || '').trim() === entryName)
+      || null;
+    return String(entry?.taggar?.typ?.[0] || '').trim();
+  }, name);
+  if (!category) throw new Error(`Unable to resolve the index category for ${name}.`);
+
+  const categories = page.locator('#lista details[data-cat]');
+  const categoryIndex = await categories.evaluateAll(
+    (details, categoryName) => details.findIndex(detail => detail.dataset.cat === categoryName),
+    category
+  );
+  if (categoryIndex < 0) throw new Error(`Unable to find the index category ${category}.`);
+
+  const details = categories.nth(categoryIndex);
+  if (!(await details.evaluate(element => element.open))) {
+    await details.locator(':scope > summary').click();
+  }
+  await expect.poll(async () => page.locator('#lista li.entry-card:visible, #lista li.card:visible').evaluateAll(
+    (cards, entryName) => cards.filter(card => String(card?.dataset?.name || '').trim() === entryName).length,
+    name
+  )).toBeGreaterThan(0);
+}
+
 async function clickProfileTarget(page, kind) {
   return page.evaluate((targetKind) => {
     const listTypes = new Set(['Förmåga', 'Basförmåga', 'Särdrag', 'Fördel', 'Nackdel', 'Mystisk kraft', 'Ritual']);
@@ -107,6 +140,7 @@ test('add-item profiling records staged breakdown for inventory adds', async ({ 
     window.symbaroumPerf?.clearHistory?.();
   });
 
+  await revealIndexTarget(page, 'Dubbel ringbrynja');
   const clicked = await clickProfileTarget(page, 'inventory');
   expect(clicked).toBeTruthy();
 
@@ -147,6 +181,7 @@ test('add-item profiling records incremental list adds without a full index rere
     window.symbaroumPerf?.clearHistory?.();
   });
 
+  await revealIndexTargetByCategory(page, 'Akrobatik');
   const clicked = await clickProfileTarget(page, 'list');
   expect(clicked).toBe('Akrobatik');
 

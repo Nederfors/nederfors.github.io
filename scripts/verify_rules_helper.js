@@ -1,18 +1,12 @@
-ObjC.import('Foundation');
-ObjC.import('stdlib');
-
-function unwrap(value) {
-  return ObjC.unwrap(value);
-}
+import fs from 'node:fs';
+import path from 'node:path';
 
 function joinPath(root, relativePath) {
-  return unwrap($(root).stringByAppendingPathComponent($(relativePath)));
+  return path.join(root, relativePath);
 }
 
-function readText(path) {
-  const text = $.NSString.stringWithContentsOfFileEncodingError($(path), $.NSUTF8StringEncoding, null);
-  if (!text) throw new Error(`Kunde inte läsa ${path}`);
-  return unwrap(text);
+function readText(filePath) {
+  return fs.readFileSync(filePath, 'utf8');
 }
 
 function assert(condition, message) {
@@ -155,12 +149,11 @@ function hasHardStopCode(stopResult, code) {
 }
 
 function listDataJsonFiles(rootPath) {
-  const dataPath = joinPath(rootPath, 'data');
-  const names = ObjC.deepUnwrap($.NSFileManager.defaultManager.contentsOfDirectoryAtPathError($(dataPath), null));
-  return (Array.isArray(names) ? names : [])
-    .filter(name => typeof name === 'string' && name.endsWith('.json'))
-    .filter(name => !['all.json', 'struktur.json', 'ai-plugin.json', 'legacy-import-map.json'].includes(name))
-    .sort();
+  const contract = JSON.parse(readText(joinPath(rootPath, 'config/catalog-files.json')));
+  if (!Array.isArray(contract.entryDataFiles)) {
+    throw new Error('config/catalog-files.json saknar entryDataFiles-array');
+  }
+  return contract.entryDataFiles.slice();
 }
 
 function resolveTypeRuleMap(payload) {
@@ -186,7 +179,7 @@ function attachTypeRulesToEntries(entries, typeRules) {
         writable: true,
         enumerable: false
       });
-    } catch (_) {
+    } catch {
       entry.__typ_regler = typeRules;
     }
     return entry;
@@ -226,7 +219,7 @@ function readWeaponEntries(rootPath) {
   files.forEach(file => {
     try {
       out.push(...readEntryDataFile(rootPath, file));
-    } catch (_) {
+    } catch {
       // Ignore missing split files and try legacy fallback below.
     }
   });
@@ -824,7 +817,7 @@ function verifySnapshotRules(rootPath) {
         configurable: true,
         enumerable: false
       });
-    } catch (_) {
+    } catch {
       targetList.__snapshotRules = mapped;
     }
     return targetList;
@@ -2616,7 +2609,7 @@ function verifyRequirementScopeLogic(rootPath) {
         writable: true,
         enumerable: false
       });
-    } catch (_) {
+    } catch {
       entry.__typ_regler = typeRules;
     }
     return entry;
@@ -4847,7 +4840,6 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   const { getMissingRequirementReasonsForCandidate, getMonstruosTraitPermissions } = sandbox.rulesHelper;
 
   const troll = rasList.find(e => e.namn === 'Troll');
-  const vandod = rasList.find(e => e.namn === 'Vandöd');
   const andrik = rasList.find(e => e.namn === 'Andrik');
   const monster = rasList.find(e => e.namn === 'Monster');
   const djurBjara = rasList.find(e => e.namn === 'Best');
@@ -6006,7 +5998,7 @@ function verifyMalCoverage(rootPath) {
         const nivaData = entry?.taggar?.nivå_data || entry?.taggar?.niva_data || {};
         Object.values(nivaData).forEach(level => scanRegler(level?.regler, uncovered));
       });
-    } catch (_) { /* ignore parse errors for optional files */ }
+    } catch { /* ignore parse errors for optional files */ }
   });
 
   assert(uncovered.size === 0, 'Saknar MAL_REGISTRY-hanterare för: ' + [...uncovered].join(', '));
@@ -6102,7 +6094,7 @@ function verifyTypeRuleHierarchy(rootPath) {
         writable: true,
         enumerable: false
       });
-    } catch (_) {
+    } catch {
       entry.__typ_regler = typeRules;
     }
     return entry;
@@ -6274,7 +6266,6 @@ function verifyHamnskifteGrants(rootPath) {
   } = sandbox.rulesHelper;
   const {
     calcEntryXP,
-    buildGrantMaps,
     isRuleGrantedEntry,
     getGrantedEntryOverrideCost,
     setCurrentList,
@@ -7893,7 +7884,7 @@ function verifyEquipmentRestrictions(rootPath) {
 }
 
 try {
-  const rootPath = unwrap($.NSFileManager.defaultManager.currentDirectoryPath);
+  const rootPath = process.cwd();
   verifyRuleHelper(rootPath);
   verifySnapshotRules(rootPath);
   verifyUnifiedNarEvaluator(rootPath);
@@ -7942,5 +7933,5 @@ try {
   const message = error && error.message ? error.message : String(error);
   const stack = error && error.stack ? error.stack : '';
   console.log(`verify_rules_helper: failed\n${message}\n${stack}`);
-  $.exit(1);
+  process.exitCode = 1;
 }

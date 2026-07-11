@@ -509,7 +509,8 @@
     let fixedRandomEntries = null;
 
     const STATE_KEY = 'indexViewState';
-    const CATEGORY_BATCH_SIZE = 50;
+    // Smaller chunks keep category expansion below a perceptible main-thread stall on mobile.
+    const CATEGORY_BATCH_SIZE = 12;
     const catRenderLimits = {};
     let catState = {};
     const loadState = () => {
@@ -2007,6 +2008,28 @@
         handleIndexSearchSubmit(term, opts);
       };
     }
+
+    // Elite profession setup is a large, infrequently used flow. Keep its
+    // classic script out of the initial index bundle, but retain the existing
+    // button contract and load it before handling the first request.
+    document.addEventListener('click', async event => {
+      const button = event.target.closest('button[data-elite-req]');
+      if (!button || window.eliteAdd || button.dataset.eliteLoading === '1') return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      button.dataset.eliteLoading = '1';
+      button.disabled = true;
+      try {
+        await window.ensureEliteAdd?.();
+        await window.eliteAdd?.handle?.(button);
+      } catch (error) {
+        console.error('Failed to load elite profession flow', error);
+        window.toast?.('Kunde inte öppna elityrkesflödet. Försök igen.');
+      } finally {
+        button.disabled = false;
+        delete button.dataset.eliteLoading;
+      }
+    }, { capture: true });
     updateSearchDatalist();
 
     const pendingSearch = takePendingIndexSearch();
@@ -2126,6 +2149,39 @@
       });
       return indexWorkerCache.initPromise;
     };
+
+    let indexSearchWarmKey = '';
+    let indexSearchWarmPromise = null;
+    const ensureIndexSearchReady = () => {
+      const key = entryCache.filteredKey;
+      if (indexSearchWarmKey === key && indexSearchWarmPromise) {
+        return indexSearchWarmPromise;
+      }
+      indexSearchWarmKey = key;
+      buildSearchTagLookup();
+      indexSearchWarmPromise = Promise.resolve(window.ensureSymbaroumRulesWorkerReady?.())
+        .then(() => ensureIndexWorkerCatalog(getEntries()))
+        .then(result => Boolean(result))
+        .catch(error => {
+          console.warn('Index search warmup failed; using on-demand search setup.', error);
+          indexSearchWarmKey = '';
+          indexSearchWarmPromise = null;
+          return false;
+        });
+      return indexSearchWarmPromise;
+    };
+    window.ensureSymbaroumIndexSearchReady = ensureIndexSearchReady;
+
+    window.setTimeout(() => {
+      const warm = () => {
+        if (document.body?.dataset?.role === 'index') void ensureIndexSearchReady();
+      };
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(warm, { timeout: 10_000 });
+      } else {
+        window.setTimeout(warm, 500);
+      }
+    }, 3_000);
 
     const queryIndexWorker = async (baseEntries, queryState) => {
       const worker = window.symbaroumRulesWorker;
@@ -2269,6 +2325,39 @@
       setTimeout(resolve, 0);
     });
 
+    const buildRenderContext = (charList, invList) => {
+      const inventoryCountById = new Map();
+      const characterCountById = new Map();
+      const traitCountByName = new Map();
+      const activeHandlingEntries = [];
+
+      invList.forEach(entry => {
+        const id = entry?.id;
+        if (id === undefined || id === null) return;
+        const key = String(id);
+        inventoryCountById.set(key, (inventoryCountById.get(key) || 0) + Number(entry?.qty || 1));
+      });
+      charList.forEach(entry => {
+        if (!entry) return;
+        if (entry.trait) {
+          const name = String(entry.namn || '');
+          if (name) traitCountByName.set(name, (traitCountByName.get(name) || 0) + 1);
+        } else if (entry.id !== undefined && entry.id !== null) {
+          const key = String(entry.id);
+          characterCountById.set(key, (characterCountById.get(key) || 0) + 1);
+        }
+        if (getActiveHandlingKeys(entry).length) activeHandlingEntries.push(entry);
+      });
+
+      return {
+        inventoryCountById,
+        characterCountById,
+        traitCountByName,
+        activeHandlingEntries,
+        monsterLoreSpecs: usedMonsterLoreSpecs(charList)
+      };
+    };
+
     const renderList = async arr => {
       const renderSequence = ++renderListSequence;
       const sortMode = storeHelper.getEntrySort
@@ -2295,6 +2384,7 @@
       // Always render list; a fallback "Hoppsan" category is appended last.
       const charList = storeHelper.getCurrentList(store);
       const invList = storeHelper.getInventory(store);
+      const renderContext = buildRenderContext(charList, invList);
       const compact = storeHelper.getCompactEntries(store);
       const cats = {};
       const terms = F.search
@@ -2544,8 +2634,14 @@
           }
           // ── Conflict detection ──
           const activeKeys = getActiveHandlingKeys(p);
-          const currentChars = storeHelper.getCurrentList(store);
-          const conflictPool = findConflictingEntries(p, currentChars);
+          const conflictPool = activeKeys.length
+            ? renderContext.activeHandlingEntries.filter(item => (
+              item !== p
+              && !((item.namn || '') === (p?.namn || '')
+                && (item.trait ?? null) === (p?.trait ?? null)
+                && (item.nivå ?? null) === (p?.nivå ?? null))
+            ))
+            : [];
           const conflictsHtml = (activeKeys.length && conflictPool.length)
             ? buildConflictsHtml(conflictPool)
             : '';
@@ -2561,7 +2657,7 @@
           // ── Count & multi ──
           const isInventoryEntry = isInv(p);
           const isMonsterLore = p.namn === 'Monsterlärd';
-          const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
+          const monsterLoreUsed = isMonsterLore ? renderContext.monsterLoreSpecs : [];
           const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
           const entryMaxCount = getEntryMaxCount(p);
           const multi = isInventoryEntry || monsterLoreMulti || entryMaxCount > 1;
@@ -2571,13 +2667,13 @@
             if (bundleCount !== null) {
               count = bundleCount;
             } else {
-              count = invList.filter(c => c.id === p.id).reduce((sum, c) => sum + (c.qty || 1), 0);
+              count = renderContext.inventoryCountById.get(String(p.id)) || 0;
             }
           } else {
             if (isMonsterLore) {
-              count = charList.filter(c => c.namn === p.namn && c.trait).length;
+              count = renderContext.traitCountByName.get(String(p.namn || '')) || 0;
             } else {
-              count = charList.filter(c => c.id === p.id && !c.trait).length;
+              count = renderContext.characterCountById.get(String(p.id)) || 0;
             }
           }
           const limit = isInv(p)
@@ -3721,18 +3817,21 @@
             })
             : false;
 
-          if (skipRequirementPopup && isElityrke(p) && typeof window.eliteAdd?.handle === 'function') {
-            cancelAddScenario(addScenarioId, {
-              scope: 'index',
-              entry: name,
-              reason: 'redirected-elite-flow'
-            });
-            await window.eliteAdd.handle({
-              dataset: {
-                eliteReq: p.namn
-              }
-            });
-            return;
+          if (skipRequirementPopup && isElityrke(p)) {
+            await window.ensureEliteAdd?.();
+            if (typeof window.eliteAdd?.handle === 'function') {
+              cancelAddScenario(addScenarioId, {
+                scope: 'index',
+                entry: name,
+                reason: 'redirected-elite-flow'
+              });
+              await window.eliteAdd.handle({
+                dataset: {
+                  eliteReq: p.namn
+                }
+              });
+              return;
+            }
           }
 
           const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'

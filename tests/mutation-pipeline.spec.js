@@ -94,10 +94,6 @@ async function setDialogOverrides(page, options = {}) {
   });
 }
 
-async function readDialogMessages(page) {
-  return page.evaluate(() => Array.isArray(window.__testDialogMessages) ? window.__testDialogMessages.slice() : []);
-}
-
 async function seedNamedEntries(page, specs) {
   return page.evaluate(async (specs) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
@@ -225,7 +221,70 @@ async function prepareCharacterLevelCandidate(page, mode = 'fast') {
   }, { mode });
 }
 
+async function revealIndexEntry(page, name) {
+  const visibleCardCount = await page.locator('#lista li.entry-card:visible, #lista li.card:visible').evaluateAll(
+    (cards, entryName) => cards.filter((card) => String(card?.dataset?.name || '').trim() === String(entryName || '').trim()).length,
+    name
+  );
+  if (visibleCardCount > 0) return;
+
+  const category = await page.evaluate((entryName) => {
+    const entry = window.lookupEntry?.({ name: entryName })
+      || (window.DB || []).find(candidate => String(candidate?.namn || '').trim() === entryName)
+      || null;
+    return String(entry?.taggar?.typ?.[0] || '').trim();
+  }, name);
+  if (!category) throw new Error(`Unable to resolve the index category for ${name}.`);
+
+  const categories = page.locator('#lista details[data-cat]');
+  const categoryIndex = await categories.evaluateAll(
+    (details, categoryName) => details.findIndex(detail => detail.dataset.cat === categoryName),
+    category
+  );
+  if (categoryIndex < 0) throw new Error(`Unable to find the index category ${category}.`);
+
+  const details = categories.nth(categoryIndex);
+  if (!(await details.evaluate(element => element.open))) {
+    await details.locator(':scope > summary').click();
+  }
+
+  const visibleCards = details.locator('li.entry-card:visible, li.card:visible');
+  const categoryLoadMore = page.locator('#lista button[data-load-more-cat]:visible');
+  await expect.poll(async () => {
+    const targetCount = await visibleCards.evaluateAll(
+      (cards, entryName) => cards.filter(card => String(card?.dataset?.name || '').trim() === entryName).length,
+      name
+    );
+    const loadMoreCount = await categoryLoadMore.evaluateAll(
+      (buttons, categoryName) => buttons.filter(button => button.dataset.loadMoreCat === categoryName).length,
+      category
+    );
+    return targetCount + loadMoreCount;
+  }).toBeGreaterThan(0);
+
+  for (let batch = 0; batch < 20; batch += 1) {
+    const targetCount = await visibleCards.evaluateAll(
+      (cards, entryName) => cards.filter(card => String(card?.dataset?.name || '').trim() === entryName).length,
+      name
+    );
+    if (targetCount > 0) return;
+
+    const loadMoreIndex = await categoryLoadMore.evaluateAll(
+      (buttons, categoryName) => buttons.findIndex(button => button.dataset.loadMoreCat === categoryName),
+      category
+    );
+    if (loadMoreIndex < 0) break;
+
+    const previousCount = await visibleCards.count();
+    await categoryLoadMore.nth(loadMoreIndex).click();
+    await expect.poll(() => visibleCards.count()).toBeGreaterThan(previousCount);
+  }
+
+  throw new Error(`Unable to reveal ${name} in the index category ${category}.`);
+}
+
 async function setIndexCardLevel(page, name, level) {
+  await revealIndexEntry(page, name);
   const changed = await page.evaluate(({ name, level }) => {
     const card = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')]
       .find((candidate) => String(candidate?.dataset?.name || '').trim() === String(name || '').trim()) || null;
@@ -281,16 +340,6 @@ async function choosePopupOption(page, label) {
   if (!clicked) throw new Error(`Unable to pick popup option ${label}.`);
 }
 
-async function cancelChoicePopup(page) {
-  await page.locator('#choicePopup').waitFor({ state: 'visible' });
-  await page.evaluate(() => {
-    const popup = document.getElementById('choicePopup');
-    const button = popup?.querySelector('#choiceClose');
-    if (!button) throw new Error('Missing choice popup close button.');
-    button.click();
-  });
-}
-
 async function changeCardLevel(page, rootSelector, name, value) {
   const changed = await page.evaluate(({ rootSelector, name, value }) => {
     const root = document.querySelector(rootSelector);
@@ -336,6 +385,126 @@ async function readLevelControlValue(page, rootSelector, name) {
     return card?.querySelector('select.level')?.value || '';
   }, { rootSelector, name });
 }
+
+function visibleEntryCard(page, rootSelector, name) {
+  return page.locator(`${rootSelector} li.entry-card[data-name="${name}"], ${rootSelector} li.card[data-name="${name}"]`).first();
+}
+
+async function revealCharacterEntry(page, name) {
+  const card = visibleEntryCard(page, '#valda', name);
+  await expect(card).toBeAttached();
+
+  const category = card.locator('xpath=ancestor::details[1]');
+  if (await category.count() && !await category.evaluate(details => details.open)) {
+    await category.locator(':scope > summary').click();
+  }
+
+  await expect(card).toBeVisible();
+  return card;
+}
+
+async function resolveCascadeDialog(page, { keepGenerated }) {
+  const dialog = page.locator('#daub-dialog-modal');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('.db-modal__body')).toContainText('automatiskt tillagda förmågor');
+
+  if (keepGenerated) {
+    await dialog.locator('[data-dialog-action="ok"]').click();
+  } else {
+    await page.keyboard.press('Escape');
+  }
+
+  await expect(dialog).toBeHidden();
+}
+
+async function seedInventoryRow(page, { id, name, qty = 1 }) {
+  await page.evaluate(async ({ id, name, qty }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.storeHelper.setInventory(activeStore, [{
+      id,
+      name,
+      qty,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    }]);
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-seed-inventory-row' });
+    window.invUtil?.renderInventory?.();
+  }, { id, name, qty });
+}
+
+async function readInventoryRows(page) {
+  return page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    return window.storeHelper.getInventory(activeStore).map(row => ({
+      id: row.id || '',
+      name: row.name || row.namn || '',
+      qty: Number(row.qty) || 0
+    }));
+  });
+}
+
+async function clickInventoryAction(page, name, action) {
+  const card = page.locator('#invList li.entry-card, #invList li.card')
+    .filter({ has: page.locator(`[data-name="${name}"]`) });
+  const directCard = page.locator(`#invList li[data-name="${name}"]`).first();
+  const target = (await directCard.count()) ? directCard : card.first();
+  await expect(target).toBeVisible();
+  await target.locator(`button[data-act="${action}"]`).click();
+}
+
+test('a normal ability can be added, levelled, observed, and reloaded through user controls', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/index', '#lista');
+  await clearPerfHistory(page, { awaitFlush: true });
+
+  const toolbar = page.locator('shared-toolbar');
+  await revealIndexEntry(page, 'Akrobatik');
+
+  const indexCard = visibleEntryCard(page, '#lista', 'Akrobatik');
+  await expect(indexCard).toBeVisible();
+  await expect(indexCard.locator('select.level')).toHaveValue('Novis');
+  await expect(indexCard.locator('button[data-act="add"]')).toBeVisible();
+  await indexCard.locator('button[data-act="add"]').click();
+
+  const addScenario = await readLatestScenario(page, 'add-item-to-character');
+  expect(addScenario?.detail?.entry).toBe('Akrobatik');
+  expect(addScenario?.detail?.branch).toBe('list');
+  await expect.poll(async () => await readListEntries(page, 'Akrobatik')).toEqual([
+    expect.objectContaining({ name: 'Akrobatik', level: 'Novis' })
+  ]);
+  await expect(indexCard.locator('button[data-act="rem"]')).toBeVisible();
+
+  await toolbar.locator('#characterLink').click();
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'character'
+    && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+  ));
+
+  const characterCard = await revealCharacterEntry(page, 'Akrobatik');
+  const levelSelect = characterCard.locator('select.level');
+  await expect(levelSelect).toBeVisible();
+  await expect(levelSelect).toHaveValue('Novis');
+
+  await clearPerfHistory(page, { awaitFlush: true, levelChanges: true });
+  await levelSelect.selectOption('Gesäll');
+  const levelScenario = await readLatestScenario(page, 'character-level-change');
+  expect(levelScenario?.detail?.entry).toBe('Akrobatik');
+  expect(levelScenario?.detail?.renderMode).toBe('targeted');
+
+  await expect(levelSelect).toHaveValue('Gesäll');
+  await expect.poll(async () => await readListEntries(page, 'Akrobatik')).toEqual([
+    expect.objectContaining({ name: 'Akrobatik', level: 'Gesäll' })
+  ]);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  const reloadedCard = await revealCharacterEntry(page, 'Akrobatik');
+  await expect(reloadedCard.locator('select.level')).toHaveValue('Gesäll');
+  await expect.poll(async () => await readListEntries(page, 'Akrobatik')).toEqual([
+    expect.objectContaining({ name: 'Akrobatik', level: 'Gesäll' })
+  ]);
+});
 
 test('index popup adds close the choice popup before store mutation and stay on the targeted refresh path', async ({ page }) => {
   await seedProfileStore(page);
@@ -398,10 +567,9 @@ test('choice-popup add with replace_existing upgrades the existing Exceptionellt
   });
 });
 
-test('choice-popup add reports no-options when all Monsterlärd specializations are already used', async ({ page }) => {
+test('Monsterlärd hides Add and preserves four entries when every specialization is used', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');
-  await setDialogOverrides(page);
   await seedNamedEntries(page, [
     { name: 'Monsterlärd', level: 'Gesäll', trait: 'Bestar' },
     { name: 'Monsterlärd', level: 'Gesäll', trait: 'Kulturvarelser' },
@@ -410,15 +578,30 @@ test('choice-popup add reports no-options when all Monsterlärd specializations 
   ]);
 
   await setIndexCardLevel(page, 'Monsterlärd', 'Gesäll');
-  await clickIndexAdd(page, 'Monsterlärd');
+  await clearPerfHistory(page, { awaitFlush: true });
 
-  const scenario = await readLatestScenario(page, 'add-item-to-character', 'cancelled');
-  const messages = await readDialogMessages(page);
-  const alerts = messages.filter((entry) => entry.type === 'alert').map((entry) => entry.message);
+  const card = visibleEntryCard(page, '#lista', 'Monsterlärd');
+  await expect(card).toBeVisible();
+  await expect(card.locator('.count-badge')).toHaveText('×4');
+  await expect(card.locator('button[data-act="add"]')).toHaveCount(0);
+  expect(await card.locator('button[data-act]').evaluateAll(buttons => (
+    buttons.map(button => button.dataset.act)
+  ))).toEqual(['del', 'sub']);
+  await expect(page.locator('#choicePopup')).toBeHidden();
 
-  expect(scenario?.detail?.reason).toBe('list-choice-cancelled');
-  expect(alerts.some((message) => message.includes('Inga val kvar'))).toBe(true);
+  const addScenarioCount = await page.evaluate(() => (
+    (window.symbaroumPerf?.getSnapshot?.()?.scenarios || [])
+      .filter(entry => entry.name === 'add-item-to-character').length
+  ));
+  expect(addScenarioCount).toBe(0);
   await expect.poll(async () => (await readListEntries(page, 'Monsterlärd')).length).toBe(4);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.locator('#lista').waitFor({ state: 'visible' });
+
+  await expect.poll(async () => (await readListEntries(page, 'Monsterlärd')).length).toBe(4);
+  await expect(page.locator('#choicePopup')).toBeHidden();
 });
 
 test('character fast level changes stay targeted and survive reload', async ({ page }) => {
@@ -471,10 +654,9 @@ test('character structural level changes fall back to a full selection render wh
   expect(granted.length).toBeGreaterThan(0);
 });
 
-test('character level changes can keep granted entries when the cleanup confirm is accepted', async ({ page }) => {
+test('character level changes can keep granted entries by accepting the real cleanup dialog', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/character', '#valda');
-  await setDialogOverrides(page, { confirmResult: true });
   await seedNamedEntries(page, [{
     name: 'Hamnskifte',
     level: 'Gesäll'
@@ -483,19 +665,88 @@ test('character level changes can keep granted entries when the cleanup confirm 
   const grantedBefore = (await readListEntries(page, '')).filter((entry) => entry.name.startsWith('Hamnskifte:'));
   expect(grantedBefore.length).toBeGreaterThan(0);
 
-  await changeCardLevel(page, '#valda', 'Hamnskifte', 'Novis');
-  const messages = await readDialogMessages(page);
-  const confirmMessage = messages.find((entry) => entry.type === 'confirm' && entry.message.includes('automatiskt tillagda förmågor'));
+  const hamnskifteCard = await revealCharacterEntry(page, 'Hamnskifte');
+  await hamnskifteCard.locator('select.level').selectOption('Novis');
+  await resolveCascadeDialog(page, { keepGenerated: true });
   await expect.poll(async () => (
     (await readListEntries(page, 'Hamnskifte')).find((entry) => entry.name === 'Hamnskifte')?.level || ''
   )).toBe('Novis');
   const afterEntries = await readListEntries(page, '');
 
-  expect(confirmMessage).toBeTruthy();
   grantedBefore.forEach((entry) => {
     expect(afterEntries.some((candidate) => candidate.name === entry.name)).toBe(true);
   });
   expect(afterEntries.find((entry) => entry.name === 'Hamnskifte')?.level).toBe('Novis');
+});
+
+test('character level changes remove generated grants by rejecting the real cleanup dialog', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+  await seedNamedEntries(page, [{
+    name: 'Hamnskifte',
+    level: 'Gesäll'
+  }]);
+
+  const grantedBefore = (await readListEntries(page, '')).filter(entry => entry.name.startsWith('Hamnskifte:'));
+  expect(grantedBefore.length).toBeGreaterThan(0);
+
+  const hamnskifteCard = await revealCharacterEntry(page, 'Hamnskifte');
+  await hamnskifteCard.locator('select.level').selectOption('Novis');
+  await resolveCascadeDialog(page, { keepGenerated: false });
+  await expect.poll(async () => {
+    const entries = await readListEntries(page, '');
+    return {
+      level: entries.find(entry => entry.name === 'Hamnskifte')?.level || '',
+      generated: entries.filter(entry => entry.name.startsWith('Hamnskifte:')).map(entry => entry.name)
+    };
+  }).toEqual({ level: 'Novis', generated: [] });
+
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-rejected-cascade' }));
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.locator('#valda').waitFor({ state: 'visible' });
+
+  const afterReload = await readListEntries(page, '');
+  expect(afterReload.find(entry => entry.name === 'Hamnskifte')?.level).toBe('Novis');
+  expect(afterReload.filter(entry => entry.name.startsWith('Hamnskifte:'))).toEqual([]);
+});
+
+test('Inventory UI add, subtract, and remove actions persist their resulting quantities', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/inventory', '#invList');
+  await seedInventoryRow(page, { id: 'di1', name: 'Bandage', qty: 1 });
+
+  const card = page.locator('#invList li[data-name="Bandage"]').first();
+  await expect(card).toBeVisible();
+
+  await clickInventoryAction(page, 'Bandage', 'add');
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 2 }]);
+  await expect(card.locator('.count-badge')).toHaveText('×2');
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-add-acceptance' }));
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 2 }]);
+
+  await clickInventoryAction(page, 'Bandage', 'sub');
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 1 }]);
+  await expect(page.locator('#invList li[data-name="Bandage"] button[data-act="sub"]')).toHaveCount(0);
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-subtract-acceptance' }));
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 1 }]);
+
+  await clickInventoryAction(page, 'Bandage', 'add');
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 2 }]);
+  await clickInventoryAction(page, 'Bandage', 'del');
+  await expect.poll(() => readInventoryRows(page)).toEqual([]);
+  await expect(page.locator('#invList li[data-name="Bandage"]')).toHaveCount(0);
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-remove-acceptance' }));
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => readInventoryRows(page)).toEqual([]);
 });
 
 test('character level changes revert when higher-level requirements are blocked', async ({ page }) => {

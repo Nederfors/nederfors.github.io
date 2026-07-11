@@ -89,7 +89,16 @@ def build_exact_index(names, categories):
     return {name: {category: set() for category in categories} for name in names}
 
 
-def process_items(items, type_label, valid_names, exact, unknown_tags, required_type=None):
+def process_items(
+    items,
+    type_label,
+    valid_names,
+    exact,
+    unknown_tags,
+    required_type=None,
+    ignored_tags=None,
+):
+    ignored_tags = ignored_tags or set()
     for item in items:
         if not isinstance(item, dict):
             continue
@@ -102,7 +111,7 @@ def process_items(items, type_label, valid_names, exact, unknown_tags, required_
         for tag in split_tags(taggar.get("traditions") or taggar.get("ark_trad")):
             if tag in valid_names:
                 exact[tag][type_label].add(name)
-            else:
+            elif tag not in ignored_tags:
                 unknown_tags[tag] += 1
 
 
@@ -147,10 +156,38 @@ def main():
 
     exact_yrke = build_exact_index(yrke_names, YRKE_CATEGORY_ORDER)
     unknown_yrke_tags = defaultdict(int)
-    process_items(bas_data, "Basförmåga", valid_yrken, exact_yrke, unknown_yrke_tags)
-    process_items(form_data, "Förmåga", valid_yrken, exact_yrke, unknown_yrke_tags)
-    process_items(mk_data, "Mystisk kraft", valid_yrken, exact_yrke, unknown_yrke_tags)
-    process_items(ritual_data, "Ritual", valid_yrken, exact_yrke, unknown_yrke_tags)
+    process_items(
+        bas_data,
+        "Basförmåga",
+        valid_yrken,
+        exact_yrke,
+        unknown_yrke_tags,
+        ignored_tags=valid_elityrken,
+    )
+    process_items(
+        form_data,
+        "Förmåga",
+        valid_yrken,
+        exact_yrke,
+        unknown_yrke_tags,
+        ignored_tags=valid_elityrken,
+    )
+    process_items(
+        mk_data,
+        "Mystisk kraft",
+        valid_yrken,
+        exact_yrke,
+        unknown_yrke_tags,
+        ignored_tags=valid_elityrken,
+    )
+    process_items(
+        ritual_data,
+        "Ritual",
+        valid_yrken,
+        exact_yrke,
+        unknown_yrke_tags,
+        ignored_tags=valid_elityrken,
+    )
 
     exact_elityrke = build_exact_index(elityrke_names, ELITYRKE_CATEGORY_ORDER)
     unknown_elityrke_tags = defaultdict(int)

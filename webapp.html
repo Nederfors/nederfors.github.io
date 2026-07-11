@@ -1,32 +1,31 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="sv" data-theme="ember" data-db-texture="glass">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Symbapedia">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon-192.png">
   <meta name="theme-color" content="#2D2C21">
   <title>Symbapedia - Installera som webapp</title>
-  <style>html[data-preload] body { visibility:hidden; opacity:0; } html.is-ready body { visibility:visible; opacity:1; transition:opacity .2s; }</style>
-  <script>document.documentElement.dataset.preload = "true";</script>
-  <script>
-    const revealWebapp = () => {
-      document.documentElement.classList.add('is-ready');
-      document.documentElement.removeAttribute('data-preload');
-    };
-
-    if (document.readyState === 'complete') {
-      revealWebapp();
-    } else {
-      window.addEventListener('load', revealWebapp, { once: true });
-    }
-  </script>
-  <link rel="stylesheet" href="css/style.css">
   <style>
+    html {
+      min-height: 100%;
+      background: #2d2c21;
+      color-scheme: dark;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: #2d2c21;
+      color: #fff3e4;
+      font: 500 1rem/1.55 "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    }
     main { max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    h1, h2 { line-height: 1.2; }
+    section { color: #d6c6b4; }
     ol { padding-left: 1.2rem; }
   </style>
 </head>
@@ -97,14 +96,6 @@
       window.addEventListener('hashchange', renderSection);
       window.requestAnimationFrame?.(renderSection);
     })();
-  </script>
-  <script src="js/vendor/daub.js"></script>
-  <script>
-    DAUB.setTemperature('auto');
-    DAUB.setTexture('glass');
-    DAUB.setFamily('ember');
-    DAUB.setScheme('dark');
-    DAUB.setAccent('#B97A52');
   </script>
   <script type="module" src="js/webapp-bootstrap.js"></script>
 </body>

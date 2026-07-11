@@ -15606,6 +15606,7 @@ function defaultTraits() {
   });
   const DISMISS_ID_RE = /(cancel|close)$/i;
   const BODY_ACTION_CLASS_RE = /\b(confirm-row|button-row|popup-footer|requirement-popup-actions|picker-popup-actions|qual-popup-actions|header-actions)\b/;
+  let generatedTitleId = 0;
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -15748,6 +15749,31 @@ function defaultTraits() {
     title.textContent = options.titleText || DIALOG_TITLE_BY_ID[overlayId] || 'Symbapedia';
     header.insertBefore(title, header.firstChild || null);
     return title;
+  }
+
+  function ensureUniqueTitleId(overlay, title) {
+    if (!(title instanceof HTMLElement)) return '';
+    if (title.id) return title.id;
+
+    const root = overlay?.getRootNode?.() || document;
+    const base = overlay?.id
+      ? `${overlay.id}Title`
+      : `popupTitle${++generatedTitleId}`;
+    let candidate = base;
+    let suffix = 2;
+    while (typeof root.getElementById === 'function' && root.getElementById(candidate)) {
+      candidate = `${base}${suffix++}`;
+    }
+    title.id = candidate;
+    return candidate;
+  }
+
+  function applyDialogSemantics(overlay, modal, title) {
+    if (!(modal instanceof HTMLElement)) return;
+    const titleId = ensureUniqueTitleId(overlay, title);
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    if (titleId) modal.setAttribute('aria-labelledby', titleId);
   }
 
   function ensureHeader(overlay, modal, options = {}) {
@@ -16001,6 +16027,8 @@ function defaultTraits() {
     modal.classList.add('db-modal', 'popup-shell--daub');
     applyPopupMeta(overlay, modal, options);
     const header = ensureHeader(overlay, modal, options);
+    const title = ensureTitleNode(header, modal, String(overlay.id || '').trim(), options);
+    applyDialogSemantics(overlay, modal, title);
     ensureCloseButton(overlay, header);
     ensureFooter(modal);
     const body = ensureBody(modal);
@@ -17094,12 +17122,20 @@ function defaultTraits() {
       window.daubMotion.destroySwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey]);
       return false;
     }
+    const swipeKey = INVENTORY_HUB_SWIPE_KEYS[hubKey];
+    const activeIndex = Math.max(0, def.tabs.indexOf(activeTab));
+    if (window.daubMotion.hasSwipeTabs?.(swipeKey)) {
+      window.daubMotion.slideTabsTo?.(swipeKey, activeIndex, { animate: false });
+      window.requestAnimationFrame(() => window.daubMotion.refreshSwipeTabs?.(swipeKey));
+      return true;
+    }
     window.daubMotion.bindSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey], {
       host: panelsHost,
       selector: '.tools-panel',
-      initialIndex: Math.max(0, def.tabs.indexOf(activeTab)),
+      initialIndex: activeIndex,
       onIndexChange(index) {
         const nextTab = def.tabs[index] || def.defaultTab;
+        if (hub?.dataset.activeTab === nextTab) return;
         openInventoryHubTab(nextTab);
       }
     });
@@ -17468,6 +17504,7 @@ function defaultTraits() {
         return {
           id: tabId,
           label: def.titlesByTabId[tabId] || tabId,
+          panelClassName: 'inventory-hub-panel',
           build(panel) {
             panel.innerHTML = renderInventoryHubViewContent(sectionId);
             const section = panel.querySelector(`#${sectionId}`);
@@ -17477,6 +17514,7 @@ function defaultTraits() {
       }),
       ariaLabel: hubKey === 'items' ? 'Hantera föremål' : 'Hantera ekonomi',
       idPrefix: `${hubKey}Manager`,
+      panelsClassName: 'inventory-hub-panels',
       onTabChange(nextTab) {
         openInventoryHubTab(nextTab);
       }
@@ -17567,7 +17605,6 @@ function defaultTraits() {
       if (key !== hubKey) closeInventoryHub(key);
     });
     syncInventoryHubState();
-    syncInventoryHubSwipeTabs(hubKey, resolvedTab);
     setInventoryHubTab(hubKey, resolvedTab, { syncTouch: false });
     if (!hub.__hubSession) {
       hub.__hubSession = createPopupSession(hub, {
@@ -17589,6 +17626,7 @@ function defaultTraits() {
         }
       });
     }
+    const hasSwipeTabs = syncInventoryHubSwipeTabs(hubKey, resolvedTab);
     const inner = hub.querySelector(':scope > .popup-inner');
     if (inner) inner.scrollTop = 0;
     syncInventoryMotionTargets();
@@ -17598,6 +17636,16 @@ function defaultTraits() {
     }
     if (activateView) {
       openInventoryHubTab(resolvedTab);
+    }
+    if (hasSwipeTabs) {
+      window.requestAnimationFrame(() => {
+        window.daubMotion?.slideTabsTo?.(
+          INVENTORY_HUB_SWIPE_KEYS[hubKey],
+          Math.max(0, def.tabs.indexOf(resolvedTab)),
+          { animate: false }
+        );
+        window.daubMotion?.refreshSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey]);
+      });
     }
     return hub;
   }
@@ -25108,6 +25156,22 @@ function defaultTraits() {
   const observedRoots = new Set();
   const rootObservers = new Map();
   const internalCloseIds = new Set();
+  const managedBackgroundInert = new Map();
+  const managedAriaModal = new Map();
+  const managedZIndex = new Map();
+  const POPUP_Z_BASE = 4000;
+  const RESTORE_TARGET_MAX_AGE_MS = 1500;
+  let lastInteractionTarget = null;
+  let lastInteractionAt = 0;
+  const FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[contenteditable="true"]',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
 
   const DEFAULT_TYPE = 'form';
   const TOUCH_PROFILE_SET = new Set(['panel-right', 'sheet-down', 'none']);
@@ -25160,9 +25224,21 @@ function defaultTraits() {
     return el && el.classList?.contains('db-modal-overlay');
   }
 
+  function isDrawerOverlay(el) {
+    return Boolean(el?.classList?.contains('offcanvas') || el?.classList?.contains('db-drawer'));
+  }
+
+  function isManagedOverlay(el) {
+    return Boolean(
+      el?.classList?.contains('popup')
+      || el?.classList?.contains('db-modal-overlay')
+      || isDrawerOverlay(el)
+    );
+  }
+
   function collectPopupElements(root) {
     if (!root || typeof root.querySelectorAll !== 'function') return [];
-    return Array.from(root.querySelectorAll('.popup[id], .db-modal-overlay[id]'));
+    return Array.from(root.querySelectorAll('.popup[id], .db-modal-overlay[id], .offcanvas[id], .db-drawer[id]'));
   }
 
   function getAllKnownRoots() {
@@ -25172,6 +25248,211 @@ function defaultTraits() {
       if (root && !roots.includes(root)) roots.push(root);
     });
     return roots;
+  }
+
+  function getDeepActiveElement() {
+    let active = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    return active instanceof HTMLElement ? active : null;
+  }
+
+  function rememberInteractionTarget(event) {
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    const target = path.find(node => (
+      node instanceof HTMLElement && node.matches?.(FOCUSABLE_SELECTOR)
+    ));
+    if (!target) return;
+    lastInteractionTarget = target;
+    lastInteractionAt = window.performance?.now?.() || Date.now();
+  }
+
+  function isUsableRestoreTarget(target, overlay) {
+    return Boolean(
+      target instanceof HTMLElement
+      && target.isConnected
+      && target !== document.body
+      && target !== document.documentElement
+      && target !== overlay
+      && !overlay?.contains?.(target)
+    );
+  }
+
+  function resolveRestoreFocus(overlay) {
+    const active = getDeepActiveElement();
+    if (isUsableRestoreTarget(active, overlay) && active.matches?.(FOCUSABLE_SELECTOR)) {
+      return active;
+    }
+    const now = window.performance?.now?.() || Date.now();
+    if (
+      now - lastInteractionAt <= RESTORE_TARGET_MAX_AGE_MS
+      && isUsableRestoreTarget(lastInteractionTarget, overlay)
+    ) {
+      return lastInteractionTarget;
+    }
+    if (isUsableRestoreTarget(active, overlay)) return active;
+    return null;
+  }
+
+  function getFocusableElements(container) {
+    if (!(container instanceof Element)) return [];
+    return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter(element => {
+      if (!(element instanceof HTMLElement) || element.closest('[inert]')) return false;
+      if (element.getAttribute('aria-hidden') === 'true') return false;
+      const style = getComputedStyle(element);
+      return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
+    });
+  }
+
+  function focusOverlay(element) {
+    if (!(element instanceof HTMLElement)) return;
+    window.requestAnimationFrame(() => {
+      const active = getDeepActiveElement();
+      if (active && element.contains(active)) return;
+      const surface = element.querySelector('.popup-inner, .db-modal, .db-drawer__panel') || element;
+      const target = getFocusableElements(surface)[0] || surface;
+      if (target === surface && !surface.hasAttribute('tabindex')) surface.setAttribute('tabindex', '-1');
+      try { target.focus({ preventScroll: true }); } catch { target.focus?.(); }
+    });
+  }
+
+  function forEachKnownElement(selector, callback) {
+    getAllKnownRoots().forEach(root => {
+      if (!root || typeof root.querySelectorAll !== 'function') return;
+      root.querySelectorAll(selector).forEach(callback);
+    });
+  }
+
+  function getDialogSurface(element) {
+    if (!(element instanceof HTMLElement)) return null;
+    return element.querySelector(
+      '.db-modal[role="dialog"], .popup-inner[role="dialog"], .db-drawer__panel[role="dialog"]'
+    ) || element.querySelector('.db-modal, .popup-inner, .db-drawer__panel') || element;
+  }
+
+  function restoreManagedBackground() {
+    managedBackgroundInert.forEach((hadInert, element) => {
+      if (!(element instanceof HTMLElement)) return;
+      if (hadInert) element.setAttribute('inert', '');
+      else element.removeAttribute('inert');
+    });
+    managedBackgroundInert.clear();
+  }
+
+  function makeBackgroundInert(element) {
+    if (!(element instanceof HTMLElement)) return;
+    if (!managedBackgroundInert.has(element)) {
+      managedBackgroundInert.set(element, element.hasAttribute('inert'));
+    }
+    element.setAttribute('inert', '');
+  }
+
+  function inertSiblingsAlongComposedPath(top) {
+    let current = top;
+    while (current) {
+      const parent = current.parentNode;
+      if (parent instanceof ShadowRoot) {
+        Array.from(parent.children).forEach(sibling => {
+          if (sibling !== current) makeBackgroundInert(sibling);
+        });
+        current = parent.host;
+        continue;
+      }
+      if (parent instanceof HTMLElement) {
+        Array.from(parent.children).forEach(sibling => {
+          if (sibling !== current) makeBackgroundInert(sibling);
+        });
+        current = parent;
+        continue;
+      }
+      break;
+    }
+  }
+
+  function restoreManagedAriaModal() {
+    managedAriaModal.forEach((state, surface) => {
+      if (!(surface instanceof HTMLElement)) return;
+      if (state.hadAttribute) surface.setAttribute('aria-modal', state.value);
+      else surface.removeAttribute('aria-modal');
+    });
+    managedAriaModal.clear();
+  }
+
+  function setManagedAriaModal(surface, value) {
+    if (!(surface instanceof HTMLElement)) return;
+    if (!managedAriaModal.has(surface)) {
+      managedAriaModal.set(surface, {
+        hadAttribute: surface.hasAttribute('aria-modal'),
+        value: surface.getAttribute('aria-modal') || ''
+      });
+    }
+    surface.setAttribute('aria-modal', value);
+  }
+
+  function restoreManagedZIndexes() {
+    managedZIndex.forEach((value, element) => {
+      if (!(element instanceof HTMLElement)) return;
+      if (value) element.style.zIndex = value;
+      else element.style.removeProperty('z-index');
+    });
+    managedZIndex.clear();
+  }
+
+  function setManagedZIndex(element, value) {
+    if (!(element instanceof HTMLElement)) return;
+    if (!managedZIndex.has(element)) managedZIndex.set(element, element.style.zIndex);
+    element.style.zIndex = String(value);
+  }
+
+  function normalizeDrawerSemantics(element) {
+    if (!(element instanceof HTMLElement) || !isDrawerOverlay(element)) return;
+    const surface = element.querySelector('.db-drawer__panel');
+    if (!(surface instanceof HTMLElement) || surface === element) return;
+    surface.setAttribute('role', 'dialog');
+    surface.setAttribute('aria-modal', 'true');
+    element.removeAttribute('role');
+    element.removeAttribute('aria-modal');
+  }
+
+  function restoreManagedUnderlay(element) {
+    if (!(element instanceof HTMLElement)) return;
+    if (element.dataset.popupManagedInert === 'true') {
+      element.removeAttribute('inert');
+      delete element.dataset.popupManagedInert;
+    }
+    element.removeAttribute('data-popup-underlay');
+  }
+
+  function coverWithTopOverlay(element) {
+    if (!(element instanceof HTMLElement)) return;
+    if (!element.hasAttribute('inert')) {
+      element.dataset.popupManagedInert = 'true';
+      element.setAttribute('inert', '');
+    }
+    element.dataset.popupUnderlay = 'true';
+    setManagedAriaModal(getDialogSurface(element), 'false');
+  }
+
+  function syncOverlayStack() {
+    restoreManagedBackground();
+    restoreManagedAriaModal();
+    restoreManagedZIndexes();
+    forEachKnownElement('[data-popup-underlay], [data-popup-managed-inert="true"]', restoreManagedUnderlay);
+
+    const openPopups = stack
+      .map(id => entries.get(id)?.element || findElementById(id))
+      .filter(element => element instanceof HTMLElement && isPopupOpen(element.id));
+    openPopups.forEach((element, index) => {
+      normalizeDrawerSemantics(element);
+      setManagedZIndex(element, POPUP_Z_BASE + (index * 20));
+    });
+
+    const top = openPopups[openPopups.length - 1];
+    if (!top) return;
+
+    openPopups.slice(0, -1).forEach(coverWithTopOverlay);
+    inertSiblingsAlongComposedPath(top);
+    restoreManagedUnderlay(top);
+    setManagedAriaModal(getDialogSurface(top), 'true');
   }
 
   function findElementById(id) {
@@ -25209,7 +25490,7 @@ function defaultTraits() {
     const el = entry?.element || findElementById(id);
     if (!el) return false;
     if (isDaubOverlay(el)) return el.getAttribute('aria-hidden') === 'false';
-    return Boolean(el.classList?.contains('open'));
+    return Boolean(el.classList?.contains('open') || el.classList?.contains('db-drawer--open'));
   }
 
   function getTopPopupId() {
@@ -25223,7 +25504,7 @@ function defaultTraits() {
     const openEls = [];
     roots.forEach(root => {
       collectPopupElements(root).forEach(el => {
-        if (el.classList.contains('open')) openEls.push(el);
+        if (isPopupOpen(el.id)) openEls.push(el);
       });
     });
     const top = openEls[openEls.length - 1];
@@ -25298,7 +25579,7 @@ function defaultTraits() {
     }
 
     if (!openStateById.has(id)) {
-      openStateById.set(id, Boolean(existing.element?.classList?.contains('open')));
+      openStateById.set(id, Boolean(existing.element && isPopupOpen(id)));
     }
     return existing;
   }
@@ -25312,6 +25593,10 @@ function defaultTraits() {
     if (session) session.isClosing = true;
 
     const el = entry?.element || findElementById(id);
+    const restoreFocus = session?.restoreFocus || null;
+    if (isDrawerOverlay(el) && restoreFocus?.isConnected) {
+      el._overlayReturnFocus = restoreFocus;
+    }
     if (el && !options.skipClassRemoval) {
       internalCloseIds.add(id);
       if (isDaubOverlay(el)) {
@@ -25322,11 +25607,22 @@ function defaultTraits() {
       if (el.classList.contains('open')) {
         el.classList.remove('open');
       }
+      if (el.classList.contains('db-drawer--open')) {
+        el.classList.remove('db-drawer--open');
+      }
+      if (isDrawerOverlay(el)) {
+        el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('inert', '');
+      }
       setTimeout(() => internalCloseIds.delete(id), 0);
     }
 
     removeFromStack(id);
     openStateById.set(id, false);
+    if (el instanceof HTMLElement) {
+      restoreManagedUnderlay(el);
+    }
+    syncOverlayStack();
 
     if (el && typeof window.registerOverlayCleanup === 'function') {
       try { window.registerOverlayCleanup(el, null); } catch {}
@@ -25338,6 +25634,19 @@ function defaultTraits() {
     callbacks.forEach(fn => {
       if (typeof fn !== 'function') return;
       try { fn(reason || 'programmatic'); } catch (error) { console.error(error); }
+    });
+
+    window.requestAnimationFrame(() => {
+      const nextTop = getInteractiveTopOverlay();
+      if (nextTop && (!restoreFocus || !nextTop.contains(restoreFocus))) {
+        focusOverlay(nextTop);
+        return;
+      }
+      if (restoreFocus?.isConnected) {
+        try { restoreFocus.focus({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
+      } else if (nextTop) {
+        focusOverlay(nextTop);
+      }
     });
 
     return true;
@@ -25389,6 +25698,7 @@ function defaultTraits() {
       policy,
       onClose: typeof options.onClose === 'function' ? options.onClose : prev.onClose || null,
       cleanup: typeof options.cleanup === 'function' ? options.cleanup : prev.cleanup || null,
+      restoreFocus: prev.restoreFocus || resolveRestoreFocus(el),
       isClosing: false
     });
 
@@ -25407,10 +25717,19 @@ function defaultTraits() {
     if (!el.classList.contains('open')) {
       el.classList.add('open');
     }
+    if (isDrawerOverlay(el) && !el.classList.contains('db-drawer--open')) {
+      el.classList.add('db-drawer--open');
+    }
+    if (isDrawerOverlay(el)) {
+      el.removeAttribute('inert');
+      el.setAttribute('aria-hidden', 'false');
+    }
     el.dataset.touchProfile = touchProfile;
 
     pushToStack(id);
     openStateById.set(id, true);
+    syncOverlayStack();
+    focusOverlay(el);
 
     return {
       id,
@@ -25449,11 +25768,60 @@ function defaultTraits() {
     return Array.isArray(path) && path.some(node => node === target);
   }
 
+  function getInteractiveTopOverlay() {
+    const historyTop = typeof window.peekTopOverlay === 'function' ? window.peekTopOverlay() : null;
+    if (historyTop instanceof HTMLElement && historyTop.classList.contains('open')) return historyTop;
+    const popupId = getTopPopupId();
+    return popupId ? entries.get(popupId)?.element || findElementById(popupId) : null;
+  }
+
+  function trapFocus(event, element) {
+    const surface = element?.querySelector?.('.popup-inner, .db-modal, .db-drawer__panel') || element;
+    if (!(surface instanceof HTMLElement)) return false;
+    const focusable = getFocusableElements(surface);
+    if (!focusable.length) {
+      if (!surface.hasAttribute('tabindex')) surface.setAttribute('tabindex', '-1');
+      event.preventDefault();
+      surface.focus({ preventScroll: true });
+      return true;
+    }
+
+    const active = getDeepActiveElement();
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!active || !element.contains(active)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll: true });
+      return true;
+    }
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+      return true;
+    }
+    if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+      return true;
+    }
+    return false;
+  }
+
   function onGlobalKeydown(event) {
+    if (event.key === 'Tab') {
+      const interactiveTop = getInteractiveTopOverlay();
+      if (interactiveTop) trapFocus(event, interactiveTop);
+      return;
+    }
     if (event.key !== 'Escape') return;
     const top = getTopSession();
     if (!top || !top.policy.escape) return;
+    const interactiveTop = getInteractiveTopOverlay();
+    const popup = top.entry.element || findElementById(top.id);
+    if (interactiveTop && popup !== interactiveTop) return;
     event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
     close(top.id, 'escape');
   }
 
@@ -25471,18 +25839,32 @@ function defaultTraits() {
       close(top.id, 'close-button');
       return;
     }
-    const inner = pop.querySelector('.popup-inner') || pop.querySelector('.db-modal');
+    const inner = pop.querySelector('.popup-inner') || pop.querySelector('.db-modal') || pop.querySelector('.db-drawer__panel');
     const clickedInner = inner
       ? (pathContains(path, inner) || (event.target instanceof Node && inner.contains(event.target)))
       : false;
     const clickedPopup = pathContains(path, pop)
       || (event.target instanceof Node && pop.contains(event.target));
+    const hasPointerCoordinates = Number.isFinite(event.clientX)
+      && Number.isFinite(event.clientY)
+      && (event.clientX !== 0 || event.clientY !== 0);
+    const pointTarget = hasPointerCoordinates
+      ? document.elementFromPoint(event.clientX, event.clientY)
+      : null;
+    const clickedSurfaceLessDrawerContent = !inner
+      && isDrawerOverlay(pop)
+      && clickedPopup
+      && (event.target !== pop
+        || (pointTarget instanceof Node && pointTarget !== pop && pop.contains(pointTarget)));
     const pathHasOverlay = Array.isArray(path) && path.some(node =>
       node instanceof Element &&
       (node.classList?.contains('popup') || node.classList?.contains('offcanvas') || node.classList?.contains('db-modal-overlay') || node.classList?.contains('db-drawer'))
     );
 
-    if (clickedInner) return;
+    // Legacy offcanvas panels use the drawer root as their content surface.
+    // Descendant clicks must stay inside, while a direct root click remains a
+    // valid backdrop dismissal just like structured drawers.
+    if (clickedInner || clickedSurfaceLessDrawerContent) return;
     if (clickedPopup) {
       close(top.id, 'backdrop');
       return;
@@ -25493,16 +25875,16 @@ function defaultTraits() {
 
   function registerPopupElement(el) {
     if (!el || !el.id) return;
-    if (!el.classList?.contains('popup') && !el.classList?.contains('db-modal-overlay')) return;
+    if (!isManagedOverlay(el)) return;
     ensureEntry(el, {});
   }
 
   function registerPopupTree(node) {
     if (!node) return;
     if (node.nodeType === 1) {
-      if ((node.classList?.contains('popup') || node.classList?.contains('db-modal-overlay')) && node.id) registerPopupElement(node);
+      if (isManagedOverlay(node) && node.id) registerPopupElement(node);
       if (typeof node.querySelectorAll === 'function') {
-        node.querySelectorAll('.popup[id], .db-modal-overlay[id]').forEach(registerPopupElement);
+        node.querySelectorAll('.popup[id], .db-modal-overlay[id], .offcanvas[id], .db-drawer[id]').forEach(registerPopupElement);
       }
     }
   }
@@ -25510,22 +25892,40 @@ function defaultTraits() {
   function onPopupClassMutation(el) {
     if (!el || !el.id) return;
     const isOverlay = isDaubOverlay(el);
-    if (!isOverlay && !el.classList?.contains('popup')) return;
+    if (!isManagedOverlay(el)) return;
     const id = el.id;
     ensureEntry(el);
     const wasOpen = Boolean(openStateById.get(id));
     const isOpen = isOverlay
       ? el.getAttribute('aria-hidden') === 'false'
-      : el.classList.contains('open');
+      : (el.classList.contains('open') || el.classList.contains('db-drawer--open'));
     openStateById.set(id, isOpen);
 
     if (isOpen && !wasOpen) {
+      if (!sessions.has(id)) {
+        const entry = entries.get(id);
+        const type = normalizeType(entry?.type);
+        sessions.set(id, {
+          id,
+          type,
+          touchProfile: normalizeTouchProfile(type, entry?.touchProfile),
+          policy: normalizePolicy(type, entry?.dismissPolicy),
+          onClose: null,
+          cleanup: null,
+          restoreFocus: resolveRestoreFocus(el),
+          isClosing: false
+        });
+      }
       pushToStack(id);
+      syncOverlayStack();
+      window.queueMicrotask?.(syncOverlayStack);
+      focusOverlay(el);
       return;
     }
 
     if (!isOpen && wasOpen) {
       removeFromStack(id);
+      syncOverlayStack();
       if (internalCloseIds.has(id)) return;
       if (sessions.has(id)) {
         runSessionClose(id, 'external', { skipClassRemoval: true });
@@ -25588,6 +25988,7 @@ function defaultTraits() {
   };
 
   document.addEventListener('keydown', onGlobalKeydown, true);
+  document.addEventListener('pointerdown', rememberInteractionTarget, true);
   document.addEventListener('click', onGlobalClick, true);
 
   if (document.readyState === 'loading') {
@@ -25625,9 +26026,8 @@ const removeToolbarUiPref = (key) => {
     toolbarUiPrefsStorage?.removeItem?.(key);
   } catch {}
 };
-const SHADOW_STYLESHEET_HREF = window.__symbaroumAssetMode === 'production'
-  ? 'css/shadow.css'
-  : 'css/style.css';
+const SHADOW_STYLESHEET_HREF = 'css/toolbar-shadow.css';
+const POPUP_STYLESHEET_HREF = 'css/popup-shell.css';
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 const LEVEL_OPTION_SPECS = Object.freeze([
@@ -25965,6 +26365,11 @@ class SharedToolbar extends HTMLElement {
     this._filterFirstOpenHandled = false;
     this._keyboardLikelyVisible = false;
     this._keyboardVisibilityTimer = null;
+    this._offlineUnsubscribe = null;
+    this._offlineDocumentCount = 0;
+    this._accessibilityObserver = null;
+    this._searchKeyTarget = null;
+    this._searchKeyHandler = null;
   }
 
   /* ------------------------------------------------------- */
@@ -25974,6 +26379,10 @@ class SharedToolbar extends HTMLElement {
     window.DAUB?.init?.(this.shadowRoot);
     window.autoResizeAll?.(this.shadowRoot);
     this.bindPopupManager();
+    this.bindOfflineControls();
+    this.bindAccessibilityState();
+    this._overlayKeyHandler = event => this.handleOverlayKeydown(event);
+    this.shadowRoot.addEventListener('keydown', this._overlayKeyHandler);
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
@@ -26205,6 +26614,17 @@ class SharedToolbar extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._offlineUnsubscribe?.();
+    this._offlineUnsubscribe = null;
+    this._accessibilityObserver?.disconnect();
+    this._accessibilityObserver = null;
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      this._searchKeyTarget.removeEventListener('keydown', this._searchKeyHandler, true);
+    }
+    this._searchKeyTarget = null;
+    this._searchKeyHandler = null;
+    if (this._overlayKeyHandler) this.shadowRoot?.removeEventListener('keydown', this._overlayKeyHandler);
+    this._overlayKeyHandler = null;
     this._toolbarResizeObserver?.disconnect();
     this._toolbarResizeObserver = null;
     this._vvCleanup?.forEach(cleanup => cleanup());
@@ -26229,6 +26649,191 @@ class SharedToolbar extends HTMLElement {
     this._toolbarElement = null;
     this._largeViewportHeight = null;
     document.removeEventListener('click', this._outsideHandler);
+  }
+
+  formatOfflineBytes(bytes) {
+    const value = Number(bytes) || 0;
+    if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} kB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  updateOfflineControls(detail = {}) {
+    const status = this.shadowRoot?.getElementById('offlineStatus');
+    const warmButton = this.shadowRoot?.getElementById('offlineRulesBtn');
+    const clearButton = this.shadowRoot?.getElementById('clearOfflineDocuments');
+    if (!status || !warmButton || !clearButton) return;
+
+    if (Number.isFinite(Number(detail.documents))) {
+      this._offlineDocumentCount = Math.max(0, Number(detail.documents));
+    }
+    const documentCount = this._offlineDocumentCount;
+    clearButton.disabled = documentCount === 0;
+    clearButton.textContent = documentCount
+      ? `Rensa ${documentCount} hämtad${documentCount === 1 ? '' : 'e'} PDF`
+      : 'Inga hämtade PDF:er';
+
+    if (detail.type === 'OFFLINE_RULES_PROGRESS') {
+      status.textContent = `Förbereder offline-regler: ${detail.completed || 0}/${detail.total || 0}`;
+      warmButton.disabled = true;
+      warmButton.textContent = 'Förbereder offline…';
+      return;
+    }
+    if (detail.type === 'OFFLINE_RULES_ERROR' || detail.status === 'error' || detail.status === 'timeout') {
+      status.textContent = 'Offline-regler kunde inte uppdateras. Försök igen när du är online.';
+      warmButton.disabled = false;
+      warmButton.textContent = 'Försök igen offline';
+      return;
+    }
+    if (detail.status === 'ready' || detail.rules?.revision) {
+      const size = this.formatOfflineBytes(detail.rules?.totalBytes);
+      status.textContent = `Offline-regler är redo (${detail.rules?.total || 0} filer, ${size}).`;
+      warmButton.disabled = false;
+      warmButton.textContent = 'Uppdatera offline-regler';
+      return;
+    }
+    status.textContent = 'Offline-regler förbereds automatiskt efter att appen har startat.';
+    warmButton.disabled = false;
+    warmButton.textContent = 'Förbered offline-regler';
+  }
+
+  bindOfflineControls() {
+    const offline = window.symbaroumOffline;
+    if (!offline) {
+      this.updateOfflineControls({ status: 'unavailable' });
+      return;
+    }
+    this._offlineUnsubscribe?.();
+    this._offlineUnsubscribe = offline.subscribe(detail => this.updateOfflineControls(detail));
+    offline.getStatus().then(detail => this.updateOfflineControls(detail));
+  }
+
+  bindAccessibilityState() {
+    this._accessibilityObserver?.disconnect();
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      this._searchKeyTarget.removeEventListener('keydown', this._searchKeyHandler, true);
+    }
+
+    const search = this.shadowRoot?.getElementById('searchField');
+    const suggestions = this.shadowRoot?.getElementById('searchSuggest');
+    const partyButtons = [
+      this.shadowRoot?.getElementById('partySmith'),
+      this.shadowRoot?.getElementById('partyAlchemist'),
+      this.shadowRoot?.getElementById('partyArtefacter')
+    ].filter(Boolean);
+
+    const syncSearch = () => {
+      if (!search || !suggestions) return;
+      const options = Array.from(suggestions.querySelectorAll('.item'));
+      const expanded = !suggestions.hidden && options.length > 0;
+      search.setAttribute('aria-expanded', String(expanded));
+      options.forEach((option, index) => {
+        option.id = `searchSuggestOption-${index}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', String(option.classList.contains('active')));
+      });
+      const active = options.find(option => option.classList.contains('active'));
+      if (expanded && active) search.setAttribute('aria-activedescendant', active.id);
+      else search.removeAttribute('aria-activedescendant');
+    };
+
+    this._searchKeyTarget = search || null;
+    this._searchKeyHandler = search
+      ? event => this.handleSearchComboboxKeydown(event)
+      : null;
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      // Capture on the input before the legacy raw-submit listener. An active
+      // option owns Enter; with no active option the event continues unchanged.
+      this._searchKeyTarget.addEventListener('keydown', this._searchKeyHandler, true);
+    }
+
+    const syncPartyButtons = () => {
+      partyButtons.forEach(button => {
+        button.setAttribute('aria-pressed', String(button.classList.contains('active')));
+      });
+    };
+
+    this._accessibilityObserver = new MutationObserver(() => {
+      syncSearch();
+      syncPartyButtons();
+    });
+    if (suggestions) {
+      this._accessibilityObserver.observe(suggestions, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['class', 'hidden']
+      });
+    }
+    partyButtons.forEach(button => {
+      this._accessibilityObserver.observe(button, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    });
+    syncSearch();
+    syncPartyButtons();
+  }
+
+  handleSearchComboboxKeydown(event) {
+    if (event?.key !== 'Enter') return false;
+    const search = this.shadowRoot?.getElementById('searchField');
+    if (!search || event.target !== search) return false;
+
+    const suggestions = this.shadowRoot?.getElementById('searchSuggest');
+    const activeOption = suggestions && !suggestions.hidden
+      ? suggestions.querySelector('.item.active')
+      : null;
+    if (!activeOption) return false;
+
+    const selectActive = window.globalSearch?.selectActiveSuggestion;
+    if (typeof selectActive !== 'function') return false;
+    let selected = false;
+    try {
+      selected = Boolean(selectActive.call(window.globalSearch));
+    } catch {
+      return false;
+    }
+    if (!selected) return false;
+
+    event.preventDefault?.();
+    // The legacy listener is on the same input and submits the raw query. Stop
+    // it only after the active option has been selected successfully.
+    event.stopImmediatePropagation?.();
+    search.focus?.({ preventScroll: true });
+    return true;
+  }
+
+  handleOverlayKeydown(event) {
+    if (event.key !== 'Tab') return;
+    const historyTop = window.peekTopOverlay?.();
+    const top = historyTop instanceof HTMLElement && this.shadowRoot.contains(historyTop)
+      ? historyTop
+      : Array.from(this.shadowRoot.querySelectorAll('.popup.open, .offcanvas.open')).at(-1);
+    if (!(top instanceof HTMLElement)) return;
+    const surface = top.querySelector('.popup-inner, .db-modal, .db-drawer__panel') || top;
+    const focusable = Array.from(surface.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+    )).filter(element => (
+      !element.closest('[inert]')
+      && element.getAttribute('aria-hidden') !== 'true'
+      && window.getComputedStyle(element).visibility !== 'hidden'
+      && window.getComputedStyle(element).display !== 'none'
+      && element.getClientRects().length > 0
+    ));
+    if (!focusable.length) return;
+    const active = this.shadowRoot.activeElement;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!active || !top.contains(active)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll: true });
+    } else if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
   }
 
   /* ------------------------------------------------------- */
@@ -26866,15 +27471,22 @@ class SharedToolbar extends HTMLElement {
           height: 1.15em;
           margin: 0 .25em 0 0;
         }
+        @media (max-width: 640px), (pointer: coarse) {
+          #searchField {
+            height: 44px;
+            min-height: 44px;
+          }
+        }
       </style>
       <link rel="stylesheet" href="${SHADOW_STYLESHEET_HREF}">
+      <link rel="stylesheet" href="${POPUP_STYLESHEET_HREF}">
       <!-- ---------- Verktygsrad ---------- -->
       <nav class="toolbar db-bottom-nav db-bottom-nav--always" aria-label="Primär navigering">
         <div class="toolbar-top">
           <button id="catToggle" class="db-btn db-btn--icon chevron-toggle" title="Minimera alla kategorier"><span class="chevron-icon"></span></button>
           <div class="search-wrap db-search" role="search">
-            <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off">
-            <div id="searchSuggest" class="suggestions" hidden></div>
+            <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest">
+            <div id="searchSuggest" class="suggestions" role="listbox" aria-label="Sökförslag" hidden></div>
           </div>
           <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
         </div>
@@ -26945,6 +27557,13 @@ class SharedToolbar extends HTMLElement {
               <div class="char-btn-row">
                 <button id="checkForUpdates" class="db-btn">Uppdatera appen</button>
               </div>
+              <div class="char-btn-row offline-controls-row">
+                <button id="offlineRulesBtn" class="db-btn">Förbered offline-regler</button>
+              </div>
+              <p id="offlineStatus" class="offline-status" role="status">Offline-regler förbereds automatiskt efter att appen har startat.</p>
+              <div class="char-btn-row offline-controls-row">
+                <button id="clearOfflineDocuments" class="db-btn db-btn--secondary" disabled>Inga hämtade PDF:er</button>
+              </div>
               <div class="char-btn-row">
                 <button id="deleteChar" class="db-btn db-btn--danger">Radera rollperson</button>
               </div>
@@ -26960,19 +27579,19 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle icon-only">${icon('smithing')}</button>
+                    <button id="partySmith" class="party-toggle icon-only" type="button" aria-label="Smed i partyt" aria-pressed="false" title="Ställ in smed i partyt">${icon('smithing')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Alkemist i partyt?</span>
                     </span>
-                    <button id="partyAlchemist" class="party-toggle icon-only">${icon('alkemi')}</button>
+                    <button id="partyAlchemist" class="party-toggle icon-only" type="button" aria-label="Alkemist i partyt" aria-pressed="false" title="Ställ in alkemist i partyt">${icon('alkemi')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Artefaktmakare i partyt?</span>
                     </span>
-                    <button id="partyArtefacter" class="party-toggle icon-only">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
+                    <button id="partyArtefacter" class="party-toggle icon-only" type="button" aria-label="Artefaktmakare i partyt" aria-pressed="false" title="Ställ in artefaktmakare i partyt">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
                   </li>
                   ${renderFilterSwitchRow({
                     id: 'filterUnion',
@@ -27826,6 +28445,55 @@ class SharedToolbar extends HTMLElement {
       return;
     }
 
+    if (btn.id === 'offlineRulesBtn') {
+      if (!window.symbaroumOffline) {
+        window.toast?.('Offline-funktionen är inte tillgänglig.');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Förbereder offline…';
+      window.symbaroumOffline.retryRules()
+        .then(result => {
+          this.updateOfflineControls(result);
+          if (result?.ok) window.toast?.('Offline-reglerna är uppdaterade.');
+        })
+        .catch(error => {
+          console.error('Offline rules update failed', error);
+          this.updateOfflineControls({ status: 'error' });
+        })
+        .finally(() => {
+          const current = this.shadowRoot?.getElementById('offlineRulesBtn');
+          if (current && current.textContent === 'Förbereder offline…') {
+            current.disabled = false;
+            current.textContent = originalText;
+          }
+        });
+      return;
+    }
+
+    if (btn.id === 'clearOfflineDocuments') {
+      if (!window.symbaroumOffline || !window.confirm('Rensa alla PDF:er som har hämtats för offline-läsning?')) return;
+      const previousDocumentCount = this._offlineDocumentCount;
+      btn.disabled = true;
+      window.symbaroumOffline.clearDocuments()
+        .then(result => {
+          if (result?.ok) {
+            this.updateOfflineControls(result);
+            window.toast?.('Hämtade PDF:er har rensats.');
+          } else {
+            this.updateOfflineControls({ documents: previousDocumentCount });
+            window.toast?.('Kunde inte rensa hämtade PDF:er.');
+          }
+        })
+        .catch(error => {
+          console.error('Offline document cleanup failed', error);
+          this.updateOfflineControls({ documents: previousDocumentCount });
+          window.toast?.('Kunde inte rensa hämtade PDF:er.');
+        });
+      return;
+    }
+
     if (btn.id === 'collapseAllFilters') {
       const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(#invSpendCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
@@ -27955,7 +28623,7 @@ class SharedToolbar extends HTMLElement {
   setPanelState(panel, isOpen, trigger = null) {
     if (!panel) return;
     const surface = panel.querySelector('.db-drawer__panel') || panel;
-    const wasOpen = panel.classList.contains('open');
+    const wasOpen = panel.classList.contains('open') || panel.getAttribute('aria-hidden') === 'false';
     panel.classList.toggle('open', isOpen);
     panel.classList.toggle('db-drawer--open', isOpen);
     panel.setAttribute('aria-hidden', String(!isOpen));
@@ -27963,6 +28631,7 @@ class SharedToolbar extends HTMLElement {
     if (isOpen) {
       panel.removeAttribute('inert');
       panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
+      window.registerOverlayCleanup?.(panel, () => this.setPanelState(panel, false));
       surface.scrollTop = 0;
       requestAnimationFrame(() => {
         const focusTarget = surface.querySelector(
@@ -27974,6 +28643,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     panel.setAttribute('inert', '');
+    window.registerOverlayCleanup?.(panel, null);
     const restoreFocus = panel._restoreFocus;
     panel._restoreFocus = null;
     if (wasOpen && restoreFocus?.isConnected) {

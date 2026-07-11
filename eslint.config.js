@@ -46,6 +46,7 @@ const browserGlobals = {
 };
 
 const nodeGlobals = {
+  AbortController: 'readonly',
   Buffer: 'readonly',
   process: 'readonly'
 };
@@ -75,6 +76,7 @@ export default [
   {
     files: [
       'playwright.config.js',
+      'playwright.release.config.js',
       'vite.config.js',
       'vitest.config.js',
       'eslint.config.js',
@@ -87,6 +89,7 @@ export default [
       'js/views/**/*.js',
       'js/workers/**/*.js',
       'scripts/**/*.mjs',
+      'scripts/verify_rules_helper.js',
       'tests/**/*.js'
     ],
     languageOptions: {

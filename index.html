@@ -6,26 +6,100 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Symbapedia">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon-192.png">
   <meta name="theme-color" content="#2D2C21">
   <title>Symbapedia</title>
 
   <style>
-    html[data-preload] body { visibility:hidden; opacity:0; }
-    html.is-ready body { visibility:visible; opacity:1; transition:opacity .2s; }
+    html {
+      min-height: 100%;
+      background: #2d2c21;
+      color-scheme: dark;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: #2d2c21;
+    }
+    html[data-preload="true"] #view-root,
+    html[data-preload="true"] shared-toolbar { visibility: hidden; }
+    html.is-ready body { opacity:1; transition:opacity .2s; }
+    .skip-links {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 10001;
+      display: flex;
+      gap: .35rem;
+      padding: .35rem;
+      transform: translateY(-120%);
+      transition: transform .15s ease;
+    }
+    .skip-links:focus-within { transform: translateY(0); }
+    .skip-link {
+      padding: .55rem .75rem;
+      border-radius: .55rem;
+      background: #fff3e4;
+      color: #231e1a;
+      font: 700 .95rem/1.2 system-ui, sans-serif;
+    }
     .boot-fallback {
-      width: min(40rem, calc(100vw - 2rem));
-      margin: 12vh auto 0;
-      padding: 1rem 1.2rem;
-      border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.12));
-      border-radius: 1rem;
-      background: var(--db-color-surface, rgba(25, 21, 18, 0.96));
-      color: var(--db-color-text, #fff3e4);
-      box-shadow: var(--db-shadow-2, 0 18px 40px rgba(0, 0, 0, 0.32));
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      background:
+        radial-gradient(circle at top, rgba(185, 122, 82, .18), transparent 42%),
+        #2d2c21;
+      color: #fff3e4;
       font: 500 1rem/1.5 var(--db-font-ui, "Avenir Next", "Segoe UI", sans-serif);
     }
     .boot-fallback[hidden] { display: none; }
+    .boot-fallback__card {
+      box-sizing: border-box;
+      width: min(24rem, 100%);
+      padding: 1.2rem 1.3rem;
+      border: 1px solid rgba(255, 243, 228, 0.14);
+      border-radius: 1rem;
+      background: rgba(25, 21, 18, 0.96);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+    }
+    .boot-fallback h1 {
+      display: inline-block;
+      margin: 0 0 .4rem;
+      font-size: 1.55rem;
+      line-height: 1.05;
+      letter-spacing: .025em;
+    }
+    .boot-fallback p { margin: 0; color: #d6c6b4; }
+    .boot-fallback__spinner {
+      width: 1.2rem;
+      height: 1.2rem;
+      margin-top: .9rem;
+      border: 2px solid rgba(255,255,255,.22);
+      border-top-color: #b97a52;
+      border-radius: 50%;
+      animation: boot-spin .8s linear infinite;
+    }
+    .boot-fallback.is-error .boot-fallback__spinner { display: none; }
+    .boot-fallback__retry {
+      min-height: 44px;
+      margin-top: 1rem;
+      padding: .55rem .9rem;
+      border: 1px solid rgba(255, 243, 228, .18);
+      border-radius: .65rem;
+      background: #b97a52;
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .boot-fallback__spinner { animation: none; }
+    }
     .boot-fallback code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.95em;
@@ -33,31 +107,101 @@
   </style>
   <script>
     document.documentElement.dataset.preload = "true";
-    window.__symbaroumShowBootFallback = function(message) {
-      if (window.__symbaroumBootCompleted) return;
+    window.__symbaroumAfterFirstPaint = new Promise(resolve => {
+      const schedule = () => {
+        const fallbackId = window.setTimeout(resolve, 150);
+        window.requestAnimationFrame(() => window.setTimeout(() => {
+          window.clearTimeout(fallbackId);
+          resolve();
+        }, 0));
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', schedule, { once: true });
+      } else {
+        schedule();
+      }
+    });
+
+    window.__symbaroumDaubReady = window.__symbaroumAfterFirstPaint
+      .then(() => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'js/vendor/daub.js';
+        script.addEventListener('load', () => {
+          try {
+            window.DAUB?.setTemperature?.('auto');
+            window.DAUB?.setTexture?.('glass');
+            window.DAUB?.setFamily?.('ember');
+            window.DAUB?.setScheme?.('dark');
+            window.DAUB?.setAccent?.('#B97A52');
+            resolve(true);
+          } catch (error) {
+            reject(error);
+          }
+        }, { once: true });
+        script.addEventListener('error', () => {
+          reject(new Error('Failed to load the DAUB runtime.'));
+        }, { once: true });
+        document.head.appendChild(script);
+      }))
+      .catch(error => {
+        console.warn('Optional DAUB runtime did not load', error);
+        return false;
+      });
+
+    window.__symbaroumShowBootFallback = function(message, options) {
+      const isError = Boolean(options && options.error);
+      if (window.__symbaroumBootCompleted && !isError) return;
       document.documentElement.classList.add('is-ready');
-      document.documentElement.removeAttribute('data-preload');
+      if (!isError) document.documentElement.removeAttribute('data-preload');
       const fallback = document.getElementById('boot-fallback');
       if (!fallback) return;
       fallback.hidden = false;
-      fallback.innerHTML = message;
+      fallback.classList.toggle('is-error', isError);
+      fallback.setAttribute('role', isError ? 'alertdialog' : 'status');
+      if (isError) fallback.setAttribute('aria-modal', 'true');
+      else fallback.removeAttribute('aria-modal');
+      const text = fallback.querySelector('#boot-message');
+      const retry = fallback.querySelector('#boot-retry');
+      if (text) text.innerHTML = message;
+      if (text) text.setAttribute('role', isError ? 'alert' : 'status');
+      ['view-root', 'skip-links-root'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.toggleAttribute('inert', isError);
+      });
+      document.querySelector('shared-toolbar')?.toggleAttribute('inert', isError);
+      if (retry) {
+        retry.hidden = !isError;
+        if (isError) window.requestAnimationFrame(() => retry.focus({ preventScroll: true }));
+      }
     };
+    window.__symbaroumShowLoadError = function(message) {
+      window.__symbaroumShowBootFallback(message, { error: true });
+    };
+    window.__symbaroumBootWatchdog = window.setTimeout(() => {
+      if (document.documentElement.dataset.preload === 'true') {
+        window.__symbaroumShowBootFallback(
+          'Symbapedia kunde inte starta. Kontrollera anslutningen och försök igen.',
+          { error: true }
+        );
+      }
+    }, 8000);
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const fallback = document.getElementById('boot-fallback');
+      const retry = document.getElementById('boot-retry');
+      if (!fallback?.classList.contains('is-error') || fallback.hidden || !retry) return;
+      event.preventDefault();
+      retry.focus({ preventScroll: true });
+    }, true);
     document.addEventListener('DOMContentLoaded', () => {
       if (window.location.protocol === 'file:') {
         window.setTimeout(() => {
           window.__symbaroumShowBootFallback(
-            'This shell must be served over <code>http://</code>.<br>Run <code>npm run dev</code> or <code>npm run preview</code> in the repo root.'
+            'Sidan måste köras via <code>http://</code>.<br>Starta den med <code>npm run dev</code> eller <code>npm run preview</code>.',
+            { error: true }
           );
         }, 100);
-        return;
       }
-      window.setTimeout(() => {
-        if (!window.__symbaroumBootCompleted && document.documentElement.dataset.preload === 'true') {
-          window.__symbaroumShowBootFallback(
-            'The app shell did not finish booting. Check the browser console for the failing asset or script.'
-          );
-        }
-      }, 8000);
     });
   </script>
   <script type="importmap">
@@ -67,21 +211,39 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="css/style.css">
-  <script src="js/vendor/daub.js"></script>
-  <script>
-    DAUB.setTemperature('auto');
-    DAUB.setTexture('glass');
-    DAUB.setFamily('ember');
-    DAUB.setScheme('dark');
-    DAUB.setAccent('#B97A52');
+  <script type="module">
+    window.__symbaroumStylesReady = window.__symbaroumAfterFirstPaint
+      .then(() => import('./js/app-styles.js'))
+      .then(() => true)
+      .catch(error => {
+        console.error('Symbapedia styles failed to load', error);
+        return false;
+      });
+
+    window.__symbaroumAfterFirstPaint
+      .then(() => import('./js/app-bootstrap.js'))
+      .catch(error => {
+        console.error('Symbapedia bootstrap failed', error);
+        window.__symbaroumShowLoadError?.('Symbapedia kunde inte läsa in de filer som behövs. Kontrollera anslutningen och försök igen.');
+      });
   </script>
-  <script type="module" src="js/app-bootstrap.js"></script>
 </head>
 <body data-role="index">
 
-  <div id="boot-fallback" class="boot-fallback" hidden></div>
-  <div id="view-root"></div>
+  <nav class="skip-links" id="skip-links-root" aria-label="Genvägar">
+    <a class="skip-link" id="skip-to-content" href="#">Hoppa till innehåll</a>
+    <a class="skip-link" id="skip-to-search" href="#searchField">Hoppa till sök</a>
+  </nav>
+
+  <div id="boot-fallback" class="boot-fallback" role="status" aria-live="polite" aria-labelledby="boot-title" aria-describedby="boot-message">
+    <div class="boot-fallback__card">
+      <h1 id="boot-title">Symbapedia</h1>
+      <p id="boot-message" role="status">Laddar Symbapedia…</p>
+      <div class="boot-fallback__spinner" aria-hidden="true"></div>
+      <button id="boot-retry" class="boot-fallback__retry" type="button" hidden onclick="window.location.reload()">Ladda om</button>
+    </div>
+  </div>
+  <main id="view-root" tabindex="-1" aria-busy="true"></main>
 
   <!-- Gemensam toolbar + paneler -->
   <shared-toolbar></shared-toolbar>

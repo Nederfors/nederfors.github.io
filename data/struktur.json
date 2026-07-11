@@ -3,8 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-07-09T10:30:37.377547+00:00",
-      "antal_typer_hittade": 57,
+      "antal_typer_hittade": 58,
       "källfiler": [
         "data/diverse.json",
         "data/kuriositeter.json",
@@ -14,6 +13,7 @@
         "data/formaga.json",
         "data/basformagor.json",
         "data/kvalitet.json",
+        "data/mystisk-kraft.json",
         "data/mystisk-kvalitet.json",
         "data/neutral-kvalitet.json",
         "data/negativ-kvalitet.json",
@@ -42,9 +42,7 @@
         "data/avstandsvapen.json",
         "data/narstridsvapen.json"
       ],
-      "överhoppade_filer": [
-        "mystisk-kraft.json.entries[4].beskrivning: unknown entry key"
-      ]
+      "genererad": "2026-07-10T13:37:08.062850+00:00"
     },
     "Allmän kvalitet": {
       "antal": 2,
@@ -918,7 +916,7 @@
       ]
     },
     "Elityrke": {
-      "antal": 21,
+      "antal": 20,
       "källfiler": [
         "data/elityrke.json"
       ],
@@ -1297,10 +1295,11 @@
       ]
     },
     "Elityrkesförmåga": {
-      "antal": 42,
+      "antal": 64,
       "källfiler": [
         "data/formaga.json",
         "data/monstruost-sardrag.json",
+        "data/mystisk-kraft.json",
         "data/ritual.json"
       ],
       "exempel": [
@@ -3642,6 +3641,120 @@
             "skilling": 5,
             "örtegar": 0
           }
+        }
+      ]
+    },
+    "Mystisk kraft": {
+      "antal": 85,
+      "källfiler": [
+        "data/mystisk-kraft.json"
+      ],
+      "exempel": [
+        {
+          "id": "mystiskkr1",
+          "name": "Anatema",
+          "description": "Material: En liten silverklocka  \nMystikern har studerat motmagins hemligheter och kan upplösa andra krafters verkan. Anatema påverkar inte ritualer – deras mystiska band är alltför grundligt vävda och kan endast motverkas med andra ritualer.",
+          "tags": {
+            "types": [
+              "Mystisk kraft"
+            ],
+            "traditions": [
+              "Ordensmagiker",
+              "Stavmagiker",
+              "Teurg"
+            ],
+            "tests": [
+              "Viljestark"
+            ]
+          },
+          "levels": {
+            "Novis": {
+              "description": "Handling: Aktiv. Mystikern kan med ett lyckat [Viljestark←Viljestark] skingra en pågående effekt på en varelse, även på sig själv under förutsättning att mystikern är i stånd att använda magi. Det är den påverkande mystikerns Viljestark som används som motstånd.",
+              "actions": "Aktiv",
+              "damage_type": "Ingen"
+            },
+            "Gesäll": {
+              "description": "Handling: Aktiv. Mystikern kan skingra pågående effekter på flera varelser i en kedja, slag slås för ett mål i taget.",
+              "actions": "Aktiv",
+              "damage_type": "Ingen"
+            },
+            "Mästare": {
+              "description": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark skingra alla verksamma magiska effekter oavsett sort, inklusive frammanade effekter och varelser.",
+              "actions": "Aktiv",
+              "damage_type": "Ingen"
+            }
+          },
+          "rules": {}
+        },
+        {
+          "id": "mystiskkr2",
+          "name": "Andeplåga",
+          "description": "Tradition: Endast tillgänglig för Andebesvärjare\nMaterial: En bit av en liksvepning\nVärlden är gammal och många andar dröjer kvar från forna tider; naturandar i mark och vatten eller döda hjältar som ännu inte har passerat till andra sidan. Vissa mystiker kan väcka andar till liv för en stund och få dem att anfalla fiender. Fienden ansätts av dessa ettriga andar som sliter kläder, utrustning, hår och kött. I bästa fall kan fienden inte agera alls, i värsta fall drivs fienden till vansinne eller död av de vilda andarnas angrepp.",
+          "tags": {
+            "types": [
+              "Mystisk kraft",
+              "Elityrkesförmåga"
+            ],
+            "traditions": [
+              "Andebesvärjare"
+            ],
+            "tests": [
+              "Viljestark"
+            ]
+          },
+          "levels": {
+            "Novis": {
+              "description": "Aktiv. Mystikern kallar andar till sin hjälp och dessa transparenta skepnader anfaller en fiende. Fienden misslyckas automatiskt med alla slag för koncentration gällande mystiska krafter; alla andra framgångsslag får en andra chans att misslyckas. Mystikern måste klara ett Viljestark varje runda för att vidmakthålla andarnas hjälp.",
+              "actions": "Aktiv",
+              "damage_type": "Ingen"
+            },
+            "Gesäll": {
+              "description": "Aktiv. Mystikern kan kräva mer substantiell hjälp av traktens andar. De anfaller frenetiskt och ger skada på Viljestark utöver effekten på novisnivå. Skadan på Viljestark är 1T4 per runda, rustning skyddar ej. Når Viljestark noll dör offret, om det inte får slå Dödsslag som rollpersoner. Rollpersoner blir tillfälligt vansinniga (katatoniska, hysteriska, eller på annat sätt oförmögna att agera) under tiden de slår sina Dödsslag. Den alternativa skadan läks annars som annan skada. Mystikern måste klara ett Viljestark varje runda för att vidmakthålla andarnas hjälp och koncentrationen riskerar dessutom att brytas när mystikern tar skada, [Viljestark – Skada].",
+              "actions": "Aktiv",
+              "damage_type": "Mystisk"
+            },
+            "Mästare": {
+              "description": "Aktiv. Andarnas angrepp gör 1T6 i skada på Viljestark.",
+              "actions": "Aktiv",
+              "damage_type": "Mystisk"
+            }
+          },
+          "rules": {}
+        },
+        {
+          "id": "mystiskkr3",
+          "name": "Beskyddande runor",
+          "description": "Tradition: Stavmagi, Symbolism\nMaterial: Ristade runor\nMystikerns runor släpper lös beskyddande energier, vilka omsveper mystikern och på högre nivåer också dennes allierade.",
+          "tags": {
+            "types": [
+              "Mystisk kraft"
+            ],
+            "traditions": [
+              "Stavmagiker",
+              "Symbolist"
+            ],
+            "tests": [
+              "Viljestark"
+            ]
+          },
+          "levels": {
+            "Novis": {
+              "description": "Aktiv. Runornas kraft ger 1T4 extra i skydd tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada]. Skyddstärningen slås separat vid varje träff och adderas till målets rustning, om någon.",
+              "actions": "Aktiv",
+              "damage_type": "Ingen"
+            },
+            "Gesäll": {
+              "description": "Aktiv. Runorna ger 1T4 extra i skydd. En hämnande verkan medför också 1T4 i skada på varje fiende som skadar den beskyddade varelsen, rustning skyddar ej. Effekten varar tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada].",
+              "actions": "Aktiv",
+              "damage_type": "Mystisk"
+            },
+            "Mästare": {
+              "description": "Aktiv. Den skyddande och hämnande effekten slås med 1T6 istället för 1T4 och varar tills mystikern misslyckas med ett Viljestark.",
+              "actions": "Aktiv",
+              "damage_type": "Mystisk"
+            }
+          },
+          "rules": {}
         }
       ]
     },

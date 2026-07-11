@@ -1434,7 +1434,7 @@
     },
     {
       "id": "elix63",
-      "name": "Gryningsblod",
+      "name": "Gryningsblod (Novis)",
       "tags": {
         "types": [
           "Elixir"
@@ -1457,7 +1457,7 @@
     },
     {
       "id": "elix64",
-      "name": "Gryningsblod",
+      "name": "Gryningsblod (Gesäll)",
       "tags": {
         "types": [
           "Elixir"
@@ -1480,7 +1480,7 @@
     },
     {
       "id": "elix65",
-      "name": "Gryningsblod",
+      "name": "Gryningsblod (Mästare)",
       "tags": {
         "types": [
           "Elixir"
@@ -1503,7 +1503,7 @@
     },
     {
       "id": "elix66",
-      "name": "Essensdrapa",
+      "name": "Essensdrapa (Novis)",
       "tags": {
         "types": [
           "Elixir"
@@ -1526,7 +1526,7 @@
     },
     {
       "id": "elix67",
-      "name": "Essensdrapa",
+      "name": "Essensdrapa (Gesäll)",
       "tags": {
         "types": [
           "Elixir"

@@ -118,3 +118,118 @@ test('legacy character imports canonicalize weapon ids in the browser app', asyn
   ]);
   expect(result.exportHasLegacyWeaponIds).toBe(false);
 });
+
+test('browser import maps ambiguous legacy elixir names to their canonical Novis variants', async ({ page }) => {
+  await page.addInitScript(() => {
+    for (const key of ['showOpenFilePicker', 'showDirectoryPicker']) {
+      try {
+        Object.defineProperty(window, key, {
+          configurable: true,
+          writable: true,
+          value: undefined
+        });
+      } catch {
+        try { window[key] = undefined; } catch {}
+      }
+    }
+    if (sessionStorage.getItem('__legacyElixirImportSeeded') === '1') return;
+    localStorage.clear();
+    sessionStorage.clear();
+    sessionStorage.setItem('__legacyElixirImportSeeded', '1');
+  });
+  await page.goto('/#/index');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+
+  const toolbar = page.locator('shared-toolbar');
+  await toolbar.locator('#filterToggle').click();
+  await expect(toolbar.locator('#filterPanel')).toHaveAttribute('aria-hidden', 'false');
+
+  const storageButton = toolbar.locator('#driveStorageBtn');
+  if (!(await storageButton.isVisible())) {
+    await toolbar.locator('#filterFormalCard .card-title').click();
+  }
+  await expect(storageButton).toBeVisible();
+  await storageButton.click();
+
+  const storagePopup = toolbar.locator('#driveStoragePopup');
+  await expect(storagePopup).toBeVisible();
+  await storagePopup.locator('#driveStorageTab-import').click();
+  await expect(storagePopup.locator('#driveStorageTab-import')).toHaveAttribute('aria-selected', 'true');
+
+  const importButton = storagePopup
+    .locator('#driveStoragePanel-import button')
+    .filter({ hasText: /^Importera till vald mapp$/ });
+  await expect(importButton).toBeVisible();
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await importButton.click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({
+    name: 'legacy-elixir-aliases.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      name: 'Legacy elixir aliases',
+      data: {
+        inventory: [
+          { n: 'Gryningsblod' },
+          { n: 'Essensdrapa' }
+        ]
+      }
+    }))
+  });
+
+  await expect.poll(() => page.evaluate(() => (
+    window.storeHelper.load().characters.find(char => char.name === 'Legacy elixir aliases')?.id || ''
+  ))).not.toBe('');
+  const importedId = await page.evaluate(() => (
+    window.storeHelper.load().characters.find(char => char.name === 'Legacy elixir aliases')?.id || ''
+  ));
+  expect(importedId).toBeTruthy();
+
+  await expect.poll(() => page.evaluate(id => {
+    const activeStore = window.storeHelper.load();
+    return (activeStore.data[id]?.inventory || []).map(row => ({
+      id: row.id || '',
+      name: row.name || row.namn || ''
+    }));
+  }, importedId)).toEqual([
+    { id: 'elix63', name: 'Gryningsblod (Novis)' },
+    { id: 'elix66', name: 'Essensdrapa (Novis)' }
+  ]);
+
+  await expect(storagePopup).toBeHidden();
+  if (await toolbar.locator('#filterPanel').getAttribute('aria-hidden') !== 'false') {
+    await toolbar.locator('#filterToggle').click();
+  }
+  await expect(toolbar.locator('#filterPanel')).toHaveAttribute('aria-hidden', 'false');
+  const charSelect = toolbar.locator('#charSelect');
+  if (!(await charSelect.isVisible())) {
+    await toolbar.locator('#filterFormalCard .card-title').click();
+  }
+  await expect(charSelect).toBeVisible();
+  await expect(charSelect).toHaveValue(importedId);
+  await expect(charSelect.locator('option:checked')).toHaveText('Legacy elixir aliases');
+
+  await toolbar.locator('#filterPanel aside button[data-close="filterPanel"]').click();
+  await expect(toolbar.locator('#filterPanel')).toHaveAttribute('aria-hidden', 'true');
+  await toolbar.locator('#inventoryLink').click();
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'inventory'
+    && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+  ));
+  await expect(page.locator('#invList li[data-name="Gryningsblod (Novis)"]')).toBeVisible();
+  await expect(page.locator('#invList li[data-name="Essensdrapa (Novis)"]')).toBeVisible();
+
+  // Exercise the same persisted bootstrap path a user gets after importing a
+  // file, instead of relying on the importing page's pre-import store object.
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  const afterReload = await page.evaluate(id => {
+    const activeStore = window.storeHelper.load();
+    return (activeStore.data[id]?.inventory || []).map(row => [row.id || '', row.name || row.namn || '']);
+  }, importedId);
+  expect(afterReload).toEqual([
+    ['elix63', 'Gryningsblod (Novis)'],
+    ['elix66', 'Essensdrapa (Novis)']
+  ]);
+});

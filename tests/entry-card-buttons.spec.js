@@ -44,6 +44,13 @@ async function waitForApp(page, route, selector) {
   await page.locator(selector).waitFor({ state: 'visible' });
 }
 
+async function revealIndexTarget(page, query) {
+  const search = page.locator('shared-toolbar').locator('#searchField');
+  await search.fill(query);
+  await search.press('Enter');
+  await expect.poll(async () => page.locator('#lista li.entry-card:visible, #lista li.card:visible').count()).toBeGreaterThan(0);
+}
+
 async function prepareIndexInventoryEntry(page, qty, preferredName = 'Dubbel ringbrynja') {
   return page.evaluate(async ({ qty, preferredName }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
@@ -260,6 +267,7 @@ async function changeCardLevel(page, rootSelector, name, value) {
 test('index inventory cards keep the canonical standard-button order for counts 0, 1, and 2', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');
+  await revealIndexTarget(page, 'Dubbel ringbrynja');
 
   const entry = await prepareIndexInventoryEntry(page, 0);
   await expect.poll(async () => (
@@ -280,6 +288,7 @@ test('index inventory cards keep the canonical standard-button order for counts 
 test('index incremental action updates keep db-btn styling and button footprint stable', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');
+  await revealIndexTarget(page, 'Dubbel ringbrynja');
 
   const entry = await prepareIndexInventoryEntry(page, 1);
   await expect.poll(async () => (
@@ -344,11 +353,11 @@ test('character level changes keep the surviving standard-button order stable', 
 
   const entry = await prepareCharacterLevelEntry(page);
   const beforeActs = await readStandardButtons(page, '#valda', entry.name);
-  expect(beforeActs?.map((button) => button.act) || []).toEqual(['rem']);
+  expect(beforeActs?.map((button) => button.act) || []).toEqual(['del']);
 
   await changeCardLevel(page, '#valda', entry.name, entry.levels[1]);
   await expect.poll(async () => {
-    return page.evaluate(({ name, value }) => {
+    return page.evaluate(({ name }) => {
       const card = [...document.querySelectorAll('#valda li.entry-card, #valda li.card')]
         .find((candidate) => String(candidate?.dataset?.name || '').trim() === String(name || '').trim()) || null;
       const select = card?.querySelector('select.level');
@@ -358,5 +367,5 @@ test('character level changes keep the surviving standard-button order stable', 
 
   await expect.poll(async () => (
     (await readStandardButtons(page, '#valda', entry.name))?.map((button) => button.act) || []
-  )).toEqual(['rem']);
+  )).toEqual(['del']);
 });

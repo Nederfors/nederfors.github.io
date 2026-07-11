@@ -4,13 +4,12 @@ import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+from catalog_files import load_catalog_files
 from data_file_schema import load_json, normalize_payload, validate_catalog_payload
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 OUTPUT_FILE = DATA_DIR / 'struktur.json'
-MANIFEST_FILE = ROOT_DIR / 'scripts' / 'generated' / 'data_manifest.json'
-EXCLUDED_FILES = {'ai-plugin.json', 'all.json', 'struktur.json', 'pdf-list.json', 'legacy-import-map.json'}
 
 
 def parse_args():
@@ -53,23 +52,25 @@ def get_entry_tags(entry):
 
 
 def discover_data_files():
-    if MANIFEST_FILE.exists():
-        manifest = load_json(MANIFEST_FILE)
-        names = manifest.get('entryDataFiles') or []
-        files = []
-        for name in names:
-            path = DATA_DIR / str(name)
-            if path.exists():
-                files.append(path)
-        if files:
-            return files
+    contract = load_catalog_files()
+    return [DATA_DIR / name for name in contract.entry_data_files]
 
-    files = []
-    for path in sorted(DATA_DIR.glob('*.json'), key=lambda p: p.name.casefold()):
-        if path.name in EXCLUDED_FILES:
-            continue
-        files.append(path)
-    return files
+
+def stable_generated_at(next_payload):
+    try:
+        existing_payload = load_json(OUTPUT_FILE)
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing_payload = None
+
+    if isinstance(existing_payload, list) and len(existing_payload) == 1:
+        existing_body = existing_payload[0]
+        if isinstance(existing_body, dict):
+            previous = existing_body.get('_meta', {}).get('genererad')
+            comparable = json.loads(json.dumps(existing_body, ensure_ascii=False))
+            comparable.get('_meta', {}).pop('genererad', None)
+            if comparable == next_payload and isinstance(previous, str) and previous:
+                return previous
+    return datetime.now(timezone.utc).isoformat()
 
 
 def build_structure(max_examples, strict=False):
@@ -118,7 +119,6 @@ def build_structure(max_examples, strict=False):
                 'för varje datatyp (tagg) hittad i källfilerna.'
             ),
             'språk': 'Svenska',
-            'genererad': datetime.now(timezone.utc).isoformat(),
             'antal_typer_hittade': len(type_examples),
             'källfiler': [f'data/{name}' for name in processed_files]
         }
@@ -132,6 +132,8 @@ def build_structure(max_examples, strict=False):
             'källfiler': sorted(type_sources[entry_type], key=str.casefold),
             'exempel': type_examples[entry_type]
         }
+
+    out['_meta']['genererad'] = stable_generated_at(out)
 
     with OUTPUT_FILE.open('w', encoding='utf-8') as handle:
         json.dump([out], handle, ensure_ascii=False, indent=2)

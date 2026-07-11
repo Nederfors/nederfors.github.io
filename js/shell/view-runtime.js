@@ -22,6 +22,21 @@ export function createViewRuntime() {
     return document.getElementById('view-root') || document.body;
   }
 
+  function setViewBusy(isBusy) {
+    const viewRoot = getViewRoot();
+    if (viewRoot && viewRoot !== document.body) {
+      viewRoot.setAttribute('aria-busy', String(Boolean(isBusy)));
+    }
+  }
+
+  function focusViewRoot() {
+    const viewRoot = getViewRoot();
+    if (!viewRoot || viewRoot === document.body) return;
+    window.requestAnimationFrame(() => {
+      try { viewRoot.focus({ preventScroll: true }); } catch { viewRoot.focus?.(); }
+    });
+  }
+
   function syncDocumentTitle(role, tab = null) {
     document.title = getViewTitle(role, tab);
   }
@@ -85,7 +100,15 @@ export function createViewRuntime() {
 
     const sequence = ++routeSequence;
     const prev = currentRole;
-    const nextView = await loadView(normalizedRole);
+    setViewBusy(true);
+    let nextView;
+    try {
+      nextView = await loadView(normalizedRole);
+    } catch (error) {
+      setViewBusy(false);
+      window.__symbaroumShowLoadError?.('Den valda vyn kunde inte laddas. Kontrollera anslutningen och försök igen.');
+      throw error;
+    }
     if (sequence !== routeSequence) return;
 
     // Flush pending writes in the background — don't block the swap
@@ -115,11 +138,17 @@ export function createViewRuntime() {
       activeView.destroy();
     }
     activeView = nextView;
-    await activeView?.mount?.(document.body, {
-      role: normalizedRole,
-      previousRole: prev,
-      tab
-    });
+    try {
+      await activeView?.mount?.(document.body, {
+        role: normalizedRole,
+        previousRole: prev,
+        tab
+      });
+    } catch (error) {
+      setViewBusy(false);
+      window.__symbaroumShowLoadError?.('Vyns data kunde inte laddas. Kontrollera anslutningen och försök igen.');
+      throw error;
+    }
     if (sequence !== routeSequence) return;
 
     // 6. Activate traits tab if entering via summary/effects alias
@@ -147,6 +176,8 @@ export function createViewRuntime() {
     }
 
     resolveNavigationPerf(normalizedRole);
+    setViewBusy(false);
+    if (prev && prev !== normalizedRole) focusViewRoot();
   }
 
   return {

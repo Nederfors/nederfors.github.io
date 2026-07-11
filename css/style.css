@@ -3,5 +3,32 @@
 @import url('./components.css');
 @import url('./daub-bridges.css');
 @import url('./overlays.css');
+@import url('./popup-shell.css');
 @import url('./mobile.css');
 @import url('./motion.css');
+
+/* Capability-based sizing must also cover touch tablets wider than the
+   phone breakpoint. Keep this after the component imports so the compact
+   Traits card rules cannot shrink the controls back below a touch target. */
+@media (pointer: coarse) {
+  .trait-btn,
+  .traits-hub-panel .trait-controls .trait-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Avoid laying out off-screen catalog cards during the initial route render.
+   The remembered intrinsic size keeps subsequent scrolling stable while the
+   browser materializes each card. Safari safely ignores this optimization. */
+@supports (content-visibility: auto) {
+  #view-root #lista > .cat-group {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 4rem;
+  }
+
+  #view-root .entry-card-list > .entry-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 12rem;
+  }
+}

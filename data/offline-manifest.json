@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "revision": "4b4b69b0aec66c76b1eeb1d19699085887f4423cbd30c2f80851ab6b1e156149",
+  "resources": [
+    {
+      "url": "data/diverse.json",
+      "revision": "sha256-9790188f1b963f0c8e78bb2a6db15948f315baa007fe61eed15b02c3582aacb9",
+      "bytes": 33408
+    },
+    {
+      "url": "data/kuriositeter.json",
+      "revision": "sha256-5ce8b904ca6e85eaa1d452f71d534560a80045b36b449d7adf18d7d4b19634fb",
+      "bytes": 68239
+    },
+    {
+      "url": "data/skatter.json",
+      "revision": "sha256-9eba8c29706e7df80b00f7e8a0e049d064dd3d828adfec167a41cd2f50f0c8a4",
+      "bytes": 33630
+    },
+    {
+      "url": "data/elixir.json",
+      "revision": "sha256-dc51a7f1d1b69ec812b312fcbeb50721e8a50947ec1f982e17d1bfaae1d12b0f",
+      "bytes": 68424
+    },
+    {
+      "url": "data/fordel.json",
+      "revision": "sha256-b55d35bcd8b33d697fdd2ac17fab0f03483d327c4103858b060a17c379d42310",
+      "bytes": 75354
+    },
+    {
+      "url": "data/formaga.json",
+      "revision": "sha256-5f59a04b3c3425cb207200103483a279c8d224450ab212b279be6a84413fa7e3",
+      "bytes": 208918
+    },
+    {
+      "url": "data/basformagor.json",
+      "revision": "sha256-e1cf357717daef60d1488d53380ce0ec98ed3c4ef044f5091158ed9dd862defb",
+      "bytes": 16529
+    },
+    {
+      "url": "data/kvalitet.json",
+      "revision": "sha256-d1606cfa61ab3e8ab45946bd74982433216b2f4dfe4bf3ce4dd19605b1b18f28",
+      "bytes": 13028
+    },
+    {
+      "url": "data/mystisk-kraft.json",
+      "revision": "sha256-5681499858e545384ad8276808a4ee15c6e76e6a81f55c32b8e6c0647e526b61",
+      "bytes": 173284
+    },
+    {
+      "url": "data/mystisk-kvalitet.json",
+      "revision": "sha256-e615d0cd113bd80d5d76727ae14e2ea2142097cf2d2d375cb34f9dcde58769b0",
+      "bytes": 21036
+    },
+    {
+      "url": "data/neutral-kvalitet.json",
+      "revision": "sha256-b592bcbb284218f922221f0a6660b7b96d9a8581c750a1c4809d08fad6e73756",
+      "bytes": 7751
+    },
+    {
+      "url": "data/negativ-kvalitet.json",
+      "revision": "sha256-7045742a5769608bb6e0b5a6038d8cdaa95860625df9153e0c307428943961aa",
+      "bytes": 4157
+    },
+    {
+      "url": "data/nackdel.json",
+      "revision": "sha256-c831b01064a2eaf1e326b873180fbd2974b6a0915c09ab7fc7a236c3ecbeb362",
+      "bytes": 74880
+    },
+    {
+      "url": "data/anstallning.json",
+      "revision": "sha256-12ac2cf0b088a0e8419f1dbf236eac500f889ae29908f67ffa79dc2dbac115ca",
+      "bytes": 2656
+    },
+    {
+      "url": "data/byggnader.json",
+      "revision": "sha256-55a414afe2c078f3ea2ca33028697928bf2dd8c700312551b8e87638cfbe8759",
+      "bytes": 3123
+    },
+    {
+      "url": "data/yrke.json",
+      "revision": "sha256-5715bb3411c35d89f7dda59d0741c75d77448d096eaaabcbc8cf9b57e620458b",
+      "bytes": 50521
+    },
+    {
+      "url": "data/ras.json",
+      "revision": "sha256-5b7f7eb635037301656b004e8da0e9f85776b2b329906e159f2977b0991ad3fa",
+      "bytes": 46168
+    },
+    {
+      "url": "data/elityrke.json",
+      "revision": "sha256-692d30e033c9ed3705e701fafb86f08d72a408e202314b27dc6e8130224a5d07",
+      "bytes": 75445
+    },
+    {
+      "url": "data/fardmedel.json",
+      "revision": "sha256-0eefd54a61f0c0002142124c1395c7d7c18226b990a3f44365c11933b3f363f2",
+      "bytes": 4035
+    },
+    {
+      "url": "data/forvaring.json",
+      "revision": "sha256-42bc0743e5884ff3f972a9edd14d0ca779275003370f1c9f96b3780f9d59a9a8",
+      "bytes": 5599
+    },
+    {
+      "url": "data/gardsdjur.json",
+      "revision": "sha256-8d706457978051676946c57eb34352531add28a4edd133d6a148b40908e31260",
+      "bytes": 3087
+    },
+    {
+      "url": "data/instrument.json",
+      "revision": "sha256-505b44dd00b7fed9f145899ecfd3c7afc7e2ad5cc27e2c6c24ecaff52bd09c50",
+      "bytes": 5931
+    },
+    {
+      "url": "data/klader.json",
+      "revision": "sha256-5b972d3c12cd4f647f84139de58a3c28d565173d07f6466ab6da78f2bb4c8f9e",
+      "bytes": 9807
+    },
+    {
+      "url": "data/specialverktyg.json",
+      "revision": "sha256-5136e4e383972837c0af7051da24385ef37a1943d0b227cfbd4209da982623f4",
+      "bytes": 25310
+    },
+    {
+      "url": "data/tjanster.json",
+      "revision": "sha256-6998792e69c175b3562d8caf4011dd2ac825be62bff545a40c63729c67ebc008",
+      "bytes": 4904
+    },
+    {
+      "url": "data/ritual.json",
+      "revision": "sha256-26f194ec20b4e716a867b303199ea9cb5935e6c2dd2f2fa16dc97fa6103367be",
+      "bytes": 113549
+    },
+    {
+      "url": "data/rustning.json",
+      "revision": "sha256-eb3fb6b6be16518b6bcaa40d9b00a9c323657c4de3b016f468518d0f59db135e",
+      "bytes": 14492
+    },
+    {
+      "url": "data/mat.json",
+      "revision": "sha256-f3ab98972437adf721ea46e786e66f03337c215a651b6efab7bb3a2fb2893593",
+      "bytes": 27228
+    },
+    {
+      "url": "data/dryck.json",
+      "revision": "sha256-42445639ef022ab2a042559194d0de8ff881357f298282d27003adf9bc06fad4",
+      "bytes": 10605
+    },
+    {
+      "url": "data/sardrag.json",
+      "revision": "sha256-55116b07cc05ba7488c9af5e6b4f6678f2910c3f982b057b61e953e16eb20f59",
+      "bytes": 18375
+    },
+    {
+      "url": "data/monstruost-sardrag.json",
+      "revision": "sha256-3a0c3b781c6ed90529dd505d2c5a7a00ffbf6c36a60548f05436ce0b9064413b",
+      "bytes": 109522
+    },
+    {
+      "url": "data/artefakter.json",
+      "revision": "sha256-6f6e4e8a01cdaab330cfa43f5cce38307615783758a704d3320c1889dbe7c5c9",
+      "bytes": 257703
+    },
+    {
+      "url": "data/lagre-artefakter.json",
+      "revision": "sha256-dc4765bc15dc7460d1f4bf020b35d33ca89ab2b6515b2c192e82565f9f31865f",
+      "bytes": 78590
+    },
+    {
+      "url": "data/fallor.json",
+      "revision": "sha256-ebe24e978616280941767babb77739ee63fd2c437347f01af30c56dd9d14e8d4",
+      "bytes": 6029
+    },
+    {
+      "url": "data/avstandsvapen.json",
+      "revision": "sha256-bf405f7dcb0903539479a3f6c6c0f2adc8ecf31310bc17d5a08030c1bb14166f",
+      "bytes": 27524
+    },
+    {
+      "url": "data/narstridsvapen.json",
+      "revision": "sha256-a67cfdc310109b6003c2bccfab1c807c3211a8dec8cb585d524d365e40873535",
+      "bytes": 24331
+    },
+    {
+      "url": "data/tabeller.json",
+      "revision": "sha256-13bf353e4ae7930c5cd90e4caf3e5c46c03c056d12b77a12988899fd89a99b2a",
+      "bytes": 56874
+    }
+  ],
+  "totalBytes": 1780046
+}

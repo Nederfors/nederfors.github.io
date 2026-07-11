@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    if: github.ref == 'refs/heads/rpg-db-beta'
     runs-on: ubuntu-latest
 
     permissions:
@@ -34,8 +35,127 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build production site
+      - name: Validate deployment workflow syntax
+        run: |
+          ruby -e "require 'yaml'; YAML.load_file('.github/workflows/deploy-symbapedia.yml')"
+
+      - name: Audit production dependencies
+        run: npm run audit:prod
+
+      - name: Validate catalogs and schemas
+        run: npm run validate:data
+
+      - name: Verify rule behavior
+        run: npm run verify:rules
+
+      - name: Lint source and tests
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Build production site (pass 1)
         run: python3 scripts/master_sync.py
+
+      - name: Verify generated output is committed and fingerprint dist
+        run: |
+          changes="$(git status --porcelain --untracked-files=all)"
+          if [ -n "$changes" ]; then
+            echo "$changes"
+            exit 1
+          fi
+          mkdir -p .artifacts/release
+          node scripts/content-fingerprint.mjs dist > .artifacts/release/dist-pass-1.sha256
+
+      - name: Build production site (idempotency pass)
+        run: python3 scripts/master_sync.py
+
+      - name: Verify idempotent source and build output
+        run: |
+          changes="$(git status --porcelain --untracked-files=all)"
+          if [ -n "$changes" ]; then
+            echo "$changes"
+            exit 1
+          fi
+          node scripts/content-fingerprint.mjs dist > .artifacts/release/dist-pass-2.sha256
+          diff -u .artifacts/release/dist-pass-1.sha256 .artifacts/release/dist-pass-2.sha256
+
+      - name: Install release browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run desktop core browser tests
+        id: core_tests
+        env:
+          PLAYWRIGHT_EVIDENCE_SUITE: core
+        run: npm run test:e2e:core
+
+      - name: Upload desktop browser evidence
+        if: ${{ always() && steps.core_tests.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-core-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: .artifacts/playwright/core/
+
+      - name: Run responsive browser tests
+        id: responsive_tests
+        env:
+          PLAYWRIGHT_EVIDENCE_SUITE: responsive
+        run: npm run test:e2e:responsive
+
+      - name: Upload responsive browser evidence
+        if: ${{ always() && steps.responsive_tests.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-responsive-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: .artifacts/playwright/responsive/
+
+      - name: Run serial PWA and performance tests
+        id: pwa_tests
+        env:
+          PLAYWRIGHT_EVIDENCE_SUITE: pwa
+        run: npm run test:e2e:pwa
+
+      - name: Upload PWA browser evidence
+        if: ${{ always() && steps.pwa_tests.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-pwa-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: .artifacts/playwright/pwa/
+
+      - name: Run Lighthouse release budgets
+        id: lighthouse_tests
+        run: node scripts/run-lighthouse.mjs
+
+      - name: Upload Lighthouse evidence
+        if: ${{ always() && steps.lighthouse_tests.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-release-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 14
+          path: .artifacts/perf/
+
+      - name: Stamp deployment revision
+        run: |
+          printf '%s\n' "$GITHUB_SHA" > dist/deploy-revision.txt
+          node scripts/content-fingerprint.mjs dist > .artifacts/release/deployed-dist.sha256
+          printf '%s\n' "$GITHUB_SHA" > .artifacts/release/source-revision.txt
+          echo "Deterministic build fingerprint: $(cat .artifacts/release/dist-pass-2.sha256)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stamped deploy fingerprint: $(cat .artifacts/release/deployed-dist.sha256)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-provenance-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 30
+          path: .artifacts/release/
 
       - name: Configure Git
         run: |
@@ -48,6 +168,7 @@ jobs:
         run: |
           git config --global url."https://x-access-token:${DEPLOY_TOKEN}@github.com/".insteadOf "https://github.com/"
           git clone --depth 1 --branch "$TARGET_BRANCH" "https://github.com/$TARGET_REPO.git" ../symbapedia-live
+          echo "PREVIOUS_LIVE_SHA=$(git -C ../symbapedia-live rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Replace live site with built dist
         run: |
@@ -66,3 +187,13 @@ jobs:
 
           git commit -m "Deploy production build from rpg-db-beta"
           git push origin "$TARGET_BRANCH"
+
+      - name: Record rollback revision
+        run: |
+          echo "Previous live revision: $PREVIOUS_LIVE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke-test published site
+        env:
+          EXPECTED_DEPLOY_REVISION: ${{ github.sha }}
+          PRODUCTION_URL: https://nederfors.github.io/
+        run: npm run smoke:production

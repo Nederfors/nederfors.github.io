@@ -14,7 +14,6 @@ ICONS_DIR = ROOT_DIR / "icons"
 CSS_DIR = ROOT_DIR / "css"
 
 CORE_PRECACHE_PATTERN = r"(const CORE_PRECACHE_URLS = \[\n)(.*?)(\n\];)"
-CORE_REFRESH_PATTERN = r"(const CORE_REFRESH_TARGETS = \[\n)(.*?)(\n\];)"
 
 HTML_EXCLUDES = {
     "google7c739dca0cd83ad1.html",
@@ -34,6 +33,7 @@ SPECIAL_DATA_FILES = [
 ]
 BUNDLED_DATA_FILES = [
     "index-catalog.json",
+    "offline-manifest.json",
 ]
 
 
@@ -101,23 +101,9 @@ def render_precache_block() -> str:
     return "\n".join(f"  '{path}'," for path in paths)
 
 
-def render_refresh_targets() -> str:
-    return "\n".join(
-        [
-            "  { url: 'index.html', cacheName: CORE_CACHE },",
-            "  { url: 'webapp.html', cacheName: CORE_CACHE },",
-            "  { url: 'manifest.json', cacheName: CORE_CACHE },",
-            "  { url: 'data/legacy-import-map.json', cacheName: JSON_CACHE },",
-            "  { url: 'data/pdf-list.json', cacheName: JSON_CACHE },",
-            "  { url: 'data/index-catalog.json', cacheName: JSON_CACHE }",
-        ]
-    )
-
-
 def main() -> None:
     text = read_text(SW_PATH)
     updated = replace_regex_block(text, CORE_PRECACHE_PATTERN, r"\1" + render_precache_block() + r"\3")
-    updated = replace_regex_block(updated, CORE_REFRESH_PATTERN, r"\1" + render_refresh_targets() + r"\3")
     changed = update_file(SW_PATH, updated)
     if changed:
         print(f"updated {SW_PATH.relative_to(ROOT_DIR).as_posix()}")

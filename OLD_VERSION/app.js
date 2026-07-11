@@ -2,8 +2,6 @@
    js/app.js – delas av index.html & character.html
    =========================================================== */
 
-/* eslint-disable no-alert */
-
 /* ---------- hjälp ---------- */
 const $       = id => document.getElementById(id);
 const LEVELS  = ['Novis', 'Gesäll', 'Mästare'];

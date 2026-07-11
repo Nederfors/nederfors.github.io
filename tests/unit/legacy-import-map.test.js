@@ -10,16 +10,7 @@ const storePath = path.join(repoRoot, 'js', 'store.js');
 const catalogSchemaSource = fs.readFileSync(catalogSchemaPath, 'utf8');
 const storeSource = fs.readFileSync(storePath, 'utf8');
 const legacyMap = JSON.parse(fs.readFileSync(path.join(repoRoot, 'data', 'legacy-import-map.json'), 'utf8'));
-
-const DATA_EXCLUDES = new Set([
-  'ai-plugin.json',
-  'all.json',
-  'index-catalog.json',
-  'legacy-import-map.json',
-  'pdf-list.json',
-  'struktur.json',
-  'tabeller.json'
-]);
+const catalogFiles = JSON.parse(fs.readFileSync(path.join(repoRoot, 'config', 'catalog-files.json'), 'utf8'));
 
 function createLocalStorage() {
   const state = {};
@@ -106,8 +97,7 @@ function createSandbox() {
 
 function loadCatalogEntries(catalogSchema) {
   const dataDir = path.join(repoRoot, 'data');
-  return fs.readdirSync(dataDir)
-    .filter(name => name.endsWith('.json') && !DATA_EXCLUDES.has(name))
+  return catalogFiles.entryDataFiles
     .flatMap(name => {
       const payload = JSON.parse(fs.readFileSync(path.join(dataDir, name), 'utf8'));
       return catalogSchema.normalizePayload(payload, { sourceFile: `data/${name}` }).entries;
@@ -178,6 +168,30 @@ function oldWeaponIdValues(value) {
 }
 
 describe('legacy character import map', () => {
+  it('maps formerly ambiguous elixir names to the lowest tier deterministically', () => {
+    const sandbox = createSandbox();
+    const storeHelper = sandbox.window.storeHelper;
+
+    expect(storeHelper.canonicalizeLegacyEntryNameToId('Gryningsblod')).toBe('elix63');
+    expect(storeHelper.canonicalizeLegacyEntryNameToId('Essensdrapa')).toBe('elix66');
+
+    const store = emptyStore();
+    const id = storeHelper.importCharacterJSON(store, {
+      name: 'Legacy elixirs',
+      data: {
+        inventory: [
+          { n: 'Gryningsblod' },
+          { n: 'Essensdrapa' }
+        ]
+      }
+    });
+
+    expect(store.data[id].inventory.map(row => [row.id, row.name])).toEqual([
+      ['elix63', 'Gryningsblod (Novis)'],
+      ['elix66', 'Essensdrapa (Novis)']
+    ]);
+  });
+
   it('canonicalizes old weapon IDs and aliases during import/export', () => {
     const sandbox = createSandbox();
     const storeHelper = sandbox.window.storeHelper;

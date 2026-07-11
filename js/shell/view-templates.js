@@ -109,6 +109,9 @@ export const VIEW_TEMPLATES = Object.freeze({
         <button id="manageEconomyBtn" class="db-btn" type="button" title="Hantera ekonomi">
           Hantera ekonomi
         </button>
+        <button id="invDashFloatBtn" class="db-btn inv-dash-float-btn" type="button" title="Visa inventarieöversikt" aria-label="Visa inventarieöversikt">
+          <svg class="inv-dash-float-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
+        </button>
       </div>
     </div>
 
@@ -118,9 +121,6 @@ export const VIEW_TEMPLATES = Object.freeze({
     </div>
   </div>
 
-  <button id="invDashFloatBtn" class="db-btn inv-dash-float-btn" type="button" title="Visa inventarieöversikt" aria-label="Visa inventarieöversikt">
-    <svg class="inv-dash-float-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
-  </button>
 `,
 
   notes: `
@@ -139,65 +139,65 @@ export const VIEW_TEMPLATES = Object.freeze({
 
       <!-- -------- Bakgrund -------- -->
       <details class="note-field" open>
-        <summary>Berätta om rollpersonens bakgrund</summary>
-        <textarea id="background" name="background" class="auto-resize" placeholder="Här kan du skriva längre text…"></textarea>
+        <summary id="backgroundLabel">Berätta om rollpersonens bakgrund</summary>
+        <textarea id="background" name="background" class="auto-resize" aria-labelledby="backgroundLabel" placeholder="Här kan du skriva längre text…"></textarea>
       </details>
 
       <!-- -------- Kortfattat -------- -->
         <div class="field-row">
           <details class="note-field" open>
-            <summary>Skugga</summary>
-            <textarea id="shadow" name="shadow" class="auto-resize" placeholder="Ex. 'Vit som nyfallen snö med stänk av sot'"></textarea>
+            <summary id="shadowLabel">Skugga</summary>
+            <textarea id="shadow" name="shadow" class="auto-resize" aria-labelledby="shadowLabel" placeholder="Ex. 'Vit som nyfallen snö med stänk av sot'"></textarea>
           </details>
           <details class="note-field" open>
-            <summary>Ålder</summary>
-            <textarea id="age" name="age" class="auto-resize" placeholder="T.ex. 34"></textarea>
+            <summary id="ageLabel">Ålder</summary>
+            <textarea id="age" name="age" class="auto-resize" aria-labelledby="ageLabel" placeholder="T.ex. 34"></textarea>
           </details>
         </div>
         <div class="field-row">
           <details class="note-field" open>
-            <summary>Utseende</summary>
-            <textarea id="appearance" name="appearance" class="auto-resize" placeholder="Kort beskrivning"></textarea>
+            <summary id="appearanceLabel">Utseende</summary>
+            <textarea id="appearance" name="appearance" class="auto-resize" aria-labelledby="appearanceLabel" placeholder="Kort beskrivning"></textarea>
           </details>
           <details class="note-field" open>
-            <summary>Manér</summary>
-            <textarea id="manner" name="manner" class="auto-resize" placeholder="Särskilda drag"></textarea>
+            <summary id="mannerLabel">Manér</summary>
+            <textarea id="manner" name="manner" class="auto-resize" aria-labelledby="mannerLabel" placeholder="Särskilda drag"></textarea>
           </details>
         </div>
         <details class="note-field" open>
-          <summary>Citat</summary>
-          <textarea id="quote" name="quote" class="auto-resize" placeholder="Ex. 'Jag önskar att min skugga var Smygaren'"></textarea>
+          <summary id="quoteLabel">Citat</summary>
+          <textarea id="quote" name="quote" class="auto-resize" aria-labelledby="quoteLabel" placeholder="Ex. 'Jag önskar att min skugga var Smygaren'"></textarea>
         </details>
 
         <details class="note-field" open>
-          <summary>Fraktion/ätt/klan/stam</summary>
-          <textarea id="faction" name="faction" class="auto-resize" placeholder="T.ex. ätt eller klan"></textarea>
+          <summary id="factionLabel">Fraktion/ätt/klan/stam</summary>
+          <textarea id="faction" name="faction" class="auto-resize" aria-labelledby="factionLabel" placeholder="T.ex. ätt eller klan"></textarea>
         </details>
 
       <!-- -------- Mellanlångt -------- -->
         <div class="field-row">
           <details class="note-field" open>
-            <summary>Personligt mål</summary>
-            <textarea id="goal" name="goal" class="auto-resize" placeholder="Livsmål, ambition"></textarea>
+            <summary id="goalLabel">Personligt mål</summary>
+            <textarea id="goal" name="goal" class="auto-resize" aria-labelledby="goalLabel" placeholder="Livsmål, ambition"></textarea>
           </details>
           <details class="note-field" open>
-            <summary>Drivkrafter</summary>
-            <textarea id="drives" name="drives" class="auto-resize" placeholder="Vad får dem att agera?"></textarea>
+            <summary id="drivesLabel">Drivkrafter</summary>
+            <textarea id="drives" name="drives" class="auto-resize" aria-labelledby="drivesLabel" placeholder="Vad får dem att agera?"></textarea>
           </details>
         </div>
         <div class="field-row">
           <details class="note-field" open>
-            <summary>Lojaliteter</summary>
-            <textarea id="loyalties" name="loyalties" class="auto-resize" placeholder="T.ex. familj, gille"></textarea>
+            <summary id="loyaltiesLabel">Lojaliteter</summary>
+            <textarea id="loyalties" name="loyalties" class="auto-resize" aria-labelledby="loyaltiesLabel" placeholder="T.ex. familj, gille"></textarea>
           </details>
           <details class="note-field" open>
-            <summary>Älskar</summary>
-            <textarea id="likes" name="likes" class="auto-resize" placeholder="T.ex. skogar, böcker"></textarea>
+            <summary id="likesLabel">Älskar</summary>
+            <textarea id="likes" name="likes" class="auto-resize" aria-labelledby="likesLabel" placeholder="T.ex. skogar, böcker"></textarea>
           </details>
         </div>
         <details class="note-field" open>
-          <summary>Hatar</summary>
-          <textarea id="hates" name="hates" class="auto-resize" placeholder="T.ex. orättvisa, korruption"></textarea>
+          <summary id="hatesLabel">Hatar</summary>
+          <textarea id="hates" name="hates" class="auto-resize" aria-labelledby="hatesLabel" placeholder="T.ex. orättvisa, korruption"></textarea>
         </details>
 
       <!-- -------- Knappar -------- -->
