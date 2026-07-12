@@ -25,6 +25,30 @@ För lokal utveckling:
 
 Den lokala servern behövs bara för utveckling och release-testning. Den publicerade PWA:n körs i spelarens webbläsare och sparar personliga data lokalt.
 
+## Publicera en ny version
+
+Källkoden för den publicerade webbplatsen ligger i repot `Nederfors/nederfors.github.io`. GitHub bygger webbplatsen automatiskt; mappen `dist` ska inte läggas till i Git.
+
+Det säkra standardflödet är:
+
+1. Skapa en kortlivad branch för ändringen.
+2. Öppna en pull request mot `main` på GitHub.
+3. Vänta tills kontrollen **Test and build** är grön.
+4. Slå ihop pull requesten. En ny grön **Build and deploy Symbapedia**-körning publicerar då automatiskt webbplatsen på [https://nederfors.github.io/](https://nederfors.github.io/).
+
+Bygget installerar låsta npm-beroenden, validerar databasen, kontrollerar regler och kod, kör enhetstester och bygger PWA:n. Endast en push till `main` får publicera; pull requests och manuella körningar testar och bygger utan att ändra den publika webbplatsen.
+
+### Om en GitHub-kontroll misslyckas
+
+1. Öppna fliken **Actions** i repot.
+2. Öppna den röda körningen **Build and deploy Symbapedia**.
+3. Öppna steget med ett rött kryss och läs felmeddelandet längst ned.
+4. Rätta felet och pusha igen. För ett tillfälligt GitHub-fel kan du välja **Re-run jobs** i körningens meny.
+
+GitHub Pages ska en gång ställas in på **Settings → Pages → Build and deployment → Source: GitHub Actions**. Arbetsflödet finns i `.github/workflows/build.yaml` och använder GitHubs inbyggda Pages-behörighet; ingen separat deploy-token behövs.
+
+För att backa en felaktig publicering, återställ den felaktiga committen på en ny branch och slå ihop återställningen till `main`. GitHub bygger och publicerar då automatiskt den återställda versionen.
+
 ## Hur allt hänger ihop
 
 ### 1) Databas
