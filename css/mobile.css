@@ -1,0 +1,142 @@
+/* 360px cross-platform baseline. This is intentionally imported last. */
+.traits-tab__label-compact { display: none; }
+
+@media (max-width: 640px) {
+  html { scrollbar-gutter: auto; }
+
+  body.app-shell {
+    gap: .4rem;
+    padding-inline: var(--app-page-gutter);
+    padding-bottom: calc(var(--app-toolbar-height) + var(--app-safe-bottom));
+  }
+
+  .app-title {
+    width: var(--shell-width);
+    margin: calc(.9rem + var(--app-safe-top)) auto .25rem;
+    font-size: 2rem;
+    line-height: 1.15;
+  }
+
+  .panel {
+    width: var(--shell-width);
+    max-width: var(--shell-width);
+    padding: .75rem;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+
+  .toolbar.db-bottom-nav {
+    --toolbar-control-height: 44px;
+    gap: .5rem;
+    padding: .5rem .75rem calc(.5rem + var(--app-safe-bottom));
+  }
+
+  .toolbar-top { gap: .5rem; }
+  .toolbar-top .search-wrap { min-width: 0; }
+  .toolbar .exp-counter { padding-inline: .75rem; font-size: .9rem; }
+  .toolbar .toolbar-nav-items { gap: 0; padding: .15rem; }
+  .toolbar .db-bottom-nav__item {
+    min-height: 56px;
+    padding: .4rem .1rem;
+    gap: .2rem;
+    font-size: .62rem;
+    line-height: 1.1;
+  }
+  .toolbar .db-bottom-nav__item .btn-icon { width: 1.45rem; height: 1.45rem; }
+
+  .traits-tabs-shell { padding: .75rem; }
+  .traits-tabs { gap: .3rem; margin-bottom: 1rem; padding: .3rem; }
+  .traits-tab { min-height: 44px; padding: .55rem .35rem; font-size: .92rem; }
+  .traits-tab__label-full { display: none; }
+  .traits-tab__label-compact { display: inline; }
+
+  .trait-xp-summary { padding: .8rem; gap: .65rem; }
+  .trait-xp-header { display: grid; grid-template-columns: 1fr; gap: .45rem; }
+  .trait-xp-buttons {
+    display: grid;
+    grid-template-columns: var(--app-touch-target) minmax(5rem, 6rem) var(--app-touch-target);
+    justify-content: center;
+    gap: .45rem;
+    width: 100%;
+  }
+  .trait-xp-buttons .db-btn {
+    width: var(--app-touch-target);
+    min-width: var(--app-touch-target);
+    height: var(--app-touch-target);
+    padding: 0;
+  }
+  .trait-xp-buttons input {
+    width: 100%;
+    min-width: 0;
+    height: var(--app-touch-target);
+    text-align: center;
+  }
+  .trait-xp-row { gap: .6rem; justify-content: space-between; }
+  .trait-xp-label { font-size: .68rem; letter-spacing: .04em; }
+  .trait-xp-value { font-size: 1.1rem; }
+
+  .trait-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(var(--app-touch-target), 1fr));
+    gap: .35rem;
+    width: 100%;
+  }
+  .trait-btn,
+  .traits-hub-panel .trait-controls .trait-btn {
+    min-width: var(--app-touch-target);
+    min-height: var(--app-touch-target);
+    padding: .35rem;
+    font-size: .9rem;
+  }
+  .traits-reset-btn,
+  .traits-hub-panel .traits-reset-btn.db-btn--danger {
+    width: var(--app-touch-target);
+    height: var(--app-touch-target);
+  }
+
+  .db-card.entry-card { padding: .4rem .5rem; gap: .25rem; }
+  .entry-card.compact .entry-collapse-btn {
+    width: var(--app-touch-target);
+    min-width: var(--app-touch-target);
+    height: var(--app-touch-target);
+    margin: -.35rem 0 -.35rem -.35rem;
+  }
+  .entry-card.compact .entry-header-actions .info-btn {
+    width: var(--app-touch-target);
+    min-width: var(--app-touch-target);
+    height: var(--app-touch-target);
+  }
+  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--app-touch-target);
+    align-items: center;
+    gap: .25rem;
+  }
+  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-row-header {
+    grid-column: 1;
+    min-width: 0;
+  }
+  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-row-actions {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+  }
+  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-action-controls,
+  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-action-group-standard {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+  }
+  .entry-card.compact .entry-row-actions .control-buttons .entry-standard-action,
+  .entry-card.compact .entry-row-actions .control-buttons .char-btn,
+  .entry-card.compact .entry-row-actions .control-buttons .db-btn {
+    width: var(--app-touch-target);
+    min-width: var(--app-touch-target);
+    height: var(--app-touch-target);
+  }
+}

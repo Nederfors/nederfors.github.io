@@ -1,182 +1,198 @@
-[
-  {
-    "namn": "Flodbåt",
-    "beskrivning": "Mindre båt anpassad för transport längs floder och sjöar.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 300
-    },
-    "grundpris": {
-      "daler": 200,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far1"
+{
+  "schema_version": 3,
+  "type_rules": {
+    "Färdmedel": {}
   },
-  {
-    "namn": "Galär",
-    "beskrivning": "Större rodd- och segelfartyg, lämpad för kust- och havsfärder.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
+  "entries": [
+    {
+      "id": "far1",
+      "name": "Flodbåt",
+      "description": "Mindre båt anpassad för transport längs floder och sjöar.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 300
+      },
+      "base_price": {
+        "daler": 200,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "stat": {
-      "bärkapacitet": 1500
+    {
+      "id": "far2",
+      "name": "Galär",
+      "description": "Större rodd- och segelfartyg, lämpad för kust- och havsfärder.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 1500
+      },
+      "base_price": {
+        "daler": 1000,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "grundpris": {
-      "daler": 1000,
-      "skilling": 0,
-      "örtegar": 0
+    {
+      "id": "far3",
+      "name": "Kanot",
+      "description": "Lätt, smal båt som enkelt paddlas av en eller två personer.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 80
+      },
+      "base_price": {
+        "daler": 2,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "id": "far2"
-  },
-  {
-    "namn": "Kanot",
-    "beskrivning": "Lätt, smal båt som enkelt paddlas av en eller två personer.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
+    {
+      "id": "far4",
+      "name": "Kärra",
+      "description": "Enkel tvåhjulig kärra för transport av varor eller bagage.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 100
+      },
+      "base_price": {
+        "daler": 1,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "stat": {
-      "bärkapacitet": 80
+    {
+      "id": "far5",
+      "name": "Ridhäst, lätt",
+      "description": "Smidigare häst, lämpad för snabb färd och längre resor.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 35
+      },
+      "base_price": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "grundpris": {
-      "daler": 2,
-      "skilling": 0,
-      "örtegar": 0
+    {
+      "id": "far6",
+      "name": "Ridhäst, tung",
+      "description": "Starkare häst som lämpar sig för ryttare i rustning eller tunga lass.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 45
+      },
+      "base_price": {
+        "daler": 7,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "id": "far3"
-  },
-  {
-    "namn": "Kärra",
-    "beskrivning": "Enkel tvåhjulig kärra för transport av varor eller bagage.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
+    {
+      "id": "far7",
+      "name": "Mulåsna",
+      "description": "Uthålligt lastdjur som klarar ojämn terräng och tung last.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 50
+      },
+      "base_price": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "stat": {
-      "bärkapacitet": 100
+    {
+      "id": "far8",
+      "name": "Roddbåt",
+      "description": "Liten båt som drivs framåt med åror, passar mindre sjöar och vikar.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 120
+      },
+      "base_price": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "grundpris": {
-      "daler": 1,
-      "skilling": 0,
-      "örtegar": 0
+    {
+      "id": "far9",
+      "name": "Släde",
+      "description": "Kälke för transport över snö eller is, dras ofta av djur.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 120
+      },
+      "base_price": {
+        "daler": 2,
+        "skilling": 0,
+        "örtegar": 0
+      }
     },
-    "id": "far4"
-  },
-  {
-    "namn": "Ridhäst, lätt",
-    "beskrivning": "Smidigare häst, lämpad för snabb färd och längre resor.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 35
-    },
-    "grundpris": {
-      "daler": 5,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far5"
-  },
-  {
-    "namn": "Ridhäst, tung",
-    "beskrivning": "Starkare häst som lämpar sig för ryttare i rustning eller tunga lass.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 45
-    },
-    "grundpris": {
-      "daler": 7,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far6"
-  },
-  {
-    "namn": "Mulåsna",
-    "beskrivning": "Uthålligt lastdjur som klarar ojämn terräng och tung last.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 50
-    },
-    "grundpris": {
-      "daler": 3,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far7"
-  },
-  {
-    "namn": "Roddbåt",
-    "beskrivning": "Liten båt som drivs framåt med åror, passar mindre sjöar och vikar.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 120
-    },
-    "grundpris": {
-      "daler": 3,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far8"
-  },
-  {
-    "namn": "Släde",
-    "beskrivning": "Kälke för transport över snö eller is, dras ofta av djur.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 120
-    },
-    "grundpris": {
-      "daler": 2,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far9"
-  },
-  {
-    "namn": "Vagn",
-    "beskrivning": "Fyrhjuligt fordon för tyngre laster och bekvämare resor.",
-    "taggar": {
-      "typ": [
-        "Färdmedel"
-      ]
-    },
-    "stat": {
-      "bärkapacitet": 200
-    },
-    "grundpris": {
-      "daler": 5,
-      "skilling": 0,
-      "örtegar": 0
-    },
-    "id": "far10"
-  }
-]
+    {
+      "id": "far10",
+      "name": "Vagn",
+      "description": "Fyrhjuligt fordon för tyngre laster och bekvämare resor.",
+      "tags": {
+        "types": [
+          "Färdmedel"
+        ]
+      },
+      "levels": {},
+      "stats": {
+        "bärkapacitet": 200
+      },
+      "base_price": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    }
+  ]
+}

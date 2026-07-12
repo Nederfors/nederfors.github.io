@@ -1,4 +1,4 @@
-(function(window){
+(function (window) {
   let renderHooked = false;
   let catListenerBound = false;
   let sTemp = '';
@@ -16,7 +16,7 @@
     const catDetails = dom?.invList ? [...dom.invList.querySelectorAll('.cat-group > details')] : [];
     if (catDetails.length) {
       const catsMinimized = catDetails.every(det => !det.open);
-      dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
+      { const ci = dom.catToggle.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', catsMinimized); }
       dom.catToggle.title = catsMinimized
         ? 'Öppna alla kategorier'
         : 'Minimera alla kategorier';
@@ -24,9 +24,9 @@
     }
     const cards = [];
     if (dom?.invFormal) cards.push(...dom.invFormal.querySelectorAll('li.card'));
-    if (dom?.invList)   cards.push(...dom.invList.querySelectorAll('li.card'));
+    if (dom?.invList) cards.push(...dom.invList.querySelectorAll('li.card'));
     const allCollapsed = cards.length > 0 && cards.every(card => card.classList.contains('compact'));
-    dom.catToggle.textContent = allCollapsed ? '▶' : '▼';
+    { const ci = dom.catToggle.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     dom.catToggle.title = allCollapsed
       ? 'Öppna alla inventariekort'
       : 'Minimera alla inventariekort';
@@ -42,7 +42,7 @@
     }
     const cards = [];
     if (dom?.invFormal) cards.push(...dom.invFormal.querySelectorAll('li.card'));
-    if (dom?.invList)   cards.push(...dom.invList.querySelectorAll('li.card'));
+    if (dom?.invList) cards.push(...dom.invList.querySelectorAll('li.card'));
     if (!cards.length) return;
     const shouldOpen = cards.every(card => card.classList.contains('compact'));
     cards.forEach(card => {
@@ -110,14 +110,22 @@
           }
         })
         : null);
-    const explode = typeof window.explodeTags === 'function' ? window.explodeTags : null;
+    const splitArkTags = (value) => {
+      if (typeof window.splitTags === 'function') return window.splitTags(value);
+      const source = Array.isArray(value)
+        ? value
+        : ((value === undefined || value === null) ? [] : [value]);
+      return source
+        .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+        .filter(Boolean);
+    };
     const baseInventory = typeof storeHelper?.getInventory === 'function'
       ? storeHelper.getInventory(store)
       : [];
     const inventory = Array.isArray(baseInventory) ? baseInventory : [];
     const sets = {
-      typ : new Set(),
-      ark : new Set(),
+      typ: new Set(),
+      ark: new Set(),
       test: new Set()
     };
     if (typeof getEntry === 'function') {
@@ -130,24 +138,24 @@
         typTags.filter(Boolean).forEach(val => sets.typ.add(val));
         const arkSource = tags.ark_trad;
         let arkTags = [];
-        if (explode) {
-          try { arkTags = explode(arkSource); }
-          catch { arkTags = []; }
-        }
+        try { arkTags = splitArkTags(arkSource); }
+        catch { arkTags = []; }
         if (arkTags.length) {
           arkTags.filter(Boolean).forEach(val => sets.ark.add(val));
         } else if (Array.isArray(arkSource)) {
           const hasValue = arkSource.some(v => String(v || '').trim());
           if (hasValue) sets.ark.add('Traditionslös');
         }
-        const testTags = Array.isArray(tags.test) ? tags.test : [];
+        const testTags = typeof window.getEntryTestTags === 'function'
+          ? window.getEntryTestTags(entry)
+          : (Array.isArray(tags.test) ? tags.test : []);
         testTags.filter(Boolean).forEach(val => sets.test.add(val));
       });
     }
 
     const fill = (sel, values, label) => {
       if (!sel) return;
-      const opts = [`<option value="">${label} (alla)</option>`];
+      const opts = [`<option value="">Lägg till filter</option>`];
       const sorted = Array.from(values)
         .map(val => String(val || ''))
         .filter(Boolean)
@@ -158,7 +166,7 @@
 
     fill(dom?.typSel, sets.typ, 'Typ');
     fill(dom?.arkSel, sets.ark, 'Arketyp');
-    fill(dom?.tstSel, sets.test, 'Test');
+    fill(dom?.tstSel, sets.test, 'Karaktärsdrag');
   }
 
   function hookRender() {
@@ -182,11 +190,34 @@
     dom.cName.textContent = current?.name || '';
   }
 
+  function refreshInventoryPanel() {
+    updateCharName();
+    if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+      invUtil.renderInventory();
+      return;
+    }
+    refreshInventoryFilters();
+    syncCatToggle();
+    updateSearchDatalist();
+  }
+
   function initInventory() {
     hookRender();
+    if (window.invUtil) {
+      if (typeof invUtil.renderInventory === 'function') {
+        invUtil.renderInventory();
+      }
+      if (typeof invUtil.bindInv === 'function') {
+        invUtil.bindInv();
+      }
+      if (typeof invUtil.bindMoney === 'function') {
+        invUtil.bindMoney();
+      }
+    }
     refreshInventoryFilters();
     updateCharName();
     syncCatToggle();
+    window.invUtil?.syncMotionTargets?.();
 
     if (dom?.catToggle && !catListenerBound) {
       dom.catToggle.addEventListener('click', onCatToggle);
@@ -196,25 +227,12 @@
     bindSearchHandlers();
     updateSearchDatalist();
 
-    window.indexViewRefreshFilters = refreshInventoryFilters;
-    window.indexViewUpdate = () => {
-      if (window.invUtil && typeof invUtil.renderInventory === 'function') {
-        invUtil.renderInventory();
-      } else {
-        updateSearchDatalist();
-      }
-    };
-
-    window.inventoryViewUpdate = function inventoryViewUpdate() {
-      updateCharName();
-      if (window.invUtil && typeof invUtil.renderInventory === 'function') {
-        invUtil.renderInventory();
-      } else {
-        refreshInventoryFilters();
-        syncCatToggle();
-        updateSearchDatalist();
-      }
-    };
+    window.symbaroumViewBridge?.registerViewHooks('inventory', {
+      refreshName: updateCharName,
+      refreshFilters: refreshInventoryFilters,
+      refreshInventory: refreshInventoryPanel,
+      refresh: refreshInventoryPanel
+    });
 
     window.inventorySyncCats = syncCatToggle;
   }

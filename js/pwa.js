@@ -1,7 +1,13 @@
 if ('serviceWorker' in navigator) {
   let reloadOnControllerChange = false;
   let latestRegistration = null;
+  let registrationStarted = false;
+  let lastUpdateCheckAt = 0;
   const storageKeyPrefix = 'pwa-dismissed:';
+  const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+  const REGISTRATION_IDLE_TIMEOUT_MS = 4000;
+  const REGISTRATION_START_DELAY_MS = 2500;
+  const APP_READY_TIMEOUT_MS = 6000;
 
   const buildStorageKey = id => (id ? `${storageKeyPrefix}${id}` : null);
 
@@ -22,18 +28,6 @@ if ('serviceWorker' in navigator) {
       // Access to localStorage may be blocked; ignore.
     }
     return storages;
-  };
-
-  const getLatestWorkerVersion = async () => {
-    try {
-      const response = await fetch('sw.js', { cache: 'no-store' });
-      const text = await response.text();
-      const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
-      if (match) return match[1];
-    } catch (error) {
-      // Ignore version lookup errors.
-    }
-    return null;
   };
 
   const clearDismissalsExcept = id => {
@@ -92,8 +86,56 @@ if ('serviceWorker' in navigator) {
     clearDismissalsExcept(null);
   };
 
-  const applyWaitingWorker = registration => {
+  const runWhenIdle = callback => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(callback, { timeout: REGISTRATION_IDLE_TIMEOUT_MS });
+      return;
+    }
+    window.setTimeout(callback, 800);
+  };
+
+  const waitForAppReady = () => new Promise(resolve => {
+    if (window.__symbaroumBootCompleted || !document.documentElement.hasAttribute('data-preload')) {
+      resolve();
+      return;
+    }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener('symbaroum-view-boot', finish);
+      resolve();
+    };
+    window.addEventListener('symbaroum-view-boot', finish, { once: true });
+    window.setTimeout(finish, APP_READY_TIMEOUT_MS);
+  });
+
+  const maybeUpdateRegistration = async (registration, { force = false } = {}) => {
+    if (!registration || typeof registration.update !== 'function') return null;
+    const now = Date.now();
+    if (!force && now - lastUpdateCheckAt < UPDATE_CHECK_INTERVAL_MS) {
+      return null;
+    }
+    lastUpdateCheckAt = now;
+    try {
+      return await registration.update();
+    } catch (error) {
+      console.warn('Service worker update check failed', error);
+      return null;
+    }
+  };
+
+  const flushPendingWrites = async reason => {
+    try {
+      await window.symbaroumPersistence?.flushPendingWrites?.({ reason });
+    } catch (error) {
+      console.error(`Failed to flush pending writes for ${reason}`, error);
+    }
+  };
+
+  const applyWaitingWorker = async registration => {
     if (!registration?.waiting) return false;
+    await flushPendingWrites('pwa-update');
     reloadOnControllerChange = true;
     registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     return true;
@@ -190,6 +232,23 @@ if ('serviceWorker' in navigator) {
       }
     });
 
+  const getLatestWorkerVersion = async registration => {
+    const worker = registration?.waiting
+      || registration?.installing
+      || registration?.active
+      || navigator.serviceWorker.controller
+      || null;
+    const response = await postMessageToWorker(
+      worker,
+      { type: 'GET_VERSION' },
+      { timeout: 3000 }
+    );
+    if (response?.ok && response?.version) {
+      return response.version;
+    }
+    return worker?.scriptURL || 'sw.js';
+  };
+
   const resolveCacheRefreshWorker = registration =>
     navigator.serviceWorker.controller
     || registration?.active
@@ -219,6 +278,9 @@ if ('serviceWorker' in navigator) {
   const triggerManualUpdate = async options => {
     const { forceReload } = options || {};
     try {
+      if (forceReload) {
+        await flushPendingWrites('pwa-update-check');
+      }
       let registration = latestRegistration || (await navigator.serviceWorker.getRegistration());
       if (!registration) {
         try {
@@ -238,13 +300,13 @@ if ('serviceWorker' in navigator) {
 
       let status;
       if (registration.waiting) {
-        applyWaitingWorker(registration);
+        await applyWaitingWorker(registration);
         status = 'applied';
       } else {
-        await registration.update();
+        await maybeUpdateRegistration(registration, { force: true });
         const waiting = await waitForInstallingWorker(registration);
         if (waiting) {
-          applyWaitingWorker(registration);
+          await applyWaitingWorker(registration);
           status = 'applied';
         } else {
           status = 'up-to-date';
@@ -271,15 +333,27 @@ if ('serviceWorker' in navigator) {
 
   window.requestPwaUpdate = triggerManualUpdate;
 
-  window.addEventListener('load', () => {
+  const onControllerChange = () => {
+    clearAllWorkerDismissals();
+    if (onControllerChange.refreshing) return;
+    if (reloadOnControllerChange) {
+      onControllerChange.refreshing = true;
+      window.location.reload();
+    }
+  };
+  onControllerChange.refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
 
-    navigator.serviceWorker.register('sw.js').then(registration => {
+  const startServiceWorkerRegistration = () => {
+    if (registrationStarted) return;
+    registrationStarted = true;
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(registration => {
       latestRegistration = registration;
-      // Proactively check for updates
-      registration.update();
+      // Check for updates, but do not do it on every foreground transition.
+      maybeUpdateRegistration(registration);
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-          registration.update();
+          maybeUpdateRegistration(registration);
         }
       });
 
@@ -288,7 +362,7 @@ if ('serviceWorker' in navigator) {
         if (!reg) return;
         const waitingWorker = reg.waiting;
         if (!waitingWorker) return;
-        const version = await getLatestWorkerVersion();
+        const version = await getLatestWorkerVersion(reg);
         const dismissId = version || waitingWorker.scriptURL;
 
         clearDismissalsExcept(dismissId);
@@ -306,7 +380,7 @@ if ('serviceWorker' in navigator) {
           if (dismissId) {
             clearWorkerDismissal(dismissId);
           }
-          applyWaitingWorker(reg);
+          await applyWaitingWorker(reg);
         } else if (dismissId) {
           markWorkerDismissed(dismissId);
         }
@@ -333,18 +407,21 @@ if ('serviceWorker' in navigator) {
 
       listenForWaitingServiceWorker(registration);
     });
+  };
 
-    // When the controller changes after SKIP_WAITING, reload once
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      clearAllWorkerDismissals();
-      if (refreshing) return;
-      if (reloadOnControllerChange) {
-        refreshing = true;
-        window.location.reload();
-      }
+  const scheduleServiceWorkerRegistration = () => {
+    waitForAppReady().then(() => {
+      window.setTimeout(() => {
+        runWhenIdle(startServiceWorkerRegistration);
+      }, REGISTRATION_START_DELAY_MS);
     });
-  });
+  };
+
+  if (document.readyState === 'complete') {
+    scheduleServiceWorkerRegistration();
+  } else {
+    window.addEventListener('load', scheduleServiceWorkerRegistration, { once: true });
+  }
 }
 
 let deferredPrompt;

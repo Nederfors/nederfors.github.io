@@ -21,11 +21,12 @@
     const panel = document.createElement('aside');
     panel.id = 'yrkePanel';
     panel.classList.add('offcanvas');
+    panel.dataset.touchProfile = 'panel-right';
     panel.innerHTML = `
       <header class="inv-header">
         <h2 id="yrkeTitle"></h2>
         <div class="inv-actions">
-          <button id="yrkeClose" class="char-btn icon">✕</button>
+          <button id="yrkeClose" class="db-btn db-btn--icon">✕</button>
         </div>
       </header>
       <div id="yrkeContent"></div>
@@ -36,6 +37,18 @@
     panel.addEventListener('click', (e) => {
       const conflictBtn = e.target.closest('[data-conflict-btn]');
       const tab = e.target.closest('.info-tab');
+      const skadetypSummary = e.target.closest('.skadetyp-level-details > summary');
+      if (skadetypSummary) {
+        const detailsEl = skadetypSummary.parentElement;
+        requestAnimationFrame(() => {
+          if (!detailsEl?.open) return;
+          const scope = detailsEl.closest('.skadetyp-panel') || panel;
+          scope.querySelectorAll('.skadetyp-level-details[open]').forEach(other => {
+            if (other !== detailsEl) other.open = false;
+          });
+        });
+        return;
+      }
       if (!tab) return;
       const target = tab.dataset.tab;
       if (!target) return;
@@ -60,6 +73,7 @@
 
     panel.classList.add('open');
     panel.scrollTop = 0;
+    window.registerOverlayCleanup?.(panel, close);
     if (options.initialTab) {
       activateTab(panel, options.initialTab);
       requestAnimationFrame(() => activateTab(panel, options.initialTab));
@@ -78,6 +92,7 @@
     if(p) {
       p.classList.remove('open');
       window.updateScrollLock?.();
+      window.registerOverlayCleanup?.(p, null);
     }
     conflictHandler = null;
     if(outsideHandler){

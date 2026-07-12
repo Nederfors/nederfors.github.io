@@ -1,67 +1,90 @@
 (function(window){
-  const TRAITS = ['Diskret','Kvick','Listig','Stark','Vaksam'];
+  const TRAITS = ['Diskret', 'Kvick', 'Listig', 'Stark', 'Vaksam'];
 
-  function createPopup(){
-    if(document.getElementById('maskPopup')) return;
-    const div=document.createElement('div');
-    div.id='maskPopup';
-    div.innerHTML=`<div class="popup-inner"><h3 id="maskTitle">V\u00e4lj karakt\u00e4rsdrag</h3><div id="maskOpts"></div><button id="maskCancel" class="char-btn danger">Avbryt</button></div>`;
-    document.body.appendChild(div);
-  }
-
-  function openPopup(options, cb){
-    createPopup();
-    const pop=document.getElementById('maskPopup');
-    const box=pop.querySelector('#maskOpts');
-    const cls=pop.querySelector('#maskCancel');
-    box.innerHTML=options.map((n,i)=>`<button data-i="${i}" class="char-btn">${n}</button>`).join('');
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-    function close(){
-      pop.classList.remove('open');
-      box.innerHTML='';
-      box.removeEventListener('click',onClick);
-      cls.removeEventListener('click',onCancel);
-      pop.removeEventListener('click',onOutside);
-    }
-    function onClick(e){
-      const b=e.target.closest('button[data-i]');
-      if(!b) return;
-      const idx=Number(b.dataset.i);
-      close();
-      cb(options[idx]);
-    }
-    function onCancel(){ close(); cb(null); }
-    function onOutside(e){
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        cb(null);
+  function getPickerEntry(sourceEntry) {
+    if (sourceEntry && typeof sourceEntry === 'object') return sourceEntry;
+    if (typeof window.lookupEntry === 'function') {
+      try {
+        const hit = window.lookupEntry({ name: 'Djurmask' });
+        if (hit && typeof hit === 'object') return hit;
+      } catch (_) {
+        // Fall through to fallback.
       }
     }
-    box.addEventListener('click',onClick);
-    cls.addEventListener('click',onCancel);
-    pop.addEventListener('click',onOutside);
+    return { namn: 'Djurmask', traits: [...TRAITS] };
   }
 
-  function pickTrait(used, cb){
-    openPopup(TRAITS, res=>cb(res));
+  function pickTrait(used, cb, sourceEntry) {
+    const hasUsed = Array.isArray(used);
+    const usedValues = hasUsed ? used : [];
+    const done = typeof (hasUsed ? cb : used) === 'function' ? (hasUsed ? cb : used) : () => {};
+    const picker = window.choicePopup;
+    if (!picker || typeof picker.pickForEntry !== 'function') {
+      done(null);
+      return;
+    }
+
+    const entry = getPickerEntry(sourceEntry);
+    const context = { entry, sourceEntry: entry };
+    picker.pickForEntry({
+      entry,
+      context,
+      usedValues,
+      fallbackLegacy: true
+    }).then(result => {
+      done(result?.value ?? null);
+    }).catch(() => done(null));
+  }
+
+  function resolveInventoryEntry(item){
+    const ref = item?.id || item?.name || '';
+    if (window.invUtil && typeof window.invUtil.getEntry === 'function') {
+      return window.invUtil.getEntry(ref);
+    }
+    if (typeof window.lookupEntry === 'function') {
+      return window.lookupEntry({ id: item?.id, name: item?.name }, { explicitName: item?.name });
+    }
+    return {};
+  }
+
+  function getTraitBonusForItem(item, entry){
+    const trait = String(item?.trait || '').trim();
+    if (!trait || !entry || typeof entry !== 'object') return 0;
+    const helper = window.rulesHelper;
+
+    if (helper && typeof helper.queryMal === 'function') {
+      try {
+        const sourceEntry = { ...entry };
+        if (item?.nivå) sourceEntry.nivå = item.nivå;
+        const value = Number(helper.queryMal([sourceEntry], 'karaktarsdrag_max_tillagg', { trait, row: item, sourceEntry }));
+        if (Number.isFinite(value) && value !== 0) return value;
+      } catch (_) {
+        // Fall through to local fallback.
+      }
+    }
+
+    if (Array.isArray(entry.traits) && entry.traits.includes(trait)) return 1;
+    return 0;
   }
 
   function getBonuses(inv){
-    const cur=inv||storeHelper.getInventory(storeHelper.load());
-    const res={};
-    cur.forEach(it=>{
-      if(it.id==='l9' && it.trait){
-        res[it.trait]=(res[it.trait]||0)+1;
-      }
+    const cur = inv || storeHelper.getInventory(storeHelper.load());
+    const res = {};
+    cur.forEach(it => {
+      const trait = String(it?.trait || '').trim();
+      if (!trait) return;
+      const entry = resolveInventoryEntry(it);
+      const bonus = getTraitBonusForItem(it, entry);
+      if (!bonus) return;
+      res[trait] = (res[trait] || 0) + bonus;
     });
     return res;
   }
 
   function getBonus(trait){
-    const inv=storeHelper.getInventory(storeHelper.load());
-    return getBonuses(inv)[trait]||0;
+    const inv = storeHelper.getInventory(storeHelper.load());
+    return getBonuses(inv)[trait] || 0;
   }
 
-  window.maskSkill={pickTrait,getBonuses,getBonus};
+  window.maskSkill = { pickTrait, getBonuses, getBonus };
 })(window);

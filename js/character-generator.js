@@ -15,7 +15,7 @@
     elityrke: ''
   };
 
-  const LEVEL_VALUE = { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
+  const LEVEL_VALUE = { '': 0, Novis: 1, Enkel: 1, 'Gesäll': 2, 'Ordinär': 2, 'Mästare': 3, Avancerad: 3 };
   const MELEE_SCHOOLS = [
     'Sköldkamp',
     'Naturlig krigare',
@@ -47,6 +47,7 @@
     mystic: null,
     yrkeTraitGuide: null
   };
+  const eliteUtils = window.eliteUtils || {};
   const YRKE_TRADITION_PAIRS = [
     ['häxa', 'Häxkonst'],
     ['svartkonstnär', 'Svartkonst'],
@@ -57,11 +58,17 @@
   ];
   const TRADITION_BASE_ABILITY_PAIRS = [
     ['Häxkonst', 'Häxkonster'],
+    ['Häxa', 'Häxkonster'],
     ['Svartkonst', 'Svartkonst'],
+    ['Svartkonstnär', 'Svartkonst'],
     ['Teurgi', 'Teurgi'],
+    ['Teurg', 'Teurgi'],
     ['Ordensmagi', 'Ordensmagi'],
+    ['Ordensmagiker', 'Ordensmagi'],
     ['Symbolism', 'Symbolism'],
+    ['Symbolist', 'Symbolism'],
     ['Trollsång', 'Trollsång'],
+    ['Trollsångare', 'Trollsång'],
     ['Stavmagiker', 'Stavmagi']
   ];
   const isEliteEntry = (entry) => {
@@ -315,8 +322,10 @@
           if (resolved) return resolved;
         }
         const likelyFields = [
+          entry.suggested_abilities,
           entry.lampliga_formagor,
           entry.lampliga,
+          entry.elite_abilities,
           entry.Elityrkesförmågor
         ];
         for (let i = 0; i < likelyFields.length; i += 1) {
@@ -381,8 +390,8 @@
     }
 
     seedAbilityPreferences() {
-      toNameArray(this.selectedYrke?.lampliga_formagor).forEach(name => this.addAbilityPreference(name, 4));
-      toNameArray(this.selectedElityrke?.Elityrkesförmågor).forEach(name => this.addAbilityPreference(name, 5));
+      toNameArray(this.selectedYrke?.suggested_abilities || this.selectedYrke?.lampliga_formagor).forEach(name => this.addAbilityPreference(name, 4));
+      toNameArray(this.selectedElityrke?.elite_abilities || this.selectedElityrke?.Elityrkesförmågor).forEach(name => this.addAbilityPreference(name, 5));
       const traitPrefs = Array.isArray(this.traitPreferences) ? this.traitPreferences : [];
       traitPrefs.forEach(pref => {
         const weight = pref.weight || traitWeightFromTarget(pref.target);
@@ -478,7 +487,7 @@
       if (ignore) return true;
       const entry = lookupEntryByName(name);
       if (!entry) return true;
-      const tests = toNameArray(entry?.taggar?.test);
+      const tests = getEntryTests(entry);
       if (!tests.length) return true;
       const stats = this.Karaktarsdrag || {};
       return tests.every(test => {
@@ -496,7 +505,7 @@
       const elite = this.selectedElityrke;
       if (!elite) return forced;
 
-      const groups = parseElityrkeRequirementGroups(elite.krav_formagor);
+      const groups = parseElityrkeRequirementGroups(elite?.elite_requirements || elite?.krav || {});
       const used = new Set();
       const picks = [];
       groups.forEach(group => {
@@ -511,7 +520,7 @@
         });
       });
 
-      const eliteSkills = toNameArray(elite.Elityrkesförmågor);
+      const eliteSkills = toNameArray(elite.elite_abilities || elite.Elityrkesförmågor);
       if (eliteSkills.length) {
         const pick = eliteSkills[randIndex(eliteSkills.length)];
         if (pick) {
@@ -528,6 +537,7 @@
 
     pickRequirementForGroup(group, used) {
       if (!group) return null;
+      const minErf = Math.max(0, Number(group?.min_erf) || 0);
       const pool = [];
       const pushEntry = (entry) => {
         if (!entry || !this.isRequirementEntryValid(entry)) return;
@@ -545,16 +555,29 @@
       if (!pool.length) return null;
       const dedup = pool.filter(entry => entry?.namn && !used.has(normalizeName(entry.namn)));
       const preferred = dedup.filter(entry => this.isRequirementEntryAlreadySatisfied(entry));
-      const list = preferred.length ? preferred : (dedup.length ? dedup : pool);
+      const baseList = preferred.length ? preferred : (dedup.length ? dedup : pool);
+      const nonRitual = baseList.filter(entry => this.getRequirementEntryType(entry) !== 'ritual');
+      const list = minErf > 10 && nonRitual.length ? nonRitual : baseList;
       const entry = list[randIndex(list.length)];
       if (!entry) return null;
       const name = entry.namn;
       used.add(normalizeName(name));
       const type = this.getRequirementEntryType(entry);
+      const minimum = type === 'ritual' ? 'Novis' : (group.min_niva || 'Novis');
+      const minCount = Math.max(1, Number(group?.min_antal) || 1);
+      const perPickErf = minErf > 0 ? (minErf / minCount) : 0;
+      let targetLevel = minimum;
+      if (type !== 'ritual') {
+        if (perPickErf >= 50) targetLevel = 'Mästare';
+        else if (perPickErf >= 25) targetLevel = 'Gesäll';
+        else targetLevel = 'Novis';
+      }
       return {
         name,
         type,
-        targetLevel: type === 'ritual' ? 'Novis' : 'Novis'
+        targetLevel,
+        minLevel: minimum,
+        isPrimary: Boolean(group.isPrimary)
       };
     }
 
@@ -562,29 +585,17 @@
       if (!Array.isArray(picks) || !picks.length) return;
       const abilityReqs = picks.filter(req => req && req.type !== 'ritual');
       abilityReqs.forEach(req => {
+        const minimum = req.minLevel || 'Novis';
+        if (LEVEL_VALUE[req.targetLevel || ''] < LEVEL_VALUE[minimum]) {
+          req.targetLevel = minimum;
+        }
         const current = this.Formagor[req.name] || '';
         if (LEVEL_VALUE[current] > LEVEL_VALUE[req.targetLevel || '']) {
           req.targetLevel = current;
         } else if (!req.targetLevel) {
-          req.targetLevel = 'Novis';
+          req.targetLevel = minimum;
         }
       });
-      if (!abilityReqs.length) return;
-      const existingMaster = abilityReqs.find(req => (this.Formagor[req.name] || '') === 'Mästare');
-      if (existingMaster) {
-        existingMaster.targetLevel = 'Mästare';
-        return;
-      }
-      let choice = abilityReqs[0];
-      let best = LEVEL_VALUE[this.Formagor[choice.name] || ''];
-      abilityReqs.forEach(req => {
-        const lvl = LEVEL_VALUE[this.Formagor[req.name] || ''];
-        if (lvl > best) {
-          choice = req;
-          best = lvl;
-        }
-      });
-      choice.targetLevel = 'Mästare';
     }
 
     isRequirementEntryValid(entry) {
@@ -594,6 +605,7 @@
       if (!types.length) return false;
       return types.some(type =>
         type === 'Förmåga' ||
+        type === 'Basförmåga' ||
         type === 'Mystisk kraft' ||
         type === 'Ritual' ||
         type === 'Monstruöst särdrag'
@@ -640,6 +652,25 @@
     forceEnsureAbilityLevel(name, targetLevel) {
       if (!name) return false;
       const desired = LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
+      const entry = lookupEntryByName(name);
+      const entryTypes = entry?.taggar?.typ || [];
+      const isBaseAbility = entryTypes.includes('Basförmåga');
+      if (isBaseAbility) {
+        const helper = window.storeHelper || {};
+        const fixedLevel = typeof helper.resolveEntryLevel === 'function'
+          ? helper.resolveEntryLevel(entry, desired)
+          : (entry?.nivå || desired);
+        const fixedCost = typeof helper.entryLevelCost === 'function'
+          ? helper.entryLevelCost(entry, fixedLevel)
+          : (fixedLevel === 'Avancerad' ? 30 : (fixedLevel === 'Ordinär' ? 20 : 10));
+        if (!this.Formagor[name]) {
+          if (this.ERFkvar < fixedCost) return false;
+          const paid = this.spendXP(fixedCost);
+          if (paid < fixedCost) return false;
+        }
+        this.Formagor[name] = fixedLevel;
+        return true;
+      }
       const abilityTrad = getAbilityTraditionName(name);
       if (abilityTrad) {
         const baseAbility = getTraditionBaseAbilityName(abilityTrad);
@@ -793,14 +824,21 @@
       const buildPool = (poolOpts = {}) => {
         const respectRace = poolOpts.respectRace !== false;
         const respectStats = poolOpts.respectStats !== false;
+        const requirementContext = respectRace
+          ? buildEntryList({
+            abilities: this.Formagor,
+            rituals: this.valdaRitualer,
+            extraEntries: this.extraPicks
+          })
+          : [];
         return getEntriesByType(tag)
-          .filter(entry => !respectRace || entryMatchesRace(entry, this.selectedRace))
+          .filter(entry => !respectRace || entryMeetsRequirements(entry, requirementContext))
           .filter(entry => !respectStats || this.isAbilityAllowedByStats(entry?.namn))
           .map(entry => {
             let weight = 1;
             const nameKey = normalizeName(entry?.namn);
             if (preferred.has(nameKey)) weight += 4;
-            const tests = toNameArray(entry?.taggar?.test).map(str => str.toLowerCase());
+            const tests = getEntryTests(entry).map(str => str.toLowerCase());
             if (opts.weightByTrait && traitKey && tests.some(test => test.includes(traitKey))) weight += 2;
             const archetypeMatch = getEntryArchetypes(entry).some(tag => this.archetypePreferences.has(tag));
             if (archetypeMatch) weight += 2;
@@ -1043,7 +1081,7 @@
         const cached = abilityTraitCache.get(key);
         if (cached) return cached.has(trait);
         const entry = lookupEntryByName(name);
-        const tests = new Set(toNameArray(entry?.taggar?.test).map(normalizeAttributeName).filter(Boolean));
+        const tests = new Set(getEntryTests(entry).map(normalizeAttributeName).filter(Boolean));
         abilityTraitCache.set(key, tests);
         return tests.has(trait);
       };
@@ -1518,7 +1556,7 @@
     const races = getEntriesByType('Ras').filter(r => r?.namn);
     if (!races.length) return null;
     const suggested = new Set(
-      toNameArray(yrkeEntry?.forslag_pa_slakte)
+      toNameArray(yrkeEntry?.suggested_races || yrkeEntry?.forslag_pa_slakte)
         .map(normalizeName)
         .filter(Boolean)
     );
@@ -1548,7 +1586,11 @@
 
   function getEntriesByType(type) {
     const db = Array.isArray(window.DB) ? window.DB : [];
-    return db.filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type));
+    return db.filter(entry => {
+      const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+      if (types.includes(type)) return true;
+      return type === 'Förmåga' && types.includes('Basförmåga');
+    });
   }
 
   function normalizeName(name) {
@@ -1558,7 +1600,7 @@
 
   function isMysticProfession(entry) {
     if (!entry) return false;
-    const names = toNameArray(entry?.lampliga_formagor).concat(toNameArray(entry?.lampliga));
+    const names = toNameArray(entry?.suggested_abilities || entry?.lampliga_formagor).concat(toNameArray(entry?.lampliga));
     return names.some(str => {
       const norm = normalizeName(str);
       return norm.startsWith('mystisk kraft') || norm === 'ritualist';
@@ -1571,7 +1613,7 @@
     const canonical = new Set(getMysticPools().canonicalTraditions.keys());
     const hasKnownTradition = traditionTags.some(tag => canonical.has(tag));
     if (hasKnownTradition) return true;
-    const names = toNameArray(entry?.Elityrkesförmågor);
+    const names = toNameArray(entry?.elite_abilities || entry?.Elityrkesförmågor);
     return names.some(name => {
       const norm = normalizeName(name);
       if (norm.startsWith('mystisk kraft') || norm === 'ritualist') return true;
@@ -1604,17 +1646,20 @@
     return list.some(tag => normalizeTraditionKey(tag) === target);
   }
 
-  function entryMatchesRace(entry, raceEntry) {
-    const raceTags = toNameArray(entry?.taggar?.ras).map(normalizeName).filter(Boolean);
-    if (!raceTags.length) return true;
-    if (!raceEntry) return false;
-    const candidates = [
-      raceEntry.id,
-      raceEntry.namn,
-      ...(toNameArray(raceEntry?.taggar?.ras) || [])
-    ].map(normalizeName).filter(Boolean);
-    if (!candidates.length) return false;
-    return raceTags.some(tag => candidates.includes(tag));
+  function entryMeetsRequirements(entry, contextList) {
+    if (!entry || typeof entry !== 'object') return false;
+    const checker = window.rulesHelper?.getMissingRequirementReasonsForCandidate;
+    if (typeof checker !== 'function') return true;
+    const candidateLevel = typeof entry?.nivå === 'string' && entry.nivå.trim()
+      ? entry.nivå.trim()
+      : (entry?.nivåer ? 'Novis' : '');
+    const candidate = candidateLevel ? { ...entry, nivå: candidateLevel } : entry;
+    const missing = checker(
+      candidate,
+      Array.isArray(contextList) ? contextList : [],
+      candidateLevel ? { level: candidateLevel } : undefined
+    );
+    return !Array.isArray(missing) || missing.length === 0;
   }
 
   function getEntryArchetypes(entry) {
@@ -1675,10 +1720,17 @@
   }
 
   function entryAllowsMultiple(entry) {
-    if (!entry) return false;
-    if (entry.kan_införskaffas_flera_gånger) return true;
-    const tags = entry.taggar || {};
-    if (tags.kan_införskaffas_flera_gånger) return true;
+    if (!entry || typeof entry !== 'object') return false;
+    if (typeof window.rulesHelper?.getEntryMaxCount === 'function') {
+      return Number(window.rulesHelper.getEntryMaxCount(entry)) > 1;
+    }
+    const tagLimit = Number(entry?.taggar?.max_antal);
+    if (Number.isFinite(tagLimit) && tagLimit > 1) return true;
+    const directLimit = Number(entry?.max_antal);
+    if (Number.isFinite(directLimit) && directLimit > 1) return true;
+    if (entry.kan_införskaffas_flera_gånger === true || entry?.taggar?.kan_införskaffas_flera_gånger === true) {
+      return true;
+    }
     return false;
   }
 
@@ -1709,7 +1761,22 @@
     return [];
   }
 
+  function getEntryTests(entry, options = {}) {
+    if (!entry) return [];
+    const level = options?.level;
+    if (typeof window.getEntryTestTags === 'function') {
+      const tests = window.getEntryTestTags(entry, { level });
+      return Array.isArray(tests) ? tests : [];
+    }
+    return toNameArray(entry?.taggar?.test);
+  }
+
   function getYrkeTraditionName(entry) {
+    const helper = window.storeHelper || {};
+    if (typeof helper.resolveTraditionSkillName === 'function') {
+      const resolved = helper.resolveTraditionSkillName(entry?.namn);
+      if (resolved) return resolved;
+    }
     const name = normalizeName(entry?.namn);
     if (!name) return '';
     const match = YRKE_TRADITION_PAIRS.find(pair => pair[0] === name);
@@ -1717,6 +1784,11 @@
   }
 
   function getTraditionBaseAbilityName(tradition) {
+    const helper = window.storeHelper || {};
+    if (typeof helper.resolveTraditionSkillName === 'function') {
+      const resolved = helper.resolveTraditionSkillName(tradition);
+      if (resolved) return resolved;
+    }
     const key = normalizeTraditionKey(tradition);
     if (!key) return '';
     const match = TRADITION_BASE_ABILITY_PAIRS.find(pair => normalizeTraditionKey(pair[0]) === key);
@@ -1730,137 +1802,35 @@
     return match ? resolveTraditionName(match[0]) || match[0] : '';
   }
 
-  function parseElityrkeRequirementGroups(text) {
+  function parseElityrkeRequirementGroups(krav) {
+    if (typeof eliteUtils.getKravGroups === 'function') {
+      try {
+        return eliteUtils.getKravGroups(krav || {}, {
+          dbList: Array.isArray(window.DB) ? window.DB : [],
+          lookupEntry: window.lookupEntry
+        }).filter(group => {
+          const type = typeof eliteUtils.normalizeType === 'function'
+            ? eliteUtils.normalizeType(group?.type)
+            : String(group?.type || '').trim();
+          return type !== 'Fördel' && type !== 'Nackdel';
+        });
+      } catch {}
+    }
     const extParser = window.eliteAdd?.parseGroupRequirements;
     if (typeof extParser === 'function') {
       try {
-        const res = extParser(text || '');
+        const res = extParser(krav || {});
         if (Array.isArray(res)) return res;
       } catch {}
     }
-    return fallbackRequirementGroups(text || '');
-  }
-
-  function fallbackRequirementGroups(rawText) {
-    const rawGroups = splitRequirementComma(rawText).map(segment => splitRequirementOr(segment));
-    const out = [];
-    rawGroups.forEach(group => {
-      let hasAnyMystic = false;
-      let hasAnyRitual = false;
-      const names = new Set();
-      group.forEach(part => {
-        expandRequirementPart(part).forEach(val => {
-          if (val.anyMystic) {
-            hasAnyMystic = true;
-            return;
-          }
-          if (val.anyRitual) {
-            hasAnyRitual = true;
-            return;
-          }
-          (val.names || []).forEach(name => {
-            const trimmed = String(name || '').trim();
-            if (trimmed) names.add(trimmed);
-          });
-        });
-      });
-      if (hasAnyMystic) {
-        out.push({ anyMystic: true });
-        return;
-      }
-      if (hasAnyRitual && names.size === 0) {
-        out.push({ anyRitual: true });
-        return;
-      }
-      const list = Array.from(names);
-      if (!list.length) return;
-      const allRitual = list.every(name => {
-        const entry = lookupEntryByName(name);
-        return (entry?.taggar?.typ || []).includes('Ritual');
-      });
-      out.push({ names: list, allRitual });
-    });
-    return out;
-  }
-
-  function splitRequirementComma(str) {
-    const result = [];
-    let buf = '';
-    let depth = 0;
-    const input = String(str || '');
-    for (let i = 0; i < input.length; i += 1) {
-      const ch = input[i];
-      if (ch === '(') depth += 1;
-      else if (ch === ')') depth = Math.max(0, depth - 1);
-      if ((ch === ',' || ch === ';') && depth === 0) {
-        if (buf.trim()) result.push(buf.trim());
-        buf = '';
-        continue;
-      }
-      buf += ch;
-    }
-    if (buf.trim()) result.push(buf.trim());
-    return result;
-  }
-
-  function splitRequirementOr(str) {
-    const result = [];
-    let buf = '';
-    let depth = 0;
-    const input = String(str || '');
-    const lower = input.toLowerCase();
-    for (let i = 0; i < input.length;) {
-      if (lower.startsWith(' eller ', i) && depth === 0) {
-        if (buf.trim()) result.push(buf.trim());
-        buf = '';
-        i += 7;
-        continue;
-      }
-      const ch = input[i];
-      if (ch === '(') depth += 1;
-      else if (ch === ')') depth = Math.max(0, depth - 1);
-      buf += ch;
-      i += 1;
-    }
-    if (buf.trim()) result.push(buf.trim());
-    return result.length ? result : [''];
-  }
-
-  function expandRequirementPart(raw) {
-    const name = String(raw || '').trim();
-    if (!name) return [];
-    const mysticMatch = name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
-    if (mysticMatch) {
-      const inner = mysticMatch[1].trim();
-      if (inner.toLowerCase() === 'valfri') return [{ anyMystic: true }];
-      return expandRequirementOptions(inner);
-    }
-    const ritualMatch = name.match(/^Ritualist\s*\(([^)]+)\)/i);
-    if (ritualMatch) {
-      const inner = ritualMatch[1].trim();
-      if (inner.toLowerCase() === 'valfri') return [{ anyRitual: true }];
-      return expandRequirementOptions(inner);
-    }
-    if (/^Ritualist$/i.test(name)) return [{ anyRitual: true }];
-    return [{ names: [name] }];
-  }
-
-  function expandRequirementOptions(inner) {
-    const opts = [];
-    splitRequirementComma(inner).forEach(segment => {
-      splitRequirementOr(segment).forEach(val => {
-        const nm = String(val || '').trim();
-        if (nm) opts.push({ names: [nm] });
-      });
-    });
-    return opts;
+    return [];
   }
 
   function getAbilitiesMatchingTrait(trait) {
     const key = normalizeName(trait);
     if (!key) return [];
     return getEntriesByType('Förmåga')
-      .filter(entry => toNameArray(entry?.taggar?.test).some(test => normalizeName(test).includes(key)))
+      .filter(entry => getEntryTests(entry).some(test => normalizeName(test).includes(key)))
       .map(entry => entry.namn)
       .filter(Boolean);
   }
@@ -1955,7 +1925,7 @@
       const name = entry?.namn;
       if (!name) return;
       if ((entry?.taggar?.typ || []).includes('Elityrkesförmåga')) return;
-      const tests = toNameArray(entry?.taggar?.test);
+      const tests = getEntryTests(entry);
       const archetypes = getEntryArchetypes(entry);
       pushEntry(name, tests, archetypes);
     });

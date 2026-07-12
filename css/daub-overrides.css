@@ -1,0 +1,397 @@
+/*
+ * DAUB theme overrides — maps DAUB semantic tokens to Symbapedia's
+ * medieval dark-fantasy palette.  Loaded AFTER all legacy CSS so that
+ * DAUB components rendered later pick up these values.
+ */
+
+[data-theme="ember-dark"] {
+  /* ── Backgrounds (charred wood) ────────────────────── */
+  --db-color-bg:              #2D2C21;
+  --db-color-bg-alt:          #26211D;
+  --db-color-bg-rgb:          26, 19, 16;
+
+  /* ── Surfaces (weathered plank) ────────────────────── */
+  --db-color-surface:         #231E1A;
+  --db-color-surface-rgb:     42, 31, 24;
+
+  /* ── Text (parchment / ash) ────────────────────────── */
+  --db-color-text:            #FFF3E4;
+  --db-color-text-secondary:  #BCAE9E;
+  --db-color-text-muted:      rgba(245, 230, 208, 0.40);
+  --db-color-text-rgb:        245, 230, 208;
+
+  /* ── Borders (wood-grain edge) ─────────────────────── */
+  --db-color-border:          #3E342E;
+  --db-color-border-rgb:      74, 54, 40;
+
+  /* ── Accent (burning ember) ────────────────────────── */
+  --db-color-accent:          #B97A52;
+  --db-color-accent-hover:    #C98B63;
+  --db-color-accent-rgb:      185, 122, 82;
+  --db-accent-dark:           #B97A52;
+  --db-accent-light:          #C98B63;
+  --db-accent-hover:          #C98B63;
+  --db-accent-pressed:        #8a3618;
+
+  /* ── Status colours ──────────────────────────────── */
+  --db-color-error:           #e85c4a;
+  --db-color-success:         #7daa6e;
+  --db-color-warning:         #d4a237;
+  --db-error:                 #e85c4a;
+  --db-success:               #7daa6e;
+  --db-warning:               #d4a237;
+
+  /* ── Overlay / backdrop ──────────────────────────── */
+  --db-color-overlay:         rgba(8, 4, 2, 0.68);
+
+  /* ── Typography ──────────────────────────────────── */
+  --db-font-heading:          'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --db-font-body:             'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif;
+  --db-font-ui:               'Avenir Next', 'Segoe UI', 'Trebuchet MS', sans-serif;
+
+  /* ── Shadows (ember glow + depth) ──────────────────── */
+  --db-shadow-1:              0 12px 28px rgba(0, 0, 0, 0.20), 0 0 1px rgba(185, 122, 82, 0.06);
+  --db-shadow-2:              0 18px 38px rgba(0, 0, 0, 0.38), 0 0 2px rgba(185, 122, 82, 0.08);
+  --db-shadow-3:              0 28px 48px rgba(0, 0, 0, 0.36), 0 0 3px rgba(185, 122, 82, 0.10);
+  --db-shadow-inset:          inset 0 2px 5px rgba(0, 0, 0, 0.48);
+
+  /* ── Legacy aliases (resolve through DAUB tokens) ──── */
+  --bg:                       var(--db-color-bg-alt);
+  --panel:                    var(--db-color-surface);
+  --border:                   var(--db-color-border);
+  --card:                     var(--db-color-bg);
+  --card-border:              var(--db-color-border);
+  --txt:                      var(--db-color-text);
+  --subtxt:                   var(--db-color-text-secondary);
+  --accent:                   var(--db-color-accent);
+  --danger:                   var(--db-color-error);
+  --shadow:                   var(--db-shadow-2);
+  --toolborder:               var(--db-color-border);
+  --button-standard:          var(--db-color-border);
+  --button-cta:               var(--db-accent-dark);
+  --text-icons:               var(--db-color-text);
+  --popup-backdrop-shade:     var(--db-color-overlay);
+  --display-font:             var(--db-font-heading);
+  --ui-font:                  var(--db-font-ui);
+  --shell-edge:               var(--db-color-border);
+}
+
+/* ── Bridge: popup-manager .open ↔ DAUB modal visibility ── */
+.db-modal-overlay.popup {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  background: var(--db-color-overlay, rgba(6, 5, 4, 0.58));
+  backdrop-filter: blur(4px);
+}
+.db-modal-overlay.popup.open {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+.db-modal-overlay.popup .db-modal {
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Sections moved into the inventory hub must not be hidden/repositioned
+   by the CDN .db-modal-overlay defaults or the bridge rule above */
+.inventory-hub-popup .inventory-hub-section.db-modal-overlay {
+  display: block;
+  position: static;
+  inset: auto;
+  z-index: auto;
+  opacity: 1;
+  visibility: visible;
+  background: none;
+  backdrop-filter: none;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+/* ── Bridge: offcanvas .open ↔ DAUB drawer ── */
+.db-drawer.offcanvas {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: min(380px, 85vw);
+  z-index: 1001;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  display: block;
+  visibility: visible;
+  background: var(--db-color-surface, rgba(49, 36, 26, 0.998));
+  border-left: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
+  box-shadow: var(--db-shadow-3, 0 28px 48px rgba(0, 0, 0, 0.3));
+  backdrop-filter: blur(14px);
+}
+.db-drawer.offcanvas.open {
+  transform: translateX(0);
+}
+@media (max-width: 640px) {
+  .db-drawer.offcanvas {
+    width: 100vw;
+    max-width: 100vw;
+  }
+}
+
+/* ── Entry card visual separation ── */
+.db-card.entry-card {
+  border: 1px solid var(--db-color-border, #3E342E);
+  border-radius: 0.75rem;
+  background: var(--db-color-surface, #231E1A);
+  padding: 0.65rem 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .db-card.entry-card {
+    padding: 0.45rem 0.4rem;
+    border-radius: 0.5rem;
+  }
+}
+
+/* Subtler hover on entry cards — keep the lift minimal */
+.db-card.entry-card:hover,
+.db-card--interactive.entry-card:hover {
+  transform: translateY(0);
+  box-shadow: var(--db-card-shadow), inset 0 1px 0 rgba(var(--db-glow-rgb),0.6), inset 0 -1px 0 rgba(var(--db-shadow-rgb),0.08);
+  border-color: rgba(255, 243, 228, 0.14);
+}
+
+/* Special cards keep their stronger border but gain rounded corners */
+.db-card[data-special] {
+  border-radius: 0.75rem;
+}
+
+/* ── Compact buttons inside entry cards ── */
+.entry-card .db-btn {
+  padding: .3rem .65rem;
+  font-size: .88rem;
+  min-height: 0;
+}
+.entry-card .db-btn--icon-only {
+  padding: .25rem;
+}
+.entry-card .db-btn .btn-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+/* Action-row buttons use --entry-card-action-size; re-assert after generic override */
+.entry-card .entry-row-actions .control-buttons .db-btn {
+  width: var(--entry-card-action-size);
+  min-width: var(--entry-card-action-size);
+  height: var(--entry-card-action-size);
+  padding: 0;
+}
+.entry-card .entry-row-actions .control-buttons .db-btn .btn-icon {
+  width: calc(var(--entry-card-action-size) - 12px);
+  height: calc(var(--entry-card-action-size) - 12px);
+}
+
+/* ── DAUB component refinements for Symbapedia ──────── */
+
+/* Choice-picker modal: constrain height, layout options as grid */
+#choicePopup.db-modal-overlay .db-modal {
+  max-height: 80vh;
+}
+
+#choicePopup .picker-popup-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 0.4rem 0;
+}
+
+#choicePopup .picker-popup-options .db-btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+#choicePopup .picker-popup-subtitle {
+  color: var(--db-color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+#choicePopup .picker-popup-empty {
+  color: var(--db-color-text-muted);
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+/* Dialog modal: center text */
+#daub-dialog-modal .db-modal__body {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+#daub-dialog-modal .db-modal__footer {
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* ── Bridge styles: .btn-icon inside db-btn ─────────── */
+.db-btn .btn-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  pointer-events: none;
+  object-fit: contain;
+}
+
+.db-btn--icon {
+  gap: 0.35rem;
+}
+
+.db-btn--icon-only .btn-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* ── Bridge: native <details> ↔ DAUB accordion ────────── */
+/* Override CDN accordion wrapper (border, overflow, radius)
+   so the list stretches full-width inside its parent panel */
+.db-accordion {
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+/* DAUB uses .db-accordion__item--open to toggle max-height;
+   we rely on native <details open> instead.                */
+.db-accordion__item[open] > .db-accordion__content {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+.db-accordion__content {
+  max-height: none;
+  overflow: visible;
+  transition: none;
+  padding: 0;
+}
+
+/* ── Accordion chevron indicator ─────────────────────── */
+.db-accordion__trigger {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.db-accordion__trigger::-webkit-details-marker {
+  display: none;
+}
+.db-accordion__trigger::after {
+  content: '';
+  display: block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-left: auto;
+  border-right: 2px solid var(--db-color-text-secondary, #bcae9e);
+  border-bottom: 2px solid var(--db-color-text-secondary, #bcae9e);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.db-accordion__item[open] > .db-accordion__trigger::after {
+  transform: rotate(-135deg);
+}
+
+/* ── DAUB chip overrides for Symbapedia ──────────────── */
+/* Override CDN defaults so chips fit the medieval palette
+   and have proper sizing inside cards and filter bars    */
+.db-chip {
+  font-size: 0.82rem;
+  padding: 0.22rem 0.6rem;
+  line-height: 1.35;
+  color: var(--db-color-text-secondary, #bcae9e);
+  background: var(--db-color-bg-alt, rgba(62, 45, 33, 0.78));
+  border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.1));
+}
+
+/* Clickable filter tags */
+.db-chip.filter-tag {
+  cursor: pointer;
+  background: var(--tag-interactive-bg, rgba(62, 44, 30, 0.98));
+  color: var(--tag-interactive-text, #FFF3E4);
+  border: 1px solid var(--tag-interactive-border, rgba(245, 230, 208, 0.12));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04), 0 1px 2px rgba(0, 0, 0, .35);
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.db-chip.filter-tag:hover {
+  opacity: 0.85;
+}
+
+/* Removable active-filter chips */
+.db-chip.removable {
+  cursor: pointer;
+  padding-right: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, .14);
+}
+.db-chip.removable .db-chip__close {
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  margin-left: 0.25rem;
+  padding: 0;
+  line-height: 1;
+}
+.db-chip.removable .db-chip__close:hover {
+  background: #a83830;
+  color: #fff;
+}
+
+/* Compact chips inside cards */
+.card .tags .db-chip,
+.db-card .tags .db-chip {
+  font-size: 0.78rem;
+  padding: 0.15rem 0.5rem;
+}
+
+/* ── Chevron icon (toolbar toggle buttons) ───────────── */
+.chevron-icon {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.chevron-icon.collapsed {
+  transform: rotate(-45deg);
+}
+
+/* ── Bridge: DAUB chip inheriting tag colour semantics ─ */
+.db-chip.quality   { background: color-mix(in srgb, var(--quality) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--quality) 50%, transparent); color: var(--quality); }
+.db-chip.mystic    { background: color-mix(in srgb, var(--mystic) 22%, transparent);  border: 1.5px solid color-mix(in srgb, var(--mystic) 50%, transparent);  color: var(--mystic); }
+.db-chip.neutral   { background: color-mix(in srgb, var(--neutral) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--neutral) 50%, transparent); color: var(--neutral); }
+.db-chip.negative  { background: color-mix(in srgb, var(--negative) 22%, transparent); border: 1.5px solid color-mix(in srgb, var(--negative) 50%, transparent); color: var(--negative); }
+.db-chip.unbound   { background: rgba(232, 129, 129, 0.18); border: 1.5px solid rgba(232, 129, 129, 0.5); color: #e68181; }
+
+/* Free quality glow */
+.db-chip.quality.free   { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--quality) 55%, transparent); }
+.db-chip.mystic.free    { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mystic) 55%, transparent); }
+.db-chip.neutral.free   { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--neutral) 55%, transparent); }
+.db-chip.negative.free  { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--negative) 55%, transparent); }

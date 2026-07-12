@@ -9,13 +9,20 @@
   const STORAGE_META_KEY = 'rpall-meta';
   const STORAGE_CHAR_PREFIX = 'rpall-char-';
   const ENTRY_SORT_DEFAULT = (global.ENTRY_SORT_DEFAULT || 'alpha-asc');
+  const CHARACTER_FILE_FORMAT = 'symbapedia-character';
+  const CHARACTER_FILE_FORMAT_VERSION = 2;
+  const CHARACTER_RULESET_VERSION = 3;
 
   const charStorageKey = (id) => `${STORAGE_CHAR_PREFIX}${id}`;
 
   const runtimeVersions = {
     custom: 0,
-    revealed: 0
+    revealed: 0,
+    derivedByCharacter: Object.create(null)
   };
+  const SNAPSHOT_RULES_KEY = 'snapshotRules';
+  const SNAPSHOT_SOURCE_TYPE_ENTRY = 'entry';
+  const SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING = 'artifact_binding';
 
   const normalizeEntrySort = (mode) => {
     if (typeof global.normalizeEntrySortMode === 'function') {
@@ -34,6 +41,20 @@
   };
 
   const getRuntimeVersion = (key) => runtimeVersions[key] || 0;
+  const getDerivedVersionKey = (store, charId) => {
+    const raw = charId ?? store?.current ?? '';
+    return raw === null || raw === undefined ? '' : String(raw).trim();
+  };
+  const bumpDerivedVersion = (store, charId) => {
+    const key = getDerivedVersionKey(store, charId);
+    if (!key) return 0;
+    runtimeVersions.derivedByCharacter[key] = (runtimeVersions.derivedByCharacter[key] || 0) + 1;
+    return runtimeVersions.derivedByCharacter[key];
+  };
+  const getDerivedVersionMeta = (store, charId) => {
+    const key = getDerivedVersionKey(store, charId);
+    return key ? (runtimeVersions.derivedByCharacter[key] || 0) : 0;
+  };
 
   const getCustomEntriesVersionMeta = () => getRuntimeVersion('custom');
   const getRevealedArtifactsVersionMeta = () => getRuntimeVersion('revealed');
@@ -51,13 +72,304 @@
     entrySort: normalizeEntrySort(store.entrySort)
   });
 
-  function persistMeta(store) {
+  const cloneValue = (value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return value;
+    }
+  };
+
+  const normalizeAliasKey = (value) => String(value ?? '').trim().normalize('NFC').toLowerCase();
+  const aliasLookup = (map, value) => {
+    const raw = String(value ?? '').trim();
+    if (!raw || !map) return '';
+    if (Object.prototype.hasOwnProperty.call(map.exact, raw)) return map.exact[raw];
+    return map.normalized[normalizeAliasKey(raw)] || '';
+  };
+  const normalizeAliasMap = (raw) => {
+    const exact = {};
+    const normalized = {};
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      Object.entries(raw).forEach(([key, value]) => {
+        const from = String(key ?? '').trim();
+        const to = String(value ?? '').trim();
+        if (!from || !to) return;
+        exact[from] = to;
+        normalized[normalizeAliasKey(from)] = to;
+      });
+    }
+    return { exact, normalized };
+  };
+  const normalizeLegacyImportMap = (raw) => ({
+    raw: raw && typeof raw === 'object' && !Array.isArray(raw) ? cloneValue(raw) : {},
+    entryIdAliases: normalizeAliasMap(raw?.entry_id_aliases),
+    entryNameAliases: normalizeAliasMap(raw?.entry_name_aliases),
+    entryDisplayNames: normalizeAliasMap(raw?.entry_display_names),
+    qualityNameAliases: normalizeAliasMap(raw?.quality_name_aliases),
+    typeAliases: normalizeAliasMap(raw?.type_aliases)
+  });
+  let legacyImportMap = normalizeLegacyImportMap(global.__symbaroumLegacyImportMap || {});
+
+  function setLegacyImportMap(map) {
+    legacyImportMap = normalizeLegacyImportMap(map || {});
+    global.__symbaroumLegacyImportMap = legacyImportMap.raw;
+    return legacyImportMap.raw;
+  }
+
+  function getLegacyImportMap() {
+    return cloneValue(legacyImportMap.raw);
+  }
+
+  function canonicalizeLegacyEntryId(id) {
+    const raw = String(id ?? '').trim();
+    if (!raw) return '';
+    return aliasLookup(legacyImportMap.entryIdAliases, raw) || raw;
+  }
+
+  function canonicalizeLegacyEntryNameToId(name) {
+    return aliasLookup(legacyImportMap.entryNameAliases, name);
+  }
+
+  function getLegacyEntryDisplayName(id) {
+    return aliasLookup(legacyImportMap.entryDisplayNames, canonicalizeLegacyEntryId(id));
+  }
+
+  function canonicalizeLegacyQualityName(name) {
+    const raw = String(name ?? '').trim();
+    if (!raw) return '';
+    return aliasLookup(legacyImportMap.qualityNameAliases, raw) || raw;
+  }
+
+  function canonicalizeLegacyTypeName(name) {
+    const raw = String(name ?? '').trim();
+    if (!raw) return '';
+    return aliasLookup(legacyImportMap.typeAliases, raw) || raw;
+  }
+
+  function rewriteStringList(list, canonicalize) {
+    if (!Array.isArray(list)) return { value: list, changed: false };
+    let changed = false;
+    const value = list.map(item => {
+      if (typeof item !== 'string') return item;
+      const next = canonicalize(item);
+      if (next !== item) changed = true;
+      return next;
+    });
+    return { value, changed };
+  }
+
+  function canonicalizeTags(target) {
+    if (!target || typeof target !== 'object') return false;
+    let changed = false;
+    const rewrite = (key, canonicalize) => {
+      if (!Array.isArray(target[key])) return;
+      const result = rewriteStringList(target[key], canonicalize);
+      if (result.changed) {
+        target[key] = result.value;
+        changed = true;
+      }
+    };
+    rewrite('typ', canonicalizeLegacyTypeName);
+    rewrite('types', canonicalizeLegacyTypeName);
+    rewrite('kvalitet', canonicalizeLegacyQualityName);
+    rewrite('qualities', canonicalizeLegacyQualityName);
+    return changed;
+  }
+
+  function canonicalizeQualityFields(target) {
+    if (!target || typeof target !== 'object') return false;
+    let changed = false;
+    ['kvaliteter', 'qualities', 'gratisKval', 'removedKval', 'manualQualityOverride'].forEach(key => {
+      const result = rewriteStringList(target[key], canonicalizeLegacyQualityName);
+      if (result.changed) {
+        target[key] = result.value;
+        changed = true;
+      }
+    });
+    if (canonicalizeTags(target.taggar)) changed = true;
+    if (canonicalizeTags(target.tags)) changed = true;
+    return changed;
+  }
+
+  function findCustomEntry(custom, id, name) {
+    const list = Array.isArray(custom) ? custom : [];
+    const idText = String(id ?? '').trim();
+    const nameText = String(name ?? '').trim();
+    if (idText) {
+      const hit = list.find(entry => String(entry?.id ?? '').trim() === idText);
+      if (hit) return hit;
+    }
+    if (nameText) {
+      return list.find(entry => String(entry?.namn ?? entry?.name ?? '').trim() === nameText) || null;
+    }
+    return null;
+  }
+
+  function lookupCanonicalEntry(id, name, custom) {
+    const customEntry = findCustomEntry(custom, id, name);
+    if (customEntry) return customEntry;
+    if (typeof global.lookupEntry !== 'function') return null;
+    const ref = { id, name };
+    return global.lookupEntry(ref, { explicitName: name, allowNameFallback: true }) || null;
+  }
+
+  function canonicalizeEntryRefFields(target, options = {}) {
+    if (!target || typeof target !== 'object') return false;
+    const custom = Array.isArray(options.custom) ? options.custom : [];
+    const rawId = target.id ?? target.i;
+    const rawName = target.namn ?? target.name ?? target.n;
+    const idText = rawId === undefined || rawId === null ? '' : String(rawId).trim();
+    const nameText = rawName === undefined || rawName === null ? '' : String(rawName).trim();
+    const mappedId = idText ? canonicalizeLegacyEntryId(idText) : '';
+    const nameMappedId = nameText ? canonicalizeLegacyEntryNameToId(nameText) : '';
+    const effectiveId = nameMappedId || mappedId || idText;
+    const entry = lookupCanonicalEntry(effectiveId, nameText, custom);
+    const resolvedId = entry?.id !== undefined ? String(entry.id).trim() : effectiveId;
+    const preserveExplicitName = options.preserveExplicitName !== false && Boolean(nameText) && !nameMappedId;
+    const resolvedName = String(
+      preserveExplicitName
+        ? nameText
+        : (entry?.namn ?? entry?.name ?? nameText ?? '')
+    ).trim();
+    let changed = false;
+
+    if (resolvedId && target.id !== resolvedId) {
+      target.id = resolvedId;
+      changed = true;
+    }
+    if (resolvedId && Object.prototype.hasOwnProperty.call(target, 'i') && target.i !== resolvedId) {
+      target.i = resolvedId;
+      changed = true;
+    }
+    if (resolvedName && Object.prototype.hasOwnProperty.call(target, 'namn') && target.namn !== resolvedName) {
+      target.namn = resolvedName;
+      changed = true;
+    }
+    if (resolvedName && Object.prototype.hasOwnProperty.call(target, 'name') && target.name !== resolvedName) {
+      target.name = resolvedName;
+      changed = true;
+    }
+    if (resolvedName && Object.prototype.hasOwnProperty.call(target, 'n') && target.n !== resolvedName) {
+      target.n = resolvedName;
+      changed = true;
+    }
+    if (canonicalizeQualityFields(target)) changed = true;
+    return changed;
+  }
+
+  function canonicalizeInventoryRows(rows, custom) {
+    if (!Array.isArray(rows)) return false;
+    let changed = false;
+    rows.forEach(row => {
+      if (!row || typeof row !== 'object') return;
+      if (row.typ !== 'currency' && canonicalizeEntryRefFields(row, { custom })) changed = true;
+      if (Array.isArray(row.contains) && canonicalizeInventoryRows(row.contains, custom)) changed = true;
+    });
+    return changed;
+  }
+
+  function canonicalizeDefenseItem(item, custom) {
+    return canonicalizeEntryRefFields(item, { custom });
+  }
+
+  function canonicalizeDefenseSetupRefs(setup, custom) {
+    if (!setup || typeof setup !== 'object') return false;
+    let changed = false;
+    if (canonicalizeDefenseItem(setup.armor, custom)) changed = true;
+    if (Array.isArray(setup.weapons)) {
+      setup.weapons.forEach(item => {
+        if (canonicalizeDefenseItem(item, custom)) changed = true;
+      });
+    }
+    if (canonicalizeDefenseItem(setup.dancingWeapon, custom)) changed = true;
+    const rawSeparate = setup.separateWeapons;
+    if (rawSeparate && typeof rawSeparate === 'object' && !Array.isArray(rawSeparate)) {
+      Object.entries(rawSeparate).forEach(([key, value]) => {
+        const mappedKey = canonicalizeLegacyEntryId(key);
+        if (mappedKey && mappedKey !== key) {
+          rawSeparate[mappedKey] = value;
+          delete rawSeparate[key];
+          changed = true;
+        }
+        const items = Array.isArray(value) ? value : [value];
+        items.forEach(item => {
+          if (canonicalizeDefenseItem(item, custom)) changed = true;
+        });
+      });
+    }
+    return changed;
+  }
+
+  function canonicalizeRevealedArtifacts(list, custom) {
+    if (!Array.isArray(list)) return { value: list, changed: false };
+    let changed = false;
+    const value = list.map(item => {
+      const id = canonicalizeLegacyEntryId(item);
+      const nameId = canonicalizeLegacyEntryNameToId(item);
+      const effectiveId = nameId || id;
+      const entry = lookupCanonicalEntry(effectiveId, item, custom);
+      const next = entry?.id || effectiveId || item;
+      if (next !== item) changed = true;
+      return next;
+    });
+    return { value: [...new Set(value)], changed };
+  }
+
+  function canonicalizeCharacterReferences(data, options = {}) {
+    if (!data || typeof data !== 'object') return false;
+    const custom = Array.isArray(options.custom) ? options.custom : (Array.isArray(data.custom) ? data.custom : []);
+    let changed = false;
+    custom.forEach(entry => {
+      if (canonicalizeQualityFields(entry)) changed = true;
+    });
+    if (Array.isArray(data.list)) {
+      data.list.forEach(entry => {
+        if (canonicalizeEntryRefFields(entry, { custom })) changed = true;
+      });
+    }
+    if (canonicalizeInventoryRows(data.inventory, custom)) changed = true;
+    if (canonicalizeDefenseSetupRefs(data.defenseSetup, custom)) changed = true;
+    const revealed = canonicalizeRevealedArtifacts(data.revealedArtifacts, custom);
+    if (revealed.changed) {
+      data.revealedArtifacts = revealed.value;
+      changed = true;
+    }
+    return changed;
+  }
+
+  const getPersistence = () => global.symbaroumPersistence || null;
+  const normalizeMutationFields = (fields) => {
+    const list = Array.isArray(fields) ? fields : (fields ? [fields] : []);
+    return [...new Set(
+      list
+        .map(field => String(field || '').trim())
+        .filter(Boolean)
+    )];
+  };
+  const getCharacterFieldPatch = (store, charId, fields) => {
+    const normalizedFields = normalizeMutationFields(fields);
+    const data = store?.data?.[charId];
+    return normalizedFields.reduce((patch, field) => {
+      if (data && Object.prototype.hasOwnProperty.call(data, field)) {
+        patch[field] = cloneValue(data[field]);
+      } else {
+        patch[field] = undefined;
+      }
+      return patch;
+    }, {});
+  };
+  let currentCharacterMutationBatch = null;
+
+  function persistMetaLocal(store) {
     try {
       localStorage.setItem(STORAGE_META_KEY, JSON.stringify(extractMeta(store)));
     } catch {}
   }
 
-  function persistCharacter(store, charId) {
+  function persistCharacterLocal(store, charId) {
     if (!charId) return;
     const data = store.data?.[charId];
     const key = charStorageKey(charId);
@@ -70,11 +382,149 @@
     } catch {}
   }
 
-  const persistCurrentCharacter = (store) => {
-    if (store.current) persistCharacter(store, store.current);
+  function persistMeta(store) {
+    const persistence = getPersistence();
+    if (persistence?.mode === 'dexie' && typeof persistence.saveMeta === 'function') {
+      persistence.saveMeta({
+        meta: extractMeta(store),
+        characters: cloneValue(store.characters || []),
+        folders: cloneValue(store.folders || [])
+      }).catch(error => {
+        console.error('Failed to persist store metadata', error);
+      });
+      return;
+    }
+    persistMetaLocal(store);
+  }
+
+  function persistCharacter(store, charId, options = {}) {
+    if (!charId) return;
+    const persistence = getPersistence();
+    const fields = normalizeMutationFields(options.fields);
+    if (persistence?.mode === 'dexie') {
+      if (fields.length && typeof persistence.saveCharacterFields === 'function') {
+        persistence.saveCharacterFields(charId, {
+          fields,
+          resolveValue: (field) => store?.data?.[charId]?.[field]
+        }).catch(error => {
+          console.error(`Failed to persist character fields for ${charId}`, error);
+        });
+        return;
+      }
+      if (typeof persistence.saveCharacter === 'function') {
+        persistence.saveCharacter(charId, store.data?.[charId] || null).catch(error => {
+          console.error(`Failed to persist character ${charId}`, error);
+        });
+        return;
+      }
+    }
+    persistCharacterLocal(store, charId);
+  }
+
+  const persistCurrentCharacter = (store, options = {}) => {
+    if (store.current) persistCharacter(store, store.current, options);
   };
 
+  function commitCurrentCharacterMutation(store, options = {}) {
+    const charId = getDerivedVersionKey(store);
+    if (!charId) return null;
+    const normalizedFields = normalizeMutationFields(options.fields);
+    const activeBatch = currentCharacterMutationBatch;
+    if (activeBatch && activeBatch.store === store && activeBatch.charId === charId) {
+      if (options.bumpDerived) activeBatch.bumpDerived = true;
+      if (options.persist !== false) activeBatch.shouldPersist = true;
+      if (normalizedFields.length) {
+        normalizedFields.forEach(field => activeBatch.fields.add(field));
+      } else {
+        activeBatch.requiresFullPersist = true;
+      }
+      return charId;
+    }
+    if (options.bumpDerived) bumpDerivedVersion(store, charId);
+    if (options.persist !== false) {
+      persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
+    }
+    return charId;
+  }
+
+  function batchCurrentCharacterMutation(store, options = {}, callback) {
+    if (typeof callback !== 'function') return undefined;
+    const charId = getDerivedVersionKey(store);
+    if (!charId) return callback();
+
+    const parentBatch = currentCharacterMutationBatch;
+    const batch = parentBatch && parentBatch.store === store && parentBatch.charId === charId
+      ? parentBatch
+      : {
+          store,
+          charId,
+          depth: 0,
+          fields: new Set(),
+          bumpDerived: false,
+          shouldPersist: false,
+          requiresFullPersist: false
+        };
+    if (!parentBatch || parentBatch !== batch) {
+      currentCharacterMutationBatch = batch;
+    }
+    batch.depth += 1;
+
+    const initialFields = normalizeMutationFields(options.fields);
+    if (initialFields.length) {
+      initialFields.forEach(field => batch.fields.add(field));
+    } else if (options.fields === null) {
+      batch.requiresFullPersist = true;
+    }
+    if (options.bumpDerived) batch.bumpDerived = true;
+    if (options.persist !== false) batch.shouldPersist = true;
+
+    const finalize = () => {
+      batch.depth -= 1;
+      if (batch.depth > 0) return;
+      if (currentCharacterMutationBatch === batch) {
+        currentCharacterMutationBatch = null;
+      }
+      if (batch.bumpDerived) {
+        bumpDerivedVersion(store, charId);
+      }
+      if (batch.shouldPersist) {
+        persistCharacter(store, charId, batch.requiresFullPersist ? {} : { fields: [...batch.fields] });
+      }
+    };
+
+    try {
+      const result = callback();
+      if (result && typeof result.then === 'function') {
+        return result.finally(finalize);
+      }
+      finalize();
+      return result;
+    } catch (error) {
+      finalize();
+      throw error;
+    }
+  }
+
   const MAX_RECENT_SEARCHES = 10;
+  const CURRENT_LIST_MUTATION_FIELDS = Object.freeze([
+    'list',
+    'inventory',
+    'privMoney',
+    'possessionMoney',
+    'bonusMoney',
+    'entryOrderCounter',
+    'suppressedEntryGrants',
+    'darkPastSuppressed',
+    SNAPSHOT_RULES_KEY,
+    'revealedArtifacts'
+  ]);
+  const CUSTOM_ENTRY_MUTATION_FIELDS = Object.freeze([
+    'custom',
+    'inventory',
+    'revealedArtifacts'
+  ]);
+  const INVENTORY_MUTATION_FIELDS = Object.freeze(['inventory']);
+  const INVENTORY_AND_ARTIFACT_FIELDS = Object.freeze(['inventory', 'artifactEffects']);
 
   function save(store, options = {}) {
     const { meta = true, charIds, allCharacters = false } = options || {};
@@ -100,6 +550,14 @@
   const HAMNSKIFTE_BASE = Object.fromEntries(
     Object.entries(HAMNSKIFTE_NAMES).map(([k,v]) => [v,k])
   );
+
+  function isHamnskifteGrantEntry(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    const id = String(entry?.id || '').trim().toLowerCase();
+    if (id.startsWith('hamnskifte_grants')) return true;
+    const name = String(entry?.namn || '').trim();
+    return /^hamnskifte:\s*/i.test(name);
+  }
 
   const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
 
@@ -150,7 +608,8 @@
     'trait',
     'form',
     'race',
-    'noInv'
+    'noInv',
+    'manualRuleOverride'
   ]);
 
   const ENTRY_PRESERVE_KEYS = new Set([
@@ -161,7 +620,8 @@
     'trait',
     'form',
     'race',
-    'noInv'
+    'noInv',
+    'manualRuleOverride'
   ]);
 
   const stableClone = (value) => {
@@ -398,6 +858,108 @@
     data.entryOrderCounter = counter;
   }
 
+  function snapshotCurrentListMutationState(store) {
+    if (!store?.current) return null;
+    const data = store.data?.[store.current];
+    if (!data || typeof data !== 'object') return null;
+    return {
+      list: Array.isArray(data.list) ? data.list : [],
+      entryOrderCounter: coerceOrderValue(data.entryOrderCounter) || 0,
+      suppressedEntryGrants: stableSignature(normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants)),
+      darkPastSuppressed: Boolean(data.darkPastSuppressed),
+      snapshotRules: stableSignature(normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY])),
+      revealedArtifacts: stableSignature(Array.isArray(data.revealedArtifacts) ? data.revealedArtifacts : []),
+      privMoney: stableSignature(normalizeMoney(data.privMoney || defaultMoney())),
+      possessionMoney: stableSignature(normalizeMoney(data.possessionMoney || defaultMoney())),
+      bonusMoney: stableSignature(normalizeMoney(data.bonusMoney || defaultMoney()))
+    };
+  }
+
+  function collectListEntryTopology(beforeList, afterList) {
+    const beforeUidSet = new Set(
+      (Array.isArray(beforeList) ? beforeList : [])
+        .map(entry => String(entry?.__uid || '').trim())
+        .filter(Boolean)
+    );
+    const afterUidSet = new Set(
+      (Array.isArray(afterList) ? afterList : [])
+        .map(entry => String(entry?.__uid || '').trim())
+        .filter(Boolean)
+    );
+    const addedEntries = (Array.isArray(afterList) ? afterList : []).filter(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      return Boolean(uid) && !beforeUidSet.has(uid);
+    });
+    const removedEntries = (Array.isArray(beforeList) ? beforeList : []).filter(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      return Boolean(uid) && !afterUidSet.has(uid);
+    });
+    return {
+      addedEntries,
+      removedEntries,
+      topologyChanged: addedEntries.length > 0 || removedEntries.length > 0
+    };
+  }
+
+  function normalizeGrantedEntryList(entries, liveList) {
+    if (!Array.isArray(entries) || !entries.length) return [];
+    const live = Array.isArray(liveList) ? liveList : [];
+    const byUid = new Map(
+      live
+        .map(entry => [String(entry?.__uid || '').trim(), entry])
+        .filter(([uid, entry]) => Boolean(uid) && entry)
+    );
+    const out = [];
+    const seen = new Set();
+    entries.forEach(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      const liveEntry = (uid && byUid.get(uid)) || entry;
+      const liveUid = String(liveEntry?.__uid || '').trim();
+      if (!liveEntry || !liveUid || seen.has(liveUid)) return;
+      seen.add(liveUid);
+      out.push(liveEntry);
+    });
+    return out;
+  }
+
+  function buildCurrentListMutationSummary(beforeState, afterState, options = {}) {
+    const topology = collectListEntryTopology(beforeState?.list, afterState?.list);
+    const inventoryChanged = Boolean(options.inventoryChanged);
+    const revealedChanged = Boolean(options.revealedChanged)
+      || beforeState?.revealedArtifacts !== afterState?.revealedArtifacts;
+    const privMoneyChanged = beforeState?.privMoney !== afterState?.privMoney;
+    const possessionMoneyChanged = beforeState?.possessionMoney !== afterState?.possessionMoney;
+    const bonusMoneyChanged = beforeState?.bonusMoney !== afterState?.bonusMoney;
+    const moneyChanged = privMoneyChanged || possessionMoneyChanged || bonusMoneyChanged;
+    const entryOrderCounterChanged = beforeState?.entryOrderCounter !== afterState?.entryOrderCounter;
+    const suppressedEntryGrantsChanged = beforeState?.suppressedEntryGrants !== afterState?.suppressedEntryGrants;
+    const darkPastSuppressedChanged = beforeState?.darkPastSuppressed !== afterState?.darkPastSuppressed;
+    const snapshotRulesChanged = Boolean(options.snapshotRulesChanged)
+      || beforeState?.snapshotRules !== afterState?.snapshotRules;
+
+    const changedFields = ['list'];
+    if (inventoryChanged) changedFields.push('inventory');
+    if (privMoneyChanged) changedFields.push('privMoney');
+    if (possessionMoneyChanged) changedFields.push('possessionMoney');
+    if (bonusMoneyChanged) changedFields.push('bonusMoney');
+    if (entryOrderCounterChanged) changedFields.push('entryOrderCounter');
+    if (suppressedEntryGrantsChanged) changedFields.push('suppressedEntryGrants');
+    if (darkPastSuppressedChanged) changedFields.push('darkPastSuppressed');
+    if (snapshotRulesChanged) changedFields.push(SNAPSHOT_RULES_KEY);
+    if (revealedChanged) changedFields.push('revealedArtifacts');
+
+    return {
+      changedFields,
+      topologyChanged: topology.topologyChanged,
+      addedEntries: topology.addedEntries,
+      removedEntries: topology.removedEntries,
+      grantedEntriesAdded: normalizeGrantedEntryList(options.grantedEntriesAdded, afterState?.list),
+      inventoryChanged,
+      moneyChanged,
+      revealedChanged
+    };
+  }
+
   function initializeEntryMetadata(data) {
     if (!data || typeof data !== 'object') return;
     const list = Array.isArray(data.list) ? data.list : [];
@@ -456,8 +1018,34 @@
     return `Custom${cleaned || 'Unnamed'}`;
   }
 
-  const FALLBACK_WEAPON_TYPES = ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'];
+  const LEGACY_WEAPON_BASE_TYPE = global.LEGACY_WEAPON_BASE_TYPE || 'Vapen';
+  const MELEE_WEAPON_BASE_TYPE = global.MELEE_WEAPON_BASE_TYPE || 'Närstridsvapen';
+  const RANGED_WEAPON_BASE_TYPE = global.RANGED_WEAPON_BASE_TYPE || 'Avståndsvapen';
+  const WEAPON_BASE_TYPES = Array.isArray(global.WEAPON_BASE_TYPES)
+    ? global.WEAPON_BASE_TYPES
+    : [MELEE_WEAPON_BASE_TYPE, RANGED_WEAPON_BASE_TYPE, LEGACY_WEAPON_BASE_TYPE];
+  const FALLBACK_WEAPON_TYPES = ['Enhandsvapen','Korta vapen','Långa vapen','Tvåhandsvapen','Obeväpnad attack','Stav','Armborst','Pilbåge','Kastvapen','Slunga','Blåsrör','Belägringsvapen','Projektilvapen'];
   const FALLBACK_ARMOR_TYPES  = ['Lätt Rustning','Medeltung Rustning','Tung Rustning'];
+  const isWeaponTypeName = (value) => {
+    if (typeof global.isWeaponType === 'function') return global.isWeaponType(value);
+    const txt = String(value || '').trim();
+    return txt === LEGACY_WEAPON_BASE_TYPE || txt === MELEE_WEAPON_BASE_TYPE || txt === RANGED_WEAPON_BASE_TYPE;
+  };
+  const isWeaponBaseTypeName = (value) => {
+    if (typeof global.isWeaponBaseType === 'function') return global.isWeaponBaseType(value);
+    const txt = String(value || '').trim();
+    return WEAPON_BASE_TYPES.includes(txt);
+  };
+  const isRangedWeaponTypeName = (value) => {
+    if (typeof global.isRangedWeaponType === 'function') return global.isRangedWeaponType(value);
+    const txt = String(value || '').trim();
+    return txt === RANGED_WEAPON_BASE_TYPE || txt === 'Armborst' || txt === 'Pilbåge' || txt === 'Kastvapen' || txt === 'Slunga' || txt === 'Blåsrör' || txt === 'Belägringsvapen' || txt === 'Projektilvapen';
+  };
+  const normalizeWeaponType = (value) => {
+    if (typeof global.normalizeWeaponTypeName === 'function') return global.normalizeWeaponTypeName(value);
+    const txt = String(value || '').trim();
+    return txt === 'Tvåhandsvapen' ? 'Tvåhandsvapen' : txt;
+  };
 
   function getSubtypeSets() {
     const weapon = new Set();
@@ -471,11 +1059,11 @@
       const db = global.DB || [];
       db.forEach(e => {
         const typs = e?.taggar?.typ || [];
-        if (typs.includes('Vapen')) {
+        if (Array.isArray(typs) && typs.some(isWeaponTypeName)) {
           typs.forEach(t => {
             const key = normalize(t);
-            if (!key || key === 'vapen' || key === 'sköld' || skip.has(key)) return;
-            const label = String(t).trim();
+            if (!key || key === 'sköld' || skip.has(key) || isWeaponBaseTypeName(t)) return;
+            const label = normalizeWeaponType(t);
             if (label) weapon.add(label);
           });
         }
@@ -531,19 +1119,34 @@
       entry.vikt = Number.isFinite(weight) && weight >= 0 ? weight : 0;
       entry.grundpris = sanitizeMoneyStruct(entry.grundpris);
 
-      // Tags: ensure Hemmagjort baseline; inject base types for subtypes; treat Sköld as weapon
+      // Tags: ensure Hemmagjort baseline; inject weapon/armor base types for subtypes.
       const taggar = (entry.taggar && typeof entry.taggar === 'object') ? { ...entry.taggar } : {};
       const normalizeTypes = (vals) => {
-        const extras = new Set((vals || []).map(v => String(v).trim()).filter(Boolean));
+        const extras = new Set(
+          (vals || [])
+            .map(v => normalizeWeaponType(v))
+            .map(v => String(v).trim())
+            .filter(Boolean)
+        );
         extras.delete('Hemmagjort');
-        const hasWeapon = extras.has('Vapen') || extras.has('Sköld') || [...extras].some(t => weaponSubs.has(t));
+        const hadLegacyWeapon = extras.delete(LEGACY_WEAPON_BASE_TYPE);
+        const hasWeapon = hadLegacyWeapon || extras.has('Sköld') || [...extras].some(t => weaponSubs.has(t) || isWeaponTypeName(t));
         const hasArmor  = extras.has('Rustning') || [...extras].some(t => armorSubs.has(t));
-        if (hasWeapon) extras.add('Vapen');
+        const hasMeleeBase = extras.has(MELEE_WEAPON_BASE_TYPE);
+        const hasRangedBase = extras.has(RANGED_WEAPON_BASE_TYPE);
+        if (hasWeapon && !hasMeleeBase && !hasRangedBase) {
+          const hasRangedSubtype = [...extras].some(t => isRangedWeaponTypeName(t));
+          extras.add(hasRangedSubtype ? RANGED_WEAPON_BASE_TYPE : MELEE_WEAPON_BASE_TYPE);
+        }
         if (hasArmor) extras.add('Rustning');
         const ordered = ['Hemmagjort'];
-        if (extras.has('Vapen')) ordered.push('Vapen');
+        if (extras.has(MELEE_WEAPON_BASE_TYPE)) ordered.push(MELEE_WEAPON_BASE_TYPE);
+        if (extras.has(RANGED_WEAPON_BASE_TYPE)) ordered.push(RANGED_WEAPON_BASE_TYPE);
         if (extras.has('Rustning')) ordered.push('Rustning');
-        extras.forEach(t => { if (t !== 'Vapen' && t !== 'Rustning') ordered.push(t); });
+        extras.forEach(t => {
+          if (t === MELEE_WEAPON_BASE_TYPE || t === RANGED_WEAPON_BASE_TYPE || t === 'Rustning') return;
+          ordered.push(t);
+        });
         return ordered;
       };
       if (Array.isArray(taggar.typ)) {
@@ -556,7 +1159,9 @@
       entry.taggar = taggar;
 
       entry.beskrivning = typeof entry.beskrivning === 'string' ? entry.beskrivning.trim() : '';
-      entry.artifactEffect = entry.artifactEffect === 'xp' || entry.artifactEffect === 'corruption' ? entry.artifactEffect : '';
+      entry.artifactEffect = entry.artifactEffect === undefined || entry.artifactEffect === null
+        ? ''
+        : String(entry.artifactEffect).trim();
 
       if (entry.bound === 'kraft' || entry.bound === 'ritual') {
         const rawLabel = typeof entry.boundLabel === 'string' ? entry.boundLabel.trim() : '';
@@ -621,13 +1226,15 @@
 
     const data = {
       custom: [],
-      artifactEffects: { xp: 0, corruption: 0 },
+      artifactEffects: defaultArtifactEffects(),
+      snapshotRules: [],
       bonusMoney: defaultMoney(),
       savedUnusedMoney: defaultMoney(),
       privMoney: defaultMoney(),
       possessionMoney: defaultMoney(),
       possessionRemoved: 0,
       hamnskifteRemoved: [],
+      suppressedEntryGrants: {},
       forcedDefense: '',
       defenseSetup: defaultDefenseSetup(),
       notes: defaultNotes(),
@@ -639,10 +1246,16 @@
 
     let mutated = false;
 
-    if (!data.artifactEffects) {
-      data.artifactEffects = { xp: 0, corruption: 0 };
+    const normalizedArtifactEffects = normalizeArtifactEffectsMap(data.artifactEffects);
+    if (JSON.stringify(normalizedArtifactEffects) !== JSON.stringify(data.artifactEffects || {})) {
       mutated = true;
     }
+    data.artifactEffects = normalizedArtifactEffects;
+    const normalizedSnapshotRules = normalizeSnapshotRuleRecords(data.snapshotRules);
+    if (JSON.stringify(normalizedSnapshotRules) !== JSON.stringify(data.snapshotRules || [])) {
+      mutated = true;
+    }
+    data.snapshotRules = normalizedSnapshotRules;
     if (!data.manualAdjustments) {
       data.manualAdjustments = defaultManualAdjustments();
       mutated = true;
@@ -681,6 +1294,32 @@
       data.darkPastSuppressed = false;
       mutated = true;
     }
+    const normalizedSuppressedEntryGrants = normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants);
+    if (Array.isArray(data.hamnskifteRemoved) && data.hamnskifteRemoved.length) {
+      const REMOVED_TO_GRANT_ID = {
+        'Naturligt vapen': 'hamnskifte_grants4',
+        'Pansar': 'hamnskifte_grants2',
+        'Robust': 'hamnskifte_grants1',
+        'Regeneration': 'hamnskifte_grants3'
+      };
+      data.hamnskifteRemoved.forEach(baseName => {
+        const grantId = REMOVED_TO_GRANT_ID[baseName];
+        if (grantId) addSuppressedEntryGrant(normalizedSuppressedEntryGrants, 'Hamnskifte', `id:${grantId}`);
+      });
+      data.hamnskifteRemoved = [];
+      mutated = true;
+    }
+    if (data.darkPastSuppressed) {
+      addSuppressedEntryGrant(
+        normalizedSuppressedEntryGrants,
+        'Mörkt blod',
+        `name:${normalizeEntryGrantName('Mörkt förflutet')}`
+      );
+    }
+    if (JSON.stringify(normalizedSuppressedEntryGrants) !== JSON.stringify(data.suppressedEntryGrants || {})) {
+      mutated = true;
+    }
+    data.suppressedEntryGrants = normalizedSuppressedEntryGrants;
     if (!data.notes) {
       data.notes = defaultNotes();
       mutated = true;
@@ -725,9 +1364,13 @@
         }
       }
 
+      if (canonicalizeCharacterReferences(data, { custom: data.custom })) {
+        mutated = true;
+      }
+
       initializeEntryMetadata(data);
 
-      return { data, mutated };
+      return { data, mutated, idMap };
     }
 
   /* ---------- 1. Grund­struktur ---------- */
@@ -735,7 +1378,7 @@
     return {
       current: '',          // id för vald karaktär
       characters: [],       // [{ id, name }]
-      data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{xp:0,corruption:0} } }
+      data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{...} } }
       folders: [],          // [{ id, name, order }]
       activeFolder: 'ALL',  // 'ALL' | folderId ("Utan mapp" ej tillåtet)
       filterUnion: false,
@@ -747,20 +1390,74 @@
     };
   }
 
+  function hydrateStructuredStore(snapshot, options = {}) {
+    const persistChanges = options.persistChanges !== false;
+    const persistMetaFn = typeof options.persistMeta === 'function' ? options.persistMeta : persistMeta;
+    const persistCharacterFn = typeof options.persistCharacter === 'function' ? options.persistCharacter : persistCharacter;
+    const store = { ...emptyStore(), ...(snapshot || {}) };
+    if (!store.data || typeof store.data !== 'object') store.data = {};
+    const chars = Array.isArray(store.characters) ? store.characters : [];
+    const usedCustomIds = new Set();
+    const mutatedIds = new Set();
+
+    chars.forEach(char => {
+      if (!char || !char.id) return;
+      const { data, mutated } = normalizeCharacterData(store, char.id, store.data?.[char.id] || {}, char, usedCustomIds);
+      store.data[char.id] = data;
+      if (mutated) mutatedIds.add(char.id);
+    });
+
+    let metaMutated = false;
+    if (!Array.isArray(store.folders)) {
+      store.folders = [];
+      metaMutated = true;
+    }
+    if (!store.activeFolder || store.activeFolder === '') {
+      store.activeFolder = 'ALL';
+      metaMutated = true;
+    }
+    metaMutated = ensureSystemFolderAndMigrate(store) || metaMutated;
+
+    const hasCurrent = Boolean(store.current);
+    const currentLive = hasCurrent
+      ? Boolean(store.data?.[store.current]?.liveMode)
+      : Boolean(store.liveMode);
+
+    if (!Object.prototype.hasOwnProperty.call(snapshot || {}, 'liveMode')) {
+      const normalized = Boolean(store.liveMode);
+      store.liveMode = hasCurrent ? currentLive : normalized;
+      metaMutated = true;
+    } else {
+      const metaLive = Boolean(store.liveMode);
+      if (hasCurrent && metaLive !== currentLive) {
+        store.liveMode = currentLive;
+        metaMutated = true;
+      } else {
+        store.liveMode = metaLive;
+      }
+    }
+
+    store.entrySort = normalizeEntrySort(store.entrySort);
+
+    if (persistChanges) {
+      if (metaMutated) persistMetaFn(store);
+      mutatedIds.forEach(id => persistCharacterFn(store, id));
+    }
+
+    return store;
+  }
+
   /* ---------- 2. Load / Save ---------- */
-  function load() {
+  function loadLegacyStorage(options = {}) {
+    const persistChanges = options.persistChanges !== false;
     try {
       const metaRaw = localStorage.getItem(STORAGE_META_KEY);
       const legacyRaw = localStorage.getItem(STORAGE_KEY);
 
       if (metaRaw) {
         const metaParsed = JSON.parse(metaRaw);
-        const metaHasLiveMode = Object.prototype.hasOwnProperty.call(metaParsed || {}, 'liveMode');
-        const store = { ...emptyStore(), ...metaParsed };
-        store.data = {};
+        const store = { ...emptyStore(), ...metaParsed, data: {} };
         const chars = Array.isArray(store.characters) ? store.characters : [];
-        const usedCustomIds = new Set();
-        const mutatedIds = new Set();
         chars.forEach(char => {
           if (!char || !char.id) return;
           let charData = {};
@@ -768,46 +1465,13 @@
             const raw = localStorage.getItem(charStorageKey(char.id));
             charData = raw ? JSON.parse(raw) : {};
           } catch {}
-          const { data, mutated } = normalizeCharacterData(store, char.id, charData, char, usedCustomIds);
-          store.data[char.id] = data;
-          if (mutated) mutatedIds.add(char.id);
+          store.data[char.id] = charData;
         });
-
-        let metaMutated = false;
-        if (!Array.isArray(store.folders)) {
-          store.folders = [];
-          metaMutated = true;
-        }
-        if (!store.activeFolder || store.activeFolder === '') {
-          store.activeFolder = 'ALL';
-          metaMutated = true;
-        }
-        metaMutated = ensureSystemFolderAndMigrate(store) || metaMutated;
-
-        const hasCurrent = Boolean(store.current);
-        const currentLive = hasCurrent
-          ? Boolean(store.data?.[store.current]?.liveMode)
-          : Boolean(store.liveMode);
-
-        if (!metaHasLiveMode) {
-          const normalized = Boolean(store.liveMode);
-          store.liveMode = hasCurrent ? currentLive : normalized;
-          metaMutated = true;
-        } else {
-          const metaLive = Boolean(store.liveMode);
-          if (hasCurrent && metaLive !== currentLive) {
-            store.liveMode = currentLive;
-            metaMutated = true;
-          } else {
-            store.liveMode = metaLive;
-          }
-        }
-
-        store.entrySort = normalizeEntrySort(store.entrySort);
-
-        if (metaMutated) persistMeta(store);
-        mutatedIds.forEach(id => persistCharacter(store, id));
-        return store;
+        return hydrateStructuredStore(store, {
+          persistChanges,
+          persistMeta: persistMetaLocal,
+          persistCharacter: persistCharacterLocal
+        });
       }
 
       if (legacyRaw) {
@@ -833,18 +1497,35 @@
             store.data[id].liveMode = Boolean(store.liveMode);
           }
         });
-        persistMeta(store);
-        Object.keys(store.data).forEach(id => persistCharacter(store, id));
-        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        if (persistChanges) {
+          persistMetaLocal(store);
+          Object.keys(store.data).forEach(id => persistCharacterLocal(store, id));
+          try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        }
         return store;
       }
 
       const store = emptyStore();
-      persistMeta(store);
+      if (persistChanges) persistMetaLocal(store);
       return store;
     } catch {
       return emptyStore();
     }
+  }
+
+  function load() {
+    try {
+      const persistence = getPersistence();
+      const snapshot = persistence?.getStoreSnapshot?.();
+      if (snapshot) {
+        return hydrateStructuredStore(snapshot, {
+          persistChanges: true,
+          persistMeta,
+          persistCharacter
+        });
+      }
+    } catch {}
+    return loadLegacyStorage();
   }
 
   // Skapa/finn systemmappen "Standard" och migrera karaktärer utan giltig mapp
@@ -904,6 +1585,13 @@
       if (!store.data || typeof store.data !== 'object') return;
       const changedIds = new Set();
       Object.entries(store.data).forEach(([id, data]) => {
+        const beforeRefs = JSON.stringify({
+          custom: data.custom || [],
+          list: data.list || [],
+          inventory: data.inventory || [],
+          revealedArtifacts: data.revealedArtifacts || [],
+          defenseSetup: data.defenseSetup || null
+        });
         const custom = data.custom || [];
         custom.forEach(c => {
           if (!c.id) {
@@ -937,6 +1625,18 @@
             changedIds.add(id);
           }
         }
+        if (canonicalizeCharacterReferences(data, { custom })) {
+          changedIds.add(id);
+        } else {
+          const afterRefs = JSON.stringify({
+            custom: data.custom || [],
+            list: data.list || [],
+            inventory: data.inventory || [],
+            revealedArtifacts: data.revealedArtifacts || [],
+            defenseSetup: data.defenseSetup || null
+          });
+          if (afterRefs !== beforeRefs) changedIds.add(id);
+        }
       });
       changedIds.forEach(charId => persistCharacter(store, charId));
     } catch {}
@@ -969,7 +1669,13 @@
   function getCurrentList(store) {
     if (!store.current) return [];
     const list = store.data[store.current]?.list || [];
-    return list.map(x => ({ ...x }));
+    const cloned = list.map(x => ({ ...x }));
+    const snapshotRules = getSnapshotRuleRecords(store).map(record => ({
+      ...record,
+      rule: cloneSnapshotValue(record.rule),
+      sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+    }));
+    return attachSnapshotRulesToList(cloned, snapshotRules);
   }
 
   function normalizeRaceName(value) {
@@ -992,40 +1698,504 @@
     return { base, blood };
   }
 
-  function applyDarkBloodEffects(store, list) {
-    const hasDark = list.some(x => x.namn === 'Mörkt blod');
-    const idxBest = list.findIndex(x => x.namn === 'Mörkt förflutet');
-    const data = store.data[store.current] || {};
-    const suppressed = !!data.darkPastSuppressed;
-
-    if (hasDark) {
-      if (idxBest < 0 && !suppressed) {
-        const entry = lookupEntry({ name: 'Mörkt förflutet' });
-        if (entry) list.push({ ...entry });
-      }
-    }
+  function normalizeEntryGrantName(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
-  function applyRaceTraits(list) {
-    const races = [];
-    const main = list.find(isRas)?.namn || null;
-    if (main) races.push(main);
-    list.forEach(it => {
-      if (it.namn === 'Blodsband' && it.race) races.push(it.race);
+  function normalizeSuppressedEntryGrantMap(raw) {
+    const out = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+    Object.keys(raw).forEach(sourceName => {
+      const source = String(sourceName || '').trim();
+      if (!source) return;
+      const values = Array.isArray(raw[sourceName]) ? raw[sourceName] : [];
+      const keys = values
+        .map(value => String(value || '').trim())
+        .filter(Boolean);
+      if (!keys.length) return;
+      out[source] = Array.from(new Set(keys));
     });
-    DB.forEach(ent => {
-      if (!((ent.taggar?.typ || []).includes('S\u00e4rdrag'))) return;
-      const ras = ent.taggar?.ras;
-      if (!ras || !Array.isArray(ras)) return;
-      if (ent.niv\u00e5er) return;
-      const idx = list.findIndex(x => x.namn === ent.namn);
-      const allowed = races.some(r => ras.includes(r));
-      if (allowed) {
-        if (idx < 0) list.push({ ...ent });
-      } else if (idx >= 0) {
-        list.splice(idx, 1);
+    return out;
+  }
+
+  function addSuppressedEntryGrant(map, sourceName, targetKey) {
+    const source = String(sourceName || '').trim();
+    const target = String(targetKey || '').trim();
+    if (!source || !target) return;
+    const list = Array.isArray(map[source]) ? map[source] : [];
+    if (!list.includes(target)) list.push(target);
+    map[source] = list;
+  }
+
+  function removeSuppressedEntryGrant(map, sourceName, targetKey) {
+    const source = String(sourceName || '').trim();
+    const target = String(targetKey || '').trim();
+    if (!source || !target || !Array.isArray(map[source])) return;
+    map[source] = map[source].filter(value => value !== target);
+    if (!map[source].length) delete map[source];
+  }
+
+  function isSuppressedEntryGrant(map, sourceName, targetKey) {
+    const source = String(sourceName || '').trim();
+    const target = String(targetKey || '').trim();
+    if (!source || !target) return false;
+    return Array.isArray(map[source]) && map[source].includes(target);
+  }
+
+  function getEntryGrantTargetKey(ref) {
+    const name = normalizeEntryGrantName(ref?.name || ref?.namn || '');
+    if (name) return `name:${name}`;
+    const id = ref?.id === undefined || ref?.id === null
+      ? ''
+      : String(ref.id).trim();
+    return id ? `id:${id}` : '';
+  }
+
+  function resolveEntryGrantTarget(target) {
+    const id = target?.id === undefined || target?.id === null
+      ? ''
+      : String(target.id).trim();
+    const name = typeof target?.name === 'string'
+      ? target.name.trim()
+      : (typeof target?.namn === 'string' ? target.namn.trim() : '');
+    let hit = null;
+    if (typeof global.lookupEntry === 'function') {
+      try {
+        const query = {};
+        if (id) query.id = id;
+        if (name) query.name = name;
+        if (Object.keys(query).length) hit = global.lookupEntry(query);
+      } catch {}
+    }
+    const resolvedId = hit?.id === undefined || hit?.id === null
+      ? (id || undefined)
+      : hit.id;
+    const resolvedName = (typeof hit?.namn === 'string' && hit.namn.trim())
+      ? hit.namn.trim()
+      : name;
+    const key = getEntryGrantTargetKey({ id: resolvedId, name: resolvedName || name })
+      || getEntryGrantTargetKey({ id, name });
+    return {
+      id: resolvedId,
+      name: resolvedName,
+      key,
+      entry: hit && typeof hit === 'object' ? hit : null
+    };
+  }
+
+  function listHasEntryByGrantTarget(list, target) {
+    const targetId = target?.id === undefined || target?.id === null
+      ? ''
+      : String(target.id).trim();
+    const targetNameNorm = normalizeEntryGrantName(target?.name || target?.namn || '');
+    return (Array.isArray(list) ? list : []).some(entry => {
+      if (!entry || typeof entry !== 'object') return false;
+      if (targetId && entry.id !== undefined && entry.id !== null && String(entry.id) === targetId) return true;
+      return targetNameNorm && normalizeEntryGrantName(entry?.namn || '') === targetNameNorm;
+    });
+  }
+
+  function listHasEntryByName(list, name) {
+    const normalized = normalizeEntryGrantName(name);
+    if (!normalized) return false;
+    return (Array.isArray(list) ? list : []).some(entry => normalizeEntryGrantName(entry?.namn || '') === normalized);
+  }
+
+  const LIMIT_IGNORE_TAG_KEYS = Object.freeze([
+    'ignore_limits',
+    'ignore_limit',
+    'ignorelimits',
+    'ignorelimit',
+    'ignoreLimits',
+    'ignoreLimit',
+    'bypass_limits',
+    'bypass_limit'
+  ]);
+
+  function parseIgnoreLimitsFlagValue(value) {
+    if (value === undefined || value === null || value === '') return null;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      const normalized = normalizeEntryGrantName(trimmed);
+      if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) return false;
+      if (['true', '1', 'yes', 'ja', 'on'].includes(normalized)) return true;
+      return true;
+    }
+    return true;
+  }
+
+  function readIgnoreLimitsFlag(container) {
+    if (!container || typeof container !== 'object' || Array.isArray(container)) return null;
+
+    for (const key of LIMIT_IGNORE_TAG_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(container, key)) continue;
+      return parseIgnoreLimitsFlagValue(container[key]);
+    }
+
+    const wanted = new Set(LIMIT_IGNORE_TAG_KEYS.map(normalizeEntryGrantName));
+    for (const key of Object.keys(container)) {
+      if (!wanted.has(normalizeEntryGrantName(key))) continue;
+      return parseIgnoreLimitsFlagValue(container[key]);
+    }
+
+    return null;
+  }
+
+  function parseEntryGrantConstraint(rawTarget) {
+    if (!rawTarget || typeof rawTarget !== 'object') return null;
+
+    let isFree = false;
+    let gratisTill = null;
+    const levelCandidates = [rawTarget.gratisTill, rawTarget.gratis_till, rawTarget.gratis_upp_till];
+    for (const candidate of levelCandidates) {
+      if (typeof candidate !== 'string') continue;
+      const trimmed = candidate.trim();
+      if (!trimmed) continue;
+      const normalized = normalizeEntryGrantName(trimmed);
+      if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) continue;
+      isFree = true;
+      gratisTill = ['true', '1', 'yes', 'ja', 'on'].includes(normalized) ? null : trimmed;
+      break;
+    }
+
+    if (!isFree) {
+      const freeCandidates = [rawTarget.gratis, rawTarget.free, rawTarget.is_gratis, rawTarget.isGratis];
+      for (const candidate of freeCandidates) {
+        if (candidate === undefined || candidate === null || candidate === '') continue;
+        if (typeof candidate === 'string') {
+          const trimmed = candidate.trim();
+          if (!trimmed) continue;
+          const normalized = normalizeEntryGrantName(trimmed);
+          if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) continue;
+          isFree = true;
+          gratisTill = ['true', '1', 'yes', 'ja', 'on'].includes(normalized) ? null : trimmed;
+          break;
+        }
+        if (typeof candidate === 'number') {
+          if (candidate === 0) continue;
+          isFree = true;
+          gratisTill = null;
+          break;
+        }
+        if (candidate === true) {
+          isFree = true;
+          gratisTill = null;
+          break;
+        }
+      }
+    }
+
+    const ignoreLimits = readIgnoreLimitsFlag(rawTarget) === true;
+    if (!isFree && !ignoreLimits) return null;
+
+    return {
+      isFree,
+      gratisTill: isFree ? gratisTill : null,
+      ignoreLimits
+    };
+  }
+
+  function buildGrantMaps(list) {
+    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const grantCounts = new Map();
+    const grantConstraints = new Map();
+    const grantIgnoreCounts = new Map();
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return { grantCounts, grantConstraints, grantIgnoreCounts };
+
+    global.rulesHelper.getEntryGrantTargets(entries).forEach(rawTarget => {
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      const key = resolvedTarget?.key || getEntryGrantTargetKey(rawTarget);
+      if (!key) return;
+      const constraint = parseEntryGrantConstraint(rawTarget);
+      if (!constraint) return;
+      if (constraint.isFree) {
+        grantCounts.set(key, (grantCounts.get(key) || 0) + 1);
+        if (!grantConstraints.has(key)) {
+          grantConstraints.set(key, { gratisTill: constraint.gratisTill });
+        }
+      }
+      if (constraint.ignoreLimits) {
+        grantIgnoreCounts.set(key, (grantIgnoreCounts.get(key) || 0) + 1);
       }
     });
+
+    return { grantCounts, grantConstraints, grantIgnoreCounts };
+  }
+
+  function buildEntryGrantCountMap(list) {
+    return buildGrantMaps(list).grantCounts;
+  }
+
+  function getGrantTargetOccurrence(list, entry, targetKey) {
+    const entries = Array.isArray(list) ? list.filter(item => item && typeof item === 'object') : [];
+    const wantedUid = entry && entry.__uid ? String(entry.__uid) : '';
+    const wantedSig = entrySignature(entry);
+    let count = 0;
+    let refIndex = -1;
+    let uidIndex = -1;
+    let sigIndex = -1;
+
+    entries.forEach(candidate => {
+      if (getEntryGrantTargetKey(candidate) !== targetKey) return;
+      if (refIndex === -1 && candidate === entry) refIndex = count;
+      if (uidIndex === -1 && wantedUid && candidate?.__uid && String(candidate.__uid) === wantedUid) {
+        uidIndex = count;
+      }
+      if (sigIndex === -1 && wantedSig && entrySignature(candidate) === wantedSig) {
+        sigIndex = count;
+      }
+      count += 1;
+    });
+
+    if (refIndex !== -1) return { index: refIndex, total: count };
+    if (uidIndex !== -1) return { index: uidIndex, total: count };
+    if (sigIndex !== -1) return { index: sigIndex, total: count };
+    return { index: count, total: count };
+  }
+
+  function getEntryGrantCoverage(entry, list, options = {}) {
+    const targetKey = getEntryGrantTargetKey(entry);
+    if (!targetKey) {
+      return {
+        key: '',
+        grantCount: 0,
+        occurrenceIndex: -1,
+        matchingCount: 0,
+        covered: false
+      };
+    }
+
+    let grantCounts, grantConstraints;
+    if (options.grantCounts instanceof Map) {
+      grantCounts = options.grantCounts;
+      grantConstraints = options.grantConstraints instanceof Map
+        ? options.grantConstraints
+        : buildGrantMaps(list).grantConstraints;
+    } else {
+      const maps = buildGrantMaps(list);
+      grantCounts = maps.grantCounts;
+      grantConstraints = maps.grantConstraints;
+    }
+
+    const grantCount = Math.max(0, Number(grantCounts.get(targetKey) || 0));
+    const occurrence = getGrantTargetOccurrence(list, entry, targetKey);
+    const occurrenceIndex = occurrence.index;
+    const matchingCount = occurrence.total;
+    let covered = grantCount > 0 && occurrenceIndex > -1 && occurrenceIndex < grantCount;
+
+    if (covered) {
+      const constraint = grantConstraints.get(targetKey);
+      if (constraint?.gratisTill) {
+        const entryLvlIdx = LEVEL_IDX[entry?.nivå || ''] || 0;
+        const gratisTillIdx = LEVEL_IDX[constraint.gratisTill] || 0;
+        if (entryLvlIdx > gratisTillIdx) covered = false;
+      }
+    }
+
+    return {
+      key: targetKey,
+      grantCount,
+      occurrenceIndex,
+      matchingCount,
+      covered
+    };
+  }
+
+  function getGrantedEntryOverrideCost(entry, list, options = {}) {
+    const targetKey = getEntryGrantTargetKey(entry);
+    if (!targetKey) return null;
+    const entries = Array.isArray(list) ? list : [];
+
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : buildGrantMaps(entries).grantConstraints;
+
+    const constraint = grantConstraints.get(targetKey);
+    if (!constraint?.gratisTill) return null;
+
+    const entryLevel = normalizeLevelName(entry?.nivå) || resolveEntryLevel(entry, entry?.nivå);
+    const gratisLevel = normalizeLevelName(constraint.gratisTill) || resolveEntryLevel(entry, constraint.gratisTill);
+    const entryLvlIdx = LEVEL_IDX[entryLevel] || 0;
+    const gratisTillIdx = LEVEL_IDX[gratisLevel] || 0;
+    if (entryLvlIdx <= gratisTillIdx) return null; // at or below free level → handled by isRuleGrantedEntry
+
+    // Additive auto-discount: cumulative cost minus the free portion
+    const totalCost = resolveEntryLevelCost(entry, entryLevel, { list: entries, strictLevel: true });
+    const freeCost = resolveEntryLevelCost(entry, gratisLevel, { list: entries, strictLevel: true });
+    return Math.max(0, totalCost - freeCost);
+  }
+
+  function isRuleGrantedEntry(entry, list, options = {}) {
+    return getEntryGrantCoverage(entry, list, options).covered;
+  }
+
+  function hasEntryIgnoreLimitTag(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (typeof global.rulesHelper?.entryIgnoresLimits === 'function') {
+      try {
+        const helperValue = global.rulesHelper.entryIgnoresLimits(entry);
+        if (helperValue === true) return true;
+      } catch (_) {
+        // Ignore helper errors and fall back to local parsing.
+      }
+    }
+
+    const fromTags = readIgnoreLimitsFlag(entry?.taggar);
+    if (fromTags !== null) return fromTags;
+
+    const fromEntry = readIgnoreLimitsFlag(entry);
+    if (fromEntry !== null) return fromEntry;
+
+    return false;
+  }
+
+  function isEntryIgnoredByGrantLimit(entry, list, options = {}) {
+    const targetKey = getEntryGrantTargetKey(entry);
+    if (!targetKey) return false;
+
+    const entries = Array.isArray(list) ? list : [];
+    const grantIgnoreCounts = options.grantIgnoreCounts instanceof Map
+      ? options.grantIgnoreCounts
+      : buildGrantMaps(entries).grantIgnoreCounts;
+    const ignoreCount = Math.max(0, Number(grantIgnoreCounts.get(targetKey) || 0));
+    if (ignoreCount <= 0) return false;
+
+    const occurrence = getGrantTargetOccurrence(entries, entry, targetKey);
+    return occurrence.index > -1 && occurrence.index < ignoreCount;
+  }
+
+  function entryIgnoresLimits(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (hasEntryIgnoreLimitTag(entry)) return true;
+    return isEntryIgnoredByGrantLimit(entry, list, options);
+  }
+
+  function syncRuleEntryGrants(store, list, prevList, options = {}) {
+    if (!store?.current) return false;
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const now = Array.isArray(list) ? list : [];
+    const grantedEntriesAdded = Array.isArray(options?.grantedEntriesAdded) ? options.grantedEntriesAdded : null;
+    const suppressed = normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants);
+    const legacyTargetKey = `name:${normalizeEntryGrantName('Mörkt förflutet')}`;
+    if (data.darkPastSuppressed) {
+      addSuppressedEntryGrant(suppressed, 'Mörkt blod', legacyTargetKey);
+    }
+
+    const desiredBySource = new Map();
+    const prevDesiredBySource = new Map();
+    const allSources = new Set(Object.keys(suppressed));
+
+    global.rulesHelper.getEntryGrantTargets(now).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+
+      allSources.add(source);
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      const sourceTargets = desiredBySource.get(source);
+      if (!sourceTargets.has(resolvedTarget.key)) {
+        sourceTargets.set(resolvedTarget.key, resolvedTarget);
+      }
+    });
+
+    global.rulesHelper.getEntryGrantTargets(prev).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      allSources.add(source);
+      if (!prevDesiredBySource.has(source)) prevDesiredBySource.set(source, new Map());
+      prevDesiredBySource.get(source).set(resolvedTarget.key, resolvedTarget);
+    });
+
+    let changed = false;
+    allSources.forEach(source => {
+      const sourceWasPresent = listHasEntryByName(prev, source);
+      const sourceIsPresent = listHasEntryByName(now, source);
+      const sourceTargets = desiredBySource.get(source);
+      if (!sourceIsPresent) {
+        delete suppressed[source];
+        if (sourceWasPresent) {
+          const prevTargets = prevDesiredBySource.get(source);
+          if (prevTargets) {
+            prevTargets.forEach(target => {
+              for (let i = now.length - 1; i >= 0; i--) {
+                if (listHasEntryByGrantTarget([now[i]], target) && !now[i]?.manualRuleOverride) {
+                  now.splice(i, 1);
+                  changed = true;
+                }
+              }
+            });
+          }
+        }
+        return;
+      }
+
+      if (sourceTargets && sourceWasPresent) {
+        sourceTargets.forEach(target => {
+          const hadTarget = listHasEntryByGrantTarget(prev, target);
+          const hasTarget = listHasEntryByGrantTarget(now, target);
+          if (hadTarget && !hasTarget) {
+            addSuppressedEntryGrant(suppressed, source, target.key);
+          }
+        });
+      }
+
+      if (sourceTargets) {
+        sourceTargets.forEach(target => {
+          if (listHasEntryByGrantTarget(now, target)) {
+            removeSuppressedEntryGrant(suppressed, source, target.key);
+          }
+        });
+      }
+
+      // Clean up grants that fell off due to source level downgrade
+      if (sourceWasPresent) {
+        const prevTargetsForSource = prevDesiredBySource.get(source);
+        const currentTargetsForSource = desiredBySource.get(source);
+        if (prevTargetsForSource) {
+          prevTargetsForSource.forEach((prevTarget, key) => {
+            if (!currentTargetsForSource || !currentTargetsForSource.has(key)) {
+              for (let i = now.length - 1; i >= 0; i--) {
+                if (listHasEntryByGrantTarget([now[i]], prevTarget) && !now[i]?.manualRuleOverride) {
+                  now.splice(i, 1);
+                  changed = true;
+                }
+              }
+              removeSuppressedEntryGrant(suppressed, source, prevTarget.key);
+            }
+          });
+        }
+      }
+    });
+
+    desiredBySource.forEach((targets, source) => {
+      targets.forEach(target => {
+        if (!target?.entry) return;
+        if (isSuppressedEntryGrant(suppressed, source, target.key)) return;
+        if (listHasEntryByGrantTarget(now, target)) return;
+        const grantedEntry = { ...target.entry };
+        if (isHamnskifteGrantEntry(grantedEntry)) grantedEntry.form = 'beast';
+        now.push(grantedEntry);
+        if (grantedEntriesAdded) grantedEntriesAdded.push(grantedEntry);
+        changed = true;
+      });
+    });
+
+    data.suppressedEntryGrants = suppressed;
+    data.darkPastSuppressed = isSuppressedEntryGrant(suppressed, 'Mörkt blod', legacyTargetKey);
+    return changed;
   }
 
   function enforceEarthbound(list) {
@@ -1033,71 +2203,299 @@
     // Ny regel: tillåtet – ingen borttagning här.
   }
 
-  function enforceDwarf(list) {
-    if (list.some(x => x.namn === 'Dvärg')) {
-      for (let i = list.length - 1; i >= 0; i--) {
-        if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
+  function enforceRuleConflicts(list) {
+    if (!Array.isArray(list) || list.length < 2) return;
+    const hasResolutionHelper = typeof global.rulesHelper?.getConflictResolutionForCandidate === 'function';
+    const hasReasonHelper = typeof global.rulesHelper?.getConflictReasonsForCandidate === 'function';
+    if (!hasResolutionHelper && !hasReasonHelper) return;
+    const normalizeName = (value) => String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const kept = [];
+    list.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.manualRuleOverride) {
+        kept.push(entry);
+        return;
       }
+      const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
+      const resolution = hasResolutionHelper
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        : {
+          reasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
+          blockingReasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
+          replaceTargetNames: []
+        };
+      if (resolution.blockingReasons.length) return;
+      if (Array.isArray(resolution.replaceTargetNames) && resolution.replaceTargetNames.length) {
+        const replaceSet = new Set(
+          resolution.replaceTargetNames
+            .map(name => normalizeName(name))
+            .filter(Boolean)
+        );
+        for (let i = kept.length - 1; i >= 0; i--) {
+          if (replaceSet.has(normalizeName(kept[i]?.namn || '')) && !kept[i]?.manualRuleOverride) {
+            kept.splice(i, 1);
+          }
+        }
+      }
+      kept.push(entry);
+    });
+
+    if (kept.length !== list.length) {
+      list.splice(0, list.length, ...kept);
     }
   }
 
-  function enforcePackAnimal(list) {
-    const packIdx = list.findIndex(x => x.namn === 'Packåsna');
-    const hafsIdx = list.findIndex(x => x.namn === 'Hafspackare');
-    if (packIdx >= 0 && hafsIdx >= 0) {
-      if (packIdx > hafsIdx) {
-        list.splice(packIdx, 1);
-      } else {
-        list.splice(hafsIdx, 1);
+  function normalizeGrantSourceName(value) {
+    return String(value || '').trim();
+  }
+
+  function getInventoryGrantItemKey(ref) {
+    const id = ref?.id === undefined || ref?.id === null
+      ? ''
+      : String(ref.id).trim();
+    if (id) return `id:${id}`;
+    const name = normalizeLevelName(ref?.name || ref?.namn || '');
+    return name ? `name:${name}` : '';
+  }
+
+  function resolveInventoryGrantItem(grant) {
+    const id = grant?.id === undefined || grant?.id === null
+      ? ''
+      : String(grant.id).trim();
+    const name = typeof grant?.name === 'string' ? grant.name.trim() : '';
+
+    let hit = null;
+    if (typeof global.lookupEntry === 'function') {
+      try {
+        const query = {};
+        if (id) query.id = id;
+        if (name) query.name = name;
+        if (Object.keys(query).length) {
+          hit = global.lookupEntry(query);
+        }
+      } catch {}
+    }
+
+    const resolvedId = hit?.id === undefined || hit?.id === null
+      ? (id || undefined)
+      : hit.id;
+    const resolvedName = (typeof hit?.namn === 'string' && hit.namn.trim())
+      ? hit.namn.trim()
+      : name;
+    const key = getInventoryGrantItemKey({
+      id: resolvedId,
+      name: resolvedName || name
+    }) || getInventoryGrantItemKey({ id, name });
+
+    return {
+      id: resolvedId,
+      name: resolvedName,
+      key
+    };
+  }
+
+  function syncRuleInventoryGrants(store, list) {
+    if (!store?.current) return false;
+    if (typeof global.rulesHelper?.getInventoryGrantItems !== 'function') return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const inv = Array.isArray(data.inventory) ? data.inventory : [];
+    const desiredBySource = new Map();
+    const grants = global.rulesHelper.getInventoryGrantItems(Array.isArray(list) ? list : []);
+
+    grants.forEach(grant => {
+      const source = normalizeGrantSourceName(grant?.sourceEntryName || grant?.sourceEntryId);
+      if (!source) return;
+      const qty = Math.max(0, Math.floor(Number(grant?.qty || 0)));
+      if (!qty) return;
+      const resolved = resolveInventoryGrantItem(grant);
+      if (!resolved.key) return;
+
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      const byItem = desiredBySource.get(source);
+      if (!byItem.has(resolved.key)) {
+        byItem.set(resolved.key, {
+          id: resolved.id,
+          name: resolved.name,
+          qty: 0
+        });
+      }
+      byItem.get(resolved.key).qty += qty;
+    });
+
+    let changed = false;
+
+    for (let i = inv.length - 1; i >= 0; i--) {
+      const row = inv[i];
+      if (!row || typeof row !== 'object') continue;
+      const source = normalizeGrantSourceName(row.perk);
+      const grantedQty = Math.max(0, Math.floor(Number(row.perkGratis || 0)));
+      if (!source || !grantedQty) continue;
+
+      const itemKey = getInventoryGrantItemKey(row);
+      const sourceItems = desiredBySource.get(source);
+      const desiredQty = itemKey && sourceItems && sourceItems.get(itemKey)
+        ? Math.max(0, Math.floor(Number(sourceItems.get(itemKey).qty || 0)))
+        : 0;
+      if (grantedQty > desiredQty) {
+        const diff = grantedQty - desiredQty;
+        row.qty = Math.max(0, (Number(row.qty) || 0) - diff);
+        row.gratis = Math.max(0, (Number(row.gratis) || 0) - diff);
+        row.perkGratis = desiredQty;
+        changed = true;
+      }
+      if (!row.perkGratis) {
+        delete row.perk;
+        delete row.perkGratis;
+        changed = true;
+      }
+      if ((Number(row.qty) || 0) <= 0) {
+        inv.splice(i, 1);
+        changed = true;
       }
     }
+
+    desiredBySource.forEach((itemsByKey, source) => {
+      itemsByKey.forEach((target, itemKey) => {
+        const desiredQty = Math.max(0, Math.floor(Number(target?.qty || 0)));
+        if (!desiredQty) return;
+
+        let row = inv.find(candidate => {
+          if (!candidate || typeof candidate !== 'object') return false;
+          const candidateKey = getInventoryGrantItemKey(candidate);
+          if (candidateKey !== itemKey) return false;
+          const candidateSource = normalizeGrantSourceName(candidate.perk);
+          return candidateSource === source || !candidateSource;
+        });
+
+        if (!row) {
+          inv.push({
+            id: target?.id,
+            name: target?.name || '',
+            qty: desiredQty,
+            gratis: desiredQty,
+            kvaliteter: [],
+            gratisKval: [],
+            removedKval: [],
+            perk: source,
+            perkGratis: desiredQty
+          });
+          changed = true;
+          return;
+        }
+
+        const currentSource = normalizeGrantSourceName(row.perk);
+        if (!currentSource) {
+          row.perk = source;
+        } else if (currentSource !== source) {
+          return;
+        }
+
+        const currentGrantedQty = Math.max(0, Math.floor(Number(row.perkGratis || 0)));
+        if (target?.id !== undefined && target?.id !== null && row.id !== target.id) {
+          row.id = target.id;
+          changed = true;
+        }
+        if (target?.name && row.name !== target.name) {
+          row.name = target.name;
+          changed = true;
+        }
+        if (desiredQty > currentGrantedQty) {
+          const diff = desiredQty - currentGrantedQty;
+          row.qty = Math.max(0, Number(row.qty) || 0) + diff;
+          row.gratis = Math.max(0, Number(row.gratis) || 0) + diff;
+          row.perkGratis = currentGrantedQty + diff;
+          changed = true;
+        }
+      });
+    });
+
+    if (changed) {
+      data.inventory = inv;
+    }
+    return changed;
   }
 
   function applyHamnskifteTraits(store, list) {
-    if (!store.current) return;
-    const data = store.data[store.current] || {};
-    const removed = Array.isArray(data.hamnskifteRemoved) ? data.hamnskifteRemoved : [];
+    // Migration shim: remove legacy Hamnskifte entries created by old applyHamnskifteTraits.
+    // New entries are granted via syncRuleEntryGrants using ger rules on Hamnskifte (mystisk-kraft).
+    const legacyNames = new Set(Object.values(HAMNSKIFTE_NAMES));
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (legacyNames.has(list[i].namn) && !list[i]?.manualRuleOverride) list.splice(i, 1);
+    }
+  }
 
-    const hamLvl = abilityLevel(list, 'Hamnskifte');
-    const needed = [];
-    if (hamLvl >= 2) needed.push('Naturligt vapen', 'Pansar');
-    if (hamLvl >= 3) needed.push('Robust', 'Regeneration');
+  function getEntriesToBeCleanedByGrants(store, newList, prevList) {
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return [];
+    const now = Array.isArray(newList) ? newList : [];
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const desiredBySource = new Map();
+    const prevDesiredBySource = new Map();
 
-    const all = Object.keys(HAMNSKIFTE_NAMES);
-    const hamNames = HAMNSKIFTE_NAMES;
-    const allHamNames = Object.values(hamNames);
+    global.rulesHelper.getEntryGrantTargets(now).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      if (!desiredBySource.get(source).has(resolvedTarget.key)) {
+        desiredBySource.get(source).set(resolvedTarget.key, resolvedTarget);
+      }
+    });
 
-    let customs = getCustomEntries(store).filter(e => !allHamNames.includes(e.namn));
+    global.rulesHelper.getEntryGrantTargets(prev).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      if (!prevDesiredBySource.has(source)) prevDesiredBySource.set(source, new Map());
+      if (!prevDesiredBySource.get(source).has(resolvedTarget.key)) {
+        prevDesiredBySource.get(source).set(resolvedTarget.key, resolvedTarget);
+      }
+    });
 
-    all.forEach(base => {
-      const hamName = hamNames[base];
-      if (!needed.includes(base)) {
-        for (let i=list.length-1;i>=0;i--) {
-          if (list[i].namn === hamName) {
-            list.splice(i,1);
-            const idx = removed.indexOf(base);
-            if (idx >= 0) removed.splice(idx,1);
+    const allSources = new Set([...desiredBySource.keys(), ...prevDesiredBySource.keys()]);
+    const result = [];
+    const seen = new WeakSet();
+
+    allSources.forEach(source => {
+      const sourceWasPresent = listHasEntryByName(prev, source);
+      const sourceIsPresent = listHasEntryByName(now, source);
+      let targetsToCheck = null;
+
+      if (!sourceIsPresent && sourceWasPresent) {
+        targetsToCheck = prevDesiredBySource.get(source);
+      } else if (sourceIsPresent && sourceWasPresent) {
+        const prevTargets = prevDesiredBySource.get(source);
+        const currentTargets = desiredBySource.get(source);
+        if (prevTargets) {
+          const dropped = new Map();
+          prevTargets.forEach((target, key) => {
+            if (!currentTargets || !currentTargets.has(key)) dropped.set(key, target);
+          });
+          if (dropped.size > 0) targetsToCheck = dropped;
+        }
+      }
+
+      if (!targetsToCheck) return;
+      targetsToCheck.forEach(target => {
+        for (const entry of now) {
+          if (listHasEntryByGrantTarget([entry], target) && !entry?.manualRuleOverride) {
+            if (!seen.has(entry)) {
+              seen.add(entry);
+              result.push({ entry, sourceName: source });
+            }
           }
         }
-        customs = customs.filter(c => c.namn !== hamName);
-      }
+      });
     });
 
-    needed.forEach(base => {
-      const hamName = hamNames[base];
-      if (!customs.some(c => c.namn === hamName)) {
-        const entry = lookupEntry({ id: base, name: base });
-        if (entry) customs.push({ ...entry, namn: hamName, form: 'beast' });
-      }
-      const idx = list.findIndex(it => it.namn === hamName);
-      if (idx < 0 && !removed.includes(base)) {
-        const entry = customs.find(e => e.namn === hamName);
-        if (entry) list.push({ ...entry, nivå: 'Novis' });
-      }
-    });
-
-    setCustomEntries(store, customs);
-    store.data[store.current].hamnskifteRemoved = removed;
+    return result;
   }
 
   function getDependents(list, entry) {
@@ -1116,18 +2514,15 @@
       });
     }
 
-    if (name === 'M\u00f6rkt blod') {
-      list.forEach(it => {
-        const base = HAMNSKIFTE_BASE[it.namn] || it.namn;
-        if (it.namn === 'Mörkt förflutet' || DARK_BLOOD_TRAITS.includes(base)) {
-          if (it.namn !== name) out.push(it.namn);
-        }
+    if (typeof global.rulesHelper?.getEntryGrantDependents === 'function') {
+      global.rulesHelper.getEntryGrantDependents(list, ent).forEach(depName => {
+        if (depName && depName !== name) out.push(depName);
       });
     }
 
-    if (name === 'Robust') {
-      list.forEach(it => {
-        if (it.namn === 'R\u00e5styrka') out.push(it.namn);
+    if (typeof global.rulesHelper?.getRequirementDependents === 'function') {
+      global.rulesHelper.getRequirementDependents(list, ent).forEach(depName => {
+        if (depName && depName !== name) out.push(depName);
       });
     }
 
@@ -1138,67 +2533,339 @@
       });
     }
 
-    if (isRas(ent)) {
-      const race = name;
-      list.forEach(it => {
-        const ras = it.taggar?.ras || [];
-        if (ras.includes(race)) out.push(it.namn);
-      });
-    }
-
-    if (name === 'Blodsband' && entry.race) {
-      const race = entry.race;
-      list.forEach(it => {
-        const ras = it.taggar?.ras || [];
-        if (ras.includes(race)) out.push(it.namn);
-      });
-    }
-
     return Array.from(new Set(out));
   }
 
+  function syncRuleMoneyGrant(store, list, prev) {
+    if (!store?.current) return;
+    if (typeof global.rulesHelper?.getMoneyGrant !== 'function') return;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const prevGrant = global.rulesHelper.getMoneyGrant(Array.isArray(prev) ? prev : []);
+    const nowGrant  = global.rulesHelper.getMoneyGrant(Array.isArray(list) ? list : []);
+    const prevHas = prevGrant.daler || prevGrant.skilling || prevGrant.ortegar;
+    const nowHas  = nowGrant.daler  || nowGrant.skilling  || nowGrant.ortegar;
+    const priv    = data.privMoney || defaultMoney();
+    const privHas = priv.daler || priv.skilling || priv['örtegar'];
+    if (nowHas && !prevHas) {
+      data.privMoney = { daler: nowGrant.daler, skilling: nowGrant.skilling, 'örtegar': nowGrant.ortegar };
+    } else if (!nowHas && privHas) {
+      data.privMoney = defaultMoney();
+    }
+  }
+
+  function buildSnapshotEvaluationList(baseList, snapshotRecords) {
+    const list = (Array.isArray(baseList) ? baseList : []).map(entry => ({ ...entry }));
+    return attachSnapshotRulesToList(list, snapshotRecords);
+  }
+
+  function resolveSnapshotTraits(store) {
+    if (!store.current) return defaultTraits();
+    const data = store.data[store.current] || {};
+    return { ...defaultTraits(), ...(data.traits || {}) };
+  }
+
+  function materializeSnapshotSourceRules(store, descriptor, baseList, existingRecords) {
+    const sourceKey = String(descriptor?.sourceKey || '').trim();
+    if (!sourceKey) return [];
+    const sourceType = normalizeSnapshotSourceType(descriptor?.sourceType);
+    const sourceName = String(descriptor?.sourceName || '').trim();
+    const sourceSignature = String(descriptor?.sourceSignature || '').trim();
+    const rules = Array.isArray(descriptor?.rules) ? descriptor.rules : [];
+    if (!rules.length) return [];
+
+    const helper = global.rulesHelper;
+    if (!helper || typeof helper.materializeSnapshotAndrarRules !== 'function') return [];
+
+    const evalList = buildSnapshotEvaluationList(baseList, existingRecords);
+    const traits = resolveSnapshotTraits(store);
+    const artifactEffects = getArtifactEffects(store);
+    const corruption = Number(artifactEffects?.corruption || 0);
+    const pain = Number(artifactEffects?.pain || 0);
+    const toughness = Number(artifactEffects?.toughness || 0);
+    const capacity = Number(artifactEffects?.capacity || 0);
+    let materialized = [];
+    try {
+      materialized = helper.materializeSnapshotAndrarRules(rules, {
+        list: evalList,
+        sourceEntry: descriptor?.sourceEntry || null,
+        row: descriptor?.row || null,
+        traits,
+        corruption: Number.isFinite(corruption) ? corruption : 0,
+        pain: Number.isFinite(pain) ? pain : 0,
+        toughness: Number.isFinite(toughness) ? toughness : 0,
+        capacity: Number.isFinite(capacity) ? capacity : 0
+      });
+    } catch (_) {
+      materialized = [];
+    }
+
+    return (Array.isArray(materialized) ? materialized : [])
+      .map(rule => ({
+        key: 'andrar',
+        rule: cloneSnapshotValue(rule),
+        sourceKey,
+        sourceType,
+        sourceName,
+        sourceSignature,
+        detached: false,
+        sourceRef: descriptor?.sourceRef && typeof descriptor.sourceRef === 'object'
+          ? cloneSnapshotValue(descriptor.sourceRef)
+          : undefined
+      }))
+      .filter(record => record.rule && typeof record.rule === 'object');
+  }
+
+  function getEntrySnapshotRules(entry) {
+    if (!entry || typeof entry !== 'object') return [];
+    if (typeof global.rulesHelper?.getRuleList !== 'function') return [];
+    const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
+    try {
+      return (global.rulesHelper.getRuleList(entry, 'andrar', level ? { level } : {}) || [])
+        .filter(rule => rule && typeof rule === 'object' && Boolean(rule.snapshot));
+    } catch {
+      return [];
+    }
+  }
+
+  function syncEntrySnapshotRules(store, list) {
+    if (!store.current) return false;
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const entries = Array.isArray(list) ? list : [];
+    const existing = normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY]);
+    const detached = existing.filter(record => record.sourceType === SNAPSHOT_SOURCE_TYPE_ENTRY && record.detached);
+    const retainedNonEntry = existing.filter(record => record.sourceType !== SNAPSHOT_SOURCE_TYPE_ENTRY);
+    const activeExistingBySource = new Map();
+    existing.forEach(record => {
+      if (record.sourceType !== SNAPSHOT_SOURCE_TYPE_ENTRY || record.detached) return;
+      const key = record.sourceKey || '';
+      if (!key) return;
+      if (!activeExistingBySource.has(key)) activeExistingBySource.set(key, []);
+      activeExistingBySource.get(key).push(record);
+    });
+
+    const next = [...retainedNonEntry, ...detached];
+    entries.forEach(entry => {
+      const sourceKey = getEntrySnapshotSourceKey(entry);
+      if (!sourceKey) return;
+      const rules = getEntrySnapshotRules(entry);
+      const sourceSignature = stableSignature({
+        rules,
+        level: entry?.nivå || ''
+      });
+      const current = activeExistingBySource.get(sourceKey) || [];
+      const unchanged = current.length > 0
+        && current.every(record => record.sourceSignature === sourceSignature)
+        && rules.length > 0;
+      if (unchanged) {
+        next.push(...current.map(record => ({
+          ...record,
+          rule: cloneSnapshotValue(record.rule),
+          sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+        })));
+        activeExistingBySource.delete(sourceKey);
+        return;
+      }
+      activeExistingBySource.delete(sourceKey);
+      if (!rules.length) return;
+      const materialized = materializeSnapshotSourceRules(
+        store,
+        {
+          sourceKey,
+          sourceType: SNAPSHOT_SOURCE_TYPE_ENTRY,
+          sourceName: String(entry?.namn || '').trim(),
+          sourceSignature,
+          rules,
+          sourceEntry: entry,
+          sourceRef: {
+            kind: SNAPSHOT_SOURCE_TYPE_ENTRY,
+            entryUid: entry.__uid || '',
+            entryId: entry.id || '',
+            entryName: entry.namn || ''
+          }
+        },
+        entries,
+        next
+      );
+      next.push(...materialized);
+    });
+
+    activeExistingBySource.forEach(records => {
+      next.push(...records.map(record => ({
+        ...record,
+        rule: cloneSnapshotValue(record.rule),
+        sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+      })));
+    });
+
+    return setSnapshotRuleRecords(store, next, { persist: false });
+  }
+
+  function syncSnapshotRuleSources(store, descriptors, options = {}) {
+    if (!store.current) return false;
+    const sourceType = normalizeSnapshotSourceType(options?.sourceType || SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING);
+    const activeDescriptors = (Array.isArray(descriptors) ? descriptors : [])
+      .map(descriptor => ({
+        ...descriptor,
+        sourceKey: String(descriptor?.sourceKey || '').trim(),
+        sourceType
+      }))
+      .filter(descriptor => descriptor.sourceKey);
+    const activeByKey = new Map(activeDescriptors.map(descriptor => [descriptor.sourceKey, descriptor]));
+
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const existing = normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY]);
+    const preserved = [];
+    const targetExistingBySource = new Map();
+    existing.forEach(record => {
+      if (record.sourceType !== sourceType || record.detached) {
+        preserved.push(record);
+        return;
+      }
+      const key = record.sourceKey || '';
+      if (!key) return;
+      if (!targetExistingBySource.has(key)) targetExistingBySource.set(key, []);
+      targetExistingBySource.get(key).push(record);
+    });
+
+    const next = [...preserved];
+    activeDescriptors.forEach(descriptor => {
+      const key = descriptor.sourceKey;
+      const rules = Array.isArray(descriptor.rules) ? descriptor.rules : [];
+      const sourceSignature = String(descriptor.sourceSignature || stableSignature({
+        value: descriptor.value || '',
+        rules
+      }));
+      const existingForKey = targetExistingBySource.get(key) || [];
+      const unchanged = existingForKey.length > 0
+        && existingForKey.every(record => record.sourceSignature === sourceSignature);
+      if (unchanged) {
+        next.push(...existingForKey.map(record => ({
+          ...record,
+          rule: cloneSnapshotValue(record.rule),
+          sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+        })));
+        targetExistingBySource.delete(key);
+        return;
+      }
+      targetExistingBySource.delete(key);
+      const materialized = materializeSnapshotSourceRules(store, {
+        ...descriptor,
+        sourceType,
+        sourceSignature,
+        rules
+      }, store.data[store.current]?.list || [], next);
+      next.push(...materialized);
+    });
+
+    if (options.removeMissing !== false) {
+      targetExistingBySource.forEach((records, key) => {
+        if (activeByKey.has(key)) return;
+        // Missing source for this type is treated as explicit replacement/removal.
+        // Records are intentionally dropped unless caller kept them by detaching first.
+      });
+    } else {
+      targetExistingBySource.forEach(records => {
+        next.push(...records);
+      });
+    }
+
+    return setSnapshotRuleRecords(store, next);
+  }
+
+  function getSnapshotSourceImpactForEntry(store, entry) {
+    const sourceKey = getEntrySnapshotSourceKey(entry);
+    const entryUid = entry?.__uid === undefined || entry?.__uid === null
+      ? ''
+      : String(entry.__uid).trim();
+    const entryId = entry?.id === undefined || entry?.id === null
+      ? ''
+      : String(entry.id).trim();
+    const entryName = normalizeLevelName(entry?.namn || '');
+    const matchesEntry = (record) => {
+      if (!record || record.detached) return false;
+      const recordSourceKey = String(record.sourceKey || '').trim();
+      if (sourceKey && recordSourceKey === sourceKey) return true;
+      const sourceRef = record.sourceRef && typeof record.sourceRef === 'object' && !Array.isArray(record.sourceRef)
+        ? record.sourceRef
+        : null;
+      if (!sourceRef) return false;
+      const refEntryUid = sourceRef.entryUid === undefined || sourceRef.entryUid === null
+        ? ''
+        : String(sourceRef.entryUid).trim();
+      const refEntryId = sourceRef.entryId === undefined || sourceRef.entryId === null
+        ? ''
+        : String(sourceRef.entryId).trim();
+      const refEntryName = normalizeLevelName(sourceRef.entryName || '');
+      if (entryUid && refEntryUid && entryUid === refEntryUid) return true;
+      if (entryId && refEntryId && entryId === refEntryId) return true;
+      if (entryName && refEntryName && entryName === refEntryName) return true;
+
+      const refArtifactId = sourceRef.artifactId === undefined || sourceRef.artifactId === null
+        ? ''
+        : String(sourceRef.artifactId).trim();
+      const refArtifactName = normalizeLevelName(sourceRef.artifactName || '');
+      if (entryId && refArtifactId && entryId === refArtifactId) return true;
+      if (entryName && refArtifactName && entryName === refArtifactName) return true;
+      return false;
+    };
+
+    const records = getSnapshotRuleRecords(store).filter(matchesEntry);
+    if (!records.length) return { sourceKey: '', sourceKeys: [], records: [], count: 0 };
+    const sourceKeys = [...new Set(records
+      .map(record => String(record.sourceKey || '').trim())
+      .filter(Boolean))];
+    return {
+      sourceKey: sourceKeys.length === 1 ? sourceKeys[0] : '',
+      sourceKeys,
+      records,
+      count: records.length
+    };
+  }
+
+  function detachSnapshotRulesBySource(store, sourceKey) {
+    const key = String(sourceKey || '').trim();
+    if (!key) return false;
+    const records = getSnapshotRuleRecords(store);
+    let changed = false;
+    const next = records.map(record => {
+      if (record.sourceKey !== key || record.detached) return record;
+      changed = true;
+      return { ...record, detached: true };
+    });
+    if (!changed) return false;
+    return setSnapshotRuleRecords(store, next);
+  }
+
+  function removeSnapshotRulesBySource(store, sourceKey) {
+    const key = String(sourceKey || '').trim();
+    if (!key) return false;
+    const records = getSnapshotRuleRecords(store);
+    const next = records.filter(record => record.sourceKey !== key);
+    if (next.length === records.length) return false;
+    return setSnapshotRuleRecords(store, next);
+  }
+
   function setCurrentList(store, list) {
-    if (!store.current) return;
+    if (!store.current) return null;
     store.data[store.current] = store.data[store.current] || {};
     const prev = store.data[store.current]?.list || [];
     ensureListEntryMetadata(store, prev);
-    // Hantera undertryckning av Mörkt förflutet när Mörkt blod finns kvar
-    try {
-      const hadDark = prev.some(x => x.namn === 'Mörkt blod');
-      const hasDark = list.some(x => x.namn === 'Mörkt blod');
-      const hadPast = prev.some(x => x.namn === 'Mörkt förflutet');
-      const hasPast = list.some(x => x.namn === 'Mörkt förflutet');
-      store.data[store.current] = store.data[store.current] || {};
-      if (!hasDark) {
-        // Om Mörkt blod tagits bort: återställ suppression så att förflutet kan auto-läggas igen vid nytt val
-        store.data[store.current].darkPastSuppressed = false;
-      } else if (hadDark && hadPast && !hasPast) {
-        // Om användaren tog bort Mörkt förflutet medan Mörkt blod är kvar: undertryck auto-återläggning
-        store.data[store.current].darkPastSuppressed = true;
-      }
-    } catch {}
-
-    applyDarkBloodEffects(store, list);
-    applyRaceTraits(list);
+    const beforeState = snapshotCurrentListMutationState(store);
+    const grantedEntriesAdded = [];
+    syncRuleEntryGrants(store, list, prev, { grantedEntriesAdded });
     enforceEarthbound(list);
-    enforceDwarf(list);
-    enforcePackAnimal(list);
+    enforceRuleConflicts(list);
     applyHamnskifteTraits(store, list);
     syncEntryMetadataFromPrev(store, prev, list);
+    const snapshotRulesChanged = syncEntrySnapshotRules(store, list);
     store.data[store.current].list = list;
-    const hadPriv = prev.some(x => x.namn === 'Privilegierad');
-    const hasPriv = list.some(x => x.namn === 'Privilegierad');
-    const hasPos  = list.some(x => x.namn === 'Besittning');
+    const hiddenRevealChanged = syncHiddenRevealedFromList(store, list);
+    const inventoryChanged = syncRuleInventoryGrants(store, list);
+    syncRuleMoneyGrant(store, list, prev);
 
-    const priv = store.data[store.current].privMoney || defaultMoney();
-    const pos  = store.data[store.current].possessionMoney || defaultMoney();
-
-    const privHas = priv.daler || priv.skilling || priv['örtegar'];
-    if (hasPriv && !hadPriv) {
-      store.data[store.current].privMoney = { daler: 50, skilling: 0, 'örtegar': 0 };
-    } else if (!hasPriv && privHas) {
-      store.data[store.current].privMoney = defaultMoney();
-    }
+    const hasPos = list.some(x => x.namn === 'Besittning');
+    const pos    = store.data[store.current].possessionMoney || defaultMoney();
 
     if (!hasPos && (pos.daler || pos.skilling || pos['örtegar'])) {
       store.data[store.current].possessionMoney = defaultMoney();
@@ -1211,8 +2878,20 @@
     });
     store.data[store.current].bonusMoney = total;
     ensureListAppliedDigests(list);
-
-    persistCurrentCharacter(store);
+    const afterState = snapshotCurrentListMutationState(store);
+    const summary = buildCurrentListMutationSummary(beforeState, afterState, {
+      grantedEntriesAdded,
+      inventoryChanged,
+      revealedChanged: hiddenRevealChanged,
+      snapshotRulesChanged
+    });
+    store.data[store.current].lastCurrentListMutationSummary = summary;
+    if (hiddenRevealChanged) bumpRuntimeVersion('revealed');
+    commitCurrentCharacterMutation(store, {
+      bumpDerived: true,
+      fields: summary.changedFields
+    });
+    return summary;
   }
 
   /* ---------- 4. Inventarie­funktioner ---------- */
@@ -1226,7 +2905,10 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].inventory = inv;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, {
+      bumpDerived: true,
+      fields: INVENTORY_MUTATION_FIELDS
+    });
   }
 
   function getCustomEntries(store) {
@@ -1255,7 +2937,9 @@
       )];
     }
     if (idMap.size) bumpRuntimeVersion('revealed');
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, {
+      fields: CUSTOM_ENTRY_MUTATION_FIELDS
+    });
     return { entries: sanitized, idMap };
   }
 
@@ -1265,7 +2949,147 @@
   }
 
   function defaultArtifactEffects() {
-    return { xp: 0, corruption: 0 };
+    return {
+      xp: 0,
+      corruption: 0,
+      toughness: 0,
+      pain: 0,
+      capacity: 0
+    };
+  }
+
+  function normalizeArtifactEffectsMap(value) {
+    const out = { ...defaultArtifactEffects() };
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+    Object.keys(value).forEach(key => {
+      const num = Number(value[key]);
+      if (!Number.isFinite(num)) return;
+      if (Object.prototype.hasOwnProperty.call(out, key)) {
+        out[key] = num;
+      } else if (num !== 0) {
+        out[key] = num;
+      }
+    });
+    return out;
+  }
+
+  function cloneSnapshotValue(value) {
+    if (value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(cloneSnapshotValue);
+    const out = {};
+    Object.keys(value).forEach(key => {
+      const next = value[key];
+      if (next === undefined) return;
+      out[key] = cloneSnapshotValue(next);
+    });
+    return out;
+  }
+
+  function normalizeSnapshotSourceType(value) {
+    const type = String(value || '').trim().toLowerCase();
+    if (type === SNAPSHOT_SOURCE_TYPE_ENTRY) return SNAPSHOT_SOURCE_TYPE_ENTRY;
+    if (type === SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING) return SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING;
+    return SNAPSHOT_SOURCE_TYPE_ENTRY;
+  }
+
+  function normalizeSnapshotRuleRecord(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const rule = raw.rule && typeof raw.rule === 'object' && !Array.isArray(raw.rule)
+      ? cloneSnapshotValue(raw.rule)
+      : null;
+    if (!rule) return null;
+    const key = String(raw.key || 'andrar').trim() || 'andrar';
+    if (key !== 'andrar') return null;
+    const sourceKey = String(raw.sourceKey || '').trim();
+    const sourceType = normalizeSnapshotSourceType(raw.sourceType);
+    const sourceName = String(raw.sourceName || '').trim();
+    const sourceSignature = String(raw.sourceSignature || '').trim();
+    return {
+      key,
+      rule,
+      sourceKey,
+      sourceType,
+      sourceName,
+      sourceSignature,
+      detached: Boolean(raw.detached),
+      sourceRef: raw.sourceRef && typeof raw.sourceRef === 'object' && !Array.isArray(raw.sourceRef)
+        ? cloneSnapshotValue(raw.sourceRef)
+        : undefined
+    };
+  }
+
+  function normalizeSnapshotRuleRecords(value) {
+    const out = [];
+    (Array.isArray(value) ? value : []).forEach(item => {
+      const normalized = normalizeSnapshotRuleRecord(item);
+      if (!normalized) return;
+      out.push(normalized);
+    });
+    return out;
+  }
+
+  function snapshotRulesToListContext(records) {
+    return normalizeSnapshotRuleRecords(records).map(record => ({
+      key: record.key,
+      rule: cloneSnapshotValue(record.rule),
+      sourceEntryId: record.sourceKey || undefined,
+      sourceEntryName: record.sourceName || '',
+      sourceEntryLevel: '',
+      sourceEntry: null,
+      sourceType: record.sourceType,
+      sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+    }));
+  }
+
+  function attachSnapshotRulesToList(list, records) {
+    if (!Array.isArray(list)) return list;
+    const normalized = snapshotRulesToListContext(records);
+    try {
+      Object.defineProperty(list, '__snapshotRules', {
+        value: normalized,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      list.__snapshotRules = normalized;
+    }
+    return list;
+  }
+
+  function getSnapshotRuleRecords(store) {
+    if (!store.current) return [];
+    const data = store.data[store.current] || {};
+    return normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY]);
+  }
+
+  function setSnapshotRuleRecords(store, records, options = {}) {
+    if (!store.current) return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const next = normalizeSnapshotRuleRecords(records);
+    const prevJson = JSON.stringify(normalizeSnapshotRuleRecords(store.data[store.current][SNAPSHOT_RULES_KEY]));
+    const nextJson = JSON.stringify(next);
+    if (prevJson === nextJson) return false;
+    store.data[store.current][SNAPSHOT_RULES_KEY] = next;
+    if (options.persist !== false) {
+      commitCurrentCharacterMutation(store, { fields: [SNAPSHOT_RULES_KEY] });
+    }
+    return true;
+  }
+
+  function stableSignature(value) {
+    try {
+      return JSON.stringify(cloneSnapshotValue(value));
+    } catch {
+      return '';
+    }
+  }
+
+  function getEntrySnapshotSourceKey(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const uid = entry.__uid ? String(entry.__uid).trim() : '';
+    if (!uid) return '';
+    return `${SNAPSHOT_SOURCE_TYPE_ENTRY}:${uid}`;
   }
 
   function defaultManualAdjustments() {
@@ -1282,10 +3106,12 @@
     return {
       enabled: false,
       trait: '',
+      attackTrait: '',
       armor: null,
       weapons: [],
-      dancingTrait: '',
-      dancingWeapon: null
+      dancingTrait: '',       // kept for backward compat (no longer used in logic)
+      dancingWeapon: null,    // kept for backward compat (no longer used in logic)
+      separateWeapons: {}     // { [sourceEntryId]: normalizedItem[] }
     };
   }
 
@@ -1313,13 +3139,26 @@
     const weapons = Array.isArray(base.weapons)
       ? base.weapons.map(normalizeDefenseItem).filter(Boolean)
       : [];
+    const rawSep = (base.separateWeapons && typeof base.separateWeapons === 'object')
+      ? base.separateWeapons : {};
+    const separateWeapons = {};
+    Object.entries(rawSep).forEach(([id, item]) => {
+      if (Array.isArray(item)) {
+        separateWeapons[String(id)] = item.map(normalizeDefenseItem).filter(Boolean);
+      } else {
+        const normalized = normalizeDefenseItem(item);
+        separateWeapons[String(id)] = normalized ? [normalized] : [];
+      }
+    });
     return {
       enabled: Boolean(base.enabled),
       trait: typeof base.trait === 'string' ? base.trait : '',
+      attackTrait: typeof base.attackTrait === 'string' ? base.attackTrait : '',
       armor: normalizeDefenseItem(base.armor),
       weapons,
       dancingTrait: typeof base.dancingTrait === 'string' ? base.dancingTrait : '',
-      dancingWeapon: normalizeDefenseItem(base.dancingWeapon)
+      dancingWeapon: normalizeDefenseItem(base.dancingWeapon),
+      separateWeapons
     };
   }
 
@@ -1329,11 +3168,11 @@
     return { ...defaultMoney(), ...(data.money || {}) };
   }
 
-  function setMoney(store, money) {
+  function setMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store, { fields: ['money'] });
   }
 
   function getSavedUnusedMoney(store) {
@@ -1342,12 +3181,12 @@
     return { ...defaultMoney(), ...(data.savedUnusedMoney || {}) };
   }
 
-  function setSavedUnusedMoney(store, money) {
+  function setSavedUnusedMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     const normalized = normalizeMoney(money);
     store.data[store.current].savedUnusedMoney = { ...defaultMoney(), ...normalized };
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store, { fields: ['savedUnusedMoney'] });
   }
 
   function getLiveMode(store) {
@@ -1369,7 +3208,7 @@
       const currentData = store.data[store.current] = store.data[store.current] || {};
       if (currentData.liveMode !== next) {
         currentData.liveMode = next;
-        persistCurrentCharacter(store);
+        commitCurrentCharacterMutation(store, { fields: ['liveMode'] });
       }
     }
     if (store.liveMode !== next) {
@@ -1384,11 +3223,11 @@
     return { ...defaultMoney(), ...(data.bonusMoney || {}) };
   }
 
-  function setBonusMoney(store, money) {
+  function setBonusMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].bonusMoney = { ...defaultMoney(), ...money };
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store, { fields: ['bonusMoney'] });
   }
 
   function getPrivMoney(store) {
@@ -1397,7 +3236,7 @@
     return { ...defaultMoney(), ...(data.privMoney || {}) };
   }
 
-  function setPrivMoney(store, money) {
+  function setPrivMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].privMoney = { ...defaultMoney(), ...money };
@@ -1407,7 +3246,9 @@
       'örtegar': (money['örtegar'] || 0) + ((store.data[store.current].possessionMoney || {})['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    persistCurrentCharacter(store);
+    if (options.persist !== false) {
+      commitCurrentCharacterMutation(store, { fields: ['privMoney', 'bonusMoney'] });
+    }
   }
 
   function getPossessionMoney(store) {
@@ -1416,7 +3257,7 @@
     return { ...defaultMoney(), ...(data.possessionMoney || {}) };
   }
 
-  function setPossessionMoney(store, money) {
+  function setPossessionMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionMoney = { ...defaultMoney(), ...money };
@@ -1426,7 +3267,9 @@
       'örtegar': (store.data[store.current].privMoney || {})['örtegar'] + (money['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    persistCurrentCharacter(store);
+    if (options.persist !== false) {
+      commitCurrentCharacterMutation(store, { fields: ['possessionMoney', 'bonusMoney'] });
+    }
   }
 
   function incrementPossessionRemoved(store) {
@@ -1434,7 +3277,7 @@
     store.data[store.current] = store.data[store.current] || {};
     const cur = Number(store.data[store.current].possessionRemoved || 0) + 1;
     store.data[store.current].possessionRemoved = cur;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['possessionRemoved'] });
     return cur;
   }
 
@@ -1442,7 +3285,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionRemoved = 0;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['possessionRemoved'] });
   }
 
   function getHamnskifteRemoved(store) {
@@ -1455,7 +3298,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].hamnskifteRemoved = arr;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['hamnskifteRemoved'] });
   }
 
   function duplicateCharacter(store, sourceId) {
@@ -1504,6 +3347,7 @@
     if (!charId) return;
     store.characters = store.characters.filter(c => c.id !== charId);
     delete store.data[charId];
+    delete runtimeVersions.derivedByCharacter[String(charId)];
     if (store.current === charId) store.current = '';
     persistMeta(store);
     persistCharacter(store, charId);
@@ -1515,6 +3359,7 @@
     store.data = {};
     store.current = '';
     persistMeta(store);
+    runtimeVersions.derivedByCharacter = Object.create(null);
     prevIds.forEach(id => persistCharacter(store, id));
   }
 
@@ -1529,7 +3374,10 @@
       const idSet = new Set(toDelete);
       // Ta bort poster från listan och datat
       store.characters = (store.characters || []).filter(c => c && !idSet.has(c.id));
-      toDelete.forEach(id => { try { delete store.data[id]; } catch {} });
+      toDelete.forEach(id => {
+        try { delete store.data[id]; } catch {}
+        delete runtimeVersions.derivedByCharacter[String(id)];
+      });
       if (store.current && idSet.has(store.current)) store.current = '';
       persistMeta(store);
       toDelete.forEach(id => persistCharacter(store, id));
@@ -1561,7 +3409,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partySmith = level || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['partySmith'] });
   }
 
   function getPartyAlchemist(store) {
@@ -1576,7 +3424,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyAlchemist = level || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['partyAlchemist'] });
   }
 
   function getPartyArtefacter(store) {
@@ -1591,7 +3439,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyArtefacter = level || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['partyArtefacter'] });
   }
 
   function getDefenseTrait(store) {
@@ -1604,7 +3452,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].forcedDefense = trait || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['forcedDefense'] });
   }
 
   function getDefenseSetup(store) {
@@ -1617,24 +3465,26 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].defenseSetup = normalizeDefenseSetup(setup);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['defenseSetup'] });
   }
 
   function getArtifactEffects(store) {
     if (!store.current) return defaultArtifactEffects();
     const data = store.data[store.current] || {};
-    const auto = { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
-    return {
-      xp: Number(auto.xp || 0),
-      corruption: Number(auto.corruption || 0)
-    };
+    return normalizeArtifactEffectsMap(data.artifactEffects);
   }
 
   function setArtifactEffects(store, eff) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].artifactEffects = { ...defaultArtifactEffects(), ...(eff || {}) };
-    persistCurrentCharacter(store);
+    const next = normalizeArtifactEffectsMap(eff);
+    const prev = normalizeArtifactEffectsMap(store.data[store.current].artifactEffects);
+    if (JSON.stringify(prev) === JSON.stringify(next)) return;
+    store.data[store.current].artifactEffects = next;
+    commitCurrentCharacterMutation(store, {
+      bumpDerived: true,
+      fields: ['artifactEffects']
+    });
   }
 
   function getManualAdjustments(store) {
@@ -1653,14 +3503,19 @@
   function setManualAdjustments(store, adj) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
+    const prev = getManualAdjustments(store);
     const next = { ...defaultManualAdjustments(), ...(adj || {}) };
     next.xp = Number(next.xp || 0);
     next.corruption = Number(next.corruption || 0);
     next.toughness = Number(next.toughness || 0);
     next.pain = Number(next.pain || 0);
     next.capacity = Number(next.capacity || 0);
+    if (JSON.stringify(prev) === JSON.stringify(next)) return;
     store.data[store.current].manualAdjustments = next;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, {
+      bumpDerived: true,
+      fields: ['manualAdjustments']
+    });
   }
 
   function getFilterUnion(store) {
@@ -1699,6 +3554,75 @@
     persistMeta(store);
   }
 
+  const SEARCH_HIDDEN_PRIMARY_TYPES = new Set(['artefakt', 'kuriositet', 'skatt']);
+
+  function normalizeSearchRuleToken(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isTruthySearchRuleValue(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    const norm = normalizeSearchRuleToken(value);
+    return ['true', '1', 'yes', 'ja', 'on'].includes(norm);
+  }
+
+  function hasHiddenSearchRule(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    const level = options?.level !== undefined ? options.level : entry?.nivå;
+
+    let rules = [];
+    if (typeof global.rulesHelper?.getRuleList === 'function') {
+      try {
+        rules = global.rulesHelper.getRuleList(
+          entry,
+          'andrar',
+          level ? { level } : {}
+        ) || [];
+      } catch {
+        rules = [];
+      }
+    }
+
+    return rules.some(rule => {
+      const target = normalizeSearchRuleToken(rule?.mal);
+      if (target !== 'hidden') return false;
+      return isTruthySearchRuleValue(rule?.varde);
+    });
+  }
+
+  function isSearchHiddenEntry(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    const primary = normalizeSearchRuleToken(types[0]);
+    if (SEARCH_HIDDEN_PRIMARY_TYPES.has(primary)) return true;
+    return hasHiddenSearchRule(entry, options);
+  }
+
+  function syncHiddenRevealedFromList(store, list) {
+    if (!store?.current) return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const existing = new Set(Array.isArray(data.revealedArtifacts) ? data.revealedArtifacts : []);
+    let changed = false;
+
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      if (!entry || entry.id === undefined || entry.id === null) return;
+      if (!isSearchHiddenEntry(entry)) return;
+      if (existing.has(entry.id)) return;
+      existing.add(entry.id);
+      changed = true;
+    });
+
+    if (!changed) return false;
+    data.revealedArtifacts = [...existing];
+    return true;
+  }
+
   function getRevealedArtifacts(store) {
     if (!store.current) return [];
     const data = store.data[store.current] || {};
@@ -1709,9 +3633,11 @@
     if (!store.current || !id) return;
     store.data[store.current] = store.data[store.current] || {};
     const set = new Set(store.data[store.current].revealedArtifacts || []);
+    const before = set.size;
     set.add(id);
+    if (set.size === before) return;
     store.data[store.current].revealedArtifacts = [...set];
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['revealedArtifacts'] });
     bumpRuntimeVersion('revealed');
   }
 
@@ -1719,8 +3645,10 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     const list = store.data[store.current].revealedArtifacts || [];
-    store.data[store.current].revealedArtifacts = list.filter(n => n !== id);
-    persistCurrentCharacter(store);
+    const next = list.filter(n => n !== id);
+    if (next.length === list.length) return;
+    store.data[store.current].revealedArtifacts = next;
+    commitCurrentCharacterMutation(store, { fields: ['revealedArtifacts'] });
     bumpRuntimeVersion('revealed');
   }
 
@@ -1730,15 +3658,9 @@
 
     const keep = new Set();
 
-    const isHiddenTags = (tagTyp) => {
-      const arr = Array.isArray(tagTyp) ? tagTyp : [];
-      return arr.some(t => ['Artefakt', 'Kuriositet', 'Skatt'].includes(String(t)));
-    };
-
     // Keep any currently selected entries that are hidden types
     getCurrentList(store).forEach(it => {
-      const tagTyp = it.taggar?.typ || [];
-      if (isHiddenTags(tagTyp) && it.id) keep.add(it.id);
+      if (isSearchHiddenEntry(it) && it.id) keep.add(it.id);
     });
 
     // Keep any hidden items that still exist in the inventory (recursively)
@@ -1749,8 +3671,7 @@
               ? global.lookupEntry({ id: row.id, name: row.name })
               : {})
             || {};
-          const tagTyp = entry.taggar?.typ || [];
-          if (isHiddenTags(tagTyp) && entry.id) keep.add(entry.id);
+          if (isSearchHiddenEntry(entry) && entry.id) keep.add(entry.id);
           if (Array.isArray(row.contains)) collect(row.contains);
         });
       };
@@ -1758,7 +3679,7 @@
     const cur = getRevealedArtifacts(store);
     store.data[store.current].revealedArtifacts = cur.filter(n => keep.has(n));
     bumpRuntimeVersion('revealed');
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['revealedArtifacts'] });
   }
 
   function getNilasPopupSeen(store) {
@@ -1771,7 +3692,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].nilasPopupShown = Boolean(val);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['nilasPopupShown'] });
   }
 
   function normalizeMoney(m) {
@@ -1801,8 +3722,14 @@ function defaultTraits() {
   function setTraits(store, traits) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].traits = { ...defaultTraits(), ...traits };
-    persistCurrentCharacter(store);
+    const next = { ...defaultTraits(), ...traits };
+    const prev = { ...defaultTraits(), ...(store.data[store.current].traits || {}) };
+    if (JSON.stringify(prev) === JSON.stringify(next)) return;
+    store.data[store.current].traits = next;
+    commitCurrentCharacterMutation(store, {
+      bumpDerived: true,
+      fields: ['traits']
+    });
   }
 
   /* ---------- 6b. Anteckningar ---------- */
@@ -1833,11 +3760,206 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].notes = { ...defaultNotes(), ...notes };
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { fields: ['notes'] });
   }
 
   /* ---------- 6. XP-hantering ---------- */
-  const XP_LADDER = { Novis: 10, Gesäll: 30, Mästare: 60 };
+  const ERF_RULES = Object.freeze({
+    levelCosts: Object.freeze({
+      Novis: 10,
+      'Gesäll': 30,
+      'Mästare': 60,
+      Enkel: 10,
+      'Ordinär': 20,
+      Avancerad: 30
+    }),
+    levelAliases: Object.freeze({
+      novis: 'Novis',
+      gesall: 'Gesäll',
+      'gesäll': 'Gesäll',
+      mastare: 'Mästare',
+      'mästare': 'Mästare',
+      enkel: 'Enkel',
+      ordinar: 'Ordinär',
+      'ordinär': 'Ordinär',
+      avancerad: 'Avancerad'
+    }),
+    levelPriority: Object.freeze([
+      'Novis',
+      'Enkel',
+      'Gesäll',
+      'Ordinär',
+      'Mästare',
+      'Avancerad'
+    ]),
+    levelIndex: Object.freeze({
+      '': 0,
+      Novis: 1,
+      Enkel: 1,
+      'Gesäll': 2,
+      'Ordinär': 2,
+      'Mästare': 3,
+      Avancerad: 3
+    }),
+    levelCostTypes: Object.freeze([
+      'mystisk kraft',
+      'förmåga',
+      'basförmåga',
+      'särdrag',
+      'monstruöst särdrag'
+    ]),
+    ritualCost: 10,
+    advantageStepCost: 5,
+    disadvantageCap: 5
+  });
+
+  const XP_LADDER = ERF_RULES.levelCosts;
+  const LEVEL_ALIASES = ERF_RULES.levelAliases;
+  const LEVEL_PRIORITY = ERF_RULES.levelPriority;
+
+  const normalizeLevelName = (level) => {
+    const raw = String(level || '').trim();
+    if (!raw) return '';
+    const lower = raw.toLowerCase();
+    return LEVEL_ALIASES[lower] || raw;
+  };
+
+  function entryDefinedLevels(entry) {
+    const out = new Set();
+    const add = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(add);
+        return;
+      }
+      if (!value || typeof value !== 'object') return;
+      Object.keys(value).forEach(key => {
+        const norm = normalizeLevelName(key);
+        if (norm) out.add(norm);
+      });
+    };
+    add(entry?.nivåer);
+    add(entry?.nivaer);
+    add(entry?.taggar?.nivå_data);
+    add(entry?.taggar?.niva_data);
+    return LEVEL_PRIORITY.filter(level => out.has(level)).concat(
+      Array.from(out).filter(level => !LEVEL_PRIORITY.includes(level))
+    );
+  }
+
+  function resolveEntryLevel(entry, preferredLevel) {
+    const preferred = normalizeLevelName(preferredLevel);
+    const selected = normalizeLevelName(entry?.nivå);
+    const defined = entryDefinedLevels(entry);
+
+    if (preferred) {
+      if (!defined.length || defined.includes(preferred)) return preferred;
+      if (defined.length === 1) return defined[0];
+    }
+    if (selected) {
+      if (!defined.length || defined.includes(selected)) return selected;
+      if (defined.length === 1) return defined[0];
+    }
+    if (defined.length) {
+      if (defined.includes('Novis')) return 'Novis';
+      if (defined.includes('Enkel')) return 'Enkel';
+      return defined[0];
+    }
+    return preferred || selected || 'Novis';
+  }
+
+  function levelCost(level) {
+    const norm = normalizeLevelName(level);
+    return XP_LADDER[norm] || 10;
+  }
+
+  function normalizeErfOverrideNumber(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return Math.trunc(num);
+  }
+
+  function normalizeErfTypeName(type) {
+    return String(type || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function getEntryErfOverride(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (typeof global.rulesHelper?.getEntryErfOverride !== 'function') return null;
+    const entries = Array.isArray(list) ? list : [];
+    const resolvedLevel = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : resolveEntryLevel(entry, entry?.nivå);
+    const override = global.rulesHelper.getEntryErfOverride(entry, entries, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    return normalizeErfOverrideNumber(override);
+  }
+
+  function getEntryErfMultiplier(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    if (typeof global.rulesHelper?.getRequirementEffectsForCandidate !== 'function') return 1;
+    const entries = Array.isArray(list) ? list : [];
+    const resolvedLevel = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : resolveEntryLevel(entry, entry?.nivå);
+    const effects = global.rulesHelper.getRequirementEffectsForCandidate(entry, entries, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    const raw = Number(effects?.erfMultiplier || 1);
+    if (!Number.isFinite(raw) || raw <= 0) return 1;
+    return raw;
+  }
+
+  function resolveEntryLevelCost(entry, preferredLevel, options = {}) {
+    const normalizedPreferred = normalizeLevelName(preferredLevel);
+    const resolvedLevel = options.strictLevel && normalizedPreferred
+      ? normalizedPreferred
+      : resolveEntryLevel(entry, preferredLevel);
+    const list = Array.isArray(options?.list) ? options.list : [];
+    const override = getEntryErfOverride(entry, list, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    const baseCost = override !== null ? override : levelCost(resolvedLevel);
+    const multiplier = getEntryErfMultiplier(entry, list, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    if (Math.abs(multiplier - 1) < 0.001) return baseCost;
+    const scaled = normalizeErfOverrideNumber(Number(baseCost) * multiplier);
+    return scaled === null ? baseCost : scaled;
+  }
+
+  function entryLevelCost(entry, preferredLevel, options = {}) {
+    return resolveEntryLevelCost(entry, preferredLevel, options);
+  }
+
+  function isLevelCostType(types = []) {
+    const normalized = types.map(type => normalizeErfTypeName(type));
+    const levelTypes = ERF_RULES.levelCostTypes.map(type => normalizeErfTypeName(type));
+    return levelTypes.some(type => normalized.includes(type));
+  }
+
+  function typeBaseErf(type, level = 'Novis') {
+    const normalized = normalizeErfTypeName(type);
+    if (!normalized) return levelCost(level);
+    if (normalized === 'nackdel') return 0;
+    if (normalized === 'fordel') return ADVANTAGE_STEP_COST;
+    if (normalized === 'ritual') return RITUAL_COST;
+    if (isLevelCostType([normalized])) return levelCost(level);
+    return levelCost(level);
+  }
+
+  function getErfRules() {
+    return ERF_RULES;
+  }
 
   function getBaseXP(store) {
     if (!store.current) return 0;
@@ -1848,38 +3970,19 @@ function defaultTraits() {
   function setBaseXP(store, xp) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].baseXp = Number(xp) || 0;
-    persistCurrentCharacter(store);
+    const next = Number(xp) || 0;
+    if ((Number(store.data[store.current].baseXp) || 0) === next) return;
+    store.data[store.current].baseXp = next;
+    commitCurrentCharacterMutation(store, {
+      bumpDerived: true,
+      fields: ['baseXp']
+    });
   }
 
-  const RITUAL_COST = 10;
-  const ADVANTAGE_STEP_COST = 5;
-
-  const ELITE_TO_BASE_MAGIC = {
-    'Templár': 'Teurgi',
-    'Stavmagiker': 'Stavmagiker',
-    'Andebesvärjare': 'Häxkonst',
-    'Blodvadare': 'Häxkonst',
-    'Demonolog': 'Svartkonst',
-    'Grönvävare': 'Häxkonst',
-    'Illusionist': 'Ordensmagi',
-    'Inkvisitor': 'Teurgi',
-    'Mentalist': 'Ordensmagi',
-    'Nekromantiker': 'Svartkonst',
-    'Pyromantiker': 'Ordensmagi',
-    'Själasörjare': 'Teurgi'
-  };
-
-  const TRAD_TO_SKILL = {
-    'Häxkonst': 'Häxkonster',
-    'Ordensmagi': 'Ordensmagi',
-    'Stavmagiker': 'Stavmagi',
-    'Teurgi': 'Teurgi',
-    'Trollsång': 'Trollsång',
-    'Symbolism': 'Symbolism'
-  };
-
-  const LEVEL_IDX = { '': 0, Novis: 1, Gesäll: 2, Mästare: 3 };
+  const RITUAL_COST = ERF_RULES.ritualCost;
+  const ADVANTAGE_STEP_COST = ERF_RULES.advantageStepCost;
+  const DISADVANTAGE_CAP = ERF_RULES.disadvantageCap;
+  const LEVEL_IDX = ERF_RULES.levelIndex;
 
   function abilityLevel(list, ability) {
     const ent = list.find(x =>
@@ -1889,56 +3992,50 @@ function defaultTraits() {
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
-  function hamnskifteNoviceLimit(list, item, level) {
-    const lvl = LEVEL_IDX[level || 'Novis'] || 1;
-    if (lvl <= 1) return false;
-    const base = HAMNSKIFTE_BASE[item.namn];
-    if (!base) return false;
-    const hamlvl = abilityLevel(list, 'Hamnskifte');
-    const hasBloodvader = list.some(x => x.namn === 'Blodvadare');
-    if (hasBloodvader) return false;
-    if (['Naturligt vapen', 'Pansar'].includes(base) && hamlvl >= 2) {
-      return true;
-    }
-    if (['Regeneration', 'Robust'].includes(base) && hamlvl >= 3) {
-      return true;
-    }
-    return false;
-  }
+  function hamnskifteNoviceLimit() { return false; }
 
   function isFreeMonsterTrait(list, item) {
-    const base = HAMNSKIFTE_BASE[item.namn];
-    if (!base) return false;
-    const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
-    if (lvl !== 1) return false; // Only Novis level can be free
-
-    const hamnskifte = abilityLevel(list, 'Hamnskifte');
-
-    if (['Naturligt vapen', 'Pansar'].includes(base)) {
-      return hamnskifte >= 2;
-    }
-
-    if (['Regeneration', 'Robust'].includes(base)) {
-      return hamnskifte >= 3;
-    }
-
-    return false;
+    // Grant-based free checks are handled via ger + explicit gratis/gratis_upp_till tags.
+    return isRuleGrantedEntry(item, list);
   }
 
-  function monsterTraitDiscount(list, item) {
-    const base = HAMNSKIFTE_BASE[item.namn];
-    if (!base) return 0;
-    const hamnskifte = abilityLevel(list, 'Hamnskifte');
-
-    if (hamnskifte >= 2 && ['Naturligt vapen', 'Pansar'].includes(base)) {
-      return 10;
-    }
-
-    if (hamnskifte >= 3 && ['Regeneration', 'Robust'].includes(base)) {
-      return 10;
-    }
+  function monsterTraitDiscount() {
 
     return 0;
+  }
+
+  function parsePositiveLimit(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return null;
+    return rounded;
+  }
+
+  function entryTypeNames(entry) {
+    return Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(type => String(type || '').trim().toLowerCase())
+      : [];
+  }
+
+  function getEntryMaxCount(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    if (entryIgnoresLimits(entry, options?.list, options)) return Number.POSITIVE_INFINITY;
+    if (typeof global.rulesHelper?.getEntryMaxCount === 'function') {
+      return global.rulesHelper.getEntryMaxCount(entry, options);
+    }
+    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
+    if (tagLimit !== null) return tagLimit;
+    const directLimit = parsePositiveLimit(entry?.max_antal);
+    if (directLimit !== null) return directLimit;
+    if (options.allowLegacy !== false) {
+      const legacyMulti = Boolean(
+        entry?.kan_införskaffas_flera_gånger === true
+        || entry?.taggar?.kan_införskaffas_flera_gånger === true
+      );
+      if (legacyMulti) return 3;
+    }
+    return 1;
   }
 
   function monsterStackLimit(list, name) {
@@ -1946,69 +4043,57 @@ function defaultTraits() {
     const entry = typeof global.lookupEntry === 'function'
       ? global.lookupEntry({ id: base, name: base })
       : null;
-    if (!entry || !isMonstrousTrait(entry)) return 3;
-    return 1;
+    if (!entry || typeof entry !== 'object') return 1;
+    return getEntryMaxCount(entry);
+  }
+
+  function withSnapshotRules(list) {
+    return Array.isArray(list) ? list : [];
   }
 
   function calcPermanentCorruption(list, extra) {
-    let cor = 0;
-    const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
-    list.forEach(it => {
-      const levelValue = LEVEL_IDX[it.nivå || 'Novis'] || 0;
-      if (it.namn === 'Reningskraft') {
-        cor += levelValue;
-        return;
-      }
-      const types = it.taggar?.typ || [];
-      if (!['Mystisk kraft', 'Ritual'].some(t => types.includes(t))) return;
-      if (isDwarf && types.includes('Mystisk kraft') && it.namn === 'Vedergällning') return;
-      const trads = explodeTags(it.taggar?.ark_trad);
-      let lvl = 0;
-      trads.forEach(tr => {
-        const baseTrad = ELITE_TO_BASE_MAGIC[tr] || tr;
-        const abilityName = TRAD_TO_SKILL[baseTrad] || TRAD_TO_SKILL[tr];
-        if (abilityName) {
-          lvl = Math.max(lvl, abilityLevel(list, abilityName));
-        }
+    const entries = withSnapshotRules(list);
+    if (typeof global.rulesHelper?.calcPermanentCorruption === 'function') {
+      return global.rulesHelper.calcPermanentCorruption(entries, {
+        corruption: extra?.corruption || 0,
+        korruptionstroskel: extra?.korruptionstroskel || 0
       });
-      if (types.includes('Mystisk kraft')) {
-        const plvl = levelValue || 1;
-        if (plvl > lvl) cor += (plvl - lvl);
-      } else if (types.includes('Ritual')) {
-        if (lvl < 1) cor++;
-      }
-    });
-    cor += extra?.corruption || 0;
-    return cor;
+    }
+    return Number(extra?.corruption || 0);
   }
 
-  function calcDarkPastPermanentCorruption(list, thresh) {
-    if (!Array.isArray(list)) return 0;
-    if (!list.some(e => e.namn === 'Mörkt förflutet')) return 0;
-    return Math.ceil((Number(thresh) || 0) / 4);
+  function calcCorruptionTrackStats(list, willpower) {
+    const will = Number(willpower || 0);
+    const entries = withSnapshotRules(list);
+    if (typeof global.rulesHelper?.getCorruptionTrackStats === 'function') {
+      return global.rulesHelper.getCorruptionTrackStats(entries, {
+        viljestark: will
+      });
+    }
+
+    return {
+      viljestark: will,
+      korruptionstroskel: Math.ceil(will / 2),
+      styggelsetroskel: will
+    };
   }
 
   function calcUsedXP(list, extra) {
     let xp = 0;
     const entries = Array.isArray(list) ? list : [];
+    const { grantCounts, grantConstraints } = buildGrantMaps(entries);
     const advantageCounts = new Map();
 
     entries.forEach(item => {
       if (!item || typeof item !== 'object') return;
+      if (isRuleGrantedEntry(item, entries, { grantCounts, grantConstraints })) return;
       const types = (item.taggar?.typ || []).map(t => t.toLowerCase());
 
-      if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
-          .some(t => types.includes(t))) {
-        let cost = isFreeMonsterTrait(entries, item)
-          ? 0
-          : (XP_LADDER[item.nivå || 'Novis'] || 0);
-        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
-        xp += cost;
-
-      } else if (types.includes('monstruöst särdrag')) {
-        let cost = isFreeMonsterTrait(entries, item) ? 0 : RITUAL_COST;
-        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
-        xp += cost;
+      if (isLevelCostType(types)) {
+        const overrideCost = getGrantedEntryOverrideCost(item, entries, { grantCounts, grantConstraints });
+        xp += overrideCost !== null
+          ? overrideCost
+          : entryLevelCost(item, item?.nivå, { list: entries });
       }
 
       const advKey = getAdvantageKey(item, types);
@@ -2027,20 +4112,49 @@ function defaultTraits() {
     return xp;
   }
 
-  function getDisadvantages(list) {
-    const hasDark = list.some(x => x.namn === 'Mörkt blod');
-    return list.filter(item => {
+  function getDisadvantages(list, options = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const maps = (options.grantCounts instanceof Map && options.grantConstraints instanceof Map)
+      ? null
+      : buildGrantMaps(entries);
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
+    return entries.filter(item => {
       const isDis = (item.taggar?.typ || [])
         .map(t => t.toLowerCase())
         .includes('nackdel');
       if (!isDis) return false;
-      if (hasDark && item.namn === 'Mörkt förflutet') return false;
+      if (isRuleGrantedEntry(item, entries, { grantCounts, grantConstraints })) return false;
       return true;
     });
   }
 
-  function countDisadvantages(list) {
-    return getDisadvantages(list).length;
+  function countDisadvantages(list, options = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const maps = (
+      options.grantCounts instanceof Map
+      && options.grantConstraints instanceof Map
+      && options.grantIgnoreCounts instanceof Map
+    )
+      ? null
+      : buildGrantMaps(entries);
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
+    const grantIgnoreCounts = options.grantIgnoreCounts instanceof Map
+      ? options.grantIgnoreCounts
+      : maps.grantIgnoreCounts;
+
+    return getDisadvantages(entries, { grantCounts, grantConstraints }).filter(item =>
+      !entryIgnoresLimits(item, entries, { grantIgnoreCounts })
+    ).length;
   }
 
   function entryMembershipKey(entry) {
@@ -2050,10 +4164,37 @@ function defaultTraits() {
     return null;
   }
 
-  function disadvantagesWithXP(list) {
-    const disadvantages = getDisadvantages(list);
-    if (disadvantages.length <= 5) return disadvantages;
-    const sorted = disadvantages
+  function disadvantagesWithXP(list, options = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const maps = (
+      options.grantCounts instanceof Map
+      && options.grantConstraints instanceof Map
+      && options.grantIgnoreCounts instanceof Map
+    )
+      ? null
+      : buildGrantMaps(entries);
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
+    const grantIgnoreCounts = options.grantIgnoreCounts instanceof Map
+      ? options.grantIgnoreCounts
+      : maps.grantIgnoreCounts;
+
+    const disadvantages = getDisadvantages(entries, { grantCounts, grantConstraints });
+    if (!disadvantages.length) return [];
+
+    const unlimited = [];
+    const limited = [];
+    disadvantages.forEach(entry => {
+      if (entryIgnoresLimits(entry, entries, { grantIgnoreCounts })) unlimited.push(entry);
+      else limited.push(entry);
+    });
+
+    if (limited.length <= DISADVANTAGE_CAP) return [...unlimited, ...limited];
+    const sorted = limited
       .map((entry, index) => ({ entry, index }))
       .sort((a, b) => {
         const aOrder = coerceOrderValue(a.entry?.__order);
@@ -2066,7 +4207,7 @@ function defaultTraits() {
         return a.index - b.index;
       })
       .map(item => item.entry);
-    return sorted.slice(0, 5);
+    return [...unlimited, ...sorted.slice(0, DISADVANTAGE_CAP)];
   }
 
   function getAdvantageKey(entry, types) {
@@ -2105,52 +4246,58 @@ function defaultTraits() {
     return ADVANTAGE_STEP_COST * 3;
   }
 
-  function resolveAdvantageCount(entry, list, types) {
+  function resolveAdvantageCount(entry, list, types, options = {}) {
     const key = getAdvantageKey(entry, types);
     if (!key) return null;
     const arr = Array.isArray(list) ? list : [];
+    const maps = (options.grantCounts instanceof Map && options.grantConstraints instanceof Map)
+      ? null
+      : buildGrantMaps(arr);
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
     let count = 0;
     let includesEntry = false;
     arr.forEach(item => {
       if (getAdvantageKey(item) === key) {
-        count += 1;
+        if (!isRuleGrantedEntry(item, arr, { grantCounts, grantConstraints })) {
+          count += 1;
+        }
         if (!includesEntry && item === entry) includesEntry = true;
       }
     });
-    const effectiveCount = includesEntry ? count : count + 1;
+    const previewCount = isRuleGrantedEntry(entry, arr, { grantCounts, grantConstraints }) ? 0 : 1;
+    const effectiveCount = includesEntry ? count : count + previewCount;
     return { key, count, effectiveCount };
   }
 
-  function calcEntryXP(entry, list) {
+  function calcEntryXP(entry, list, options) {
+    const entries = Array.isArray(list) ? list : [];
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = (options && options.grantMaps) || buildGrantMaps(entries);
+    if (isRuleGrantedEntry(entry, entries, { grantCounts, grantConstraints })) return 0;
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) {
-      const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
-      if (entry.namn === 'Mörkt förflutet' && hasDark) return 0;
-      const disXp = disadvantagesWithXP(list || []);
-      const entries = Array.isArray(list) ? list : [];
+      const disXp = disadvantagesWithXP(entries, { grantCounts, grantConstraints, grantIgnoreCounts });
       if (entries.includes(entry)) {
         if (disXp.includes(entry)) return -ADVANTAGE_STEP_COST;
         return 0;
       }
-      return disXp.length < 5 ? -ADVANTAGE_STEP_COST : 0;
+      if (entryIgnoresLimits(entry, entries, { grantIgnoreCounts })) return -ADVANTAGE_STEP_COST;
+      const counted = countDisadvantages(entries, { grantCounts, grantConstraints, grantIgnoreCounts });
+      return counted < DISADVANTAGE_CAP ? -ADVANTAGE_STEP_COST : 0;
     }
     let xp = 0;
-    if (
-      entry.nivåer &&
-      ['mystisk kraft', 'förmåga', 'särdrag', 'monstruöst särdrag'].some(t => types.includes(t))
-    ) {
-      let cost = isFreeMonsterTrait(list || [], entry)
-        ? 0
-        : (XP_LADDER[entry.nivå || 'Novis'] || 0);
-      cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
-      xp += cost;
-    } else if (types.includes('monstruöst särdrag')) {
-      let cost = isFreeMonsterTrait(list || [], entry) ? 0 : RITUAL_COST;
-      cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
-      xp += cost;
+    if (isLevelCostType(types)) {
+      const overrideCost = getGrantedEntryOverrideCost(entry, entries, { grantCounts, grantConstraints });
+      xp += overrideCost !== null
+        ? overrideCost
+        : entryLevelCost(entry, entry?.nivå, { list: entries });
     }
     if (types.includes('fördel')) {
-      const advantageInfo = resolveAdvantageCount(entry, list, types);
+      const advantageInfo = resolveAdvantageCount(entry, entries, types, { grantCounts, grantConstraints });
       if (advantageInfo) {
         xp += advantageTotalCost(advantageInfo.effectiveCount);
       } else {
@@ -2163,11 +4310,9 @@ function defaultTraits() {
 
   function stackableDisplayKey(entry) {
     if (!entry || typeof entry !== 'object') return null;
-    if (!entry.kan_införskaffas_flera_gånger) return null;
+    if (getEntryMaxCount(entry) <= 1) return null;
     if (entry.trait) return null;
-    const types = Array.isArray(entry?.taggar?.typ)
-      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
-      : [];
+    const types = entryTypeNames(entry);
     if (!types.length) return null;
     const hasAdvantage = types.includes('fördel');
     const hasDisadvantage = types.includes('nackdel');
@@ -2190,8 +4335,13 @@ function defaultTraits() {
     const xpSource = (level && (!baseSource || baseSource.nivå !== level))
       ? { ...baseSource, nivå: level }
       : baseSource;
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = buildGrantMaps(baseList);
     const stackKey = stackableDisplayKey(entry);
-    if (stackKey) {
+    const stackGrantCount = Math.max(
+      0,
+      Number(getEntryGrantCoverage(xpSource, baseList, { grantCounts, grantConstraints }).grantCount || 0)
+    );
+    if (stackKey && stackGrantCount <= 0) {
       const stackEntries = baseList.filter(item => stackableDisplayKey(item) === stackKey);
       const actualCount = stackEntries.length;
       const previewBonus = actualCount === 0 ? 1 : 0;
@@ -2200,7 +4350,7 @@ function defaultTraits() {
         return advantageTotalCost(targetCount);
       }
       if (stackKey.startsWith('dis:')) {
-        const eligible = disadvantagesWithXP(baseList);
+        const eligible = disadvantagesWithXP(baseList, { grantCounts, grantConstraints, grantIgnoreCounts });
         const eligibleSet = new Set(
           eligible
             .map(entryMembershipKey)
@@ -2211,8 +4361,9 @@ function defaultTraits() {
           if (!key) return count;
           return count + (eligibleSet.has(key) ? 1 : 0);
         }, 0);
-        const totalEligible = eligible.length;
-        const extra = previewBonus && totalEligible < 5 ? 1 : 0;
+        const ignoresLimits = entryIgnoresLimits(xpSource, baseList, { grantIgnoreCounts });
+        const counted = countDisadvantages(baseList, { grantCounts, grantConstraints, grantIgnoreCounts });
+        const extra = previewBonus && (ignoresLimits || counted < DISADVANTAGE_CAP) ? 1 : 0;
         return (eligibleCount + extra) * -ADVANTAGE_STEP_COST;
       }
     }
@@ -2225,10 +4376,8 @@ function defaultTraits() {
 
   function singlePickAdvantageInfo(entry) {
     if (!entry || typeof entry !== 'object') return null;
-    if (entry.kan_införskaffas_flera_gånger) return null;
-    const types = Array.isArray(entry?.taggar?.typ)
-      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
-      : [];
+    if (getEntryMaxCount(entry) > 1) return null;
+    const types = entryTypeNames(entry);
     if (!types.length) return null;
     const isAdv = types.includes('fördel');
     const isDis = types.includes('nackdel');
@@ -2253,36 +4402,59 @@ function defaultTraits() {
   }
 
   function calcTotalXP(baseXp, list) {
-    return Number(baseXp || 0) + disadvantagesWithXP(list).length * 5;
+    const entries = Array.isArray(list) ? list : [];
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = buildGrantMaps(entries);
+    return Number(baseXp || 0) + disadvantagesWithXP(entries, {
+      grantCounts,
+      grantConstraints,
+      grantIgnoreCounts
+    }).length * ADVANTAGE_STEP_COST;
   }
 
   function calcCarryCapacity(strength, list) {
+    const entries = withSnapshotRules(list);
     const str = Number(strength || 0);
-    let base = str + 3;
-    if (Array.isArray(list)) {
-      if (list.some(e => e.namn === 'Packåsna')) {
-        base = Math.ceil(str * 1.5) + 3;
-      } else if (list.some(e => e.namn === 'Hafspackare')) {
-        base = Math.ceil(str * 0.5) + 3;
-      }
+    if (typeof global.rulesHelper?.getCarryCapacityBase === 'function') {
+      return global.rulesHelper.getCarryCapacityBase(entries, {
+        stark: str
+      });
     }
-    return base;
+    return str + 3;
+  }
+
+  function calcToughness(strength, list) {
+    const entries = withSnapshotRules(list);
+    const str = Number(strength || 0);
+    if (typeof global.rulesHelper?.getToughnessBase === 'function') {
+      return global.rulesHelper.getToughnessBase(entries, {
+        stark: str
+      });
+    }
+    return Math.max(10, str);
+  }
+
+  function calcTraitTotalMax(list, inventory) {
+    const entries = withSnapshotRules(list);
+    if (typeof global.rulesHelper?.getTraitTotalMax === 'function') {
+      return global.rulesHelper.getTraitTotalMax(entries, inventory);
+    }
+    return 80;
   }
 
   function calcPainThreshold(strength, list, extra) {
-    const painBonus = list.filter(e => e.namn === 'Smärttålig').length;
-    const painPenalty = list.filter(e => e.namn === 'Bräcklig').length;
-    let pain = Math.ceil(Number(strength || 0) / 2);
-    pain += painBonus - painPenalty;
-    const perm = calcPermanentCorruption(list, extra);
-    if (list.some(e => e.namn === 'Jordnära')) {
-      pain -= Math.floor(perm / 2);
+    const entries = withSnapshotRules(list);
+    const str = Number(strength || 0);
+    let pain = Math.ceil(str / 2);
+    const perm = calcPermanentCorruption(entries, extra);
+
+    if (typeof global.rulesHelper?.getPainThresholdModifier === 'function') {
+      pain += global.rulesHelper.getPainThresholdModifier(entries, {
+        ...(extra && typeof extra === 'object' ? extra : {}),
+        stark: str,
+        permanent_korruption: perm
+      });
     }
-    // Ny regel: Jordnära + Mörkt förflutet ger ytterligare - (smärtgräns / 4)
-    if (list.some(e => e.namn === 'Jordnära') && list.some(e => e.namn === 'Mörkt förflutet')) {
-      const extraPenalty = Math.floor(pain / 4);
-      pain -= extraPenalty;
-    }
+
     return pain;
   }
 
@@ -2301,6 +4473,7 @@ function defaultTraits() {
     if (Array.isArray(obj.hamnskifteRemoved) && obj.hamnskifteRemoved.length === 0) delete obj.hamnskifteRemoved;
     if (obj.artifactEffects && JSON.stringify(obj.artifactEffects) === JSON.stringify(emptyEff)) delete obj.artifactEffects;
     if (obj.manualAdjustments && JSON.stringify(obj.manualAdjustments) === JSON.stringify(emptyManual)) delete obj.manualAdjustments;
+    if (Array.isArray(obj.snapshotRules) && obj.snapshotRules.length === 0) delete obj.snapshotRules;
     ['inventory','list','custom'].forEach(k => {
       if (Array.isArray(obj[k]) && obj[k].length === 0) delete obj[k];
     });
@@ -2309,6 +4482,20 @@ function defaultTraits() {
     });
     if (obj.nilasPopupShown === false) delete obj.nilasPopupShown;
     if (obj.darkPastSuppressed === false) delete obj.darkPastSuppressed;
+    if (obj.suppressedEntryGrants && typeof obj.suppressedEntryGrants === 'object' && !Array.isArray(obj.suppressedEntryGrants)) {
+      const compact = {};
+      Object.keys(obj.suppressedEntryGrants).forEach(sourceName => {
+        const source = String(sourceName || '').trim();
+        if (!source) return;
+        const values = obj.suppressedEntryGrants[sourceName];
+        const keys = Array.isArray(values)
+          ? values.map(value => String(value || '').trim()).filter(Boolean)
+          : [];
+        if (keys.length) compact[source] = Array.from(new Set(keys));
+      });
+      if (Object.keys(compact).length) obj.suppressedEntryGrants = compact;
+      else delete obj.suppressedEntryGrants;
+    }
     if (obj.baseXp === 0) delete obj.baseXp;
     if (obj.notes) {
       const def = defaultNotes();
@@ -2341,6 +4528,7 @@ function defaultTraits() {
           if (it.trait) row.t = it.trait;
           if (it.race) row.r = it.race;
           if (it.form) row.f = it.form;
+          if (it.manualRuleOverride) row.mo = 1;
           if (it.__uid) row.u = it.__uid;
           const orderVal = coerceOrderValue(it.__order);
           if (orderVal !== null) row.o = orderVal;
@@ -2363,14 +4551,15 @@ function defaultTraits() {
 
     const remapId = (value) => {
       if (value === undefined || value === null) return value;
+      let nextValue = value;
       if (idMap instanceof Map) {
         const mapped = idMap.get(value);
-        if (mapped !== undefined) return mapped;
+        if (mapped !== undefined) nextValue = mapped;
         const asString = typeof value === 'string' ? value : String(value);
         const mappedString = idMap.get(asString);
-        if (mappedString !== undefined) return mappedString;
+        if (mappedString !== undefined) nextValue = mappedString;
       }
-      return value;
+      return canonicalizeLegacyEntryId(nextValue);
     };
 
     const cloneWithOrder = (base, src) => {
@@ -2379,6 +4568,7 @@ function defaultTraits() {
       if (src.t) base.trait = src.t;
       if (src.r) base.race = src.r;
       if (src.f) base.form = src.f;
+      if (src.mo || src.manualRuleOverride) base.manualRuleOverride = true;
       if (src.u) base.__uid = src.u;
       const orderVal = coerceOrderValue(src.o);
       if (orderVal !== null) base.__order = orderVal;
@@ -2485,7 +4675,24 @@ function defaultTraits() {
       if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
       if (row.gratisKval && row.gratisKval.length) res.gk = row.gratisKval;
       if (row.removedKval && row.removedKval.length) res.rk = row.removedKval;
-      if (row.artifactEffect === 'xp' || row.artifactEffect === 'corruption') res.e = row.artifactEffect;
+      if (Array.isArray(row.manualQualityOverride) && row.manualQualityOverride.length) {
+        const manual = row.manualQualityOverride
+          .map(value => String(value || '').trim())
+          .filter(Boolean);
+        if (manual.length) res.mqo = Array.from(new Set(manual));
+      }
+      const artifactEffect = row.artifactEffect === undefined || row.artifactEffect === null
+        ? ''
+        : String(row.artifactEffect).trim();
+      if (artifactEffect) res.e = artifactEffect;
+      const snapshotSourceKey = row.snapshotSourceKey === undefined || row.snapshotSourceKey === null
+        ? ''
+        : String(row.snapshotSourceKey).trim();
+      if (snapshotSourceKey) res.ssk = snapshotSourceKey;
+      const equippedSlot = row.equippedSlot === undefined || row.equippedSlot === null
+        ? ''
+        : String(row.equippedSlot).trim();
+      if (equippedSlot) res.es = equippedSlot;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
       if (row.perk) res.pk = row.perk;
@@ -2572,7 +4779,10 @@ function defaultTraits() {
         // Determine matching entry from DB or custom definitions
         const rawId = row.id !== undefined ? row.id : row.i;
         const mappedId = (idMap && rawId !== undefined) ? idMap.get(rawId) : undefined;
-        const effectiveId = mappedId !== undefined ? mappedId : rawId;
+        const mappedOrRawId = mappedId !== undefined ? mappedId : rawId;
+        const effectiveId = mappedOrRawId === undefined || mappedOrRawId === null
+          ? mappedOrRawId
+          : canonicalizeLegacyEntryId(mappedOrRawId);
         const rawName = row.name || row.n || '';
         let entry = null;
         if (effectiveId !== undefined) {
@@ -2610,10 +4820,23 @@ function defaultTraits() {
         const removedKval = Array.isArray(row.removedKval ?? row.rk)
           ? [...(row.removedKval ?? row.rk)]
           : [];
+        const manualQualityOverride = Array.isArray(row.manualQualityOverride ?? row.mqo)
+          ? Array.from(new Set((row.manualQualityOverride ?? row.mqo)
+            .map(value => String(value || '').trim())
+            .filter(Boolean)))
+          : [];
         const artifactEffectRaw = row.artifactEffect ?? row.e ?? entry?.artifactEffect ?? '';
-        const artifactEffect = artifactEffectRaw === 'xp' || artifactEffectRaw === 'corruption'
-          ? artifactEffectRaw
-          : '';
+        const artifactEffect = artifactEffectRaw === undefined || artifactEffectRaw === null
+          ? ''
+          : String(artifactEffectRaw).trim();
+        const snapshotSourceKeyRaw = row.snapshotSourceKey ?? row.ssk ?? '';
+        const snapshotSourceKey = snapshotSourceKeyRaw === undefined || snapshotSourceKeyRaw === null
+          ? ''
+          : String(snapshotSourceKeyRaw).trim();
+        const equippedSlotRaw = row.equippedSlot ?? row.es ?? '';
+        const equippedSlot = equippedSlotRaw === undefined || equippedSlotRaw === null
+          ? ''
+          : String(equippedSlotRaw).trim();
         const expanded = {
           id: resolvedId,
           name: resolvedName,
@@ -2624,6 +4847,11 @@ function defaultTraits() {
           removedKval,
           artifactEffect
         };
+        if (snapshotSourceKey) expanded.snapshotSourceKey = snapshotSourceKey;
+        if (equippedSlot) expanded.equippedSlot = equippedSlot;
+        if (manualQualityOverride.length) {
+          expanded.manualQualityOverride = manualQualityOverride;
+        }
         const nivå = row.nivå ?? row.l;
         if (nivå !== undefined) expanded.nivå = nivå;
         const trait = row.trait ?? row.t;
@@ -2676,6 +4904,59 @@ function defaultTraits() {
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
+  function isLegacyCharacterFile(obj) {
+    const format = String(obj?.format || '').trim();
+    const version = Number(obj?.formatVersion);
+    return format !== CHARACTER_FILE_FORMAT
+      || !Number.isFinite(version)
+      || version < CHARACTER_FILE_FORMAT_VERSION;
+  }
+
+  function applyLegacyImportedDisplayNames(data) {
+    if (!data || typeof data !== 'object') return;
+    const rewrite = (target, field) => {
+      if (!target || typeof target !== 'object') return;
+      const id = target.id ?? target.i;
+      const displayName = getLegacyEntryDisplayName(id);
+      if (displayName) target[field] = displayName;
+    };
+    (Array.isArray(data.list) ? data.list : []).forEach(entry => rewrite(entry, 'namn'));
+    const rewriteInventory = rows => (Array.isArray(rows) ? rows : []).forEach(row => {
+      if (!row || typeof row !== 'object' || row.typ === 'currency') return;
+      rewrite(row, 'name');
+      rewriteInventory(row.contains);
+    });
+    rewriteInventory(data.inventory);
+    const setup = data.defenseSetup;
+    if (setup && typeof setup === 'object') {
+      rewrite(setup.armor, 'name');
+      (Array.isArray(setup.weapons) ? setup.weapons : []).forEach(item => rewrite(item, 'name'));
+      rewrite(setup.dancingWeapon, 'name');
+      Object.values(setup.separateWeapons || {}).flat().forEach(item => rewrite(item, 'name'));
+    }
+  }
+
+  function prepareImportedCharacterData(store, id, obj, charMeta) {
+    const source = cloneValue(obj?.data);
+    const usedCustomIds = collectUsedCustomIds(store);
+    const { data, idMap } = normalizeCharacterData(
+      store,
+      id,
+      source && typeof source === 'object' ? source : {},
+      charMeta,
+      usedCustomIds
+    );
+
+    // Character files store selected entries compactly. Resolve those
+    // references after defaults, custom-ID remaps, and legacy aliases have
+    // been normalized into one canonical import payload.
+    data.list = expandList(data.list, data.custom, idMap);
+    canonicalizeCharacterReferences(data, { custom: data.custom });
+    if (isLegacyCharacterFile(obj)) applyLegacyImportedDisplayNames(data);
+    initializeEntryMetadata(data);
+    return data;
+  }
+
   function exportCharacterJSON(store, id, includeFolder = true) {
     const charId = id || store.current;
     if (!charId) return null;
@@ -2701,6 +4982,9 @@ function defaultTraits() {
       }
     }
     return {
+      format: CHARACTER_FILE_FORMAT,
+      formatVersion: CHARACTER_FILE_FORMAT_VERSION,
+      rulesetVersion: CHARACTER_RULESET_VERSION,
       name: char.name,
       ...folderPayload,
       data: stripDefaults({
@@ -2747,34 +5031,10 @@ function defaultTraits() {
           if (standard) folderId = standard.id;
         }
       } catch {}
-      store.characters.push({ id, name: obj.name || 'Ny rollperson', folderId });
-      const data = obj.data || {};
-      const usedIds = collectUsedCustomIds(store);
-      const prefix = makeCustomIdPrefix(obj.name || '', id);
-      const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
-      data.list = expandList(data.list, custom, idMap);
-      data.inventory = expandInventory(data.inventory, custom, idMap);
-      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
-        data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
-      }
-      store.data[id] = {
-        custom: [],
-        artifactEffects: defaultArtifactEffects(),
-        bonusMoney: defaultMoney(),
-        savedUnusedMoney: defaultMoney(),
-        privMoney: defaultMoney(),
-        possessionMoney: defaultMoney(),
-        possessionRemoved: 0,
-        notes: defaultNotes(),
-        liveMode: false,
-        ...data,
-        custom,
-        inventory: data.inventory
-      };
-      if (!store.data[id].notes) {
-        store.data[id].notes = defaultNotes();
-      }
-      initializeEntryMetadata(store.data[id]);
+      const charMeta = { id, name: obj?.name || 'Ny rollperson', folderId };
+      const data = prepareImportedCharacterData(store, id, obj, charMeta);
+      store.characters.push(charMeta);
+      store.data[id] = data;
       store.current = id;
       persistMeta(store);
       persistCharacter(store, id);
@@ -2813,11 +5073,17 @@ function defaultTraits() {
   /* ---------- 7. Export ---------- */
   global.storeHelper = {
     load,
+    loadLegacyStorage,
+    setLegacyImportMap,
+    getLegacyImportMap,
+    canonicalizeLegacyEntryId,
+    canonicalizeLegacyEntryNameToId,
     save,
     makeCharId,
     persistMeta,
-    persistCharacter: (store, id) => persistCharacter(store, id),
+    persistCharacter: (store, id, options = {}) => persistCharacter(store, id, options),
     persistCurrent: persistCurrentCharacter,
+    batchCurrentCharacterMutation,
     persistAllCharacters: (store) => save(store, { allCharacters: true }),
     // Aktiv mapp
     getActiveFolder: (store) => {
@@ -2942,6 +5208,12 @@ function defaultTraits() {
     getCurrentList,
     getCharacterRaces,
     setCurrentList,
+    getLastCurrentListMutationSummary: (store) => (
+      store?.current && store?.data?.[store.current]
+        ? store.data[store.current].lastCurrentListMutationSummary || null
+        : null
+    ),
+    syncRuleInventoryGrants,
     findOutdatedEntries,
     syncEntriesWithDb,
     getInventory,
@@ -2973,6 +5245,11 @@ function defaultTraits() {
     setDefenseSetup,
     getArtifactEffects,
     setArtifactEffects,
+    getSnapshotRuleRecords,
+    syncSnapshotRuleSources,
+    getSnapshotSourceImpactForEntry,
+    detachSnapshotRulesBySource,
+    removeSnapshotRulesBySource,
     getManualAdjustments,
     setManualAdjustments,
     getFilterUnion,
@@ -2987,6 +5264,7 @@ function defaultTraits() {
     addRevealedArtifact,
     removeRevealedArtifact,
     clearRevealedArtifacts,
+    isSearchHiddenEntry,
     migrateInventoryIds,
     genId,
     getNilasPopupSeen,
@@ -2996,20 +5274,30 @@ function defaultTraits() {
     setTraits,
     getBaseXP,
     setBaseXP,
+    getErfRules,
+    typeBaseErf,
+    getEntryErfOverride,
     calcUsedXP,
     calcEntryXP,
     calcEntryDisplayXP,
     formatEntryXPText,
+    normalizeLevelName,
+    entryDefinedLevels,
+    resolveEntryLevel,
+    entryLevelCost,
     calcTotalXP,
     countDisadvantages,
+    calcCorruptionTrackStats,
     calcPermanentCorruption,
-    calcDarkPastPermanentCorruption,
     calcCarryCapacity,
+    calcToughness,
+    calcTraitTotalMax,
     calcPainThreshold,
     abilityLevel,
     hamnskifteNoviceLimit,
     isFreeMonsterTrait,
     monsterTraitDiscount,
+    getEntryMaxCount,
     monsterStackLimit,
     exportCharacterJSON,
     importCharacterJSON,
@@ -3024,11 +5312,16 @@ function defaultTraits() {
     deleteCharacter,
     deleteCharactersInFolder,
     deleteAllCharacters,
+    buildGrantMaps,
+    isRuleGrantedEntry,
+    getGrantedEntryOverrideCost,
+    getEntriesToBeCleanedByGrants,
     getDependents,
     HAMNSKIFTE_NAMES,
     HAMNSKIFTE_BASE,
     DARK_BLOOD_TRAITS,
     getCustomEntriesVersion: getCustomEntriesVersionMeta,
-    getRevealedArtifactsVersion: getRevealedArtifactsVersionMeta
+    getRevealedArtifactsVersion: getRevealedArtifactsVersionMeta,
+    getDerivedVersion: getDerivedVersionMeta
   };
 })(window);

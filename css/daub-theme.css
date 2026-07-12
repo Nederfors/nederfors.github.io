@@ -1,0 +1,111 @@
+/*
+ * Symbapedia DAUB Theme Configuration
+ * ====================================
+ *
+ * HOW TO CHANGE THEME / TEXTURE:
+ *
+ * 1) Open index.html and change the attributes on <html>:
+ *
+ *    <html lang="sv" data-theme="ember-dark" data-db-texture="wood">
+ *
+ * 2) Available themes (set via data-theme):
+ *      default, dark
+ *      grunge-light, grunge-dark
+ *      solarized, solarized-dark
+ *      ink, ink-light
+ *      ember, ember-light
+ *      bone, bone-dark
+ *      dracula, dracula-light
+ *      nord, nord-light
+ *      one-dark, one-dark-light
+ *      monokai, monokai-light
+ *      gruvbox, gruvbox-light
+ *      night-owl, night-owl-light
+ *      github, github-dark
+ *      catppuccin, catppuccin-dark
+ *      tokyo-night, tokyo-night-light
+ *      material, material-light
+ *      synthwave, synthwave-light
+ *      shades-of-purple, shades-of-purple-light
+ *      ayu, ayu-dark
+ *      horizon, horizon-light
+ *
+ *    "ember-dark" is Symbapedia's custom dark-fantasy variant
+ *    (DAUB tokens + legacy aliases defined in daub-overrides.css).
+ *
+ * 3) Available textures (set via data-db-texture):
+ *      (none)  — default fractal noise
+ *      paper   — soft fibrous texture
+ *      metal   — brushed aluminum
+ *      wood    — wavy horizontal grain
+ *      glass   — frosted translucency (no background noise)
+ *      none    — no texture at all
+ *
+ * 4) Noise level — adjust --db-noise below (0 = none, 1 = heavy):
+ *
+ * 5) Temperature — adjust --db-temperature (-1 cool … 0 neutral … +1 warm):
+ */
+
+:root {
+  /* -- DAUB noise & temperature ----------------------------- */
+  --db-noise: 1;
+  --db-temperature: 0;
+
+  /* -- App layout vars (no DAUB equivalent) ----------------- */
+  --shell-width: min(1120px, calc(100vw - 1.6rem));
+  --shell-highlight: rgba(245, 230, 208, 0.14);
+  --ctrl-btn-size: 40px;
+  --entry-card-action-size: var(--ctrl-btn-size);
+  --ctrl-btn-font-size: 1.35rem;
+  --entry-tag-row: 1.35rem;
+
+  /* -- Game-semantic colours (no DAUB equivalent) ----------- */
+  --mystic: #a88fcc;
+  --quality: #C2A36A;
+  --neutral: #9CB69A;
+  --hilight: #C98B6340;
+  --negative: #8B4513;
+  --danger-bg: #3B1C1C;
+
+  /* -- XP / status pills ------------------------------------ */
+  --xp-pill-bg: #3A3029;
+  --xp-pill-border: #5A4A40;
+  --xp-pill-text: #F3E8D8;
+
+  /* -- Tag interactive (bridged to DAUB where possible) ----- */
+  --tag-interactive-bg: var(--db-color-bg-alt, #4A3A2F);
+  --tag-interactive-border: var(--db-color-border, #6A443B);
+  --tag-interactive-text: var(--db-color-text, #EBDDC8);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --ctrl-btn-size: 36px;
+    --ctrl-btn-font-size: 1.1rem;
+  }
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--db-color-bg, #231c14);
+  color: var(--db-color-text, var(--txt));
+  overflow-x: hidden;
+}
+
+html {
+  position: relative;
+  scrollbar-gutter: stable;
+}
+
+body.app-shell {
+  min-height: 100vh;
+  position: relative;
+  font-family: var(--db-font-ui, var(--ui-font));
+  isolation: isolate;
+}
+
+body.app-shell > * {
+  position: relative;
+  z-index: 1;
+}

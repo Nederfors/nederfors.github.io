@@ -47,7 +47,7 @@
 
     const shouldShow = forceDisplay || xpText !== '' || isElite;
     const prefix = `${label}: `;
-    const xpTagHtml = shouldShow ? `<span class="tag xp-cost">${prefix}${xpText}</span>` : '';
+    const xpTagHtml = shouldShow ? `<span class="db-chip xp-cost">${prefix}${xpText}</span>` : '';
     const xpHeaderHtml = shouldShow ? `<span class="entry-xp-value">${prefix}${xpText}</span>` : '';
 
     return {
@@ -96,7 +96,7 @@
     }
     if (merged.shouldShow) {
       const prefix = `${label}: `;
-      merged.tagHtml = `<span class="tag xp-cost">${prefix}${merged.text}</span>`;
+      merged.tagHtml = `<span class="db-chip xp-cost">${prefix}${merged.text}</span>`;
       merged.headerHtml = `<span class="entry-xp-value">${prefix}${merged.text}</span>`;
     } else {
       merged.tagHtml = '';

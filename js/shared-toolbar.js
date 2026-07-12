@@ -13,8 +13,353 @@ const FILTER_CARD_KEY_MAP = Object.freeze({
   filterFormalCard: FILTER_TOOLS_KEY,
   filterSettingsCard: FILTER_SETTINGS_KEY
 });
+const toolbarUiPrefsStorage = window.symbaroumUiPrefs || window.localStorage;
+const setToolbarUiPref = (key, value) => {
+  try {
+    toolbarUiPrefsStorage?.setItem?.(key, value);
+  } catch {}
+};
+const removeToolbarUiPref = (key) => {
+  try {
+    toolbarUiPrefsStorage?.removeItem?.(key);
+  } catch {}
+};
+// Shadow DOM blocks the document stylesheet cascade. Keep the complete app
+// stylesheet attached here: drawers and popups reuse component classes whose
+// rules live across components.css, overlays.css, mobile.css, and motion.css.
+// It references the same fingerprinted asset and cache key as the document,
+// restoring the component contract without maintaining a second CSS bundle.
+const getShadowStylesheetHref = () => (
+  window.__symbaroumAppStylesheetHref || 'css/toolbar-shadow.css'
+);
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+const LEVEL_OPTION_SPECS = Object.freeze([
+  { value: '', label: 'Ingen', hint: 'Stäng av bonusen från partyt.' },
+  { value: 'Novis', label: 'Novis', hint: 'Grundnivå för hantverket.' },
+  { value: 'Gesäll', label: 'Gesäll', hint: 'Mellanläge för bättre stöd.' },
+  { value: 'Mästare', label: 'Mästare', hint: 'Högsta nivån för partystöd.' }
+]);
+const SORT_OPTION_SPECS = Object.freeze([
+  { value: 'alpha-asc', label: 'Alfabetisk (A → Ö)', hint: 'Standardordning' },
+  { value: 'alpha-desc', label: 'Alfabetisk (Ö → A)', hint: 'Omvänd alfabetisk ordning' },
+  { value: 'newest', label: 'Nyast först', hint: 'Senast tillagda hamnar överst' },
+  { value: 'oldest', label: 'Äldst först', hint: 'Äldre poster visas före nya' },
+  { value: 'test', label: 'Efter test', hint: 'Sorterar på test-taggen' },
+  { value: 'ark', label: 'Efter arketyp', hint: 'Sorterar på arketyp/tradition' }
+]);
+const renderFilterSwitchRow = ({ id, label, note, title, iconName, fallback = '' }) => `
+  <li>
+    <button id="${id}" class="db-switch filter-setting-switch" type="button" title="${title || label}" aria-checked="false">
+      <span class="filter-setting-switch-main">
+        <span class="filter-setting-switch-icon" aria-hidden="true">${icon(iconName, { className: 'btn-icon', alt: label }) || fallback}</span>
+        <span class="toggle-desc">
+          <span class="toggle-question">${label}</span>
+          ${note ? `<span class="toggle-note">${note}</span>` : ''}
+        </span>
+      </span>
+      <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
+    </button>
+  </li>
+`.trim();
+const renderLevelRadioOptions = (groupName) => `
+  <div class="db-radio-group popup-radio-list">
+    ${LEVEL_OPTION_SPECS.map(option => (
+      window.renderDaubRadioRow
+        ? window.renderDaubRadioRow({
+          rowClass: 'popup-radio-option',
+          labelAttrs: ` data-level="${option.value}"`,
+          copyHtml: `<span class="popup-radio-copy"><span class="popup-radio-title">${option.label}</span><span class="popup-radio-hint">${option.hint}</span></span>`,
+          inputAttrs: ` name="${groupName}" value="${option.value}"`
+        })
+        : `
+      <label class="db-radio popup-choice-row popup-radio-option" data-level="${option.value}">
+        <input class="db-radio__input" type="radio" name="${groupName}" value="${option.value}">
+        <span class="db-radio__circle"></span>
+        <span class="popup-radio-copy">
+          <span class="popup-radio-title">${option.label}</span>
+          <span class="popup-radio-hint">${option.hint}</span>
+        </span>
+      </label>
+    `
+    )).join('')}
+  </div>
+`.trim();
+const renderSortRadioOptions = () => `
+  <div class="db-radio-group sort-option-list">
+    ${SORT_OPTION_SPECS.map(option => (
+      window.renderDaubRadioRow
+        ? window.renderDaubRadioRow({
+          rowClass: 'popup-radio-option sort-option',
+          labelAttrs: ` data-mode="${option.value}"`,
+          copyHtml: `<span class="popup-radio-copy sort-option-copy"><span class="popup-radio-title sort-option-title">${icon('sort', { className: 'btn-icon', alt: 'Sortering' })}<span>${option.label}</span></span><span class="popup-radio-hint">${option.hint}</span></span>`,
+          inputAttrs: ` name="entrySortMode" value="${option.value}"`
+        })
+        : `
+      <label class="db-radio popup-choice-row popup-radio-option sort-option" data-mode="${option.value}">
+        <input class="db-radio__input" type="radio" name="entrySortMode" value="${option.value}">
+        <span class="db-radio__circle"></span>
+        <span class="popup-radio-copy sort-option-copy">
+          <span class="popup-radio-title sort-option-title">${icon('sort', { className: 'btn-icon', alt: 'Sortering' })}<span>${option.label}</span></span>
+          <span class="popup-radio-hint">${option.hint}</span>
+        </span>
+      </label>
+    `
+    )).join('')}
+  </div>
+`.trim();
+const popupMeta = (type, size, layoutFamily, mobileMode, touchProfile) => Object.freeze({
+  type,
+  size,
+  layoutFamily,
+  mobileMode,
+  touchProfile
+});
+const BASE_POPUP_META_BY_ID = Object.freeze({
+  qualPopup: popupMeta('picker', 'md', 'modal', 'center', 'none'),
+  manualAdjustPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  defenseCalcPopup: popupMeta('form', 'lg', 'workflow-lg', 'center', 'none'),
+  alcPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
+  smithPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
+  artPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
+  entrySortPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  pdfPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  driveStoragePopup: popupMeta('form', 'lg', 'tabbed-popup-lg', 'center', 'none'),
+  characterToolsPopup: popupMeta('form', 'lg', 'tools-popup-lg', 'center', 'none'),
+  nilasPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  folderManagerPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  renameFolderPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  newCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  generatorPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
+  dupCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  renameCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  dialogPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  danielPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down')
+});
+const getPopupMetaById = () => Object.freeze({
+  ...BASE_POPUP_META_BY_ID,
+  ...(window.inventoryPopupRegistry?.getPopupMetaById?.() || {})
+});
+const renderToolsManagerPopup = ({ popupId, title, optionsId, closeId, className = '' }) => `
+      <div id="${popupId}" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner ${String(className || '').trim()}">
+          <h3>${title}</h3>
+          <div id="${optionsId}" class="tools-popup-content"></div>
+          <button id="${closeId}" class="db-btn db-btn--danger">Avbryt</button>
+        </div>
+      </div>
+`;
+const renderInventoryPopupSurfaces = () => `
+      ${renderToolsManagerPopup({
+        popupId: 'inventoryItemsPopup',
+        title: 'Hantera föremål',
+        optionsId: 'inventoryItemsOptions',
+        closeId: 'inventoryItemsClose',
+        className: 'inventory-tools-ui'
+      })}
+      ${renderToolsManagerPopup({
+        popupId: 'inventoryEconomyPopup',
+        title: 'Hantera ekonomi',
+        optionsId: 'inventoryEconomyOptions',
+        closeId: 'inventoryEconomyClose',
+        className: 'inventory-tools-ui'
+      })}
+
+      <div id="liveBuyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Köp i live-läge</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="liveBuyItemName" class="tools-meta popup-item-name" hidden></p>
+              <div class="tools-form">
+                <label class="tools-field">
+                  <span class="tools-label">Antal</span>
+                  <input id="liveBuyQty" class="db-input" type="number" min="1" step="1" value="1">
+                </label>
+                <div class="tools-grid two-col">
+                  <label class="tools-field">
+                    <span class="tools-label">Daler</span>
+                    <input id="liveBuyPriceDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Skilling</span>
+                    <input id="liveBuyPriceSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                </div>
+                <label class="tools-field">
+                  <span class="tools-label">Örtegar</span>
+                  <input id="liveBuyPriceOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="liveBuyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="liveBuyConfirm" class="db-btn">Köp</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="buyMultiplePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Köp flera</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="buyMultipleItemName" class="tools-meta popup-item-name" hidden></p>
+              <label class="tools-field">
+                <span class="tools-label">Antal</span>
+                <input id="buyMultipleInput" class="db-input" type="number" min="1" step="1" placeholder="1">
+              </label>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="buyMultipleCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="buyMultipleRemove" class="db-btn db-btn--danger">Ta bort</button>
+            <button id="buyMultipleConfirm" class="db-btn">Köp</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rowPricePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Snabb prisjustering</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <div class="tools-form">
+                <div id="rowPricePresets" class="tools-grid two-col">
+                  <button class="db-btn" type="button" data-factor="0.5">Halvera</button>
+                  <button class="db-btn" type="button" data-factor="0.75">-25%</button>
+                  <button class="db-btn" type="button" data-factor="1.25">+25%</button>
+                  <button class="db-btn" type="button" data-factor="1.5">+50%</button>
+                  <button class="db-btn" type="button" data-factor="2">Dubbel</button>
+                  <button class="db-btn db-btn--secondary" type="button" data-factor="1">Återställ faktor</button>
+                </div>
+                <label class="tools-field">
+                  <span class="tools-label">Multiplicera pris</span>
+                  <input id="rowPriceFactor" class="db-input" type="number" min="0" step="0.01" placeholder="1.25">
+                </label>
+                <div class="tools-grid two-col">
+                  <label class="tools-field">
+                    <span class="tools-label">Grundpris i daler</span>
+                    <input id="rowBaseDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Grundpris i skilling</span>
+                    <input id="rowBaseSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                </div>
+                <label class="tools-field">
+                  <span class="tools-label">Grundpris i örtegar</span>
+                  <input id="rowBaseOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="rowPriceCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="rowBaseApply" class="db-btn db-btn--secondary">Sätt grundpris</button>
+            <button id="rowPriceApply" class="db-btn">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="vehicleQtyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3 id="vehicleQtyTitle">Välj antal</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="vehicleQtyMessage" class="tools-intro"></p>
+              <label class="tools-field">
+                <span class="tools-label">Antal</span>
+                <input id="vehicleQtyInput" class="db-input" type="number" min="1" step="1" value="1">
+              </label>
+              <p id="vehicleQtyHint" class="tools-meta"></p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="vehicleQtyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="vehicleQtyConfirm" class="db-btn">Fortsätt</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="vehicleMoneyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3 id="vehicleMoneyTitle">Ta ut pengar</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="vehicleMoneyMessage" class="tools-intro"></p>
+              <p id="vehicleMoneyHint" class="tools-meta"></p>
+              <div class="tools-grid two-col">
+                <label class="tools-field">
+                  <span class="tools-label">Daler</span>
+                  <input id="vehicleMoneyDalerRemove" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+                <label class="tools-field">
+                  <span class="tools-label">Skilling</span>
+                  <input id="vehicleMoneySkillingRemove" class="db-input" type="number" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+              <label class="tools-field">
+                <span class="tools-label">Örtegar</span>
+                <input id="vehicleMoneyOrtegarRemove" class="db-input" type="number" min="0" step="1" placeholder="0">
+              </label>
+              <p id="vehicleMoneyError" class="tools-meta tools-warning" aria-live="polite"></p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="vehicleMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="vehicleMoneyConfirm" class="db-btn db-btn--danger">Ta ut</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="saveFreePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Spara och gratismarkera</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p class="tools-intro">Markera alla nuvarande föremål som gratis och spara sedan den aktuella ekonomin som ny utgångspunkt.</p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="saveFreeCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="saveFreeConfirm" class="db-btn">Fortsätt</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="advMoneyPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Fördelspengar</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p class="tools-intro">Privata pengar och fördelspengar kommer att nollställas innan åtgärden fortsätter.</p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="advMoneyCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="advMoneyConfirm" class="db-btn db-btn--danger">Nollställ och fortsätt</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="deleteContainerPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner inventory-dialog-ui">
+          <h3>Ta bort föremål med innehåll</h3>
+          <div class="tools-sections">
+            <section class="db-card tools-card">
+              <p id="deleteContainerText" class="tools-intro">Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort innehållet också?</p>
+            </section>
+          </div>
+          <div class="confirm-row">
+            <button id="deleteContainerCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="deleteContainerOnly" class="db-btn db-btn--danger">Ta bara bort färdmedlet</button>
+            <button id="deleteContainerAll" class="db-btn db-btn--danger">Ta bort allt</button>
+          </div>
+        </div>
+      </div>
+`;
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -24,15 +369,49 @@ class SharedToolbar extends HTMLElement {
     this._filterFirstOpenHandled = false;
     this._keyboardLikelyVisible = false;
     this._keyboardVisibilityTimer = null;
+    this._offlineUnsubscribe = null;
+    this._offlineDocumentCount = 0;
+    this._accessibilityObserver = null;
+    this._searchKeyTarget = null;
+    this._searchKeyHandler = null;
   }
 
   /* ------------------------------------------------------- */
   connectedCallback() {
+    const ready = this.initialize();
+    this._readyPromise = ready;
+    window.__symbaroumToolbarReady = ready;
+  }
+
+  async initialize() {
+    // Build the shadow tree in one parse. Splitting this markup across tasks
+    // exposes incomplete drawers/popups and makes each fragment parse without
+    // the surrounding HTML context.
     this.render();
+    if (!this.isConnected) return;
+    window.popupUi?.normalizeTree?.(this.shadowRoot, getPopupMetaById());
+    window.DAUB?.init?.(this.shadowRoot);
     window.autoResizeAll?.(this.shadowRoot);
+    this.bindPopupManager();
+    this.bindOfflineControls();
+    this.bindAccessibilityState();
+    this._overlayKeyHandler = event => this.handleOverlayKeydown(event);
+    this.shadowRoot.addEventListener('keydown', this._overlayKeyHandler);
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
+    if (toolbar && typeof ResizeObserver === 'function') {
+      const syncToolbarHeight = () => {
+        const height = Math.ceil(toolbar.getBoundingClientRect().height);
+        if (height > 0) {
+          document.documentElement.style.setProperty('--app-toolbar-height', `${height}px`);
+        }
+      };
+      syncToolbarHeight();
+      this._toolbarResizeObserver = new ResizeObserver(syncToolbarHeight);
+      this._toolbarResizeObserver.observe(toolbar);
+    }
+
     if (window.visualViewport && toolbar) {
       this._toolbarElement = toolbar;
       this._largeViewportHeight = null;
@@ -219,6 +598,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     this.cache();
+    this.bindPerfHooks();
     this.shadowRoot.addEventListener('click', e => this.handleClick(e));
     this._outsideHandler = e => this.handleOutsideClick(e);
     document.addEventListener('click', this._outsideHandler);
@@ -231,32 +611,36 @@ class SharedToolbar extends HTMLElement {
     document.getElementById = id =>
       nativeGetElementById(id) || this.shadowRoot.getElementById(id);
 
-    window.openDialog  = (msg, opts) => this.openDialog(msg, opts);
-    window.alertPopup  = msg => this.openDialog(msg);
+    window.openDialog = (msg, opts) => this.openDialog(msg, opts);
+    window.alertPopup = msg => this.openDialog(msg);
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
-    let toastTimer;
     window.toast = msg => {
-      let el = document.getElementById('toast');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = 'toast';
-        el.className = 'toast';
-        document.body.appendChild(el);
+      if (typeof DAUB !== 'undefined' && DAUB.toast) {
+        DAUB.toast({ message: String(msg), duration: 3000 });
       }
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
     };
 
     // Allow search suggestions to scroll without affecting the page
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
-    ['touchmove','wheel'].forEach(ev =>
+    ['touchmove', 'wheel'].forEach(ev =>
       sugEl.addEventListener(ev, e => e.stopPropagation())
     );
   }
 
   disconnectedCallback() {
+    this._offlineUnsubscribe?.();
+    this._offlineUnsubscribe = null;
+    this._accessibilityObserver?.disconnect();
+    this._accessibilityObserver = null;
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      this._searchKeyTarget.removeEventListener('keydown', this._searchKeyHandler, true);
+    }
+    this._searchKeyTarget = null;
+    this._searchKeyHandler = null;
+    if (this._overlayKeyHandler) this.shadowRoot?.removeEventListener('keydown', this._overlayKeyHandler);
+    this._overlayKeyHandler = null;
+    this._toolbarResizeObserver?.disconnect();
+    this._toolbarResizeObserver = null;
     this._vvCleanup?.forEach(cleanup => cleanup());
     this._vvCleanup = null;
     this._vvFallbackCleanup?.forEach(cleanup => cleanup());
@@ -281,25 +665,395 @@ class SharedToolbar extends HTMLElement {
     document.removeEventListener('click', this._outsideHandler);
   }
 
+  formatOfflineBytes(bytes) {
+    const value = Number(bytes) || 0;
+    if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} kB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  updateOfflineControls(detail = {}) {
+    const status = this.shadowRoot?.getElementById('offlineStatus');
+    const warmButton = this.shadowRoot?.getElementById('offlineRulesBtn');
+    const clearButton = this.shadowRoot?.getElementById('clearOfflineDocuments');
+    if (!status || !warmButton || !clearButton) return;
+
+    if (Number.isFinite(Number(detail.documents))) {
+      this._offlineDocumentCount = Math.max(0, Number(detail.documents));
+    }
+    const documentCount = this._offlineDocumentCount;
+    clearButton.disabled = documentCount === 0;
+    clearButton.textContent = documentCount
+      ? `Rensa ${documentCount} hämtad${documentCount === 1 ? '' : 'e'} PDF`
+      : 'Inga hämtade PDF:er';
+
+    if (detail.type === 'OFFLINE_RULES_PROGRESS') {
+      status.textContent = `Förbereder offline-regler: ${detail.completed || 0}/${detail.total || 0}`;
+      warmButton.disabled = true;
+      warmButton.textContent = 'Förbereder offline…';
+      return;
+    }
+    if (detail.type === 'OFFLINE_RULES_ERROR' || detail.status === 'error' || detail.status === 'timeout') {
+      status.textContent = 'Offline-regler kunde inte uppdateras. Försök igen när du är online.';
+      warmButton.disabled = false;
+      warmButton.textContent = 'Försök igen offline';
+      return;
+    }
+    if (detail.status === 'ready' || detail.rules?.revision) {
+      const size = this.formatOfflineBytes(detail.rules?.totalBytes);
+      status.textContent = `Offline-regler är redo (${detail.rules?.total || 0} filer, ${size}).`;
+      warmButton.disabled = false;
+      warmButton.textContent = 'Uppdatera offline-regler';
+      return;
+    }
+    status.textContent = 'Offline-regler förbereds automatiskt efter att appen har startat.';
+    warmButton.disabled = false;
+    warmButton.textContent = 'Förbered offline-regler';
+  }
+
+  bindOfflineControls() {
+    const offline = window.symbaroumOffline;
+    if (!offline) {
+      this.updateOfflineControls({ status: 'unavailable' });
+      return;
+    }
+    this._offlineUnsubscribe?.();
+    this._offlineUnsubscribe = offline.subscribe(detail => this.updateOfflineControls(detail));
+    offline.getStatus().then(detail => this.updateOfflineControls(detail));
+  }
+
+  bindAccessibilityState() {
+    this._accessibilityObserver?.disconnect();
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      this._searchKeyTarget.removeEventListener('keydown', this._searchKeyHandler, true);
+    }
+
+    const search = this.shadowRoot?.getElementById('searchField');
+    const suggestions = this.shadowRoot?.getElementById('searchSuggest');
+    const partyButtons = [
+      this.shadowRoot?.getElementById('partySmith'),
+      this.shadowRoot?.getElementById('partyAlchemist'),
+      this.shadowRoot?.getElementById('partyArtefacter')
+    ].filter(Boolean);
+
+    const syncSearch = () => {
+      if (!search || !suggestions) return;
+      const options = Array.from(suggestions.querySelectorAll('.item'));
+      const expanded = !suggestions.hidden && options.length > 0;
+      search.setAttribute('aria-expanded', String(expanded));
+      options.forEach((option, index) => {
+        option.id = `searchSuggestOption-${index}`;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', String(option.classList.contains('active')));
+      });
+      const active = options.find(option => option.classList.contains('active'));
+      if (expanded && active) search.setAttribute('aria-activedescendant', active.id);
+      else search.removeAttribute('aria-activedescendant');
+    };
+
+    this._searchKeyTarget = search || null;
+    this._searchKeyHandler = search
+      ? event => this.handleSearchComboboxKeydown(event)
+      : null;
+    if (this._searchKeyTarget && this._searchKeyHandler) {
+      // Capture on the input before the legacy raw-submit listener. An active
+      // option owns Enter; with no active option the event continues unchanged.
+      this._searchKeyTarget.addEventListener('keydown', this._searchKeyHandler, true);
+    }
+
+    const syncPartyButtons = () => {
+      partyButtons.forEach(button => {
+        button.setAttribute('aria-pressed', String(button.classList.contains('active')));
+      });
+    };
+
+    this._accessibilityObserver = new MutationObserver(() => {
+      syncSearch();
+      syncPartyButtons();
+    });
+    if (suggestions) {
+      this._accessibilityObserver.observe(suggestions, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['class', 'hidden']
+      });
+    }
+    partyButtons.forEach(button => {
+      this._accessibilityObserver.observe(button, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    });
+    syncSearch();
+    syncPartyButtons();
+  }
+
+  handleSearchComboboxKeydown(event) {
+    if (event?.key !== 'Enter') return false;
+    const search = this.shadowRoot?.getElementById('searchField');
+    if (!search || event.target !== search) return false;
+
+    const suggestions = this.shadowRoot?.getElementById('searchSuggest');
+    const activeOption = suggestions && !suggestions.hidden
+      ? suggestions.querySelector('.item.active')
+      : null;
+    if (!activeOption) return false;
+
+    const selectActive = window.globalSearch?.selectActiveSuggestion;
+    if (typeof selectActive !== 'function') return false;
+    let selected = false;
+    try {
+      selected = Boolean(selectActive.call(window.globalSearch));
+    } catch {
+      return false;
+    }
+    if (!selected) return false;
+
+    event.preventDefault?.();
+    // The legacy listener is on the same input and submits the raw query. Stop
+    // it only after the active option has been selected successfully.
+    event.stopImmediatePropagation?.();
+    search.focus?.({ preventScroll: true });
+    return true;
+  }
+
+  handleOverlayKeydown(event) {
+    if (event.key !== 'Tab') return;
+    const historyTop = window.peekTopOverlay?.();
+    const top = historyTop instanceof HTMLElement && this.shadowRoot.contains(historyTop)
+      ? historyTop
+      : Array.from(this.shadowRoot.querySelectorAll('.popup.open, .offcanvas.open')).at(-1);
+    if (!(top instanceof HTMLElement)) return;
+    const surface = top.querySelector('.popup-inner, .db-modal, .db-drawer__panel') || top;
+    const focusable = Array.from(surface.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+    )).filter(element => (
+      !element.closest('[inert]')
+      && element.getAttribute('aria-hidden') !== 'true'
+      && window.getComputedStyle(element).visibility !== 'hidden'
+      && window.getComputedStyle(element).display !== 'none'
+      && element.getClientRects().length > 0
+    ));
+    if (!focusable.length) return;
+    const active = this.shadowRoot.activeElement;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!active || !top.contains(active)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus({ preventScroll: true });
+    } else if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
   /* ------------------------------------------------------- */
   render() {
+    const helpOverviewCards = [
+      {
+        label: 'Kom igång',
+        value: 'Sök efter poster, öppna detaljer och lägg till dem direkt från listan.'
+      },
+      {
+        label: 'Paneler',
+        value: 'Verktygsraden leder vidare till Egenskaper, Inventarie, Index, Rollperson och Funktioner.'
+      },
+      {
+        label: 'Lagring',
+        value: 'Allt sparas lokalt i webbläsaren. Export och import används för säkerhetskopior.'
+      }
+    ];
+    const helpSections = [
+      {
+        title: 'Kom igång',
+        items: [
+          'Sök i fältet ovan och tryck Enter för att filtrera.',
+          'Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".',
+          `Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Funktioner.`
+        ]
+      },
+      {
+        title: 'Verktygsrad',
+        items: [
+          '▼: Minimerar eller expanderar alla kategorier i listor.',
+          `${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.`,
+          `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter. ${icon('settings')}: Öppnar funktionspanelen.`,
+          `${icon('anteckningar')}: Öppnar anteckningssidan i rollpersonens sidhuvud.`,
+          'XP: Visar dina totala erfarenhetspoäng.',
+          'Sök: Skriv och tryck Enter för att lägga till ett filter. Skriv ett ord inom citattecken för att tvinga fritextsökning. Klicka på taggarna under sökfältet för att ta bort filter.',
+          'Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.',
+          'Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel eller popup.'
+        ]
+      },
+      {
+        title: 'Kortkommandon',
+        items: [
+          'Enter: Lägg till skriven term.',
+          'Esc: Stäng öppna paneler eller popupfönster på desktop.'
+        ]
+      },
+      {
+        title: 'Funktionsmeny',
+        items: [
+          'Välj rollperson: Byter aktiv rollperson.',
+          'Aktiv mapp: Begränsar listan "Välj rollperson". "Alla" visar alla mappar.',
+          'Typ, Arketyp, Karaktärsdrag: Filtrerar listor.',
+          'Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.',
+          'Generera rollperson: Skapar en rollperson automatiskt.',
+          'PDF-bank: Öppnar samlingen med regel-PDF:er.',
+          'Uppdatera appen: Söker efter ny version och uppdaterar.',
+          'Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.',
+          'Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.',
+          `${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare.`,
+          `${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter och matcha någon tagg.`,
+          `${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i korten.`,
+          `${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.`,
+          `${icon('adjust')} Manuella justeringar: Hantera egna modifieringar.`,
+          `${icon('sort')} Sortering: Välj ordning för listor.`,
+          `${icon('info')} Hjälp: Visar denna panel.`
+        ]
+      },
+      {
+        title: 'Inventarie',
+        items: [
+          'Sök i inventarie: Filtrerar föremål i realtid.',
+          '▶/▼ Öppna eller kollapsa alla.',
+          '🔀 Dra-och-släpp-läge för att ändra ordning.',
+          `🆕 Eget föremål. ${icon('basket', { className: 'title-icon', alt: 'Pengar' })} Pengar (Spara, addera, nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).`,
+          '💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny.',
+          `🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.`,
+          'x² Lägg till flera av samma. Icke-staplingsbara får egna fält.',
+          'Kategori: Filtrera på föremålstyp.',
+          '🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.'
+        ]
+      },
+      {
+        title: 'Egenskaper',
+        items: [
+          `Ange total XP via ${icon('minus')}/${icon('plus')} eller genom att skriva värdet.`,
+          'Summeringen visar Totalt, Använt och Oanvänt.',
+          'Knappen "Förmågor: X" filtrerar till Endast valda.',
+          `${icon('broom')} Återställ basegenskaper: Nollställer grundvärdena utan bonusar från förmågor eller inventarie.`
+        ]
+      },
+      {
+        title: 'Rollperson',
+        items: [
+          '📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.',
+          `${icon('effects')} Effekter: Öppnar effektfliken i egenskapsvyn.`,
+          `${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.`
+        ]
+      },
+      {
+        title: 'Anteckningar',
+        items: [
+          '✏️ Redigera: Växla mellan läs- och redigeringsläge.',
+          'Sudda: Rensa alla fält. Spara: Spara anteckningar.',
+          '▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.',
+          `${icon('index')}/${icon('character')} i sidhuvudet: Till index respektive rollperson.`
+        ]
+      },
+      {
+        title: 'Listor och rader',
+        items: [
+          `Lägg till / ${icon('plus')}: Lägg till posten. ${icon('minus')}: Minska antal eller ta bort.`,
+          'Info: Visa detaljer.',
+          '🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.',
+          `${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.`,
+          `${icon('free')} Gör föremål gratis. ${(icon('active') || '💔')} Visa konflikter.`,
+          '↔ Växla artefaktens kostnad mellan XP och permanent korruption.',
+          '⬇️/⬆️ Lasta på eller av föremål till eller från färdmedel.',
+          `${icon('remove')} Ta bort posten helt.`
+        ]
+      },
+      {
+        title: 'Tabeller',
+        items: [
+          '↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad och möjliggör horisontell scroll.',
+          '⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller.'
+        ]
+      },
+      {
+        title: 'Tips',
+        items: [
+          'Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.',
+          'Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.',
+          'Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.',
+          'Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.',
+          'Webbapp: Skriv "webapp" i sökfältet för instruktioner och öppna webapp-sidan.'
+        ]
+      },
+      {
+        title: 'Data & lagring',
+        items: [
+          'Allt sparas lokalt i din webbläsare (localStorage).',
+          'Använd Export/Import under Funktioner för säkerhetskopior och flytt mellan enheter.',
+          'Rensar du webbläsardata tas lokala rollpersoner bort.'
+        ]
+      },
+      {
+        title: 'Installera som webapp',
+        body: `
+          <p>
+            Instruktioner finns på <a href="webapp.html" target="_blank">webapp-sidan</a>.
+            Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
+          </p>
+        `
+      }
+    ];
+    const renderHelpSection = section => {
+      const listHtml = Array.isArray(section.items) && section.items.length
+        ? `<ul class="summary-list">${section.items.map(item => `<li>${item}</li>`).join('')}</ul>`
+        : String(section.body || '').trim();
+      return `
+        <section class="summary-section info-panel-section help-panel-section">
+          <h3>${section.title}</h3>
+          <div class="info-panel-extra">
+            <div class="info-block">
+              ${listHtml}
+            </div>
+          </div>
+        </section>
+      `.trim();
+    };
+    const helpPanelHtml = `
+      <div class="help-content info-panel-content summary-content">
+        <div class="info-panel-stack">
+          <section class="summary-section info-panel-section info-panel-overview help-panel-overview">
+            <div class="info-panel-overview-grid">
+              ${helpOverviewCards.map(card => `
+                <div class="info-panel-overview-block">
+                  <div class="info-panel-overview-label">${card.label}</div>
+                  <p>${card.value}</p>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+          ${helpSections.map(renderHelpSection).join('')}
+        </div>
+      </div>
+    `.trim();
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; }
 
-        .toolbar {
+        .toolbar.db-bottom-nav {
           position: fixed;
-          bottom: calc(env(safe-area-inset-bottom) + var(--toolbar-lift, 0px));
+          bottom: 0;
           left: 0;
           right: 0;
           width: 100%;
-          z-index: 900;
+          z-index: 1000;
           background: var(--panel);
           border-top: 1.5px solid var(--border);
-          padding: .6rem .8rem;
+          padding: .6rem .8rem calc(.6rem + env(safe-area-inset-bottom, 0px));
           display: flex;
           flex-direction: column;
           gap: .6rem;
+          --toolbar-control-height: 2.72rem;
         }
         .toolbar-top {
           display: flex;
@@ -307,7 +1061,7 @@ class SharedToolbar extends HTMLElement {
           gap: .6rem;
         }
         .toolbar-top .search-wrap { flex: 1 1 110px; min-width: 90px; position: relative; }
-        .toolbar-top .search-wrap input { width: 100%; }
+        .toolbar-top .search-wrap input { width: 100%; height: var(--toolbar-control-height); }
         .toolbar-top .suggestions {
           position: absolute;
           left: 0;
@@ -354,6 +1108,84 @@ class SharedToolbar extends HTMLElement {
         .button-row {
           display: flex;
           gap: .6rem;
+        }
+        .toolbar .toolbar-nav-items {
+          position: relative;
+          inset: auto;
+          z-index: auto;
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: .15rem;
+          padding: .2rem;
+          border: 1px solid var(--db-color-border, rgba(245, 230, 208, .1));
+          border-radius: 1rem;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .01)),
+            rgba(25, 20, 17, .74);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, .05),
+            0 8px 18px rgba(0, 0, 0, .16);
+          padding-bottom: .2rem;
+        }
+        .toolbar .db-bottom-nav__item {
+          min-width: 0;
+          min-height: 3.35rem;
+          padding: .42rem .22rem .38rem;
+          border: 1px solid transparent;
+          border-radius: .78rem;
+          background: transparent;
+          box-shadow: none;
+          color: var(--txt-muted, rgba(245, 230, 208, .72));
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: .2rem;
+          font-size: .6rem;
+          font-weight: 650;
+          line-height: 1.08;
+          text-decoration: none;
+          text-shadow: none;
+          letter-spacing: 0;
+        }
+        .toolbar .db-bottom-nav__item .btn-icon {
+          width: 1.42rem;
+          height: 1.42rem;
+        }
+        .toolbar .db-bottom-nav__label {
+          display: block;
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .toolbar .toolbar-nav-items .db-bottom-nav__item.db-bottom-nav__item--active,
+        .toolbar .toolbar-nav-items .db-bottom-nav__item.active {
+          border-color: rgba(221, 225, 186, .34);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02)),
+            #7a9470;
+          color: #192013;
+          box-shadow:
+            0 2px 8px rgba(0, 0, 0, .18),
+            inset 0 1px 0 rgba(255, 255, 255, .16);
+        }
+        .toolbar .db-bottom-nav__item:hover {
+          color: #fff7ee;
+          border-color: rgba(245, 230, 208, .16);
+          background: rgba(255, 255, 255, .06);
+          filter: none;
+          transform: translateY(-1px);
+        }
+        .toolbar .db-bottom-nav__item:active {
+          transform: translateY(1px);
+        }
+        .toolbar .db-bottom-nav__item.db-bottom-nav__item--active:hover,
+        .toolbar .db-bottom-nav__item.active:hover {
+          color: #192013;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .03)),
+            #7a9470;
         }
         @media (pointer: coarse) {
           .toolbar.keyboard-open .button-row {
@@ -415,6 +1247,62 @@ class SharedToolbar extends HTMLElement {
           width: 1.85rem;
           height: 1.85rem;
         }
+        .filter-setting-switch {
+          width: 100%;
+          justify-content: space-between;
+          padding: .65rem .8rem;
+          border-radius: .8rem;
+          border: 1px solid rgba(255, 255, 255, .08);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(0, 0, 0, .08)),
+            rgba(18, 15, 13, .68);
+          color: var(--txt);
+          box-shadow: none;
+        }
+        .filter-setting-switch:hover {
+          filter: none;
+          transform: translateY(-1px);
+          border-color: rgba(185, 122, 82, .45);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+        }
+        .filter-setting-switch:active {
+          transform: translateY(0);
+        }
+        .filter-setting-switch-main {
+          display: flex;
+          align-items: center;
+          gap: .75rem;
+          min-width: 0;
+          flex: 1;
+        }
+        .filter-setting-switch-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 2.2rem;
+          height: 2.2rem;
+          border-radius: .7rem;
+          background: rgba(255, 255, 255, .05);
+          border: 1px solid rgba(255, 255, 255, .08);
+          flex-shrink: 0;
+        }
+        .filter-setting-switch-icon .btn-icon {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+        .filter-setting-switch .toggle-desc {
+          margin-right: 0;
+          min-width: 0;
+        }
+        .filter-setting-switch .toggle-question {
+          color: var(--txt);
+        }
+        .filter-setting-switch .toggle-note {
+          color: var(--txt-muted, var(--txt));
+          font-size: .84rem;
+          line-height: 1.35;
+          margin-top: .14rem;
+        }
         .button-row .nav-link.active {
           background: var(--neutral);
           color: #1d2118;
@@ -424,47 +1312,88 @@ class SharedToolbar extends HTMLElement {
           opacity: 1;
         }
         .toolbar .exp-counter {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: .3rem;
-          background: var(--border);
-          color: var(--txt);
-          padding: .3rem .7rem;
-          border-radius: .55rem;
-          font-weight: 600;
-          font-size: .9rem;
+          justify-content: center;
+          gap: .42rem;
+          height: var(--toolbar-control-height);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .01)),
+            rgba(49, 43, 39, .72);
+          color: #fff;
+          padding: 0 .95rem;
+          border: 1.5px solid rgba(194, 163, 106, .24);
+          border-radius: .6rem;
+          box-shadow:
+            0 4px 10px rgba(0, 0, 0, .22),
+            inset 0 1px 0 rgba(255, 255, 255, .08);
+          font-weight: 700;
+          font-size: .95rem;
+          letter-spacing: .02em;
+          text-shadow:
+            0 0 1px rgba(0, 0, 0, .9),
+            0 1px 0 rgba(0, 0, 0, .45);
+          font-family: inherit;
           white-space: nowrap;
+          cursor: pointer;
+          transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+        }
+        .toolbar .exp-counter:hover {
+          border-color: rgba(194, 163, 106, .4);
+          box-shadow:
+            0 6px 13px rgba(0, 0, 0, .26),
+            inset 0 1px 0 rgba(255, 255, 255, .1);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .02)),
+            rgba(56, 49, 44, .8);
+        }
+        .toolbar .exp-counter:focus-visible {
+          outline: 2px solid rgba(194, 163, 106, .6);
+          outline-offset: 2px;
+        }
+        .toolbar .exp-counter:active {
+          transform: translateY(1px) scale(.992);
         }
         .toolbar .exp-counter span {
-          color: var(--accent);
+          min-width: 1.8ch;
+          color: rgba(255, 255, 255, .95);
+          text-align: center;
+          text-shadow:
+            0 0 1px rgba(0, 0, 0, .9),
+            0 1px 0 rgba(0, 0, 0, .45);
           font-variant-numeric: tabular-nums;
         }
         #entrySortPopup .popup-inner {
           align-items: stretch;
           text-align: left;
         }
-        .sort-grid {
+        .sort-option-list,
+        .popup-radio-list {
           display: flex;
           flex-direction: column;
           gap: .5rem;
           margin-bottom: .2rem;
         }
-        .sort-btn {
+        .popup-radio-option {
           display: flex;
-          align-items: center;
-          justify-content: space-between;
+          align-items: flex-start;
+          justify-content: flex-start;
           gap: .75rem;
-          padding: .9rem 1rem;
+          padding: .72rem .82rem;
           width: 100%;
-          background: var(--card);
-          color: var(--txt);
-          border-radius: .8rem;
-          border: 2px solid var(--card-border);
+          background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+          color: var(--db-color-text, var(--txt));
+          border-radius: var(--db-radius-2, .8rem);
+          border: 1px solid var(--db-color-border, rgba(255, 243, 228, 0.08));
           cursor: pointer;
           text-align: left;
-          transition: background .14s ease, transform .08s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease;
+          transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
         }
-        .sort-btn .sort-label-wrap {
+        .popup-radio-option .db-radio__circle {
+          flex-shrink: 0;
+          margin-top: .05rem;
+        }
+        .popup-radio-copy {
           display: flex;
           flex-direction: column;
           gap: .2rem;
@@ -472,57 +1401,40 @@ class SharedToolbar extends HTMLElement {
           min-width: 0;
           flex: 1;
         }
-        .sort-btn .sort-label {
+        .popup-radio-title {
           display: flex;
           align-items: center;
           gap: .65rem;
           font-weight: 700;
         }
-        .sort-btn .sort-label .btn-icon {
+        .sort-option-title .btn-icon {
           width: 1.45rem;
           height: 1.45rem;
           flex-shrink: 0;
         }
-        .sort-btn .sort-hint {
+        .popup-radio-hint {
           color: var(--txt-muted, var(--txt));
           font-size: .92rem;
         }
-        .sort-btn .sort-check {
-          width: 1.2rem;
-          height: 1.2rem;
-          border-radius: .35rem;
-          border: 2px solid var(--card-border);
-          display: grid;
-          place-items: center;
-          background: var(--bg);
-          color: transparent;
-          flex-shrink: 0;
-          box-shadow: 0 2px 6px rgba(0,0,0,.12) inset;
+        .popup-radio-option:hover {
+          border-color: rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.52);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.16);
         }
-        .sort-btn:hover {
-          border-color: var(--accent);
-          box-shadow: 0 10px 24px rgba(0,0,0,.18);
+        .popup-radio-option:focus-within {
+          border-color: rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.52);
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.16);
+          outline: none;
         }
-        .sort-btn:focus-visible {
-          outline: 2px solid var(--accent);
-          outline-offset: 2px;
+        .popup-radio-option.is-selected {
+          background: var(--db-color-bg-alt, rgba(26, 19, 16, 0.96));
+          border-color: var(--db-color-accent, var(--accent));
+          box-shadow: inset 0 0 0 1px rgba(var(--db-color-accent-rgb, 185, 122, 82), 0.24);
         }
-        .sort-btn.active {
-          background: var(--accent);
-          border-color: var(--accent);
-          color: #fff;
+        .popup-radio-option.is-selected .popup-radio-hint {
+          color: var(--txt-muted, var(--txt));
         }
-        .sort-btn.active .sort-hint {
-          color: rgba(255,255,255,.85);
-        }
-        .sort-btn.active .sort-check {
-          background: #fff;
-          border-color: #fff;
-          color: var(--accent);
-        }
-        .sort-btn.active .sort-check::after {
-          content: '✓';
-          font-weight: 800;
+        .popup-radio-option.is-selected .popup-radio-title {
+          color: inherit;
         }
         .sort-meta {
           color: var(--txt-muted, var(--txt));
@@ -530,6 +1442,7 @@ class SharedToolbar extends HTMLElement {
           margin: .15rem 0 .35rem;
         }
         .char-btn,
+        .db-btn,
         .toolbar button,
         .toolbar a {
           padding: .55rem 1.1rem;
@@ -545,13 +1458,25 @@ class SharedToolbar extends HTMLElement {
           text-align: center;
           transition: transform .1s ease, opacity .1s ease;
         }
-        .char-btn.danger { background: var(--danger); }
-        .char-btn.icon   { font-size: 1.1rem; }
-        .char-btn:hover  { opacity: .85; }
-        .char-btn:active { transform: scale(.95); opacity: .7; }
+        .char-btn.danger,
+        .db-btn--danger,
+        button.db-btn--danger,
+        .db-card button.db-btn--danger:not(.entry-collapse-btn),
+        .toolbar button.db-btn--danger {
+          background: #a83830;
+          color: #fff;
+        }
+        .db-btn--secondary { background: var(--border); color: var(--txt); }
+        .char-btn.icon,
+        .db-btn--icon { font-size: 1.1rem; }
+        .char-btn:hover,
+        .db-btn:hover { opacity: .85; }
+        .char-btn:active,
+        .db-btn:active { transform: scale(.95); opacity: .7; }
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
+        #invSpendCard.compact .card-desc { display: block !important; }
         /* Inline ikoner i hjälplistan så de inte bryter rader */
         .help-content .btn-icon {
           display: inline-block;
@@ -560,40 +1485,63 @@ class SharedToolbar extends HTMLElement {
           height: 1.15em;
           margin: 0 .25em 0 0;
         }
+        @media (max-width: 640px), (pointer: coarse) {
+          #searchField {
+            height: 44px;
+            min-height: 44px;
+          }
+        }
       </style>
-      <link rel="stylesheet" href="css/style.css">
-
+      <link rel="stylesheet" href="${getShadowStylesheetHref()}">
       <!-- ---------- Verktygsrad ---------- -->
-      <footer class="toolbar">
+      <nav class="toolbar db-bottom-nav db-bottom-nav--always" aria-label="Primär navigering">
         <div class="toolbar-top">
-          <button id="catToggle" class="char-btn icon" title="Minimera alla kategorier">▼</button>
-          <div class="search-wrap">
-            <input id="searchField" placeholder="T.ex 'Pajkastare'" autocomplete="off">
-            <div id="searchSuggest" class="suggestions" hidden></div>
+          <button id="catToggle" class="db-btn db-btn--icon chevron-toggle" title="Minimera alla kategorier"><span class="chevron-icon"></span></button>
+          <div class="search-wrap db-search" role="search">
+            <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest">
+            <div id="searchSuggest" class="suggestions" role="listbox" aria-label="Sökförslag" hidden></div>
           </div>
-          <span class="exp-counter">XP: <span id="xpOut">0</span></span>
+          <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
         </div>
-        <div class="button-row">
-          <a       id="traitsLink" class="char-btn icon icon-only nav-link" title="Egenskaper" href="traits.html">${icon('egenskaper')}</a>
-          <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">${icon('inventarie')}</a>
-          <a       id="indexLink" class="char-btn icon icon-only nav-link" title="Index" href="index.html">${icon('index')}</a>
-          <a       id="characterLink" class="char-btn icon icon-only nav-link" title="Rollperson" href="character.html">${icon('character')}</a>
-          <button  id="filterToggle" class="char-btn icon icon-only" title="Filter">${icon('settings')}</button>
+        <div class="button-row toolbar-nav-items" role="list" aria-label="Vyer och filter">
+          <a id="traitsLink" class="db-bottom-nav__item nav-link" title="Egenskaper" href="#/traits">
+            ${icon('egenskaper')}
+            <span class="db-bottom-nav__label">Egenskaper</span>
+          </a>
+          <a id="inventoryLink" class="db-bottom-nav__item nav-link" title="Inventarievy" href="#/inventory">
+            ${icon('inventarie')}
+            <span class="db-bottom-nav__label">Inventarie</span>
+          </a>
+          <a id="indexLink" class="db-bottom-nav__item nav-link" title="Index" href="#/index">
+            ${icon('index')}
+            <span class="db-bottom-nav__label">Index</span>
+          </a>
+          <a id="characterLink" class="db-bottom-nav__item nav-link" title="Rollperson" href="#/character">
+            ${icon('character')}
+            <span class="db-bottom-nav__label">Rollperson</span>
+          </a>
+          <button id="filterToggle" class="db-bottom-nav__item" type="button" title="Funktioner">
+            ${icon('settings')}
+            <span class="db-bottom-nav__label">Funktioner</span>
+          </button>
         </div>
-      </footer>
+      </nav>
 
       <!-- ---------- Filter ---------- -->
-      <aside id="filterPanel" class="offcanvas">
+      <div id="filterPanel" class="db-drawer db-drawer--structured offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="filterPanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="filterPanelTitle">
         <header class="inv-header">
-          <h2>Filter</h2>
+          <h2 id="filterPanelTitle">Funktioner</h2>
           <div class="inv-actions">
-            <button id="collapseAllFilters" class="char-btn icon" title="Öppna alla">▶</button>
-            <button class="char-btn icon" data-close="filterPanel">✕</button>
+            <button id="collapseAllFilters" class="db-btn db-btn--icon chevron-toggle" title="Öppna alla"><span class="chevron-icon collapsed"></span></button>
+            <button class="db-btn db-btn--icon" data-close="filterPanel">✕</button>
           </div>
         </header>
-
-        <ul class="card-list">
-          <li class="card" data-special="__formal__" id="filterFormalCard">
+        <div class="filter-panel-content info-panel-content summary-content">
+          <div class="filter-panel-stack">
+        <ul class="card-list filter-card-list">
+          <li class="db-card" data-special="__formal__" id="filterFormalCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Verktyg ${icon('tool-box', { className: 'title-icon', alt: 'Verktyg' })}</span></div>
             <div class="card-desc">
               <!-- Välj rollperson och Aktiv mapp -->
@@ -608,26 +1556,33 @@ class SharedToolbar extends HTMLElement {
 
               <!-- Helradsknappar -->
               <div class="char-btn-row">
-                <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+                <button id="newCharBtn" class="db-btn">Ny rollperson</button>
               </div>
               <div class="char-btn-row">
-                <button id="characterToolsBtn" class="char-btn">Rollpersonshantering</button>
+                <button id="characterToolsBtn" class="db-btn">Rollpersonshantering</button>
               </div>
               <div class="char-btn-row">
-                <button id="driveStorageBtn" class="char-btn">Lagring</button>
+                <button id="driveStorageBtn" class="db-btn">Lagring</button>
               </div>
               <div class="char-btn-row">
-                <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
+                <button id="pdfLibraryBtn" class="db-btn">PDF-bank</button>
               </div>
               <div class="char-btn-row">
-                <button id="checkForUpdates" class="char-btn">Uppdatera appen</button>
+                <button id="checkForUpdates" class="db-btn">Uppdatera appen</button>
+              </div>
+              <div class="char-btn-row offline-controls-row">
+                <button id="offlineRulesBtn" class="db-btn">Förbered offline-regler</button>
+              </div>
+              <p id="offlineStatus" class="offline-status" role="status">Offline-regler förbereds automatiskt efter att appen har startat.</p>
+              <div class="char-btn-row offline-controls-row">
+                <button id="clearOfflineDocuments" class="db-btn db-btn--secondary" disabled>Inga hämtade PDF:er</button>
               </div>
               <div class="char-btn-row">
-                <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
+                <button id="deleteChar" class="db-btn db-btn--danger">Radera rollperson</button>
               </div>
             </div>
           </li>
-          <li class="card" data-special="__formal__" id="filterSettingsCard">
+          <li class="db-card" data-special="__formal__" id="filterSettingsCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Inställningar ${icon('lamp', { className: 'title-icon', alt: 'Inställningar' })}</span></div>
             <div class="card-desc">
               <!-- Grupp med partymedlemmar och vy-knappar -->
@@ -637,37 +1592,41 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle icon-only">${icon('smithing')}</button>
+                    <button id="partySmith" class="party-toggle icon-only" type="button" aria-label="Smed i partyt" aria-pressed="false" title="Ställ in smed i partyt">${icon('smithing')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Alkemist i partyt?</span>
                     </span>
-                    <button id="partyAlchemist" class="party-toggle icon-only">${icon('alkemi')}</button>
+                    <button id="partyAlchemist" class="party-toggle icon-only" type="button" aria-label="Alkemist i partyt" aria-pressed="false" title="Ställ in alkemist i partyt">${icon('alkemi')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Artefaktmakare i partyt?</span>
                     </span>
-                    <button id="partyArtefacter" class="party-toggle icon-only">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
+                    <button id="partyArtefacter" class="party-toggle icon-only" type="button" aria-label="Artefaktmakare i partyt" aria-pressed="false" title="Ställ in artefaktmakare i partyt">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
                   </li>
+                  ${renderFilterSwitchRow({
+                    id: 'filterUnion',
+                    label: 'Utvidgad sökning',
+                    note: 'Matcha någon tagg (OR) i stället för alla.',
+                    title: 'Matcha någon tag (OR)',
+                    iconName: 'extend',
+                    fallback: '<span class="emoji-fallback">🔭</span>'
+                  })}
+                  ${renderFilterSwitchRow({
+                    id: 'entryViewToggle',
+                    label: 'Expandera vy',
+                    note: 'Visa poster i expanderad standardvy.',
+                    title: 'Expandera vy',
+                    iconName: 'expand',
+                    fallback: '<span class="emoji-fallback">↕️</span>'
+                  })}
                   <li>
                     <span class="toggle-desc">
-                      <span class="toggle-question">Utvidgad sökning?</span>
+                      <span class="toggle-question">Utrustning & strid?</span>
                     </span>
-                    <button id="filterUnion" class="party-toggle icon-only" title="Matcha någon tag (OR)">${icon('extend') || '<span class="emoji-fallback">🔭</span>'}</button>
-                  </li>
-                  <li>
-                    <span class="toggle-desc">
-                      <span class="toggle-question">Expandera vy?</span>
-                    </span>
-                    <button id="entryViewToggle" class="party-toggle icon-only" title="Expandera vy">${icon('expand') || '<span class="emoji-fallback">↕️</span>'}</button>
-                  </li>
-                  <li>
-                    <span class="toggle-desc">
-                      <span class="toggle-question">Beräkna försvar?</span>
-                    </span>
-                    <button id="forceDefense" class="party-toggle icon-only" title="Öppna försvarsberäkning">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
+                    <button id="forceDefense" class="party-toggle icon-only" title="Öppna utrustning, försvar och anfall">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -688,8 +1647,15 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
         </ul>
-        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
-        <div class="card" id="searchFiltersCard">
+        <!-- Snabbspendera-kort (visible only on inventory view, replaces Sökfilter) -->
+        <div class="db-card filter-panel-static-card" id="invSpendCard" hidden>
+          <div class="card-title">Snabbspendera</div>
+          <div class="card-desc">
+            <div id="invSpendInner"></div>
+          </div>
+        </div>
+        <!-- Sökfilter-kort som samlar relaterade dropdowns (hidden on inventory view) -->
+        <div class="db-card filter-panel-static-card" id="searchFiltersCard">
           <div class="card-title">Sökfilter</div>
           <div class="card-desc">
             <div class="filter-group">
@@ -701,13 +1667,14 @@ class SharedToolbar extends HTMLElement {
               <select id="arkFilter"></select>
             </div>
             <div class="filter-group">
-              <label for="testFilter">Test</label>
+              <label for="testFilter">Karaktärsdrag</label>
               <select id="testFilter"></select>
             </div>
           </div>
         </div>
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
-        <div class="card help-card">
+        <div class="db-card help-card filter-panel-static-card">
+          <div class="card-title">Hjälp</div>
           <div class="card-desc">
             <div class="filter-group party-toggles">
               <ul class="toggle-list">
@@ -715,569 +1682,288 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle icon-only" title="Visa hjälp">${icon('info')}</button>
+                  <button id="infoToggle" class="party-toggle icon-only" type="button" title="Visa hjälp">${icon('info')}</button>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-      </aside>
+          </div>
+        </div>
+        </aside>
+      </div>
 
       <!-- ---------- Popup Kvalitet ---------- -->
-      <div id="qualPopup" class="popup">
-        <div class="popup-inner">
-          <h3 id="qualTitle">Välj kvalitet</h3>
-          <div id="qualOptions"></div>
-          <button id="qualCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Custom ---------- -->
-      <div id="customPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3 id="customTitle">Nytt föremål</h3>
-          <input id="customName" placeholder="Namn">
-          <div id="customTypeGroup" class="filter-group">
-            <label for="customType">Typ</label>
-            <div class="custom-type-row">
-              <select id="customType"></select>
-              <button id="customTypeAdd" class="char-btn icon icon-only" type="button" aria-label="Lägg till typ" title="Lägg till typ">${icon('plus')}</button>
+      <div id="qualPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner qual-popup-ui">
+          <header class="qual-popup-header">
+            <div class="qual-popup-copy">
+              <div class="qual-popup-kicker">Inventarieverktyg</div>
+              <h3 id="qualTitle">Välj kvalitet</h3>
+              <p id="qualSubtitle" class="qual-popup-subtitle">Välj ett alternativ i listan nedan.</p>
+              <div id="qualLegend" class="qual-popup-legend" aria-label="Färgkodning">
+                <span class="qual-legend-item positive">Positiv</span>
+                <span class="qual-legend-item neutral">Neutral</span>
+                <span class="qual-legend-item negative">Negativ</span>
+                <span class="qual-legend-item mystic">Mystisk</span>
+              </div>
             </div>
-            <div id="customTypeTags" class="tags"></div>
+            <button id="qualClose" class="db-btn db-btn--icon qual-popup-close" type="button" title="Stäng">✕</button>
+          </header>
+          <label for="qualSearch" class="qual-popup-search-label">Sök</label>
+          <input id="qualSearch" class="qual-popup-search-input" type="search" placeholder="Sök..." autocomplete="off" spellcheck="false">
+          <div class="qual-popup-meta">
+            <span id="qualCount" class="qual-popup-count"></span>
           </div>
-          <div id="customArtifactEffect" class="filter-group" style="display:none">
-            <label for="artifactEffect">Effekt</label>
-            <select id="artifactEffect">
-              <option value="">Obunden</option>
-              <option value="xp">\u20131 erfarenhet</option>
-              <option value="corruption">+1 permanent korruption</option>
-            </select>
+          <div id="qualOptions" class="qual-popup-options"></div>
+          <p id="qualEmpty" class="qual-popup-empty" hidden>Inga alternativ matchar sökningen.</p>
+          <div class="confirm-row qual-popup-actions">
+            <button id="qualApply" class="db-btn" type="button" hidden disabled>Lägg till valda</button>
           </div>
-          <div id="customWeaponFields" class="filter-group" style="display:none">
-            <label for="customDamage">Skada</label>
-            <input id="customDamage" placeholder="Skada">
-          </div>
-          <div id="customVehicleFields" class="filter-group" style="display:none">
-            <label for="customCapacity">Bärkapacitet</label>
-            <input id="customCapacity" type="number" min="0" step="1" placeholder="Bärkapacitet">
-          </div>
-          <div id="customLevelFields" class="filter-group" style="display:none">
-            <label for="customLevelMode">Nivåtyp</label>
-            <select id="customLevelMode">
-              <option value="novis">Novis</option>
-              <option value="gesall">Gesäll</option>
-              <option value="mastare">Mästare</option>
-              <option value="triple">Novis/Gesäll/Mästare</option>
-            </select>
-            <textarea id="customLevelNovis" class="auto-resize" placeholder="Novis"></textarea>
-            <textarea id="customLevelGesall" class="auto-resize" placeholder="Gesäll"></textarea>
-            <textarea id="customLevelMastare" class="auto-resize" placeholder="Mästare"></textarea>
-          </div>
-          <div id="customPowerFields" class="filter-group" style="display:none">
-            <label>Förmågor</label>
-            <div id="customPowerList"></div>
-            <button id="customPowerAdd" class="char-btn icon icon-only" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">${icon('plus')}</button>
-          </div>
-          <div id="customBoundFields" class="filter-group" style="display:none">
-            <label for="customBoundType">Bundet till</label>
-            <select id="customBoundType">
-              <option value="">Obundet</option>
-              <option value="kraft">Mystisk kraft</option>
-              <option value="ritual">Ritual</option>
-            </select>
-            <input id="customBoundLabel" placeholder="Etikett (t.ex. Formel)">
-          </div>
-          <div id="customArmorFields" class="filter-group" style="display:none">
-            <label for="customProtection">Skydd</label>
-            <input id="customProtection" placeholder="Skydd">
-            <label for="customRestriction">Begränsning</label>
-            <input id="customRestriction" type="number" step="1" placeholder="Begränsning">
-          </div>
-          <div class="filter-group">
-            <label for="customWeight">Vikt</label>
-            <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
-          </div>
-          <div class="money-row">
-            <input id="customDaler" type="number" min="0" placeholder="Daler">
-            <input id="customSkilling" type="number" min="0" placeholder="Skilling">
-            <input id="customOrtegar" type="number" min="0" placeholder="Örtegar">
-          </div>
-          <textarea id="customDesc" class="auto-resize" placeholder="Beskrivning"></textarea>
-          <button id="customAdd" class="char-btn" type="button">Spara</button>
-          <button id="customDelete" class="char-btn danger" type="button" style="display:none">Radera</button>
-          <button id="customCancel" class="char-btn danger" type="button">Avbryt</button>
         </div>
       </div>
 
-      <!-- ---------- Popup Pengar ---------- -->
-      <div id="moneyPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Hantera pengar</h3>
-          <div class="money-wrapper">
-            <section class="money-section card money-section-fast">
-              <header class="money-header">
-                <h4>Snabbspendera</h4>
-                <p>Kostnader som inte ska sparas i inventariet.</p>
-              </header>
-              <div class="money-row">
-                <input id="moneyDaler" type="number" min="0" placeholder="Daler">
-                <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
-                <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
-              </div>
-              <div class="money-button-row">
-                <button id="moneySpendBtn" class="char-btn">Betala</button>
-              </div>
-            </section>
-            <section class="money-section card money-section-balance">
-              <header class="money-header">
-                <h4>Saldo</h4>
-                <p>Justera kontanterna när ditt lager har ändrats.</p>
-              </header>
-              <div class="money-row">
-                <input id="moneyBalanceDaler" type="number" min="0" placeholder="Daler">
-                <input id="moneyBalanceSkilling" type="number" min="0" placeholder="Skilling">
-                <input id="moneyBalanceOrtegar" type="number" min="0" placeholder="Örtegar">
-              </div>
-              <div class="money-button-row">
-                <button id="moneySetBtn" class="char-btn">Spara som totalen</button>
-                <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
-              </div>
-              <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
-            </section>
-            <p id="moneyStatus" class="money-status"></p>
-            <button id="moneyCancel" class="char-btn danger">Stäng</button>
-          </div>
-        </div>
-      </div>
+      <!-- ---------- Inventory popup surfaces removed pending rebuild ---------- -->
+      ${renderInventoryPopupSurfaces()}
 
       <!-- ---------- Popup Manuella justeringar ---------- -->
-      <div id="manualAdjustPopup" class="popup">
-        <div class="popup-inner">
+      <div id="manualAdjustPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Manuella justeringar</h3>
           <p class="manual-adjust-hint">Använd knapparna för att lägga till eller ta bort manuella ändringar. Erf påverkar endast spenderad erfarenhet.</p>
           <div class="manual-adjust-groups" id="manualAdjustGroups">
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Korruption</span>
                 <span id="manualCorruptionDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons">
-                <button class="char-btn" type="button" data-type="corruption" data-direction="decrease">-1</button>
-                <button class="char-btn" type="button" data-type="corruption" data-direction="increase">+1</button>
+                <button class="db-btn" type="button" data-type="corruption" data-direction="decrease">-1</button>
+                <button class="db-btn" type="button" data-type="corruption" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Spenderad erf</span>
                 <span id="manualXpDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons">
-                <button class="char-btn" type="button" data-type="xp" data-direction="decrease">-1</button>
-                <button class="char-btn" type="button" data-type="xp" data-direction="increase">+1</button>
+                <button class="db-btn" type="button" data-type="xp" data-direction="decrease">-1</button>
+                <button class="db-btn" type="button" data-type="xp" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Tålighet</span>
                 <span id="manualToughnessDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons">
-                <button class="char-btn" type="button" data-type="toughness" data-direction="decrease">-1</button>
-                <button class="char-btn" type="button" data-type="toughness" data-direction="increase">+1</button>
+                <button class="db-btn" type="button" data-type="toughness" data-direction="decrease">-1</button>
+                <button class="db-btn" type="button" data-type="toughness" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Smärtgräns</span>
                 <span id="manualPainDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons">
-                <button class="char-btn" type="button" data-type="pain" data-direction="decrease">-1</button>
-                <button class="char-btn" type="button" data-type="pain" data-direction="increase">+1</button>
+                <button class="db-btn" type="button" data-type="pain" data-direction="decrease">-1</button>
+                <button class="db-btn" type="button" data-type="pain" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-card card">
+            <div class="manual-adjust-card db-card">
               <div class="manual-adjust-label">
                 <span>Bärkapacitet</span>
                 <span id="manualCapacityDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons">
-                <button class="char-btn" type="button" data-type="capacity" data-direction="decrease">-1</button>
-                <button class="char-btn" type="button" data-type="capacity" data-direction="increase">+1</button>
+                <button class="db-btn" type="button" data-type="capacity" data-direction="decrease">-1</button>
+                <button class="db-btn" type="button" data-type="capacity" data-direction="increase">+1</button>
               </div>
             </div>
           </div>
           <div class="manual-adjust-footer">
-            <button id="manualAdjustReset" class="char-btn danger" type="button">Återställ</button>
-            <button id="manualAdjustClose" class="char-btn" type="button">Stäng</button>
+            <button id="manualAdjustReset" class="db-btn db-btn--danger" type="button">Återställ</button>
+            <button id="manualAdjustClose" class="db-btn" type="button">Stäng</button>
           </div>
         </div>
       </div>
 
-      <!-- ---------- Popup Spara & Gratis ---------- -->
-      <div id="saveFreePopup" class="popup">
-        <div class="popup-inner">
-          <p>Du håller på att markera allt i ditt inventarie som gratis och spara dina oanvända pengar som dina enda pengar. Är du säker på att du vill fortsätta?</p>
-          <div class="confirm-row">
-            <button id="saveFreeCancel" class="char-btn danger">Nej</button>
-            <button id="saveFreeConfirm" class="char-btn">Ja</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Varning Fördelspengar ---------- -->
-      <div id="advMoneyPopup" class="popup">
-        <div class="popup-inner">
-          <p>Du håller på att ändra pengar du fått från en fördel.</p>
-          <div class="confirm-row">
-            <button id="advMoneyCancel" class="char-btn danger">Avbryt</button>
-            <button id="advMoneyConfirm" class="char-btn">Fortsätt</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Antal ---------- -->
-      <div id="qtyPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Lägg till antal</h3>
-          <input id="qtyInput" type="number" min="1" step="1" placeholder="Antal">
-          <div id="qtyItemList"></div>
-          <button id="qtyCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Köp Flera ---------- -->
-      <div id="buyMultiplePopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Köp flera</h3>
-          <p id="buyMultipleItemName" class="popup-item-name" hidden></p>
-          <input id="buyMultipleInput" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
-          <div class="confirm-row">
-            <button id="buyMultipleCancel" class="char-btn danger">Avbryt</button>
-            <button id="buyMultipleRemove" class="char-btn">Ta bort</button>
-            <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Live-köp ---------- -->
-      <div id="liveBuyPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Köp i live-läge</h3>
-          <p id="liveBuyItemName" class="popup-item-name" hidden></p>
-          <label class="live-buy-label" for="liveBuyQty">Antal</label>
-          <input id="liveBuyQty" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
-          <fieldset class="live-buy-fieldset">
-            <legend>Pris per enhet</legend>
-            <div class="money-row">
-              <input id="liveBuyPriceDaler" type="number" min="0" step="1" placeholder="Daler" aria-label="Pris i daler">
-              <input id="liveBuyPriceSkilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Pris i skilling">
-              <input id="liveBuyPriceOrtegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Pris i örtegar">
+      <!-- ---------- Popup Utrustning, försvar och anfall ---------- -->
+      <div id="defenseCalcPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner defense-calc-ui">
+          <header class="defense-calc-header">
+            <div class="defense-calc-header-copy">
+              <div class="defense-calc-kicker">Utrustningshanterare</div>
+              <h3>Utrustning, försvar och anfall</h3>
+              <p class="defense-calc-intro">Välj aktiv utrustning och vilka karaktärsdrag som ska användas när Försvar och Träffsäkerhet beräknas.</p>
             </div>
-          </fieldset>
-          <div class="confirm-row">
-            <button id="liveBuyCancel" class="char-btn danger">Avbryt</button>
-            <button id="liveBuyConfirm" class="char-btn">Köp</button>
+            <button id="defenseCalcCloseX" class="db-btn defense-calc-close" type="button" title="Stäng">✕</button>
+          </header>
+          <div class="defense-calc-hero">
+            <div class="defense-calc-status-block">
+              <span class="defense-calc-status-label">Läge</span>
+              <span id="defenseCalcStatus" class="defense-calc-status-value">Automatiskt läge</span>
+            </div>
+            <div class="defense-calc-meta">
+              <span id="defenseCalcBasisSummary" class="defense-calc-pill">Försvar: Automatiskt</span>
+              <span id="defenseCalcWeaponSummary" class="defense-calc-pill">Inga vapen valda</span>
+              <span id="defenseCalcAccuracySummary" class="defense-calc-pill">Träffsäkerhet</span>
+              <span id="defenseCalcDancingSummary" class="defense-calc-pill" hidden></span>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Pris ---------- -->
-      <div id="pricePopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Multiplicera pris</h3>
-          <input id="priceFactor" type="number" step="0.1" placeholder="Faktor">
-          <div id="priceItemList"></div>
-          <button id="priceApply" class="char-btn">Verkställ</button>
-          <button id="priceCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Snabb Pris ---------- -->
-      <div id="rowPricePopup" class="popup">
-        <div class="popup-inner">
-          <h3>Snabb prisjustering</h3>
-          <div class="export-sections">
-            <div class="card export-card">
-              <div class="card-title">Multiplicera pris</div>
-              <div class="card-desc">
-                <div class="price-custom-row">
-                  <input id="rowPriceFactor" type="number" min="0" step="0.1" placeholder="Faktor">
-                  <button id="rowPriceApply" class="char-btn">Multiplicera</button>
+          <div class="defense-calc-sections">
+            <section class="db-card defense-calc-card">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">1. Grund</div>
+                  <div class="defense-calc-heading">Karaktärsdrag och rustning</div>
                 </div>
-                <div id="rowPricePresets" class="char-btn-row three-col">
-                  <button class="char-btn" data-factor="0.5">×0.5</button>
-                  <button class="char-btn" data-factor="1.5">×1.5</button>
-                  <button class="char-btn" data-factor="2">×2</button>
+                <p class="defense-calc-card-note">Välj karaktärsdrag för försvar och anfall samt vilken rustning som ska vara aktiv.</p>
+              </div>
+              <div class="defense-calc-field-grid">
+                <div class="defense-calc-field">
+                  <label for="defenseCalcTrait">Försvar</label>
+                  <select id="defenseCalcTrait"></select>
+                </div>
+                <div class="defense-calc-field">
+                  <label for="defenseCalcAttackTrait">Träffsäkerhet</label>
+                  <select id="defenseCalcAttackTrait"></select>
+                </div>
+                <div class="defense-calc-field">
+                  <label for="defenseCalcArmor">Rustning</label>
+                  <select id="defenseCalcArmor"></select>
                 </div>
               </div>
-            </div>
-            <div class="card export-card">
-              <div class="card-title">Sätt nytt grundpris</div>
-              <div class="card-desc">
-                <label for="rowBaseDaler">Pris</label>
-                <div class="inline-controls">
-                  <div class="money-row">
-                    <input id="rowBaseDaler" type="number" min="0" placeholder="Daler">
-                    <input id="rowBaseSkilling" type="number" min="0" placeholder="Skilling">
-                    <input id="rowBaseOrtegar" type="number" min="0" placeholder="Örtegar">
-                  </div>
+            </section>
+            <section class="db-card defense-calc-card defense-calc-group">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">2. Utrustning</div>
+                  <div class="defense-calc-heading">Vapen & sköldar</div>
                 </div>
-                <button id="rowBaseApply" class="char-btn">Sätt pris</button>
+                <p class="defense-calc-card-note">Markera det som ska räknas. Tvåhandsvapen kan inte kombineras med armfäst sköld.</p>
               </div>
-            </div>
+              <p id="defenseCalcEmpty" class="defense-calc-empty" hidden></p>
+              <div id="defenseCalcWeaponList" class="defense-item-list"></div>
+            </section>
+            <section class="db-card defense-calc-card defense-calc-group">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">3. Utrustning</div>
+                  <div class="defense-calc-heading">Övriga utrustade föremål</div>
+                </div>
+                <p class="defense-calc-card-note">Välj plats för utrustning som ska räknas som aktiv och kunna påverka Försvar och Träffsäkerhet.</p>
+              </div>
+              <p id="defenseCalcExtraEmpty" class="defense-calc-empty" hidden></p>
+              <div id="defenseCalcExtraItems" class="defense-item-list defense-item-list-equipment"></div>
+            </section>
+            <section id="defenseCalcDancingCard" class="db-card defense-calc-card defense-calc-card-dancing">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">4. Specialfall</div>
+                  <div class="defense-calc-heading">Alternativt försvar</div>
+                </div>
+                <p class="defense-calc-card-note">Visas när rollpersonen har separat försvarsform. Välj vapen om tillämpligt.</p>
+              </div>
+              <div id="defenseCalcSeparateSelectors"></div>
+            </section>
           </div>
-          <button id="rowPriceCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Färdmedel ---------- -->
-      <div id="vehiclePopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Flytta till färdmedel</h3>
-          <select id="vehicleSelect"></select>
-          <div id="vehicleItemList"></div>
-          <button id="vehicleApply" class="char-btn">Verkställ</button>
-          <button id="vehicleCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Ta ut ur färdmedel ---------- -->
-      <div id="vehicleRemovePopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Ta ut ur färdmedel</h3>
-          <select id="vehicleRemoveSelect"></select>
-          <div id="vehicleRemoveItemList"></div>
-          <button id="vehicleRemoveApply" class="char-btn">Verkställ</button>
-          <button id="vehicleRemoveCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Antal för färdmedel ---------- -->
-      <div id="vehicleQtyPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3 id="vehicleQtyTitle">Välj antal</h3>
-          <p id="vehicleQtyMessage"></p>
-          <p id="vehicleQtyHint"></p>
-          <input id="vehicleQtyInput" type="number" min="1" step="1" placeholder="Antal">
-          <div class="confirm-row">
-            <button id="vehicleQtyCancel" class="char-btn danger">Avbryt</button>
-            <button id="vehicleQtyConfirm" class="char-btn">Verkställ</button>
+          <div class="confirm-row defense-calc-actions">
+            <button id="defenseCalcReset" class="db-btn db-btn--danger" type="button">Återställ</button>
+            <button id="defenseCalcApply" class="db-btn" type="button">Verkställ</button>
           </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Pengar i färdmedel ---------- -->
-      <div id="vehicleMoneyPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3 id="vehicleMoneyTitle">Ta ut pengar</h3>
-          <p id="vehicleMoneyMessage"></p>
-          <p id="vehicleMoneyHint"></p>
-          <div class="vehicle-money-inputs">
-            <input id="vehicleMoneyDalerRemove" type="number" min="0" step="1" placeholder="Daler">
-            <input id="vehicleMoneySkillingRemove" type="number" min="0" step="1" placeholder="Skilling">
-            <input id="vehicleMoneyOrtegarRemove" type="number" min="0" step="1" placeholder="Örtegar">
-          </div>
-          <p id="vehicleMoneyError" class="popup-error"></p>
-          <div class="confirm-row">
-            <button id="vehicleMoneyCancel" class="char-btn danger">Avbryt</button>
-            <button id="vehicleMoneyConfirm" class="char-btn">Verkställ</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Beräkna försvar ---------- -->
-      <div id="defenseCalcPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Beräkna försvar</h3>
-          <div class="defense-calc-card">
-            <div class="defense-calc-heading">Grundval</div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcTrait">Karaktärsdrag</label>
-              <select id="defenseCalcTrait"></select>
-            </div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcArmor">Rustning</label>
-              <select id="defenseCalcArmor"></select>
-            </div>
-          </div>
-          <div class="defense-calc-card defense-calc-group">
-            <div class="defense-calc-heading">Vapen & sköldar</div>
-            <p id="defenseCalcEmpty" class="popup-desc" hidden></p>
-            <div id="defenseCalcWeaponList" class="defense-item-list"></div>
-          </div>
-          <div id="defenseCalcDancingCard" class="defense-calc-card defense-calc-card-dancing">
-            <div class="defense-calc-heading">Dansande vapen</div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcDancingTrait">Karaktärsdrag</label>
-              <select id="defenseCalcDancingTrait"></select>
-            </div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcDancingWeapon">Vapen</label>
-              <select id="defenseCalcDancingWeapon"></select>
-            </div>
-            <p class="popup-desc">Om inget vapen väljs används inget vapen för dansande vapen.</p>
-          </div>
-          <div class="confirm-row">
-            <button id="defenseCalcReset" class="char-btn danger" type="button">Återställ</button>
-            <button id="defenseCalcCancel" class="char-btn danger" type="button">Avbryt</button>
-            <button id="defenseCalcApply" class="char-btn" type="button">Verkställ</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
-      <div id="deleteContainerPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <p id="deleteContainerText">Du håller på att ta bort ett föremål som innehåller föremål. Vill du ta bort föremålen i föremålet?</p>
-          <button id="deleteContainerAll" class="char-btn danger">Ja, ta bort allt</button>
-          <button id="deleteContainerOnly" class="char-btn">Ta bara bort föremålet</button>
-          <button id="deleteContainerCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
-      <div id="alcPopup" class="popup popup-bottom">
-        <div class="popup-inner">
+      <div id="alcPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Alkemistniv\u00e5</h3>
-          <div id="alcOptions">
-            <button data-level="" class="char-btn">Ingen</button>
-            <button data-level="Novis" class="char-btn">Novis</button>
-            <button data-level="Ges\u00e4ll" class="char-btn">Ges\u00e4ll</button>
-            <button data-level="M\u00e4stare" class="char-btn">M\u00e4stare</button>
-          </div>
-          <button id="alcCancel" class="char-btn danger">Avbryt</button>
+          <p class="popup-desc">Välj exakt en nivå för partiets alkemist.</p>
+          <div id="alcOptions">${renderLevelRadioOptions('party-alchemist-level')}</div>
+          <button id="alcCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
 
       <!-- ---------- Popup Smedsniv\u00e5 ---------- -->
-      <div id="smithPopup" class="popup popup-bottom">
-        <div class="popup-inner">
+      <div id="smithPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Smedsniv\u00e5</h3>
-          <div id="smithOptions">
-            <button data-level="" class="char-btn">Ingen</button>
-            <button data-level="Novis" class="char-btn">Novis</button>
-            <button data-level="Ges\u00e4ll" class="char-btn">Ges\u00e4ll</button>
-            <button data-level="M\u00e4stare" class="char-btn">M\u00e4stare</button>
-          </div>
-          <button id="smithCancel" class="char-btn danger">Avbryt</button>
+          <p class="popup-desc">Välj exakt en nivå för partiets smed.</p>
+          <div id="smithOptions">${renderLevelRadioOptions('party-smith-level')}</div>
+          <button id="smithCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
 
       <!-- ---------- Popup Artefaktmakarniv\u00e5 ---------- -->
-      <div id="artPopup" class="popup popup-bottom">
-        <div class="popup-inner">
+      <div id="artPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Artefaktmakarniv\u00e5</h3>
-          <div id="artOptions">
-            <button data-level="" class="char-btn">Ingen</button>
-            <button data-level="Novis" class="char-btn">Novis</button>
-            <button data-level="Ges\u00e4ll" class="char-btn">Ges\u00e4ll</button>
-            <button data-level="M\u00e4stare" class="char-btn">M\u00e4stare</button>
-          </div>
-        <button id="artCancel" class="char-btn danger">Avbryt</button>
+          <p class="popup-desc">Välj exakt en nivå för partiets artefaktmakare.</p>
+          <div id="artOptions">${renderLevelRadioOptions('party-artificer-level')}</div>
+        <button id="artCancel" class="db-btn db-btn--danger">Avbryt</button>
       </div>
       </div>
 
       <!-- ---------- Popup Sortering ---------- -->
-      <div id="entrySortPopup" class="popup popup-bottom">
-        <div class="popup-inner">
+      <div id="entrySortPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Sortera poster</h3>
           <p class="popup-desc">Välj hur posterna i varje kategori ska ordnas.</p>
-          <div id="entrySortOptions" class="sort-grid">
-            <button class="sort-btn" type="button" data-mode="alpha-asc">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Alfabetisk (A → Ö)</span>
-                <span class="sort-hint">Standardordning</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="alpha-desc">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Alfabetisk (Ö → A)</span>
-                <span class="sort-hint">Omvänd alfabetisk ordning</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="newest">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Nyast först</span>
-                <span class="sort-hint">Senast tillagda hamnar överst</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="oldest">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Äldst först</span>
-                <span class="sort-hint">Äldre poster visas före nya</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="test">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Efter test</span>
-                <span class="sort-hint">Sorterar på test-taggen</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-            <button class="sort-btn" type="button" data-mode="ark">
-              <span class="sort-label-wrap">
-                <span class="sort-label">${icon('sort')} Efter arketyp</span>
-                <span class="sort-hint">Sorterar på arketyp/tradition</span>
-              </span>
-              <span class="sort-check" aria-hidden="true"></span>
-            </button>
-          </div>
+          <div id="entrySortOptions">${renderSortRadioOptions()}</div>
           <p class="sort-meta">Standard: Alfabetisk (A → Ö)</p>
-          <button id="entrySortSave" class="char-btn">Spara</button>
-          <button id="entrySortCancel" class="char-btn danger">Avbryt</button>
+          <button id="entrySortSave" class="db-btn">Spara</button>
+          <button id="entrySortCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
 
       <!-- ---------- Popup PDF-bank ---------- -->
-      <div id="pdfPopup" class="popup popup-bottom">
-        <div class="popup-inner">
+      <div id="pdfPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>PDF-bank</h3>
           <div id="pdfOptions"></div>
-          <button id="pdfCancel" class="char-btn danger">Avbryt</button>
+          <button id="pdfCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
 
       <!-- ---------- Popup Drivelagring ---------- -->
-      <div id="driveStoragePopup" class="popup">
-        <div class="popup-inner drive-storage-ui">
+      <div id="driveStoragePopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner drive-storage-ui">
           <h3>Lagring</h3>
           <div id="driveStorageOptions"></div>
-          <button id="driveStorageCancel" class="char-btn danger">Avbryt</button>
+          <button id="driveStorageCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
 
       <!-- ---------- Popup Rollpersonshantering ---------- -->
-      <div id="characterToolsPopup" class="popup">
-        <div class="popup-inner character-tools-ui">
+      <div id="characterToolsPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner character-tools-ui">
           <h3>Rollpersonshantering</h3>
-          <div id="characterToolsOptions"></div>
-          <button id="characterToolsCancel" class="char-btn danger">Avbryt</button>
+          <div id="characterToolsOptions" class="tools-popup-content"></div>
+          <button id="characterToolsCancel" class="db-btn db-btn--danger">Avbryt</button>
         </div>
       </div>
 
       
 
       <!-- ---------- Nilas Popup ---------- -->
-      <div id="nilasPopup" class="popup">
-        <div class="popup-inner">
+      <div id="nilasPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Nilas \u00e4r b\u00e4st. H\u00e5ller du med?</h3>
           <div class="button-row">
-            <button id="nilasNo" class="char-btn">Nej!</button>
-            <button id="nilasYes" class="char-btn">Ja!</button>
+            <button id="nilasNo" class="db-btn">Nej!</button>
+            <button id="nilasYes" class="db-btn">Ja!</button>
           </div>
         </div>
       </div>
       <!-- ---------- Popup Mapphanterare ---------- -->
-      <div id="folderManagerPopup" class="popup popup-bottom">
-        <div class="popup-inner folder-ui">
+      <div id="folderManagerPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
+        <div class="db-modal popup-inner folder-ui">
           <header class="popup-header">
             <h3>Mappar</h3>
-            <button id="folderManagerCloseX" class="char-btn icon" title="Stäng">✕</button>
+            <button id="folderManagerCloseX" class="db-btn db-btn--icon" title="Stäng">✕</button>
           </header>
 
           <!-- Skapa ny mapp -->
@@ -1287,7 +1973,7 @@ class SharedToolbar extends HTMLElement {
               <label for="newFolderName">+ Ny mapp:</label>
               <div class="inline-controls">
                 <input id="newFolderName" placeholder="Mappnamn">
-                <button id="addFolderBtn" class="char-btn icon icon-only" aria-label="Lägg till mapp" title="Lägg till mapp">${icon('plus')}</button>
+                <button id="addFolderBtn" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Lägg till mapp" title="Lägg till mapp">${icon('plus')}</button>
               </div>
             </div>
           </section>
@@ -1308,35 +1994,31 @@ class SharedToolbar extends HTMLElement {
               <label for="folderMoveSelect">Till mapp:</label>
               <div class="inline-controls">
                 <select id="folderMoveSelect"></select>
-                <button id="folderMoveApply" class="char-btn">Flytta</button>
+                <button id="folderMoveApply" class="db-btn">Flytta</button>
               </div>
             </div>
           </section>
-
-          <div class="popup-footer">
-            <button id="folderManagerDone" class="char-btn">Klar</button>
-          </div>
         </div>
       </div>
 
       <!-- ---------- Popup Byt namn på mapp ---------- -->
-      <div id="renameFolderPopup" class="popup">
-        <div class="popup-inner">
+      <div id="renameFolderPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Byt namn på mapp</h3>
           <div class="filter-group">
             <label for="renameFolderName">Nytt namn:</label>
             <input id="renameFolderName" type="text" placeholder="Ny mapp" autocomplete="off">
           </div>
           <div class="confirm-row">
-            <button id="renameFolderCancel" class="char-btn danger">Avbryt</button>
-            <button id="renameFolderApply" class="char-btn">Spara</button>
+            <button id="renameFolderCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="renameFolderApply" class="db-btn">Spara</button>
           </div>
         </div>
       </div>
 
       <!-- ---------- Popup Ny rollperson (med mappval) ---------- -->
-      <div id="newCharPopup" class="popup">
-        <div class="popup-inner">
+      <div id="newCharPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Ny rollperson</h3>
           <div class="filter-group">
             <label for="newCharName">Namn</label>
@@ -1353,15 +2035,15 @@ class SharedToolbar extends HTMLElement {
             </div>
           </div>
           <div class="confirm-row">
-            <button id="newCharCancel" class="char-btn danger">Avbryt</button>
-            <button id="newCharCreate" class="char-btn">Skapa</button>
+            <button id="newCharCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="newCharCreate" class="db-btn">Skapa</button>
           </div>
         </div>
       </div>
 
       <!-- ---------- Popup Generera rollperson ---------- -->
-      <div id="generatorPopup" class="popup">
-        <div class="popup-inner generator-popup">
+      <div id="generatorPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner generator-popup">
           <h3>Generera rollperson</h3>
           <p class="popup-desc">Välj startvärden och låt generatorn plocka förmågor automatiskt.</p>
           <div class="generator-grid">
@@ -1412,16 +2094,16 @@ class SharedToolbar extends HTMLElement {
             <p class="field-hint">Elityrket lägger automatiskt in sina krav och minst en elityrkesförmåga.</p>
           </div>
           <div class="confirm-row">
-            <button id="genCharCancel" class="char-btn danger">Avbryt</button>
-            <button id="genCharCreate" class="char-btn">Generera</button>
+            <button id="genCharCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="genCharCreate" class="db-btn">Generera</button>
           </div>
           <p id="genCharDataWarning" class="field-hint" hidden>Databasen laddas – vänta tills den är klar innan du genererar.</p>
         </div>
       </div>
 
       <!-- ---------- Popup Kopiera rollperson (med mappval) ---------- -->
-      <div id="dupCharPopup" class="popup">
-        <div class="popup-inner">
+      <div id="dupCharPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Kopiera rollperson</h3>
           <div class="filter-group">
             <label for="dupCharName">Namn på klonen:</label>
@@ -1432,15 +2114,15 @@ class SharedToolbar extends HTMLElement {
             <select id="dupCharFolder"></select>
           </div>
           <div class="confirm-row">
-            <button id="dupCharCancel" class="char-btn danger">Avbryt</button>
-            <button id="dupCharCreate" class="char-btn">Kopiera</button>
+            <button id="dupCharCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="dupCharCreate" class="db-btn">Kopiera</button>
           </div>
         </div>
       </div>
 
       <!-- ---------- Popup Byt namn (med mappval) ---------- -->
-      <div id="renameCharPopup" class="popup">
-        <div class="popup-inner">
+      <div id="renameCharPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Byt namn</h3>
           <div class="filter-group">
             <label for="renameCharName">Nytt namn:</label>
@@ -1451,189 +2133,78 @@ class SharedToolbar extends HTMLElement {
             <select id="renameCharFolder"></select>
           </div>
           <div class="confirm-row">
-            <button id="renameCharCancel" class="char-btn danger">Avbryt</button>
-            <button id="renameCharApply" class="char-btn">Spara</button>
+            <button id="renameCharCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="renameCharApply" class="db-btn">Spara</button>
           </div>
         </div>
       </div>
 
       <!-- ---------- Dialog Popup ---------- -->
-      <div id="dialogPopup" class="popup">
-        <div class="popup-inner">
+      <div id="dialogPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <p id="dialogMessage"></p>
           <div class="confirm-row">
-            <button id="dialogCancel" class="char-btn danger">Avbryt</button>
-            <button id="dialogOk" class="char-btn">OK</button>
-            <button id="dialogExtra" class="char-btn">Extra</button>
+            <button id="dialogCancel" class="db-btn db-btn--danger">Avbryt</button>
+            <button id="dialogOk" class="db-btn">OK</button>
+            <button id="dialogExtra" class="db-btn">Extra</button>
           </div>
         </div>
       </div>
 
       <!-- ---------- Hemlig Daniel-popup ---------- -->
-      <div id="danielPopup" class="popup">
-        <div class="popup-inner">
+      <div id="danielPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner">
           <h3>Vilken kille!</h3>
           <div class="confirm-row">
-            <button id="danielPopupClose" class="char-btn">Visst?!</button>
+            <button id="danielPopupClose" class="db-btn">Visst?!</button>
           </div>
         </div>
       </div>
 
       <!-- ---------- Hj\u00e4lp ---------- -->
-      <aside id="infoPanel" class="offcanvas">
+      <div id="infoPanel" class="db-drawer db-drawer--structured offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="infoPanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="infoPanelTitle">
         <header class="inv-header">
-          <h2>Hjälp</h2>
-          <button class="char-btn icon" data-close="infoPanel">✕</button>
+          <h2 id="infoPanelTitle">Hjälp</h2>
+          <button class="db-btn db-btn--icon" data-close="infoPanel">✕</button>
         </header>
-        <div class="help-content summary-content">
-          <section class="summary-section">
-            <h3>Kom igång</h3>
-            <ul class="summary-list">
-              <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
-              <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-              <li>Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Filter.</li>
-            </ul>
-          </section>
+        ${helpPanelHtml}
+        </aside>
+      </div>
 
-          <section class="summary-section">
-            <h3>Verktygsrad</h3>
-            <ul class="summary-list">
-              <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
-              <li>${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.</li>
-              <li>${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.</li>
-              <li>${icon('anteckningar')}: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-              <li>XP: Visar dina totala erfarenhetspoäng.</li>
-              <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
-              <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
-              <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Kortkommandon</h3>
-            <ul class="summary-list">
-              <li>Enter: Lägg till skriven term.</li>
-              <li>Esc: Stäng öppna paneler/popup (desktop).</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Filtermeny</h3>
-            <ul class="summary-list">
-              <li>Välj rollperson: Byter aktiv rollperson.</li>
-              <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
-              <li>Typ, Arketyp, Test: Filtrerar listor.</li>
-              <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
-              <li>Generera rollperson: Skapar en rollperson automatiskt.</li>
-              <li>PDF-bank: Öppnar samlingen med regel-PDF:er.</li>
-              <li>Uppdatera appen: Söker efter ny version och uppdaterar.</li>
-              <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
-              <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-              <li>${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
-              <li>${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-              <li>${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
-              <li>${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-              <li>${icon('adjust')} Manuella justeringar: Hantera egna modifieringar.</li>
-              <li>${icon('sort')} Sortering: Välj ordning för listor.</li>
-              <li>${icon('info')} Hjälp: Visar denna panel.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Inventarie</h3>
-            <ul class="summary-list">
-              <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
-              <li>▶/▼ Öppna eller kollapsa alla.</li>
-              <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
-              <li>🆕 Eget föremål. ${icon('basket', { className: 'title-icon', alt: 'Pengar' })} Pengar (Spara/Addera/Nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).</li>
-              <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
-              <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.</li>
-              <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
-              <li>Kategori: Filtrera på föremålstyp.</li>
-              <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Egenskaper</h3>
-            <ul class="summary-list">
-              <li>Ange total XP via ${icon('minus')}/${icon('plus')} eller genom att skriva värdet.</li>
-              <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
-              <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
-              <li>${icon('broom')} Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Rollperson</h3>
-            <ul class="summary-list">
-              <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
-              <li>${icon('effects')} Effekter: Öppnar aktiv effektöversikt.</li>
-              <li>${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Anteckningar</h3>
-            <ul class="summary-list">
-              <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
-              <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
-              <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
-              <li>${icon('index')}/${icon('character')} i sidhuvudet: Till index respektive rollperson.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Listor och rader</h3>
-            <ul class="summary-list">
-              <li>Lägg till / ${icon('plus')}: Lägg till posten. ${icon('minus')}: Minska antal eller ta bort.</li>
-              <li>Info: Visa detaljer.</li>
-              <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
-              <li>${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.</li>
-              <li>${icon('free')} Gör föremål gratis (Shift-klick tar bort gratis). ${(icon('active') || '💔')} Visa konflikter.</li>
-              <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
-              <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-              <li>${icon('remove')} Ta bort posten helt.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Tabeller</h3>
-            <ul class="summary-list">
-              <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
-              <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Tips</h3>
-            <ul class="summary-list">
-              <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
-              <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
-              <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
-              <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
-              <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Data & lagring</h3>
-            <ul class="summary-list">
-              <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
-              <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
-              <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Installera som webapp</h3>
-            <p>
-              Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
-              Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
-            </p>
-          </section>
+      <!-- ---------- Översikt (XP slide-in) ---------- -->
+      <div id="summarySlidePanel" class="db-drawer db-drawer--structured offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="summarySlidePanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="summarySlidePanelTitle">
+        <header class="inv-header">
+          <h2 id="summarySlidePanelTitle">Översikt</h2>
+          <div class="inv-actions">
+            <button class="db-btn db-btn--icon" data-close="summarySlidePanel">✕</button>
+          </div>
+        </header>
+        <div class="summary-slide-content summary-content">
+          <div id="summarySlideInner"></div>
         </div>
-      </aside>
+        </aside>
+      </div>
+
+      <!-- ---------- Inventarie Dashboard (KPI sidebar) ---------- -->
+      <div id="invDashPanel" class="db-drawer db-drawer--structured offcanvas inv-dash-drawer" data-touch-profile="panel-right" aria-hidden="true" inert>
+        <div class="db-drawer__overlay" data-close="invDashPanel"></div>
+        <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="invDashPanelTitle">
+        <header class="inv-header">
+          <h2 id="invDashPanelTitle">Inventarium</h2>
+          <div class="inv-actions">
+            <button class="db-btn db-btn--icon" data-close="invDashPanel" aria-label="Stäng inventarium">${icon('cross', { alt: '', width: 24, height: 24 }) || '✕'}</button>
+          </div>
+        </header>
+        <div class="inv-dash-panel-content">
+          <div id="invDashInner"></div>
+        </div>
+        </aside>
+      </div>
+
 
     `;
   }
@@ -1643,10 +2214,20 @@ class SharedToolbar extends HTMLElement {
     const $ = id => this.shadowRoot.getElementById(id);
     this.panels = {
       filterPanel: $('filterPanel'),
-      infoPanel  : $('infoPanel')
+      infoPanel: $('infoPanel'),
+      summarySlidePanel: $('summarySlidePanel'),
+      invDashPanel: $('invDashPanel')
     };
     this.entryViewToggle = $('entryViewToggle');
     this.filterCollapseBtn = $('collapseAllFilters');
+  }
+
+  bindPopupManager() {
+    const manager = window.popupManager;
+    if (!manager) return;
+    manager.observeRoot?.(this.shadowRoot);
+    const registrations = Object.entries(getPopupMetaById()).map(([id, meta]) => ({ id, ...meta }));
+    manager.registerMany?.(registrations);
   }
 
   collapseNonPersistentCards() {
@@ -1657,10 +2238,8 @@ class SharedToolbar extends HTMLElement {
       el.classList.add('compact');
       window.entryCardFactory?.syncCollapse?.(el);
     });
-    try {
-      localStorage.removeItem(FILTER_TOOLS_KEY);
-      localStorage.removeItem(FILTER_SETTINGS_KEY);
-    } catch {}
+    removeToolbarUiPref(FILTER_TOOLS_KEY);
+    removeToolbarUiPref(FILTER_SETTINGS_KEY);
   }
 
   restoreFilterCollapse() {
@@ -1669,25 +2248,89 @@ class SharedToolbar extends HTMLElement {
 
   updateFilterCollapseBtn() {
     if (!this.filterCollapseBtn) return;
-    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
+    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(#invSpendCard):not(.help-card)')];
     const allCollapsed = cards.every(c => c.classList.contains('compact'));
-    this.filterCollapseBtn.textContent = allCollapsed ? '▶' : '▼';
+    { const ci = this.filterCollapseBtn.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     this.filterCollapseBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
+  }
+
+  async ensureSummaryEffectsReady() {
+    if (window.summaryEffects?.renderSummaryHtml) {
+      return window.summaryEffects;
+    }
+    if (!this._summaryEffectsPromise) {
+      this._summaryEffectsPromise = (async () => {
+        if (typeof window.ensureRouteScripts === 'function') {
+          await window.ensureRouteScripts('traits');
+        } else if (typeof window.ensureScript === 'function') {
+          await window.ensureScript('js/summary-effects.js');
+        }
+        return window.summaryEffects || null;
+      })();
+    }
+    try {
+      return await this._summaryEffectsPromise;
+    } finally {
+      if (!window.summaryEffects?.renderSummaryHtml) {
+        this._summaryEffectsPromise = null;
+      }
+    }
+  }
+
+  async openSummarySlide() {
+    const panel = this.panels.summarySlidePanel;
+    const inner = this.shadowRoot.getElementById('summarySlideInner');
+    const toggleBtn = this.shadowRoot.getElementById('xpToggle');
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) {
+      this.close('summarySlidePanel');
+      return;
+    }
+
+    if (inner) {
+      inner.innerHTML = '<section class="summary-section"><ul class="summary-list summary-text"><li>Beräknar…</li></ul></section>';
+    }
+    this.toggle('summarySlidePanel', toggleBtn);
+
+    const previousDisabled = Boolean(toggleBtn?.disabled);
+    if (toggleBtn) toggleBtn.disabled = true;
+    try {
+      await this.ensureSummaryEffectsReady();
+      if (inner) {
+        inner.innerHTML = window.summaryEffects?.renderSummaryHtml?.()
+          || '<section class="summary-section"><ul class="summary-list summary-text"><li>Kunde inte visa översikten.</li></ul></section>';
+      }
+    } catch (error) {
+      console.error('Failed to load summary slide', error);
+      if (inner) {
+        inner.innerHTML = '<section class="summary-section"><ul class="summary-list summary-text"><li>Kunde inte ladda översikten.</li></ul></section>';
+      }
+      window.toast?.('Kunde inte öppna översikten.');
+    } finally {
+      if (toggleBtn) toggleBtn.disabled = previousDisabled;
+    }
   }
 
   /* ------------------------------------------------------- */
   handleClick(e) {
+    const closeTarget = e.target.closest('[data-close]');
+    if (closeTarget) {
+      this.close(closeTarget.dataset.close);
+      return;
+    }
+
     const btn = e.target.closest('button, a');
     if (!btn) {
       // Support toggling special cards in Filter via title click
       const title = e.target.closest('#filterPanel .card-title');
       if (title) {
-        const card = title.closest('.card');
+        const card = title.closest('.db-card');
         const key = FILTER_CARD_KEY_MAP[card?.id];
         if (card) {
           const isCompact = card.classList.toggle('compact');
           if (key && !NON_PERSISTENT_FILTER_CARDS.has(card.id)) {
-            localStorage.setItem(key, isCompact ? '0' : '1');
+            setToolbarUiPref(key, isCompact ? '0' : '1');
           }
           this.updateFilterCollapseBtn();
           window.entryCardFactory?.syncCollapse?.(card);
@@ -1696,12 +2339,29 @@ class SharedToolbar extends HTMLElement {
       return;
     }
 
-    /* öppna/stäng (toggle) */
-    if (btn.id === 'filterToggle') return this.toggle('filterPanel');
-    if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
-    /* stäng */
-    if (btn.dataset.close) return this.close(btn.dataset.close);
+    if (btn.classList.contains('summary-chip-btn')) {
+      e.preventDefault();
+      window.summaryEffects?.handleSummaryChipClick?.(btn);
+      return;
+    }
 
+    if (btn.dataset.action === 'open-defense-calc') {
+      e.preventDefault();
+      if (typeof window.openDefenseCalcPopup === 'function') {
+        window.openDefenseCalcPopup();
+      }
+      return;
+    }
+
+    /* öppna/stäng (toggle) */
+    if (btn.id === 'filterToggle') return this.toggle('filterPanel', btn);
+    if (btn.id === 'infoToggle') return this.toggle('infoPanel', btn);
+    if (btn.id === 'invDashToggle') return this.toggle('invDashPanel', btn);
+    if (btn.id === 'xpToggle') {
+      void this.openSummarySlide();
+      return;
+    }
+    /* stäng */
     if (btn.id === 'checkForUpdates') {
       if (typeof window.requestPwaUpdate !== 'function') {
         window.toast?.('Uppdateringsfunktionen är inte tillgänglig.');
@@ -1715,7 +2375,7 @@ class SharedToolbar extends HTMLElement {
         const queuePostUpdateSync = () => {
           try {
             sessionStorage.setItem('pwa-post-update-sync', '1');
-          } catch {}
+          } catch { }
         };
         btn.disabled = true;
         btn.textContent = 'Kontrollerar…';
@@ -1773,12 +2433,11 @@ class SharedToolbar extends HTMLElement {
             }
           }
 
-          if (shouldReloadNow) {
-            window.toast?.('Laddar om för att slutföra uppdateringen…');
-            setTimeout(() => {
-              try { window.location.reload(); } catch {}
-            }, 120);
-          }
+          // Always reload after "Uppdatera appen" to guarantee fresh content
+          window.toast?.('Laddar om…');
+          setTimeout(() => {
+            try { window.location.reload(); } catch { }
+          }, 120);
         } catch (error) {
           if (cacheTextTimer) {
             clearTimeout(cacheTextTimer);
@@ -1799,19 +2458,68 @@ class SharedToolbar extends HTMLElement {
       return;
     }
 
+    if (btn.id === 'offlineRulesBtn') {
+      if (!window.symbaroumOffline) {
+        window.toast?.('Offline-funktionen är inte tillgänglig.');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Förbereder offline…';
+      window.symbaroumOffline.retryRules()
+        .then(result => {
+          this.updateOfflineControls(result);
+          if (result?.ok) window.toast?.('Offline-reglerna är uppdaterade.');
+        })
+        .catch(error => {
+          console.error('Offline rules update failed', error);
+          this.updateOfflineControls({ status: 'error' });
+        })
+        .finally(() => {
+          const current = this.shadowRoot?.getElementById('offlineRulesBtn');
+          if (current && current.textContent === 'Förbereder offline…') {
+            current.disabled = false;
+            current.textContent = originalText;
+          }
+        });
+      return;
+    }
+
+    if (btn.id === 'clearOfflineDocuments') {
+      if (!window.symbaroumOffline || !window.confirm('Rensa alla PDF:er som har hämtats för offline-läsning?')) return;
+      const previousDocumentCount = this._offlineDocumentCount;
+      btn.disabled = true;
+      window.symbaroumOffline.clearDocuments()
+        .then(result => {
+          if (result?.ok) {
+            this.updateOfflineControls(result);
+            window.toast?.('Hämtade PDF:er har rensats.');
+          } else {
+            this.updateOfflineControls({ documents: previousDocumentCount });
+            window.toast?.('Kunde inte rensa hämtade PDF:er.');
+          }
+        })
+        .catch(error => {
+          console.error('Offline document cleanup failed', error);
+          this.updateOfflineControls({ documents: previousDocumentCount });
+          window.toast?.('Kunde inte rensa hämtade PDF:er.');
+        });
+      return;
+    }
+
     if (btn.id === 'collapseAllFilters') {
-      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
+      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .db-card:not(#searchFiltersCard):not(#invSpendCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
         const key = FILTER_CARD_KEY_MAP[c.id];
         if (key && !NON_PERSISTENT_FILTER_CARDS.has(c.id)) {
-          localStorage.setItem(key, c.classList.contains('compact') ? '0' : '1');
+          setToolbarUiPref(key, c.classList.contains('compact') ? '0' : '1');
         }
         window.entryCardFactory?.syncCollapse?.(c);
       });
       // Ensure non-collapsible cards remain open
-      const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, .help-card');
+      const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, #invSpendCard, .help-card');
       alwaysOpen.forEach(c => {
         c.classList.remove('compact');
         window.entryCardFactory?.syncCollapse?.(c);
@@ -1822,12 +2530,12 @@ class SharedToolbar extends HTMLElement {
 
     // Collapse/expand specialkorten i filterpanelen
     if (btn.classList.contains('collapse-btn')) {
-      const card = btn.closest('#filterPanel .card');
+      const card = btn.closest('#filterPanel .db-card');
       const key = FILTER_CARD_KEY_MAP[card?.id];
       if (card) {
         const isCompact = card.classList.toggle('compact');
         if (key && !NON_PERSISTENT_FILTER_CARDS.has(card.id)) {
-          localStorage.setItem(key, isCompact ? '0' : '1');
+          setToolbarUiPref(key, isCompact ? '0' : '1');
         }
         this.updateFilterCollapseBtn();
         window.entryCardFactory?.syncCollapse?.(card);
@@ -1896,7 +2604,7 @@ class SharedToolbar extends HTMLElement {
       });
     };
 
-    const toggleButtons = ['filterToggle','infoToggle']
+    const toggleButtons = ['filterToggle', 'infoToggle', 'xpToggle']
       .map(id => this.shadowRoot.getElementById(id))
       .filter(Boolean);
     const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
@@ -1904,7 +2612,7 @@ class SharedToolbar extends HTMLElement {
 
     // Hide search suggestions when clicking outside search UI
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
-    const sIn   = this.shadowRoot.getElementById('searchField');
+    const sIn = this.shadowRoot.getElementById('searchField');
     if (sugEl && !sugEl.hidden) {
       const insideSearch = containsInPath(sugEl) || containsInPath(sIn);
       if (!insideSearch) {
@@ -1912,17 +2620,53 @@ class SharedToolbar extends HTMLElement {
       }
     }
 
-    // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','driveStoragePopup','characterToolsPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
-    if (path.some(el => el && popups.includes(el.id))) return;
+    // Ignore clicks inside any overlay so panels stay open.
+    const hasOverlayInPath = path.some(el =>
+      el instanceof Element &&
+      (el.classList?.contains('popup') || el.classList?.contains('offcanvas'))
+    );
+    if (hasOverlayInPath) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
     if (openPanel && !containsInPath(openPanel)) {
-      openPanel.classList.remove('open');
+      this.setPanelState(openPanel, false);
     }
   }
 
-  toggle(id) {
+  setPanelState(panel, isOpen, trigger = null) {
+    if (!panel) return;
+    const surface = panel.querySelector('.db-drawer__panel') || panel;
+    const wasOpen = panel.classList.contains('open') || panel.getAttribute('aria-hidden') === 'false';
+    panel.classList.toggle('open', isOpen);
+    panel.classList.toggle('db-drawer--open', isOpen);
+    panel.setAttribute('aria-hidden', String(!isOpen));
+
+    if (isOpen) {
+      panel.removeAttribute('inert');
+      panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
+      window.registerOverlayCleanup?.(panel, () => this.setPanelState(panel, false));
+      surface.scrollTop = 0;
+      requestAnimationFrame(() => {
+        const focusTarget = surface.querySelector(
+          'button[data-close], [autofocus], button:not([disabled]), [href], input:not([disabled]), select:not([disabled])'
+        );
+        try { focusTarget?.focus?.({ preventScroll: true }); } catch { focusTarget?.focus?.(); }
+      });
+      return;
+    }
+
+    panel.setAttribute('inert', '');
+    window.registerOverlayCleanup?.(panel, null);
+    const restoreFocus = panel._restoreFocus;
+    panel._restoreFocus = null;
+    if (wasOpen && restoreFocus?.isConnected) {
+      requestAnimationFrame(() => {
+        try { restoreFocus.focus?.({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
+      });
+    }
+  }
+
+  toggle(id, trigger = null) {
     const panel = this.panels[id];
     if (!panel) return;
 
@@ -1930,8 +2674,8 @@ class SharedToolbar extends HTMLElement {
     // If we just toggled this panel <300ms ago, ignore this click.
     const now = Date.now();
     if (this._lastToggle && (now - this._lastToggle < 300)) {
-        console.log("🚫 Ghost click blocked.");
-        return;
+      console.log("🚫 Ghost click blocked.");
+      return;
     }
     this._lastToggle = now;
 
@@ -1940,7 +2684,7 @@ class SharedToolbar extends HTMLElement {
 
     // 3. SYNCHRONOUS CLOSE
     // Always close other panels immediately.
-    Object.values(this.panels).forEach(p => p.classList.remove('open'));
+    Object.values(this.panels).forEach(p => this.setPanelState(p, false));
 
     // 4. ASYNC OPEN
     // If we need to open, we WAIT 50ms.
@@ -1955,16 +2699,15 @@ class SharedToolbar extends HTMLElement {
         }
         this.updateFilterCollapseBtn();
       }
-      
+
       // The Magic Delay
       setTimeout(() => {
-          panel.classList.add('open');
-          panel.scrollTop = 0;
-      }, 50); 
+        this.setPanelState(panel, true, trigger);
+      }, 50);
     }
   }
-  open(id)  {
-    Object.values(this.panels).forEach(p=>p.classList.remove('open'));
+  open(id, trigger = null) {
+    Object.values(this.panels).forEach(p => this.setPanelState(p, false));
     const panel = this.panels[id];
     if (panel) {
       if (id === 'filterPanel') {
@@ -1975,11 +2718,52 @@ class SharedToolbar extends HTMLElement {
         }
         this.updateFilterCollapseBtn();
       }
-      panel.classList.add('open');
-      panel.scrollTop = 0;
+      this.setPanelState(panel, true, trigger);
     }
   }
-  close(id) { this.panels[id]?.classList.remove('open'); }
+  close(id) { this.setPanelState(this.panels[id], false); }
+
+  bindPerfHooks() {
+    const perf = window.symbaroumPerf;
+    if (!perf) return;
+    const targets = [
+      { id: 'traitsLink', targetRole: 'traits', targetPath: '#/traits' },
+      { id: 'inventoryLink', targetRole: 'inventory', targetPath: '#/inventory' },
+      { id: 'indexLink', targetRole: 'index', targetPath: '#/index' },
+      { id: 'characterLink', targetRole: 'character', targetPath: '#/character' }
+    ];
+    const isPrimaryNavigation = event => (
+      event.button === 0
+      && !event.metaKey
+      && !event.ctrlKey
+      && !event.shiftKey
+      && !event.altKey
+    );
+
+    targets.forEach(target => {
+      const link = this.shadowRoot.getElementById(target.id);
+      if (!link || link.dataset.perfBound === '1') return;
+      link.dataset.perfBound = '1';
+      link.addEventListener('click', event => {
+        if (!isPrimaryNavigation(event)) return;
+        if (link.getAttribute('aria-current') === 'page') return;
+        perf.queueNavigationScenario('route-change', {
+          source: 'toolbar',
+          linkId: target.id,
+          targetRole: target.targetRole,
+          targetPath: target.targetPath
+        });
+        if (target.id === 'inventoryLink') {
+          perf.queueNavigationScenario('open-inventory', {
+            source: 'toolbar',
+            linkId: target.id,
+            targetRole: 'inventory',
+            targetPath: '#/inventory'
+          });
+        }
+      });
+    });
+  }
 
   openDialog(message, opts = {}) {
     const {
@@ -1988,12 +2772,122 @@ class SharedToolbar extends HTMLElement {
       cancelText = 'Avbryt',
       extraText
     } = opts;
+
+    // Use DAUB-styled modal when available (body-appended, unified via popup manager)
+    if (typeof DAUB !== 'undefined') {
+      return this._openDaubDialog(message, { cancel, okText, cancelText, extraText });
+    }
+
+    // Fallback to legacy popup-manager approach
+    return this._openLegacyDialog(message, { cancel, okText, cancelText, extraText });
+  }
+
+  _openDaubDialog(message, { cancel, okText, cancelText, extraText }) {
+    const MODAL_ID = 'daub-dialog-modal';
     return new Promise(resolve => {
-      const pop      = this.shadowRoot.getElementById('dialogPopup');
-      const msgEl    = this.shadowRoot.getElementById('dialogMessage');
-      const okBtn    = this.shadowRoot.getElementById('dialogOk');
-      const cancelBtn= this.shadowRoot.getElementById('dialogCancel');
+      let settled = false;
+
+      // Build footer buttons
+      let footerHtml = '';
+      if (extraText) {
+        footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="extra">${extraText}</button>`;
+      }
+      footerHtml += `<button class="db-btn db-btn--primary" data-dialog-action="ok">${okText}</button>`;
+
+      // Ensure modal element exists
+      let overlay = document.getElementById(MODAL_ID);
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'db-modal-overlay popup';
+        overlay.id = MODAL_ID;
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = `<div class="db-modal">
+          <div class="db-modal__header">
+            <h2 class="db-modal__title">Symbapedia</h2>
+            <button class="db-modal__close" aria-label="Stäng">&times;</button>
+          </div>
+          <div class="db-modal__body"></div>
+          <div class="db-modal__footer"></div>
+        </div>`;
+        document.body.appendChild(overlay);
+        const popupMeta = {
+          type: 'dialog',
+          size: 'sm',
+          layoutFamily: 'modal',
+          mobileMode: 'sheet',
+          touchProfile: 'sheet-down'
+        };
+        window.popupUi?.normalizeModal?.(overlay, popupMeta);
+        window.popupManager?.register?.(overlay, popupMeta);
+      }
+
+      const modalEl = overlay.querySelector('.db-modal');
+      const bodyEl = overlay.querySelector('.db-modal__body') || (() => {
+        const el = document.createElement('div');
+        el.className = 'db-modal__body popup-modal-body';
+        modalEl?.appendChild(el);
+        return el;
+      })();
+      const footerEl = overlay.querySelector('.db-modal__footer') || (() => {
+        const el = document.createElement('div');
+        el.className = 'db-modal__footer popup-modal-footer';
+        modalEl?.appendChild(el);
+        return el;
+      })();
+      bodyEl.textContent = message;
+      footerEl.innerHTML = footerHtml;
+      footerEl.hidden = !footerHtml.trim();
+
+      let pendingResult = false;
+      const popupManager = window.popupManager;
+
+      const cleanup = () => {
+        footerEl.removeEventListener('click', onClick);
+      };
+
+      const finish = res => {
+        if (settled) return;
+        settled = true;
+        pendingResult = res;
+        if (popupManager?.close && overlay.id) {
+          popupManager.close(overlay, 'programmatic');
+          return;
+        }
+        overlay.classList.remove('open');
+        cleanup();
+        resolve(res);
+      };
+
+      const onManagerClose = () => {
+        cleanup();
+        resolve(pendingResult);
+      };
+
+      const onClick = e => {
+        const btn = e.target.closest('[data-dialog-action]');
+        if (!btn) return;
+        const action = btn.dataset.dialogAction;
+        if (action === 'ok') finish(true);
+        else if (action === 'extra') finish('extra');
+      };
+      footerEl.addEventListener('click', onClick);
+
+      if (popupManager?.open && overlay.id) {
+        popupManager.open(overlay, { type: 'dialog', onClose: onManagerClose });
+      } else {
+        overlay.classList.add('open');
+      }
+    });
+  }
+
+  _openLegacyDialog(message, { cancel, okText, cancelText, extraText }) {
+    return new Promise(resolve => {
+      const pop = this.shadowRoot.getElementById('dialogPopup');
+      const msgEl = this.shadowRoot.getElementById('dialogMessage');
+      const okBtn = this.shadowRoot.getElementById('dialogOk');
+      const cancelBtn = this.shadowRoot.getElementById('dialogCancel');
       const extraBtn = this.shadowRoot.getElementById('dialogExtra');
+      const popupManager = window.popupManager;
       msgEl.textContent = message;
       cancelBtn.style.display = cancel ? '' : 'none';
       okBtn.textContent = okText;
@@ -2004,22 +2898,44 @@ class SharedToolbar extends HTMLElement {
       } else {
         extraBtn.style.display = 'none';
       }
-      pop.classList.add('open');
       pop.querySelector('.popup-inner').scrollTop = 0;
-      const close = res => {
-        pop.classList.remove('open');
+      let settled = false;
+      let pendingResult = false;
+      const finish = res => {
+        if (settled) return;
+        settled = true;
+        resolve(res);
+      };
+      const cleanup = () => {
         okBtn.removeEventListener('click', onOk);
         cancelBtn.removeEventListener('click', onCancel);
         extraBtn.removeEventListener('click', onExtra);
         pop.removeEventListener('click', onOutside);
-        resolve(res);
       };
-      const onOk = () => close(true);
-      const onCancel = () => close(false);
-      const onExtra = () => close('extra');
+      const close = (res, reason = 'programmatic') => {
+        pendingResult = res;
+        if (popupManager?.close && pop.id) {
+          popupManager.close(pop, reason);
+          return;
+        }
+        pop.classList.remove('open');
+        cleanup();
+        finish(res);
+      };
+      const onOk = () => close(true, 'ok');
+      const onCancel = () => close(false, 'cancel');
+      const onExtra = () => close('extra', 'extra');
       const onOutside = e => {
-        if (!pop.querySelector('.popup-inner').contains(e.target)) close(false);
+        if (!pop.querySelector('.popup-inner').contains(e.target)) close(false, 'backdrop');
       };
+      const onManagerClose = () => {
+        cleanup();
+        finish(pendingResult);
+      };
+
+      if (popupManager?.open && pop.id) popupManager.open(pop, { type: 'dialog', onClose: onManagerClose });
+      else pop.classList.add('open');
+
       okBtn.addEventListener('click', onOk);
       cancelBtn.addEventListener('click', onCancel);
       extraBtn.addEventListener('click', onExtra);
@@ -2036,14 +2952,36 @@ class SharedToolbar extends HTMLElement {
       const act = Array.isArray(activeRoles) ? activeRoles : [activeRoles];
       const isActive = act.includes(role);
       link.classList.toggle('active', isActive);
+      link.classList.toggle('db-bottom-nav__item--active', isActive);
       if (isActive) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     };
 
-    setLinkState('traitsLink', 'traits.html', ['traits','summary','effects']);
-    setLinkState('inventoryLink', 'inventory.html', ['inventory']);
-    setLinkState('indexLink', 'index.html', ['index']);
-    setLinkState('characterLink', 'character.html', ['character', 'notes']);
+    setLinkState('traitsLink', '#/traits', ['traits', 'summary', 'effects']);
+    setLinkState('inventoryLink', '#/inventory', ['inventory']);
+    setLinkState('indexLink', '#/index', ['index']);
+    setLinkState('characterLink', '#/character', ['character', 'notes']);
+
+    // Swap searchFilters ↔ snabbspendera card based on inventory view
+    const searchCard = this.shadowRoot.getElementById('searchFiltersCard');
+    const spendCard = this.shadowRoot.getElementById('invSpendCard');
+    if (searchCard) searchCard.hidden = role === 'inventory';
+    if (spendCard) spendCard.hidden = role !== 'inventory';
+
+    // Close inventory panels when leaving inventory view
+    if (role !== 'inventory') {
+      this.close('invDashPanel');
+    }
+  }
+
+  updateInvDash(html) {
+    const el = this.shadowRoot.getElementById('invDashInner');
+    if (el) el.innerHTML = html;
+  }
+
+  updateInvSpend(html) {
+    const el = this.shadowRoot.getElementById('invSpendInner');
+    if (el) el.innerHTML = html;
   }
 }
 

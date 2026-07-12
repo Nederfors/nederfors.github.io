@@ -1,9 +1,10 @@
 (function(window){
-  const LVL = ['Novis','Gesäll','Mästare'];
+  const LVL = ['Novis', 'Gesäll', 'Mästare', 'Enkel', 'Ordinär', 'Avancerad'];
   const EFFECT_SECTION_LABELS = new Map([
     ['Fördel', 'Fördelar'],
     ['Nackdel', 'Nackdelar'],
     ['Förmåga', 'Förmågor'],
+    ['Basförmåga', 'Förmågor'],
     ['Mystisk kraft', 'Mystiska krafter'],
     ['Ritual', 'Ritualer'],
     ['Särdrag', 'Särdrag'],
@@ -13,6 +14,8 @@
     ['Ras', 'Raser'],
     ['Artefakt', 'Artefakter'],
     ['Lägre Artefakt', 'Lägre artefakter'],
+    ['Närstridsvapen', 'Vapen'],
+    ['Avståndsvapen', 'Vapen'],
     ['Vapen', 'Vapen'],
     ['Rustning', 'Rustningar'],
     ['Sköld', 'Sköldar'],
@@ -79,12 +82,52 @@
     summaryRenderer: null,
     effectsRenderer: null
   };
+  const TRAITS_TAB_ORDER = ['traits', 'summary', 'effects'];
+  const TRAITS_SWIPE_KEY = 'traits-tabs';
+  const TRAITS_TABS = Object.freeze({
+    traits: {
+      label: 'Karaktärsdrag',
+      tabId: 'traitsTabTraits',
+      panelId: 'traitsTabPanel'
+    },
+    summary: {
+      label: 'Översikt',
+      tabId: 'traitsTabSummary',
+      panelId: 'summaryTabPanel'
+    },
+    effects: {
+      label: 'Effekter',
+      tabId: 'traitsTabEffects',
+      panelId: 'effectsTabPanel'
+    }
+  });
 
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[ch]));
 
-  const abilityDisplayName = (entry) => {
+  const getEntryChoiceDisplay = (entry, context = {}) => {
+    if (typeof window.rulesHelper?.getEntryChoiceDisplay !== 'function') return null;
+    try {
+      return window.rulesHelper.getEntryChoiceDisplay(entry, context) || null;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const abilityDisplayName = (entry, context = {}) => {
+    if (typeof window.rulesHelper?.formatEntryDisplayName === 'function') {
+      try {
+        const formatted = window.rulesHelper.formatEntryDisplayName(entry, {
+          ...context,
+          includeChoice: true,
+          includeLevel: true
+        });
+        if (formatted) return formatted;
+      } catch (_) {
+        // Fall back to legacy display formatting below.
+      }
+    }
     const base = entry?.namn ? String(entry.namn).trim() : 'Okänd post';
     const parts = [];
     if (entry?.trait) parts.push(String(entry.trait).trim());
@@ -218,8 +261,9 @@
       return sections.get(key);
     };
 
+    const currentEntries = storeHelper.getCurrentList(store) || [];
     const abilityMap = new Map();
-    (storeHelper.getCurrentList(store) || [])
+    currentEntries
       .filter(entry => !window.isInv?.(entry))
       .forEach(entry => {
         const baseEntry = resolveDbEntry(entry);
@@ -237,7 +281,17 @@
         if (baseEntry?.id !== undefined) keyParts.push(`id:${baseEntry.id}`);
         else if (entry?.id !== undefined) keyParts.push(`id:${entry.id}`);
         else if (entry?.namn) keyParts.push(`name:${entry.namn}`);
-        if (entry?.trait) keyParts.push(`trait:${entry.trait}`);
+        const choiceMeta = getEntryChoiceDisplay(entry, {
+          list: currentEntries,
+          sourceEntry: baseEntry || entry,
+          level: entry?.nivå || ''
+        });
+        if (choiceMeta?.field) {
+          const choiceValueKey = String(choiceMeta.value ?? '').trim().toLowerCase();
+          keyParts.push(`choice:${choiceMeta.field}:${choiceValueKey}`);
+        } else if (entry?.trait) {
+          keyParts.push(`trait:${entry.trait}`);
+        }
         if (entry?.nivå) keyParts.push(`lvl:${entry.nivå}`);
         if (!keyParts.length) keyParts.push(`name:${baseName}`);
         const key = keyParts.join('|');
@@ -245,7 +299,11 @@
         if (!bucket) {
           bucket = {
             section,
-            label: abilityDisplayName(entry),
+            label: abilityDisplayName(entry, {
+              list: currentEntries,
+              sourceEntry: baseEntry || entry,
+              level: entry?.nivå || ''
+            }),
             baseName,
             count: 0,
             effects
@@ -396,11 +454,19 @@
   const gatherEntries = (types, options = {}) => {
     const wanted = Array.isArray(types) ? types : [types];
     const { annotateMultiples = false, multipleThreshold = 2 } = options;
+    const matchesType = (entryTypes, type) => {
+      if (entryTypes.includes(type)) return true;
+      return type === 'Förmåga' && entryTypes.includes('Basförmåga');
+    };
     const counts = new Map();
-    (storeHelper.getCurrentList(store) || []).forEach(entry => {
+    const activeList = storeHelper.getCurrentList(store) || [];
+    activeList.forEach(entry => {
       const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
-      if (!wanted.some(type => entryTypes.includes(type))) return;
-      const display = abilityDisplayName(entry);
+      if (!wanted.some(type => matchesType(entryTypes, type))) return;
+      const display = abilityDisplayName(entry, {
+        list: activeList,
+        level: entry?.nivå || ''
+      });
       if (!display) return;
       const key = display.toLocaleLowerCase('sv');
       const existing = counts.get(key);
@@ -440,6 +506,9 @@
       xp: (artifactEffects.xp || 0) + (manualAdjust.xp || 0),
       corruption: (artifactEffects.corruption || 0) + (manualAdjust.corruption || 0)
     };
+    const artifactToughness = Number(artifactEffects.toughness || 0);
+    const artifactPain = Number(artifactEffects.pain || 0);
+    const artifactCapacity = Number(artifactEffects.capacity || 0);
     const manualToughness = Number(manualAdjust.toughness || 0);
     const manualPain = Number(manualAdjust.pain || 0);
     const manualCapacity = Number(manualAdjust.capacity || 0);
@@ -472,34 +541,21 @@
 
     const valStark = vals['Stark'];
     const valWill = vals['Viljestark'];
-    const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
-    const strongGift = strongGiftLevel >= 1;
-    const hasSjalastark = list.some(p=>p.namn==='Själastark');
-    const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
-    const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
-    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
-    const hasEarth = list.some(p=>p.namn==='Jordnära');
-    const baseMax = strongGift ? valWill + 5 : valWill;
-    const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
-    const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-    let thresh = threshBase + resistCount - sensCount;
-    const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
-    let perm = hasEarth ? (permBase % 2) : permBase;
-    perm += darkPerm;
-    const effectsWithDark = {
-      xp: combinedEffects.xp || 0,
-      corruption: (combinedEffects.corruption || 0) + darkPerm
+    const corruptionStats = storeHelper.calcCorruptionTrackStats(list, valWill);
+    const maxCor = corruptionStats.styggelsetroskel;
+    const thresh = corruptionStats.korruptionstroskel;
+    const corruptionEffects = {
+      ...combinedEffects,
+      korruptionstroskel: thresh
     };
+    const perm = storeHelper.calcPermanentCorruption(list, corruptionEffects);
+    const effectsWithDark = corruptionEffects;
 
-    const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
-    const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
-    const capacity = storeHelper.calcCarryCapacity(valStark, list) + manualCapacity;
-    const hardy = hasHardnackad ? 1 : 0;
-    const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
-    const tal = talBase + hardy + manualToughness;
-    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
+    const capacity = storeHelper.calcCarryCapacity(valStark, list) + artifactCapacity + manualCapacity;
+    const tal = storeHelper.calcToughness(valStark, list) + artifactToughness + manualToughness;
+    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + artifactPain + manualPain;
 
-    const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list) : 'Kvick';
+    const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list, vals) : 'Kvick';
     const kvickForDef = vals[defTrait];
     const defenseList = window.calcDefense ? calcDefense(kvickForDef, { mode: 'standard' }) : [];
     const defenseEntries = (Array.isArray(defenseList) ? defenseList : [])
@@ -530,42 +586,34 @@
     const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
       ? storeHelper.getDefenseSetup(store)
       : null;
-    const defenseActionBtn = `<button type="button" class="char-btn icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Beräkna försvar</span></button>`;
+    const combatActionBtn = `<button type="button" class="db-btn db-btn--icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Utrustning & strid</span></button>`;
+    const accuracyPreview = typeof window.getAccuracyPreview === 'function'
+      ? window.getAccuracyPreview({ list, inv, traitValues: vals })
+      : {
+          entries: (typeof window.calcAccuracy === 'function'
+            ? window.calcAccuracy({ list, inv, traitValues: vals })
+            : []),
+          value: Number.NEGATIVE_INFINITY
+        };
+    const accuracyEntries = (Array.isArray(accuracyPreview?.entries) ? accuracyPreview.entries : [])
+      .map(entry => {
+        if (!entry || typeof entry !== 'object') return null;
+        const name = typeof entry.name === 'string' ? entry.name.trim() : '';
+        const trait = typeof entry.trait === 'string' ? entry.trait.trim() : '';
+        const value = Number(entry.value);
+        if (!Number.isFinite(value)) return null;
+        return { name, trait, value };
+      })
+      .filter(Boolean);
+    const highestAccuracy = accuracyEntries.reduce((max, entry) => Math.max(max, entry.value), Number.NEGATIVE_INFINITY);
 
     const cond = [];
-    if(storeHelper.abilityLevel(list,'Fint') >= 1){
-      cond.push('Diskret som träffsäker för kort eller precist vapen i närstrid');
-    }
-    if(storeHelper.abilityLevel(list,'Lönnstöt') >= 1){
-      cond.push('Diskret som träffsäker vid attacker med Övertag');
-    }
-    if(storeHelper.abilityLevel(list,'Knivgöra') >= 1){
-      cond.push('Kvick som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
-    }
-    if(storeHelper.abilityLevel(list,'Koreograferad strid') >= 1){
-      cond.push('Kvick som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
-    }
-    if(storeHelper.abilityLevel(list,'Spjutdans') >= 1){
-      cond.push('Kvick som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
-    }
-    if(storeHelper.abilityLevel(list,'Taktiker') >= 3){
-      cond.push('Listig som träffsäker för allt utom tunga vapen');
-    }
-    const sjatte = Math.max(
-      storeHelper.abilityLevel(list,'Sjätte Sinne'),
-      storeHelper.abilityLevel(list,'Sjätte sinne')
-    );
-    if(sjatte >= 1){
-      cond.push('Vaksam som träffsäker för avståndsattacker');
-    }
-    if(storeHelper.abilityLevel(list,'Järnnäve') >= 1){
-      cond.push('Stark som träffsäker för närstridsattacker');
-    }
-    if(storeHelper.abilityLevel(list,'Dominera') >= 1){
-      cond.push('Övertygande som träffsäker för närstridsattacker');
-    }
-    if(storeHelper.abilityLevel(list,'Ledare') >= 1){
-      cond.push('Övertygande istället för Viljestark vid mystiska förmågor och ritualer');
+    if (typeof window.getAttackTraitRuleNotes === 'function') {
+      window.getAttackTraitRuleNotes(list).forEach(note => {
+        if (typeof note?.summaryText === 'string' && note.summaryText.trim()) {
+          cond.push(note.summaryText.trim());
+        }
+      });
     }
     if(!cond.length) cond.push('Inga särskilda ersättningar');
 
@@ -639,13 +687,64 @@
       });
     }
 
+    const corruptionItems = [
+      { label: 'Maximal korruption', value: formatNumber(maxCor) },
+      { label: 'Permanent korruption', value: formatNumber(perm) },
+      { label: 'Korruptionströskel', value: formatNumber(thresh) }
+    ];
     summarySections.push({
-      title: 'Karaktärsdrag',
-      items: KEYS.map(key => ({
-        label: key,
-        value: formatNumber(vals[key] || 0)
-      })),
-      layout: 'grid'
+      title: 'Korruption',
+      items: corruptionItems
+    });
+
+    summarySections.push({
+      title: 'Hälsa',
+      items: [
+        { label: 'Tålighet', value: formatNumber(tal) },
+        { label: 'Smärtgräns', value: formatNumber(pain) },
+        { label: 'Bärkapacitet', value: formatNumber(capacity, { decimals: 2 }) }
+      ]
+    });
+
+    summarySections.push({
+      title: 'Försvar',
+      layout: 'grid',
+      action: combatActionBtn,
+      items: [
+        { label: 'Försvar', value: defenseDisplayValue },
+        { label: 'Försvarstärning', value: defTrait },
+        ...(Number.isFinite(dancingPrimary) && dancingPrimary > Number.NEGATIVE_INFINITY
+          ? [{ label: 'Försvar (Dansande v.)', value: formatNumber(dancingPrimary) }]
+          : [])
+      ]
+    });
+
+    const accuracyItems = [];
+    if (Number.isFinite(highestAccuracy) && highestAccuracy > Number.NEGATIVE_INFINITY) {
+      accuracyItems.push({ label: 'Träffsäkerhet', value: formatNumber(highestAccuracy) });
+    }
+    accuracyEntries.forEach(entry => {
+      const baseLabel = entry.name ? `Träffsäker (${entry.name})` : 'Träffsäker';
+      const traitSuffix = entry.trait ? ` [${entry.trait}]` : '';
+      accuracyItems.push({
+        label: `${baseLabel}${traitSuffix}`,
+        value: formatNumber(entry.value)
+      });
+    });
+    cond.forEach(text => accuracyItems.push({ text }));
+    summarySections.push({
+      title: 'Träffsäkerhet',
+      layout: 'block',
+      action: combatActionBtn,
+      items: accuracyItems
+    });
+
+    summarySections.push({
+      title: 'Ekonomi',
+      items: [
+        { label: 'Totalt innehav', value: moneyToString(totalMoney) },
+        { label: 'Oanvänt kapital', value: unusedText, valueClass: unusedNegative ? 'neg' : '' }
+      ]
     });
 
     const xpItems = [
@@ -660,43 +759,12 @@
     });
 
     summarySections.push({
-      title: 'Försvar',
-      layout: 'grid',
-      action: defenseActionBtn,
-      items: [
-        { label: 'Försvar', value: defenseDisplayValue },
-        { label: 'Försvarstärning', value: defTrait },
-        ...(Number.isFinite(dancingPrimary) && dancingPrimary > Number.NEGATIVE_INFINITY
-          ? [{ label: 'Försvar (Dansande v.)', value: formatNumber(dancingPrimary) }]
-          : [])
-      ]
-    });
-
-    summarySections.push({
-      title: 'Hälsa',
-      items: [
-        { label: 'Tålighet', value: formatNumber(tal) },
-        { label: 'Smärtgräns', value: formatNumber(pain) },
-        { label: 'Bärkapacitet', value: formatNumber(capacity, { decimals: 2 }) }
-      ]
-    });
-
-    const corruptionItems = [
-      { label: 'Maximal korruption', value: formatNumber(maxCor) },
-      { label: 'Permanent korruption', value: formatNumber(perm) },
-      { label: 'Korruptionströskel', value: formatNumber(thresh) }
-    ];
-    summarySections.push({
-      title: 'Korruption',
-      items: corruptionItems
-    });
-
-    summarySections.push({
-      title: 'Ekonomi',
-      items: [
-        { label: 'Totalt innehav', value: moneyToString(totalMoney) },
-        { label: 'Oanvänt kapital', value: unusedText, valueClass: unusedNegative ? 'neg' : '' }
-      ]
+      title: 'Karaktärsdrag',
+      items: KEYS.map(key => ({
+        label: key,
+        value: formatNumber(vals[key] || 0)
+      })),
+      layout: 'grid'
     });
 
     const categorySections = [
@@ -720,12 +788,6 @@
         layout: 'stack',
         items: [row]
       });
-    });
-
-    summarySections.push({
-      title: 'Träffsäkerhet',
-      layout: 'block',
-      items: cond.map(text => ({ text }))
     });
 
     const sectionsHtml = summarySections.map(section => {
@@ -801,21 +863,35 @@
       ...(entry?.taggar?.typ || [])
     ].filter(Boolean));
     typeSet.forEach(t => {
-      tags.push(`<span class="tag filter-tag" data-section="typ" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
+      tags.push(`<span class="db-chip filter-tag" data-section="typ" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
     });
     const arkBase = explodeTags(baseEntry?.taggar?.ark_trad);
     const arkEntry = explodeTags(entry?.taggar?.ark_trad);
     const arkSet = new Set([...arkBase, ...arkEntry].filter(Boolean));
     arkSet.forEach(t => {
       if (t === 'Traditionslös') return;
-      tags.push(`<span class="tag filter-tag" data-section="ark" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
+      tags.push(`<span class="db-chip filter-tag" data-section="ark" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
     });
+    const readTests = (src, level) => {
+      if (!src) return [];
+      if (typeof window.getEntryTestTags === 'function') {
+        return window.getEntryTestTags(src, { level });
+      }
+      const tags = src.taggar || {};
+      const lvlData = tags.nivå_data || tags.niva_data || {};
+      const normalizedLevel = String(level || '').trim();
+      if (normalizedLevel && Array.isArray(lvlData[normalizedLevel]?.test)) {
+        return lvlData[normalizedLevel].test;
+      }
+      if (Array.isArray(lvlData.Enkel?.test)) return lvlData.Enkel.test;
+      return Array.isArray(tags.test) ? tags.test : [];
+    };
     const testSet = new Set([
-      ...(baseEntry?.taggar?.test || []),
-      ...(entry?.taggar?.test || [])
+      ...readTests(baseEntry, entry?.nivå || baseEntry?.nivå),
+      ...readTests(entry, entry?.nivå)
     ].filter(Boolean));
     testSet.forEach(t => {
-      tags.push(`<span class="tag filter-tag" data-section="test" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
+      tags.push(`<span class="db-chip filter-tag" data-section="test" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
     });
     return tags.join(' ');
   };
@@ -827,12 +903,17 @@
     const merged = { ...baseEntry, ...entry };
 
     const infoMeta = [];
-    if (merged.trait) {
-      const label = merged.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
-      infoMeta.push({ label, value: escapeHtml(merged.trait) });
-    }
-    if (merged.race) {
-      infoMeta.push({ label: 'Ras', value: escapeHtml(merged.race) });
+    const keyInfoMeta = [];
+    const choiceMeta = getEntryChoiceDisplay(merged, {
+      list,
+      sourceEntry: baseEntry,
+      level: merged?.nivå || entry?.nivå || ''
+    });
+    if (choiceMeta?.valueLabel) {
+      keyInfoMeta.push({
+        label: escapeHtml(choiceMeta.label || 'Val'),
+        value: escapeHtml(choiceMeta.valueLabel)
+      });
     }
 
     const xpRaw = storeHelper.calcEntryXP(entry, list);
@@ -845,18 +926,50 @@
       xpText = entry.xp;
     }
     const xpTag = xpText !== undefined && xpText !== null && xpText !== ''
-      ? `<span class="tag xp-cost">Erf: ${escapeHtml(String(xpText))}</span>`
+      ? `<span class="db-chip xp-cost">Erf: ${escapeHtml(String(xpText))}</span>`
       : '';
 
     const bodyHtml = window.abilityHtml ? abilityHtml(merged, entry.nivå) : escapeHtml(merged.beskrivning || '');
     const tagsHtml = buildInfoTags(entry, baseEntry, xpTag);
     const html = buildInfoPanelHtml({
       tagsHtml,
+      keyInfoMeta,
       bodyHtml,
       meta: infoMeta
     });
-    const title = abilityDisplayName(entry) || fallbackName || entry.namn || baseEntry?.namn || '';
+    const title = abilityDisplayName(entry, { list }) || fallbackName || entry.namn || baseEntry?.namn || '';
     window.yrkePanel?.open(title, html);
+  };
+
+  const handleSummaryChipClick = (button) => {
+    const btn = button?.closest?.('.summary-chip-btn') || button;
+    if (!btn || !btn.dataset) return false;
+    const data = btn.dataset || {};
+    const list = storeHelper.getCurrentList(store) || [];
+    let match = null;
+    const id = data.entryId ? String(data.entryId) : '';
+    if (id) match = list.find(item => String(item.id) === id);
+    if (!match) {
+      const name = data.entryName ? String(data.entryName) : '';
+      const trait = data.entryTrait ? String(data.entryTrait) : '';
+      const level = data.entryLevel ? String(data.entryLevel) : '';
+      match = list.find(item => {
+        if (name && String(item.namn) !== name) return false;
+        if (trait && String(item.trait || '') !== trait) return false;
+        if (level && String(item.nivå || '') !== level) return false;
+        return true;
+      });
+      if (!match && (name || id)) {
+        const fallback = resolveDbEntry({ id: id || undefined, name }) || null;
+        if (fallback) {
+          match = { ...fallback };
+          if (trait) match.trait = trait;
+          if (level) match.nivå = level;
+        }
+      }
+    }
+    openSummaryEntryInfo(match, data.entryName || '');
+    return Boolean(match);
   };
 
   const renderSummaryInto = (container) => {
@@ -869,41 +982,148 @@
     container.innerHTML = renderEffectsHtml();
   };
 
+  const getTraitsTabFromHash = (hash = window.location.hash) => {
+    const raw = String(hash || '').replace(/^#\/?/, '').trim().toLowerCase();
+    if (!raw || raw === 'tab-traits' || raw === 'traits' || raw === 'karaktarsdrag' || raw === 'karaktärsdrag') {
+      return 'traits';
+    }
+    if (raw === 'tab-summary' || raw === 'summary' || raw === 'overview' || raw === 'oversikt' || raw === 'översikt') {
+      return 'summary';
+    }
+    if (raw === 'tab-effects' || raw === 'effects' || raw === 'effekter') {
+      return 'effects';
+    }
+    return 'traits';
+  };
+
+  const getHashForTraitsTab = (name) => {
+    if (name === 'summary') return '#/summary';
+    if (name === 'effects') return '#/effects';
+    return '#/traits';
+  };
+
+  const setTraitsViewTitle = (label) => {
+    const titleEl = document.getElementById('traitsViewTitle');
+    if (titleEl) titleEl.textContent = label || TRAITS_TABS.traits.label;
+    if (document.body?.dataset?.role !== 'traits') return;
+    document.title = label && label !== TRAITS_TABS.traits.label
+      ? `Symbapedia - Egenskaper - ${label}`
+      : 'Symbapedia - Egenskaper';
+  };
+
+  const getTraitsPanelsHost = () => document.querySelector('.traits-tab-panels');
+
+  const syncTraitsSwipeTabs = (activeTab = 'traits') => {
+    const host = getTraitsPanelsHost();
+    if (!host || !window.daubMotion) return false;
+    if (!window.daubMotion.isTouchUi?.()) {
+      host.removeAttribute('data-swipe-tabs');
+      window.daubMotion.destroySwipeTabs?.(TRAITS_SWIPE_KEY);
+      return false;
+    }
+    window.daubMotion.bindSwipeTabs?.(TRAITS_SWIPE_KEY, {
+      host,
+      selector: '.traits-tab-panel',
+      initialIndex: Math.max(0, TRAITS_TAB_ORDER.indexOf(activeTab)),
+      onIndexChange(index) {
+        const nextTab = TRAITS_TAB_ORDER[index] || 'traits';
+        activateTraitsTab(nextTab, { syncTouch: false, focusTab: false });
+      }
+    });
+    return true;
+  };
+
+  const activateTraitsTab = (name, options = {}) => {
+    const tabName = Object.prototype.hasOwnProperty.call(TRAITS_TABS, name) ? name : 'traits';
+    const { updateHash = true, focusTab = false, syncTouch = true } = options;
+    const host = getTraitsPanelsHost();
+    const touchTabsActive = Boolean(
+      host?.dataset?.swipeTabs === '1'
+      && window.daubMotion?.hasSwipeTabs?.(TRAITS_SWIPE_KEY)
+    );
+
+    Object.entries(TRAITS_TABS).forEach(([key, config]) => {
+      const tab = document.getElementById(config.tabId);
+      const panel = document.getElementById(config.panelId);
+      const isActive = key === tabName;
+      if (tab) {
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        tab.tabIndex = isActive ? 0 : -1;
+        if (isActive) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+        if (isActive && focusTab) {
+          try { tab.focus(); } catch {}
+        }
+      }
+      if (panel) {
+        panel.classList.toggle('active', isActive);
+        panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        if (touchTabsActive) {
+          panel.removeAttribute('hidden');
+        } else if (isActive) {
+          panel.removeAttribute('hidden');
+        } else {
+          panel.setAttribute('hidden', '');
+        }
+      }
+    });
+
+    setTraitsViewTitle(TRAITS_TABS[tabName].label);
+
+    if (syncTouch && touchTabsActive) {
+      window.daubMotion.slideTabsTo?.(
+        TRAITS_SWIPE_KEY,
+        Math.max(0, TRAITS_TAB_ORDER.indexOf(tabName)),
+        { animate: true }
+      );
+    }
+
+    if (updateHash) {
+      const nextHash = getHashForTraitsTab(tabName);
+      if (window.location.hash !== nextHash) {
+        try {
+          window.history.replaceState(window.history.state, '', nextHash);
+        } catch {
+          window.location.hash = nextHash;
+        }
+      }
+    }
+    return tabName;
+  };
+
+  const bindTraitsTabs = () => {
+    const nav = document.querySelector('.traits-tabs');
+    if (!nav || nav.dataset.bound === '1') return;
+    nav.dataset.bound = '1';
+    nav.addEventListener('click', event => {
+      const tab = event.target.closest('[data-traits-tab]');
+      if (!tab) return;
+      event.preventDefault();
+      activateTraitsTab(tab.dataset.traitsTab || 'traits');
+    });
+    window.addEventListener('hashchange', () => {
+      // Only respond to tab changes when traits view is active
+      if (document.body.dataset.role !== 'traits') return;
+      activateTraitsTab(getTraitsTabFromHash(), { updateHash: false });
+    });
+  };
+
   const initSummaryPage = () => {
     const container = document.getElementById('summaryContent');
     if (!container) return;
     const render = () => renderSummaryInto(container);
     EFFECT_STATE.summaryRenderer = render;
-    window.refreshSummaryPage = () => EFFECT_STATE.summaryRenderer && EFFECT_STATE.summaryRenderer();
+    window.symbaroumViewBridge?.registerViewHooks('traits', {
+      refreshSummary: () => EFFECT_STATE.summaryRenderer && EFFECT_STATE.summaryRenderer()
+    });
     render();
+    if (container.dataset.bound === '1') return;
+    container.dataset.bound = '1';
     container.addEventListener('click', e => {
       const btn = e.target.closest('.summary-chip-btn');
       if (!btn) return;
-      const data = btn.dataset || {};
-      const list = storeHelper.getCurrentList(store) || [];
-      let match = null;
-      const id = data.entryId ? String(data.entryId) : '';
-      if (id) match = list.find(item => String(item.id) === id);
-      if (!match) {
-        const name = data.entryName ? String(data.entryName) : '';
-        const trait = data.entryTrait ? String(data.entryTrait) : '';
-        const level = data.entryLevel ? String(data.entryLevel) : '';
-        match = list.find(item => {
-          if (name && String(item.namn) !== name) return false;
-          if (trait && String(item.trait || '') !== trait) return false;
-          if (level && String(item.nivå || '') !== level) return false;
-          return true;
-        });
-        if (!match && (name || id)) {
-          const fallback = resolveDbEntry({ id: id || undefined, name }) || null;
-          if (fallback) {
-            match = { ...fallback };
-            if (trait) match.trait = trait;
-            if (level) match.nivå = level;
-          }
-        }
-      }
-      openSummaryEntryInfo(match, data.entryName || '');
+      handleSummaryChipClick(btn);
     });
   };
 
@@ -912,24 +1132,44 @@
     if (!container) return;
     const render = () => renderEffectsInto(container);
     EFFECT_STATE.effectsRenderer = render;
-    window.refreshEffectsPanel = () => EFFECT_STATE.effectsRenderer && EFFECT_STATE.effectsRenderer();
+    window.symbaroumViewBridge?.registerViewHooks('traits', {
+      refreshEffects: () => EFFECT_STATE.effectsRenderer && EFFECT_STATE.effectsRenderer()
+    });
     render();
   };
 
-  // Fallback no-ops so callers can safely invoke even innan init
-  if (typeof window.refreshSummaryPage !== 'function') {
-    window.refreshSummaryPage = () => {};
-  }
-  if (typeof window.refreshEffectsPanel !== 'function') {
-    window.refreshEffectsPanel = () => {};
-  }
+  const initUnifiedTraitsPage = () => {
+    window.DAUB?.init?.();
+    window.symbaroumViewBridge?.registerViewHooks('traits', {
+      refreshTraits: () => {
+        if (typeof window.renderTraits === 'function') {
+          window.renderTraits();
+        }
+      }
+    });
+    if (typeof window.renderTraits === 'function') {
+      window.renderTraits();
+    }
+    if (typeof window.bindTraits === 'function') {
+      window.bindTraits();
+    }
+    initSummaryPage();
+    initEffectsPage();
+    bindTraitsTabs();
+    const initialTab = getTraitsTabFromHash();
+    syncTraitsSwipeTabs(initialTab);
+    activateTraitsTab(initialTab, { updateHash: false, syncTouch: false });
+  };
 
   window.summaryEffects = {
     renderSummaryInto,
     renderEffectsInto,
     initSummaryPage,
     initEffectsPage,
+    initUnifiedTraitsPage,
+    activateTraitsTab,
     collectEffectsData,
+    handleSummaryChipClick,
     renderSummaryHtml,
     renderEffectsHtml
   };

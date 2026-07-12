@@ -1,60 +1,45 @@
 (function(window){
-  const SPECS = ['Bestar','Kulturvarelser','Odöda','Styggelser'];
+  const SPECS = ['Bestar', 'Kulturvarelser', 'Odöda', 'Styggelser'];
 
-  function createPopup(){
-    if(document.getElementById('monsterPopup')) return;
-    const div=document.createElement('div');
-    div.id='monsterPopup';
-    div.innerHTML=`<div class="popup-inner"><h3>Välj specialisering</h3><div id="monsterOpts"></div><button id="monsterCancel" class="char-btn danger">Avbryt</button></div>`;
-    document.body.appendChild(div);
-  }
-
-  function openPopup(used, cb){
-    const usedSet = new Set((used || []).map(x => String(x || '').trim()));
-    createPopup();
-    const pop=document.getElementById('monsterPopup');
-    const box=pop.querySelector('#monsterOpts');
-    const cls=pop.querySelector('#monsterCancel');
-    box.innerHTML=SPECS.map((n,i)=>{
-      const taken = usedSet.has(n);
-      const disabled = taken ? ' disabled aria-disabled="true"' : '';
-      const cls = taken ? 'char-btn disabled' : 'char-btn';
-      return `<button data-i="${i}" class="${cls}"${disabled}>${n}</button>`;
-    }).join('');
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-    function close(){
-      pop.classList.remove('open');
-      box.innerHTML='';
-      box.removeEventListener('click',onClick);
-      cls.removeEventListener('click',onCancel);
-      pop.removeEventListener('click',onOutside);
-    }
-    function onClick(e){
-      const b=e.target.closest('button[data-i]');
-      if(!b || b.disabled) return;
-      const idx=Number(b.dataset.i);
-      close();
-      cb(SPECS[idx]);
-    }
-    function onCancel(){ close(); cb(null); }
-    function onOutside(e){
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        cb(null);
+  function getEntry() {
+    if (typeof window.lookupEntry === 'function') {
+      try {
+        const hit = window.lookupEntry({ name: 'Monsterlärd' });
+        if (hit && typeof hit === 'object') return hit;
+      } catch (_) {
+        // Fall through to legacy shim.
       }
     }
-    box.addEventListener('click',onClick);
-    cls.addEventListener('click',onCancel);
-    pop.addEventListener('click',onOutside);
+    return { namn: 'Monsterlärd', nivå: 'Gesäll' };
   }
 
-  function pickSpec(used, cb){
+  function pickSpec(used, cb) {
     const hasUsed = Array.isArray(used);
-    const finalCb = hasUsed ? cb : used;
-    const usedList = hasUsed ? used : [];
-    openPopup(usedList, res=>finalCb(res));
+    const usedValues = hasUsed ? used : [];
+    const done = typeof (hasUsed ? cb : used) === 'function' ? (hasUsed ? cb : used) : () => {};
+    const picker = window.choicePopup;
+    if (!picker || typeof picker.pickForEntry !== 'function') {
+      done(null);
+      return;
+    }
+
+    const entry = getEntry();
+    const context = {
+      entry,
+      sourceEntry: entry,
+      level: 'Gesäll',
+      sourceLevel: 'Gesäll'
+    };
+
+    picker.pickForEntry({
+      entry,
+      context,
+      usedValues,
+      fallbackLegacy: true
+    }).then(result => {
+      done(result?.value ?? null);
+    }).catch(() => done(null));
   }
 
-  window.monsterLore={pickSpec, SPECS: [...SPECS]};
+  window.monsterLore = { pickSpec, SPECS: [...SPECS] };
 })(window);

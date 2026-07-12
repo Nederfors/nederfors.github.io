@@ -4,18 +4,46 @@
 
 (function(window){
   const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+  const uiPrefs = window.symbaroumUiPrefs || window.localStorage;
+  const getUiPref = (key) => {
+    try {
+      return uiPrefs?.getItem?.(key) ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const setUiPref = (key, value) => {
+    try {
+      uiPrefs?.setItem?.(key, value);
+    } catch {}
+  };
   const F = { invTxt: '', typ: [], ark: [], test: [] };
   // Bring shared currency bases into local scope
   const SBASE = window.SBASE;
   const OBASE = window.OBASE;
   const moneyToO = window.moneyToO;
   const oToMoney = window.oToMoney;
-  const INV_TOOLS_KEY = 'invToolsOpen';
-  const INV_INFO_KEY  = 'invInfoOpen';
   const INV_CAT_STATE_PREFIX = 'invCatState:';
   let cachedCatState = { key: '', state: {} };
-  const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
-  const INDIVIDUAL_TYPES = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'];
+  const WEAPON_BASE_TYPES = Array.isArray(window.WEAPON_BASE_TYPES)
+    ? window.WEAPON_BASE_TYPES
+    : ['Närstridsvapen', 'Avståndsvapen', 'Vapen'];
+  const MELEE_WEAPON_BASE_TYPE = window.MELEE_WEAPON_BASE_TYPE || 'Närstridsvapen';
+  const RANGED_WEAPON_BASE_TYPE = window.RANGED_WEAPON_BASE_TYPE || 'Avståndsvapen';
+  const hasWeaponType = (types) => {
+    if (typeof window.hasWeaponType === 'function') return window.hasWeaponType(types);
+    return (Array.isArray(types) ? types : []).some(t => WEAPON_BASE_TYPES.includes(String(t || '').trim()));
+  };
+  const isRangedWeaponType = (typeName) => {
+    if (typeof window.isRangedWeaponType === 'function') return window.isRangedWeaponType(typeName);
+    const txt = String(typeName || '').trim();
+    return txt === RANGED_WEAPON_BASE_TYPE || txt === 'Armborst' || txt === 'Pilbåge' || txt === 'Kastvapen' || txt === 'Slunga' || txt === 'Blåsrör' || txt === 'Belägringsvapen' || txt === 'Projektilvapen';
+  };
+  const isWeaponBaseType = (typeName) => WEAPON_BASE_TYPES.includes(String(typeName || '').trim());
+  const WEAPON_AND_SHIELD_TYPES = [...WEAPON_BASE_TYPES, 'Sköld'];
+  const WEAPON_QUALITY_TARGET_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Pil/Lod'];
+  const INDIVIDUAL_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'];
+  const LEGACY_STACKABLE_ID_SET = new Set(['l1', 'l11', 'l27', 'l6', 'l12', 'l13', 'l28', 'l30']);
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -27,7 +55,144 @@
     return root ? root.getElementById(id) : null;
   };
   const getEl = (id) => document.getElementById(id) || $T(id);
+  function createPopupSession(pop, options = {}) {
+    const target = pop || null;
+    const type = options.type || target?.dataset?.popupType || 'form';
+    const touchProfile = Object.prototype.hasOwnProperty.call(options, 'touchProfile')
+      ? options.touchProfile
+      : (target?.dataset?.touchProfile || window.daubMotion?.defaultTouchProfile?.(type) || undefined);
+    const onClose = typeof options.onClose === 'function' ? options.onClose : () => {};
+    const popupManager = window.popupManager;
+    let settled = false;
+
+    const finalize = (reason = 'programmatic') => {
+      if (settled) return;
+      settled = true;
+      onClose(reason);
+    };
+
+    if (popupManager?.open && target?.id) {
+      popupManager.open(target, {
+        type,
+        touchProfile,
+        dismissPolicy: options.dismissPolicy,
+        onClose: finalize
+      });
+    } else if (target) {
+      if (touchProfile) target.dataset.touchProfile = touchProfile;
+      target.classList.add('open');
+    }
+
+    return {
+      close(reason = 'programmatic') {
+        if (popupManager?.close && target?.id) {
+          popupManager.close(target, reason);
+          return;
+        }
+        if (target) target.classList.remove('open');
+        finalize(reason);
+      },
+      finalize
+    };
+  }
+  const inventoryPopupRegistry = window.inventoryPopupRegistry || null;
+  const createInventoryHubDefinition = (tabGroup, fallback) => {
+    const manager = inventoryPopupRegistry?.getManagerByTabGroup?.(tabGroup) || null;
+    const registryViews = Array.isArray(inventoryPopupRegistry?.listByTabGroup?.(tabGroup))
+      ? inventoryPopupRegistry.listByTabGroup(tabGroup)
+      : [];
+    const views = fallback.views.map(view => {
+      const registryMatch = registryViews.find(entry => entry.id === view.id || entry.tabId === view.tabId);
+      return registryMatch ? { ...view, ...registryMatch } : { ...view };
+    });
+    return Object.freeze({
+      popupId: manager?.id || fallback.popupId,
+      optionsId: manager?.optionsId || fallback.optionsId,
+      closeId: manager?.closeId || fallback.closeId,
+      launcherId: fallback.launcherId,
+      saveFreeBtnId: fallback.saveFreeBtnId || '',
+      massActionsId: fallback.massActionsId || '',
+      defaultTab: fallback.defaultTab,
+      tabs: Object.freeze(views.map(view => view.tabId)),
+      titlesByTabId: Object.freeze(Object.fromEntries(views.map(view => [view.tabId, view.title]))),
+      sectionTabIds: Object.freeze(Object.fromEntries(views.map(view => [view.id, view.tabId])))
+    });
+  };
+  const INVENTORY_HUB_DEFS = Object.freeze({
+    items: createInventoryHubDefinition('items', {
+      popupId: 'inventoryItemsPopup',
+      optionsId: 'inventoryItemsOptions',
+      closeId: 'inventoryItemsClose',
+      launcherId: 'manageItemsBtn',
+      defaultTab: 'custom-item',
+      views: [
+        { id: 'customPopup', tabId: 'custom-item', title: 'Nytt föremål' },
+        { id: 'qtyPopup', tabId: 'bulk-qty', title: 'Mängdköp' },
+        { id: 'vehiclePopup', tabId: 'vehicle-load', title: 'Lasta i färdmedel' },
+        { id: 'vehicleRemovePopup', tabId: 'vehicle-unload', title: 'Lasta ur färdmedel' }
+      ]
+    }),
+    economy: createInventoryHubDefinition('economy', {
+      popupId: 'inventoryEconomyPopup',
+      optionsId: 'inventoryEconomyOptions',
+      closeId: 'inventoryEconomyClose',
+      launcherId: 'manageEconomyBtn',
+      saveFreeBtnId: 'inventoryEconomySaveFreeBtn',
+      massActionsId: 'inventoryEconomyMassActions',
+      defaultTab: 'money',
+      views: [
+        { id: 'moneyPopup', tabId: 'money', title: 'Saldo' },
+        { id: 'pricePopup', tabId: 'bulk-price', title: 'Multiplicera pris' }
+      ]
+    })
+  });
+  const INVENTORY_HUB_SWIPE_KEYS = Object.freeze({
+    items: 'inventory-items-tabs',
+    economy: 'inventory-economy-tabs'
+  });
+  const INVENTORY_HUB_FOCUS_TARGETS = {
+    'custom-item': 'customPopup',
+    'bulk-qty': 'qtyPopup',
+    money: 'moneyPopup',
+    'quick-spend': 'moneyPopup',
+    'bulk-price': 'pricePopup',
+    'mass-actions': 'inventoryEconomyMassActions',
+    'vehicle-load': 'vehiclePopup',
+    'vehicle-unload': 'vehicleRemovePopup'
+  };
+  const INVENTORY_HUB_FOCUS_TABS = {
+    'custom-item': 'custom-item',
+    'bulk-qty': 'bulk-qty',
+    money: 'money',
+    'quick-spend': 'money',
+    'bulk-price': 'bulk-price',
+    'mass-actions': 'money',
+    'vehicle-load': 'vehicle-load',
+    'vehicle-unload': 'vehicle-unload'
+  };
+  const INVENTORY_HUB_SECTION_IDS = Array.from(new Set(
+    Object.values(INVENTORY_HUB_DEFS).flatMap(def => Object.keys(def.sectionTabIds))
+  ));
+  const requireInventoryPopupSurface = (viewKey, ids) => {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const requiredIds = Array.isArray(ids) ? ids : [ids];
+    const maybeView = requiredIds.find(id => id && INVENTORY_HUB_SECTION_IDS.includes(id));
+    if (maybeView) {
+      const hubKey = Object.entries(INVENTORY_HUB_DEFS).find(([, def]) => Object.prototype.hasOwnProperty.call(def.sectionTabIds, maybeView))?.[0] || '';
+      if (hubKey) ensureInventoryHubMounted(hubKey);
+    }
+    const hasAllIds = requiredIds.every(id => !id || root.getElementById(id));
+    if (hasAllIds) return root;
+    return null;
+  };
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+  const LEVEL_BY_IDX = ['', 'Novis', 'Ges\u00e4ll', 'M\u00e4stare'];
+  const PRICE_RULE_LEVEL_SPECS = [
+    { abilityName: 'Smideskonst', key: 'forgeLvl' },
+    { abilityName: 'Alkemist', key: 'alcLevel' },
+    { abilityName: 'Artefaktmakande', key: 'artLevel' }
+  ];
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
     'Släde': '🛷',
@@ -46,12 +211,230 @@
     if (typeof fn === 'function') return fn(entry, qualities);
     return Array.isArray(qualities) ? qualities.filter(Boolean) : [];
   };
+  const lookupQualityEntry = (name) => {
+    if (typeof window.lookupEntry !== 'function') return null;
+    const label = String(name || '').trim();
+    if (!label) return null;
+    try {
+      const hit = window.lookupEntry({ name: label });
+      return hit && typeof hit === 'object' ? hit : null;
+    } catch (_) {
+      return null;
+    }
+  };
+  const isNegativeQual = (name) => {
+    if (typeof window.isNegativeQual === 'function') return window.isNegativeQual(name);
+    const entry = lookupQualityEntry(name);
+    return Boolean(entry?.negativ === true);
+  };
+  const isNeutralQual = (name) => {
+    if (typeof window.isNeutralQual === 'function') return window.isNeutralQual(name);
+    const entry = lookupQualityEntry(name);
+    return Boolean(entry?.neutral === true);
+  };
+  const isMysticQual = (name) => {
+    if (typeof window.isMysticQual === 'function') return window.isMysticQual(name);
+    const entry = lookupQualityEntry(name);
+    const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    return types.some(typeName => String(typeName || '').trim() === 'Mystisk kvalitet');
+  };
   const normalizeShieldQualityName = (entry, qualityName) => {
     const isShield = Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Sköld');
     if (!isShield) return qualityName;
     const txt = String(qualityName || '').toLowerCase();
     if (txt.startsWith('smidig')) return 'Armfäst';
     return qualityName;
+  };
+  const splitArkTags = (value) => {
+    if (typeof window.splitTags === 'function') return window.splitTags(value);
+    const source = Array.isArray(value)
+      ? value
+      : ((value === undefined || value === null) ? [] : [value]);
+    return source
+      .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+      .filter(Boolean);
+  };
+  const getEntryPrimaryLevelName = (entry) => {
+    if (!entry || typeof entry !== 'object') return '';
+    const ownLevel = typeof entry.niv\u00e5 === 'string' ? entry.niv\u00e5.trim() : '';
+    if (ownLevel) return ownLevel;
+    const levelKeys = Object.keys(entry.niv\u00e5er || {});
+    return levelKeys.find(key => String(key || '').trim()) || '';
+  };
+  const normalizeMultiplierValue = (value, fallback = 1) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
+    return numeric;
+  };
+  const formatMultiplierLabel = (value) => {
+    const mult = normalizeMultiplierValue(value, 1);
+    if (Math.abs(mult - Math.round(mult)) < 0.001) return String(Math.round(mult));
+    return mult.toFixed(2).replace(/\.?0+$/, '');
+  };
+  const getQualityRuleEffects = (entry, qualityNames) => {
+    const names = Array.from(new Set(
+      (Array.isArray(qualityNames) ? qualityNames : [])
+        .map(String)
+        .map(name => name.trim())
+        .filter(Boolean)
+    ));
+    if (!names.length) return {};
+
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getItemQualityRuleEffects === 'function') {
+      try {
+        const resolved = helper.getItemQualityRuleEffects(names, entry) || {};
+        const out = {};
+        names.forEach(name => {
+          const raw = resolved[name] || {};
+          const multiplier = normalizeMultiplierValue(raw.multiplier, 1);
+          const additiveO = Number(raw.additiveO || 0);
+          out[name] = {
+            multiplier,
+            additiveO: Number.isFinite(additiveO) ? additiveO : 0,
+            gratisbar: raw.gratisbar === true
+          };
+        });
+        return out;
+      } catch (_) {
+        // fall through to safe defaults below
+      }
+    }
+
+    // Explicit-only fallback model: no explicit rule means multiplier 1 and not gratisbar.
+    const out = {};
+    names.forEach(name => {
+      out[name] = { multiplier: 1, additiveO: 0, gratisbar: false };
+    });
+    return out;
+  };
+  const getGratisbarQualitySet = (entry, qualityNames) => {
+    const effects = getQualityRuleEffects(entry, qualityNames);
+    const allowed = new Set();
+    (Array.isArray(qualityNames) ? qualityNames : []).forEach(name => {
+      if (effects?.[name]?.gratisbar === true) allowed.add(name);
+    });
+    return allowed;
+  };
+  const getRequirementCheckForEntry = (entry, list) => {
+    const entries = Array.isArray(list) ? list : [];
+    const levelName = getEntryPrimaryLevelName(entry);
+    const candidate = levelName
+      ? { ...entry, niv\u00e5: levelName }
+      : { ...entry };
+    const helper = window.rulesHelper;
+    const requirementEffects = (helper && typeof helper.getRequirementEffectsForCandidate === 'function')
+      ? helper.getRequirementEffectsForCandidate(candidate, entries, { level: levelName || candidate.niv\u00e5 || '' })
+      : null;
+    const explicitRequirementReasons = Array.isArray(requirementEffects?.missingReasons)
+      ? requirementEffects.missingReasons
+      : ((helper && typeof helper.getMissingRequirementReasonsForCandidate === 'function')
+        ? helper.getMissingRequirementReasonsForCandidate(candidate, entries, { level: levelName || candidate.niv\u00e5 || '' })
+        : []);
+    const explicitMessages = (helper && typeof helper.formatEntryStopMessages === 'function')
+      ? helper.formatEntryStopMessages(entry?.namn || '', { requirementReasons: explicitRequirementReasons })
+      : [];
+    const moneyMultiplier = normalizeMultiplierValue(requirementEffects?.moneyMultiplier, 1);
+    const erfMultiplier = normalizeMultiplierValue(requirementEffects?.erfMultiplier, 1);
+
+    return {
+      ok: explicitRequirementReasons.length === 0,
+      explicitMessages,
+      moneyMultiplier,
+      erfMultiplier
+    };
+  };
+  const normalizeLevelIndex = (value) => {
+    const numeric = Math.floor(Number(value) || 0);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(LEVEL_BY_IDX.length - 1, numeric));
+  };
+  const createSyntheticAbilityEntry = (abilityName, levelIdx) => {
+    if (levelIdx <= 0) return null;
+    const base = getEntry(abilityName);
+    if (!base || typeof base !== 'object' || !base.id) return null;
+    const levelName = LEVEL_BY_IDX[levelIdx] || '';
+    if (!levelName) return null;
+    return { ...base, nivå: levelName };
+  };
+  const buildPriceRuleSourceList = (list, levels = {}) => {
+    const baseList = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const excluded = new Set(PRICE_RULE_LEVEL_SPECS.map(spec => String(spec.abilityName || '').trim().toLowerCase()));
+    const out = baseList.filter(entry => {
+      const key = String(entry?.namn || '').trim().toLowerCase();
+      return !excluded.has(key);
+    });
+    PRICE_RULE_LEVEL_SPECS.forEach(spec => {
+      const levelIdx = normalizeLevelIndex(levels?.[spec.key]);
+      const synthetic = createSyntheticAbilityEntry(spec.abilityName, levelIdx);
+      if (synthetic) out.push(synthetic);
+    });
+    return out;
+  };
+  const buildItemPriceRuleContext = (entry, qualityNames, options = {}) => {
+    const names = Array.isArray(qualityNames) ? qualityNames.filter(Boolean) : [];
+    const positiveCount = countPositiveQuals(names);
+    const mysticCount = names.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
+    const targetLevel = typeof options.targetLevel === 'string' && options.targetLevel.trim()
+      ? options.targetLevel.trim()
+      : getEntryPrimaryLevelName(entry);
+    const context = {
+      targetLevel,
+      kvalitet_antal: names.length,
+      positiv_kvalitet_antal: positiveCount,
+      mystisk_kvalitet_antal: mysticCount
+    };
+    if (Object.prototype.hasOwnProperty.call(options || {}, 'krav_uppfyllda')) {
+      context.krav_uppfyllda = Boolean(options.krav_uppfyllda);
+    }
+    return context;
+  };
+  const getItemPriceEffects = (list, entry, qualityNames, options = {}) => {
+    const names = Array.isArray(qualityNames) ? qualityNames.filter(Boolean) : [];
+    const helper = window.rulesHelper;
+    const foremalContext = buildItemPriceRuleContext(entry, names, options);
+    if (helper && typeof helper.getItemPriceRuleEffects === 'function') {
+      try {
+        const resolved = helper.getItemPriceRuleEffects(list, names, entry, { foremalContext }) || {};
+        const qualityEffects = {};
+        names.forEach(name => {
+          const raw = resolved?.qualityEffects?.[name] || {};
+          qualityEffects[name] = {
+            multiplier: normalizeMultiplierValue(raw.multiplier, 1),
+            additiveO: Number(raw.additiveO || 0) || 0,
+            gratisbar: raw.gratisbar === true
+          };
+        });
+        return {
+          additiveO: Number(resolved.additiveO || 0) || 0,
+          factor: normalizeMultiplierValue(resolved.factor, 1),
+          listAdditiveO: Number(resolved.listAdditiveO || 0) || 0,
+          listFactor: normalizeMultiplierValue(resolved.listFactor, 1),
+          qualityAdditiveO: Number(resolved.qualityAdditiveO || 0) || 0,
+          qualityFactor: normalizeMultiplierValue(resolved.qualityFactor, 1),
+          qualityEffects
+        };
+      } catch (_) {
+        // fall through to safe defaults below
+      }
+    }
+
+    const qualityEffects = getQualityRuleEffects(entry, names);
+    let qualityFactor = 1;
+    let qualityAdditiveO = 0;
+    names.forEach(name => {
+      qualityFactor *= normalizeMultiplierValue(qualityEffects?.[name]?.multiplier, 1);
+      qualityAdditiveO += Number(qualityEffects?.[name]?.additiveO || 0) || 0;
+    });
+    return {
+      additiveO: qualityAdditiveO,
+      factor: qualityFactor,
+      listAdditiveO: 0,
+      listFactor: 1,
+      qualityAdditiveO,
+      qualityFactor,
+      qualityEffects
+    };
   };
   const mapRowQualityArray = (entry, list) => {
     if (!Array.isArray(list)) return list;
@@ -77,12 +460,110 @@
     const addedQ = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
     return { baseQ, addedQ };
   };
-  const isQualityAllowedByRules = (entry, row, qualityName) => {
-    if (!entry || !qualityName) return true;
+  const normalizeQualityToken = (value) => String(value || '').trim().toLowerCase();
+  const buildQualityRuleForemalContext = (entry, qualityNames = []) => ({
+    id: entry?.id,
+    namn: entry?.namn,
+    typ: Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [],
+    kvalitet: Array.isArray(qualityNames) ? qualityNames.filter(Boolean) : []
+  });
+  const getCurrentCharacterEntryList = () => {
+    if (typeof storeHelper?.getCurrentList !== 'function') return [];
+    try {
+      const list = storeHelper.getCurrentList(store);
+      return Array.isArray(list) ? list.filter(item => item && typeof item === 'object') : [];
+    } catch (_) {
+      return [];
+    }
+  };
+  const dedupeConflictReasons = (reasons) => {
+    const out = [];
+    const seen = new Set();
+    (Array.isArray(reasons) ? reasons : []).forEach(reason => {
+      if (!reason || typeof reason !== 'object') return;
+      const key = [
+        String(reason.code || '').trim(),
+        String(reason.mode || '').trim(),
+        String(reason.sourceEntryName || '').trim(),
+        String(reason.sourceEntryLevel || '').trim()
+      ].join('|');
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(reason);
+    });
+    return out;
+  };
+  const getQualityBlockingConflicts = (entry, row, qualityName) => {
+    const helper = window.rulesHelper;
+    if (!helper || typeof helper.getConflictResolutionForCandidate !== 'function') return [];
+    const candidate = lookupQualityEntry(qualityName);
+    if (!candidate) return [];
+
     const { baseQ, addedQ } = getRowQualityState(entry, row);
-    if ([...baseQ, ...addedQ].includes(qualityName)) return true;
-    const next = sanitizeArmorQualities(entry, [...baseQ, ...addedQ, qualityName]);
-    return next.includes(qualityName);
+    const existingNames = [...baseQ, ...addedQ].filter(Boolean);
+    const effectiveQualities = sanitizeArmorQualities(entry, [...existingNames, qualityName]);
+    const conditionContext = { foremal: buildQualityRuleForemalContext(entry, effectiveQualities) };
+
+    const existingQualityEntries = [];
+    const seenQualityNames = new Set();
+    existingNames.forEach(name => {
+      const key = normalizeQualityToken(name);
+      if (!key || seenQualityNames.has(key)) return;
+      seenQualityNames.add(key);
+      const qualityEntry = lookupQualityEntry(name);
+      if (qualityEntry) existingQualityEntries.push(qualityEntry);
+    });
+    const itemTargetEntry = {
+      id: `__item_quality_target__:${entry?.id || entry?.namn || ''}`,
+      namn: String(entry?.namn || 'Föremål'),
+      taggar: {
+        typ: Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : []
+      }
+    };
+
+    const listConflicts = helper.getConflictResolutionForCandidate(
+      candidate,
+      getCurrentCharacterEntryList(),
+      { conditionContext }
+    );
+    const qualityConflicts = helper.getConflictResolutionForCandidate(
+      candidate,
+      [...existingQualityEntries, itemTargetEntry],
+      { conditionContext }
+    );
+
+    return dedupeConflictReasons([
+      ...(Array.isArray(listConflicts?.blockingReasons) ? listConflicts.blockingReasons : []),
+      ...(Array.isArray(qualityConflicts?.blockingReasons) ? qualityConflicts.blockingReasons : [])
+    ]);
+  };
+  const evaluateQualityRuleAllowance = (entry, row, qualityName) => {
+    if (!entry || !qualityName) return { allowed: true, blockingConflicts: [], hardStops: [] };
+    const { baseQ, addedQ } = getRowQualityState(entry, row);
+    const existing = [...baseQ, ...addedQ];
+    if (existing.includes(qualityName)) return { allowed: true, blockingConflicts: [], hardStops: [] };
+
+    const next = sanitizeArmorQualities(entry, [...existing, qualityName]);
+    if (!next.includes(qualityName)) {
+      return {
+        allowed: false,
+        blockingConflicts: [],
+        hardStops: [{
+          code: `quality_blocked_${normalizeQualityToken(qualityName)}`,
+          message: `Kvalitet: ${qualityName}`
+        }]
+      };
+    }
+
+    const blockingConflicts = getQualityBlockingConflicts(entry, row, qualityName);
+    return {
+      allowed: blockingConflicts.length === 0,
+      blockingConflicts,
+      hardStops: []
+    };
+  };
+  const isQualityAllowedByRules = (entry, row, qualityName) => {
+    return evaluateQualityRuleAllowance(entry, row, qualityName).allowed;
   };
   const normalizeRowQualities = (row) => {
     if (!row || typeof row !== 'object') return;
@@ -91,6 +572,7 @@
       if (Array.isArray(row.kvaliteter)) row.kvaliteter = mapRowQualityArray(entry, row.kvaliteter);
       if (Array.isArray(row.gratisKval)) row.gratisKval = mapRowQualityArray(entry, row.gratisKval);
       if (Array.isArray(row.removedKval)) row.removedKval = mapRowQualityArray(entry, row.removedKval);
+      if (Array.isArray(row.manualQualityOverride)) row.manualQualityOverride = mapRowQualityArray(entry, row.manualQualityOverride);
       const { baseQ, addedQ } = getRowQualityState(entry, row);
       const allowedAll = sanitizeArmorQualities(entry, [...baseQ, ...addedQ]);
       const allowance = new Map();
@@ -99,17 +581,30 @@
         const count = allowance.get(q) || 0;
         if (count > 0) allowance.set(q, count - 1);
       });
+      const manualOverrides = Array.isArray(row.manualQualityOverride)
+        ? row.manualQualityOverride.filter(Boolean)
+        : [];
+      const manualSet = new Set(manualOverrides);
       if (Array.isArray(row.kvaliteter)) {
         row.kvaliteter = addedQ.filter(q => {
+          if (manualSet.has(q)) return true;
           const count = allowance.get(q) || 0;
           if (count <= 0) return false;
           allowance.set(q, count - 1);
           return true;
         });
       }
+      if (manualOverrides.length) {
+        const current = new Set(Array.isArray(row.kvaliteter) ? row.kvaliteter : []);
+        row.manualQualityOverride = manualOverrides.filter(q => current.has(q));
+        if (!row.manualQualityOverride.length) delete row.manualQualityOverride;
+      } else if (row.manualQualityOverride) {
+        delete row.manualQualityOverride;
+      }
       if (Array.isArray(row.gratisKval)) {
         const allowedSet = new Set(allowedAll);
-        row.gratisKval = row.gratisKval.filter(q => allowedSet.has(q));
+        const gratisbarSet = getGratisbarQualitySet(entry, allowedAll);
+        row.gratisKval = row.gratisKval.filter(q => allowedSet.has(q) && gratisbarSet.has(q));
       }
     }
     if (Array.isArray(row.contains)) {
@@ -121,8 +616,685 @@
     inv.forEach(row => normalizeRowQualities(row));
   };
 
-  function getCraftLevels() {
-    const list = storeHelper.getCurrentList(store);
+  function getInventorySectionIdForTab(hubKey, tabId) {
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return '';
+    return Object.entries(def.sectionTabIds).find(([, mappedTabId]) => mappedTabId === tabId)?.[0] || '';
+  }
+
+  function getInventoryHubKeyForTab(tabId) {
+    return Object.entries(INVENTORY_HUB_DEFS).find(([, def]) => def.tabs.includes(tabId))?.[0] || '';
+  }
+
+  function syncInventoryMotionTargets() {
+    const bind = window.daubMotion?.bindAutoAnimate;
+    if (typeof bind !== 'function') return;
+    if (dom?.invList) {
+      dom.invList.querySelectorAll('.cat-group > details > ul, .vehicle-items.entry-card-list').forEach(listEl => {
+        bind(listEl, { duration: 100 });
+      });
+    }
+    const root = getToolbarRoot();
+    if (!root) return;
+    [
+      'qtyItemList',
+      'priceItemList',
+      'vehicleItemList',
+      'vehicleRemoveItemList',
+      'qualOptions',
+      'choiceOpts'
+    ].forEach(id => {
+      const target = root.getElementById(id) || document.getElementById(id);
+      if (target instanceof HTMLElement) {
+        bind(target, { duration: 100 });
+      }
+    });
+  }
+
+  function syncInventoryHubSwipeTabs(hubKey, activeTab) {
+    const root = getToolbarRoot();
+    if (!root) return false;
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return false;
+    const hub = root.getElementById(def.popupId);
+    const panelsHost = hub?.querySelector('.tools-panels');
+    if (!(panelsHost instanceof HTMLElement) || !window.daubMotion) return false;
+    if (!window.daubMotion.isTouchUi?.()) {
+      panelsHost.removeAttribute('data-swipe-tabs');
+      window.daubMotion.destroySwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey]);
+      return false;
+    }
+    const swipeKey = INVENTORY_HUB_SWIPE_KEYS[hubKey];
+    const activeIndex = Math.max(0, def.tabs.indexOf(activeTab));
+    if (window.daubMotion.hasSwipeTabs?.(swipeKey)) {
+      window.daubMotion.slideTabsTo?.(swipeKey, activeIndex, { animate: false });
+      window.requestAnimationFrame(() => window.daubMotion.refreshSwipeTabs?.(swipeKey));
+      return true;
+    }
+    window.daubMotion.bindSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey], {
+      host: panelsHost,
+      selector: '.tools-panel',
+      initialIndex: activeIndex,
+      onIndexChange(index) {
+        const nextTab = def.tabs[index] || def.defaultTab;
+        if (hub?.dataset.activeTab === nextTab) return;
+        openInventoryHubTab(nextTab);
+      }
+    });
+    return true;
+  }
+
+  function setInventoryHubTab(hubKey, tabId, options = {}) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return;
+    const hub = root.getElementById(def.popupId);
+    if (!hub) return;
+    const wanted = def.tabs.includes(tabId) ? tabId : def.defaultTab;
+    hub.dataset.activeTab = wanted;
+    hub.__hubShell?.setActiveTab?.(wanted);
+    if (options.syncTouch !== false) {
+      window.daubMotion?.slideTabsTo?.(
+        INVENTORY_HUB_SWIPE_KEYS[hubKey],
+        Math.max(0, def.tabs.indexOf(wanted)),
+        { animate: true }
+      );
+    }
+  }
+
+  function clearInventoryHubHighlight(root) {
+    if (!root) return;
+    root.querySelectorAll('.inventory-tools-popup [data-hub-active="true"]').forEach(el => {
+      el.removeAttribute('data-hub-active');
+      el.classList.remove('is-active');
+      if (el.__hubHighlightTimer) {
+        clearTimeout(el.__hubHighlightTimer);
+        delete el.__hubHighlightTimer;
+      }
+    });
+  }
+
+  function highlightInventoryHubSection(focusSection) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    clearInventoryHubHighlight(root);
+    const targetId = INVENTORY_HUB_FOCUS_TARGETS[focusSection];
+    if (!targetId) return;
+    const target = root.getElementById(targetId);
+    if (!target) return;
+    target.dataset.hubActive = 'true';
+    target.classList.add('is-active');
+    target.__hubHighlightTimer = setTimeout(() => {
+      target.removeAttribute('data-hub-active');
+      target.classList.remove('is-active');
+      delete target.__hubHighlightTimer;
+    }, 1800);
+    requestAnimationFrame(() => {
+      const field = target.querySelector('input, select, textarea, button');
+      if (field && typeof field.focus === 'function') {
+        try { field.focus({ preventScroll: true }); } catch { field.focus(); }
+      }
+    });
+  }
+
+  function cleanupInventoryHubSections(exceptId) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    INVENTORY_HUB_SECTION_IDS.forEach(sectionId => {
+      if (sectionId === exceptId) return;
+      const section = root.getElementById(sectionId);
+      if (!section || typeof section.__hubCleanup !== 'function') return;
+      const cleanup = section.__hubCleanup;
+      section.__hubCleanup = null;
+      try { cleanup({ switching: true }); } catch {}
+    });
+  }
+
+  function renderInventoryHubViewContent(viewId) {
+    if (viewId === 'customPopup') {
+      return `
+        <section id="customPopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title" id="customTitle">Nytt föremål</div>
+                <p class="tools-intro">Skapa eller redigera hemmagjorda föremål direkt i samma shell som Rollpersonshantering.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Namn</span>
+                    <input id="customName" class="db-input" type="text" autocomplete="off" placeholder="Föremålets namn">
+                  </label>
+                  <div class="tools-grid two-col">
+                    <label class="tools-field">
+                      <span class="tools-label">Typ</span>
+                      <select id="customType" class="db-select__input"></select>
+                    </label>
+                    <div class="tools-field">
+                      <span class="tools-label">Lägg till vald typ</span>
+                      <button id="customTypeAdd" class="db-btn db-btn--secondary tools-inline-btn" type="button">Lägg till typ</button>
+                    </div>
+                  </div>
+                  <div id="customTypeTags" class="inventory-manager-chip-row"></div>
+                  <div class="tools-grid two-col">
+                    <label class="tools-field">
+                      <span class="tools-label">Vikt</span>
+                      <input id="customWeight" class="db-input" type="number" min="0" step="0.1" placeholder="0">
+                    </label>
+                    <div id="customArtifactEffect" class="tools-field" style="display:none;">
+                      <span class="tools-label">Artefakteffekt</span>
+                      <select class="db-select__input">
+                        <option value="corruption">Permanent korruption</option>
+                        <option value="xp">Erfarenhet</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="customWeaponFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Skada</span>
+                      <input id="customDamage" class="db-input" type="text" placeholder="1T6">
+                    </label>
+                  </div>
+                  <div id="customVehicleFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Bärkapacitet</span>
+                      <input id="customCapacity" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                  </div>
+                  <div id="customArmorFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Skydd</span>
+                      <input id="customProtection" class="db-input" type="text" placeholder="1D4">
+                    </label>
+                  </div>
+                  <label class="tools-field">
+                    <span class="tools-label">Begränsning</span>
+                    <input id="customRestriction" class="db-input" type="number" step="1" placeholder="0">
+                  </label>
+                  <div id="customLevelFields" class="tools-sections" style="display:none;">
+                    <div class="tools-grid two-col">
+                      <label class="tools-field">
+                        <span class="tools-label">Nivåläge</span>
+                        <select id="customLevelMode" class="db-select__input">
+                          <option value="novis">Novis</option>
+                          <option value="gesall">Gesäll</option>
+                          <option value="mastare">Mästare</option>
+                          <option value="triple">Alla nivåer</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="tools-field">
+                      <span class="tools-label">Novis</span>
+                      <textarea id="customLevelNovis" class="db-input auto-resize" placeholder="Beskrivning för Novis"></textarea>
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Gesäll</span>
+                      <textarea id="customLevelGesall" class="db-input auto-resize" placeholder="Beskrivning för Gesäll"></textarea>
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Mästare</span>
+                      <textarea id="customLevelMastare" class="db-input auto-resize" placeholder="Beskrivning för Mästare"></textarea>
+                    </label>
+                  </div>
+                  <div id="customPowerFields" class="tools-sections" style="display:none;">
+                    <div class="tools-inline-row">
+                      <span class="tools-label">Krafter</span>
+                      <button id="customPowerAdd" class="db-btn db-btn--secondary tools-inline-btn" type="button">Lägg till kraft</button>
+                    </div>
+                    <div id="customPowerList" class="tools-sections"></div>
+                  </div>
+                  <div id="customBoundFields" class="tools-grid two-col" style="display:none;">
+                    <label class="tools-field">
+                      <span class="tools-label">Binder till</span>
+                      <select id="customBoundType" class="db-select__input">
+                        <option value="">Välj</option>
+                        <option value="kraft">Kraft</option>
+                        <option value="ritual">Ritual</option>
+                      </select>
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Rubrik</span>
+                      <input id="customBoundLabel" class="db-input" type="text" autocomplete="off" placeholder="Formel eller ritual">
+                    </label>
+                  </div>
+                  <div class="tools-grid three-col inventory-manager-money-grid">
+                    <label class="tools-field">
+                      <span class="tools-label">Daler</span>
+                      <input id="customDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Skilling</span>
+                      <input id="customSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                    <label class="tools-field">
+                      <span class="tools-label">Örtegar</span>
+                      <input id="customOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                    </label>
+                  </div>
+                  <label class="tools-field">
+                    <span class="tools-label">Beskrivning</span>
+                    <textarea id="customDesc" class="db-input auto-resize" placeholder="Beskriv föremålet"></textarea>
+                  </label>
+                </div>
+                <div class="confirm-row">
+                  <button id="customDelete" class="db-btn db-btn--danger" type="button">Ta bort</button>
+                  <button id="customCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="customAdd" class="db-btn" type="button">Spara</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'qtyPopup') {
+      return `
+        <section id="qtyPopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Mängdköp</div>
+                <p class="tools-intro">Lägg till fler exemplar av valda poster i huvudinventarie eller färdmedel.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Antal</span>
+                    <input id="qtyInput" class="db-input" type="number" min="1" step="1" placeholder="1">
+                  </label>
+                  <div id="qtyItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="qtyCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="qtyApply" class="db-btn" type="button">Verkställ</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'vehiclePopup') {
+      return `
+        <section id="vehiclePopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Lasta i färdmedel</div>
+                <p class="tools-intro">Välj färdmedel och flytta markerade poster eller pengar in i lastutrymmet.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Färdmedel</span>
+                    <select id="vehicleSelect" class="db-select__input"></select>
+                  </label>
+                  <div id="vehicleItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="vehicleCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="vehicleApply" class="db-btn" type="button">Lasta</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'vehicleRemovePopup') {
+      return `
+        <section id="vehicleRemovePopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Lasta ur färdmedel</div>
+                <p class="tools-intro">Ta ut markerade föremål eller pengar från valt färdmedel och lägg tillbaka dem i huvudinventariet.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Färdmedel</span>
+                    <select id="vehicleRemoveSelect" class="db-select__input"></select>
+                  </label>
+                  <div id="vehicleRemoveItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="vehicleRemoveCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="vehicleRemoveApply" class="db-btn db-btn--danger" type="button">Lasta ur</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'moneyPopup') {
+      return `
+        <section id="moneyPopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Saldo</div>
+                <p class="tools-intro">Sätt eller addera pengar och kör gemensamma ekonomiåtgärder på samma popup-shell.</p>
+                <p id="moneyStatus" class="tools-meta"></p>
+                <div class="tools-grid three-col inventory-manager-money-grid">
+                  <label class="tools-field">
+                    <span class="tools-label">Daler</span>
+                    <input id="moneyBalanceDaler" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Skilling</span>
+                    <input id="moneyBalanceSkilling" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="tools-field">
+                    <span class="tools-label">Örtegar</span>
+                    <input id="moneyBalanceOrtegar" class="db-input" type="number" min="0" step="1" placeholder="0">
+                  </label>
+                </div>
+                <div class="confirm-row">
+                  <button id="moneySetBtn" class="db-btn db-btn--secondary" type="button">Sätt saldo</button>
+                  <button id="moneyAddBtn" class="db-btn" type="button">Addera</button>
+                </div>
+                <div id="inventoryEconomyMassActions" class="tools-grid two-col inventory-manager-actions">
+                  <button id="inventoryEconomySaveFreeBtn" class="db-btn db-btn--secondary" type="button">Spara och gratismarkera</button>
+                  <button id="moneyResetBtn" class="db-btn db-btn--danger" type="button">Nollställ pengar</button>
+                </div>
+                <div class="confirm-row">
+                  <button id="moneyCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    if (viewId === 'pricePopup') {
+      return `
+        <section id="pricePopup" class="inventory-manager-view">
+          <div class="inventory-manager-section">
+            <div class="tools-sections">
+              <section class="db-card tools-card">
+                <div class="tools-card-title">Multiplicera pris</div>
+                <p class="tools-intro">Markera en eller flera rader och applicera samma prisfaktor i ett steg.</p>
+                <div class="tools-form">
+                  <label class="tools-field">
+                    <span class="tools-label">Prisfaktor</span>
+                    <input id="priceFactor" class="db-input" type="number" min="0" step="0.01" placeholder="1.25">
+                  </label>
+                  <div id="priceItemList" class="inventory-manager-list"></div>
+                </div>
+                <div class="confirm-row">
+                  <button id="priceCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
+                  <button id="priceApply" class="db-btn" type="button">Verkställ</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+    return '';
+  }
+
+  function ensureInventoryHubMounted(hubKey) {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return null;
+    const hub = root.getElementById(def.popupId);
+    const optionsRoot = root.getElementById(def.optionsId);
+    if (!hub || !optionsRoot) return null;
+    if (hub.__hubShell) return hub;
+
+    const shell = window.toolsPopupShell?.createShell?.({
+      tabs: def.tabs.map(tabId => {
+        const sectionId = getInventorySectionIdForTab(hubKey, tabId);
+        return {
+          id: tabId,
+          label: def.titlesByTabId[tabId] || tabId,
+          panelClassName: 'inventory-hub-panel',
+          build(panel) {
+            panel.innerHTML = renderInventoryHubViewContent(sectionId);
+            const section = panel.querySelector(`#${sectionId}`);
+            if (section) section.setAttribute('data-hub-tab', tabId);
+          }
+        };
+      }),
+      ariaLabel: hubKey === 'items' ? 'Hantera föremål' : 'Hantera ekonomi',
+      idPrefix: `${hubKey}Manager`,
+      panelsClassName: 'inventory-hub-panels',
+      onTabChange(nextTab) {
+        openInventoryHubTab(nextTab);
+      }
+    });
+    if (!shell?.root) return null;
+
+    optionsRoot.innerHTML = '';
+    optionsRoot.appendChild(shell.root);
+    window.DAUB?.init?.(optionsRoot);
+    window.autoResizeAll?.(optionsRoot);
+    hub.__hubShell = shell;
+    hub.classList.add('inventory-tools-popup');
+    hub.dataset.bound = '1';
+    return hub;
+  }
+
+  function syncInventoryHubState() {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const inv = Array.isArray(storeHelper.getInventory(store)) ? storeHelper.getInventory(store) : [];
+    const hasVehicle = inv.some(row => {
+      const entry = getEntry(row?.id || row?.name);
+      return (entry?.taggar?.typ || []).includes('Färdmedel');
+    });
+    const itemsHub = root.getElementById(INVENTORY_HUB_DEFS.items.popupId);
+    if (itemsHub) itemsHub.dataset.hasVehicles = hasVehicle ? 'true' : 'false';
+  }
+
+  function closeInventoryHub(target = 'all', options = {}) {
+    if (target && typeof target === 'object') {
+      options = target;
+      target = 'all';
+    }
+    const root = getToolbarRoot();
+    if (!root) return;
+    const skipSection = options.skipSection || '';
+    const keys = target === 'all' ? Object.keys(INVENTORY_HUB_DEFS) : [target];
+    keys.forEach(hubKey => {
+      const def = INVENTORY_HUB_DEFS[hubKey];
+      if (!def) return;
+      Object.keys(def.sectionTabIds).forEach(sectionId => {
+        if (sectionId === skipSection) return;
+        const section = root.getElementById(sectionId);
+        if (!section || typeof section.__hubCleanup !== 'function') return;
+        const cleanup = section.__hubCleanup;
+        section.__hubCleanup = null;
+        try { cleanup({ viaHubClose: true }); } catch {}
+      });
+      const popup = root.getElementById(def.popupId);
+      if (!popup) return;
+      if (popup.__hubSession) {
+        popup.__hubClosingInternal = true;
+        const session = popup.__hubSession;
+        session.close('programmatic');
+        popup.__hubSession = null;
+        return;
+      }
+      if (window.popupManager?.close && popup.id) {
+        window.popupManager.close(popup, 'programmatic');
+      } else {
+        popup.classList.remove('open');
+      }
+    });
+    clearInventoryHubHighlight(root);
+    window.updateScrollLock?.();
+  }
+
+  function openInventoryHub(target = 'items', options = {}) {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const focusSection = options && typeof options === 'object' ? options.focusSection : '';
+    const activateView = !options || options.activateView !== false;
+    let hubKey = Object.prototype.hasOwnProperty.call(INVENTORY_HUB_DEFS, target) ? target : '';
+    let resolvedTab = getInventoryHubKeyForTab(target) ? target : '';
+    if (!resolvedTab && focusSection) {
+      resolvedTab = INVENTORY_HUB_FOCUS_TABS[focusSection] || '';
+    }
+    if (!resolvedTab && target === 'vehicles') {
+      resolvedTab = 'vehicle-load';
+    }
+    if (!hubKey) hubKey = getInventoryHubKeyForTab(resolvedTab) || 'items';
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return null;
+    if (!resolvedTab || !def.tabs.includes(resolvedTab)) resolvedTab = def.defaultTab;
+    const hub = ensureInventoryHubMounted(hubKey);
+    if (!hub) return null;
+    Object.keys(INVENTORY_HUB_DEFS).forEach(key => {
+      if (key !== hubKey) closeInventoryHub(key);
+    });
+    syncInventoryHubState();
+    setInventoryHubTab(hubKey, resolvedTab, { syncTouch: false });
+    if (!hub.__hubSession) {
+      hub.__hubSession = createPopupSession(hub, {
+        type: 'hub',
+        onClose: () => {
+          const isInternalClose = hub.__hubClosingInternal === true;
+          hub.__hubClosingInternal = false;
+          hub.__hubSession = null;
+          if (isInternalClose) return;
+          Object.keys(def.sectionTabIds).forEach(sectionId => {
+            const section = root.getElementById(sectionId);
+            if (!section || typeof section.__hubCleanup !== 'function') return;
+            const cleanup = section.__hubCleanup;
+            section.__hubCleanup = null;
+            try { cleanup({ viaHubClose: true }); } catch {}
+          });
+          clearInventoryHubHighlight(root);
+          window.updateScrollLock?.();
+        }
+      });
+    }
+    const hasSwipeTabs = syncInventoryHubSwipeTabs(hubKey, resolvedTab);
+    const inner = hub.querySelector(':scope > .popup-inner');
+    if (inner) inner.scrollTop = 0;
+    syncInventoryMotionTargets();
+    window.updateScrollLock?.();
+    if (focusSection) {
+      requestAnimationFrame(() => highlightInventoryHubSection(focusSection));
+    }
+    if (activateView) {
+      openInventoryHubTab(resolvedTab);
+    }
+    if (hasSwipeTabs) {
+      window.requestAnimationFrame(() => {
+        window.daubMotion?.slideTabsTo?.(
+          INVENTORY_HUB_SWIPE_KEYS[hubKey],
+          Math.max(0, def.tabs.indexOf(resolvedTab)),
+          { animate: false }
+        );
+        window.daubMotion?.refreshSwipeTabs?.(INVENTORY_HUB_SWIPE_KEYS[hubKey]);
+      });
+    }
+    return hub;
+  }
+
+  function openInventoryItemsHub(tabId = 'custom-item', options = {}) {
+    return openInventoryHub(tabId || 'items', options);
+  }
+
+  function openInventoryEconomyHub(tabId = 'money', options = {}) {
+    return openInventoryHub(tabId || 'economy', options);
+  }
+
+  function openInventoryCustomItemManager() {
+    openCustomPopup(entry => {
+      if (!entry) return;
+      const list = storeHelper.getCustomEntries(store);
+      list.push(entry);
+      const result = storeHelper.setCustomEntries(store, list);
+      if (result && result.idMap) {
+        const mappedId = result.idMap.get(entry.id);
+        if (mappedId) entry.id = mappedId;
+      }
+      if (result && Array.isArray(result.entries)) {
+        const persisted = result.entries.find(e => e.id === entry.id);
+        if (persisted) {
+          entry.namn = persisted.namn;
+          entry.artifactEffect = persisted.artifactEffect;
+        }
+      }
+      const inv = storeHelper.getInventory(store);
+      const row = {
+        id: entry.id,
+        name: entry.namn,
+        qty: 1,
+        gratis: 0,
+        gratisKval: [],
+        removedKval: [],
+        artifactEffect: entry.artifactEffect
+      };
+      if ((entry.taggar?.typ || []).includes('Artefakt')) {
+        ensureArtifactSnapshotSourceKey(entry, row);
+      }
+      inv.push(row);
+      saveInventory(inv);
+      renderInventory();
+      window.symbaroumViewBridge?.refreshCurrent({ filters: true });
+    });
+  }
+
+  function openInventoryHubTab(tabId) {
+    if (tabId === 'custom-item') {
+      openInventoryCustomItemManager();
+      return;
+    }
+    if (tabId === 'bulk-qty') {
+      openQtyPopup();
+      return;
+    }
+    if (tabId === 'money') {
+      openMoneyPopup();
+      return;
+    }
+    if (tabId === 'bulk-price') {
+      openPricePopup();
+      return;
+    }
+    if (tabId === 'vehicle-load') {
+      openVehiclePopup();
+      return;
+    }
+    if (tabId === 'vehicle-unload') {
+      openVehicleRemovePopup();
+    }
+  }
+
+  function spendInventoryMoney(spendMoney, options = {}) {
+    const normalized = storeHelper.normalizeMoney(spendMoney || {});
+    const spendO = moneyToO(normalized);
+    if (spendO <= 0) return false;
+    const finish = () => {
+      const curMoney = storeHelper.getMoney(store);
+      const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
+      storeHelper.setMoney(store, oToMoney(remainingO));
+      renderInventory();
+      scheduleMoneyMutationRefresh({
+        source: options.source || 'inventory-money-spend'
+      });
+    };
+    const priv = storeHelper.getPrivMoney(store);
+    const pos  = storeHelper.getPossessionMoney(store);
+    const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
+    if (hasAdv) {
+      openAdvMoneyPopup(() => {
+        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+        finish();
+        if (typeof options.onComplete === 'function') options.onComplete(true);
+      });
+      return true;
+    }
+    finish();
+    if (typeof options.onComplete === 'function') options.onComplete(true);
+    return true;
+  }
+
+  function getCraftLevelsForList(sourceList) {
+    const list = Array.isArray(sourceList) ? sourceList : storeHelper.getCurrentList(store);
     const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
     const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
     const forgeLvl = Math.max(partyForge, skillForge);
@@ -133,6 +1305,9 @@
     const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
     return { forgeLvl, alcLevel, artLevel };
+  }
+  function getCraftLevels() {
+    return getCraftLevelsForList();
   }
 
   function calcRowCostOWithLevels(row, levels) {
@@ -153,8 +1328,8 @@
     const baseQ = baseQuals.filter(q => !removed.includes(q));
     const extraQ = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
     const allQ = sanitizeArmorQualities(entry, [...baseQ, ...extraQ]);
-    const positives = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-    row.gratisKval = [...new Set(positives)];
+    const gratisbarSet = getGratisbarQualitySet(entry, allQ);
+    row.gratisKval = [...new Set(allQ.filter(q => gratisbarSet.has(q)))];
   }
 
   function applyLiveModePayment(pairs, opts) {
@@ -178,7 +1353,7 @@
     if (deltaO > 0) {
       const money = storeHelper.getMoney(store);
       const remainingO = Math.max(0, moneyToO(money) - deltaO);
-      storeHelper.setMoney(store, oToMoney(remainingO));
+      storeHelper.setMoney(store, oToMoney(remainingO), { persist: false });
     }
     pairs.forEach(({ next }) => {
       if (next) markRowFree(next);
@@ -201,7 +1376,7 @@
     if (cachedCatState.key === key) return cachedCatState.state;
     let state = {};
     try {
-      const raw = localStorage.getItem(key);
+      const raw = getUiPref(key);
       if (raw) state = JSON.parse(raw) || {};
     } catch {}
     cachedCatState = { key, state };
@@ -212,37 +1387,60 @@
     const key = getCatStateKey();
     cachedCatState = { key, state };
     try {
-      localStorage.setItem(key, JSON.stringify(state));
+      setUiPref(key, JSON.stringify(state));
     } catch {}
   }
 
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, m => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[m]);
+  const renderDaubCheckboxRow = window.renderDaubCheckboxRow || (({
+    rowClass = '',
+    labelAttrs = '',
+    copyHtml = '',
+    inputAttrs = '',
+    checked = false,
+    disabled = false
+  } = {}) => `
+    <label class="db-checkbox popup-choice-row ${String(rowClass || '').trim()}"${labelAttrs}>
+      ${copyHtml}
+      <input class="db-checkbox__input" type="checkbox"${inputAttrs}${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}>
+      <span class="db-checkbox__box" aria-hidden="true">${window.DAUB_CHECK_ICON || ''}</span>
+    </label>
+  `.trim());
+  const renderDaubRadioRow = window.renderDaubRadioRow || (({
+    rowClass = '',
+    labelAttrs = '',
+    copyHtml = '',
+    inputAttrs = '',
+    checked = false,
+    disabled = false
+  } = {}) => `
+    <label class="db-radio popup-choice-row popup-radio-option ${String(rowClass || '').trim()}"${labelAttrs}>
+      <input class="db-radio__input" type="radio"${inputAttrs}${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}>
+      <span class="db-radio__circle"></span>
+      ${copyHtml}
+    </label>
+  `.trim());
 
   function renderActiveFilters() {
     if (!dom.active) return;
     const tags = [];
     const text = (F.invTxt || '').trim();
     if (text) {
-      tags.push(`<span class="tag removable" data-type="text">${escapeHtml(text)} ✕</span>`);
+      tags.push(`<span class="db-chip removable" data-type="text">${escapeHtml(text)}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`);
     }
     F.test.forEach(val => {
-      tags.push(`<span class="tag removable" data-type="test" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+      tags.push(`<span class="db-chip removable" data-type="test" data-val="${escapeHtml(val)}">${escapeHtml(val)}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`);
     });
     F.typ.forEach(val => {
-      tags.push(`<span class="tag removable" data-type="typ" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+      tags.push(`<span class="db-chip removable" data-type="typ" data-val="${escapeHtml(val)}">${escapeHtml(val)}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`);
     });
     F.ark.forEach(val => {
-      tags.push(`<span class="tag removable" data-type="ark" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+      tags.push(`<span class="db-chip removable" data-type="ark" data-val="${escapeHtml(val)}">${escapeHtml(val)}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`);
     });
     dom.active.innerHTML = tags.join('');
   }
-
-  const dividePrice = (amt, divisor) => {
-    const o = typeof amt === 'number' ? amt : moneyToO(amt || {});
-    return Math.floor(o / divisor);
-  };
 
   function parseRef(ref) {
     if (ref && typeof ref === 'object') {
@@ -281,19 +1479,482 @@
     return {};
   }
 
-  function isHiddenType(tagTyp) {
-    const arr = Array.isArray(tagTyp) ? tagTyp : [];
+  function defaultArtifactEffectTotals() {
+    return {
+      xp: 0,
+      corruption: 0,
+      toughness: 0,
+      pain: 0,
+      capacity: 0
+    };
+  }
+
+  function normalizeArtifactEffectTotals(value) {
+    const base = defaultArtifactEffectTotals();
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return base;
+    const out = { ...base };
+    Object.keys(value).forEach(key => {
+      const num = Number(value[key]);
+      if (!Number.isFinite(num)) return;
+      out[key] = (out[key] || 0) + num;
+    });
+    return out;
+  }
+
+  function getArtifactEffectOption(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectOption === 'function') {
+      try {
+        return helper.getArtifactEffectOption(entry, artifactEffect, context) || null;
+      } catch (_) {}
+    }
+    const value = String(artifactEffect || '');
+    if (!value) return { value: '', label: 'Obunden', effects: {} };
+    if (value === 'xp') return { value: 'xp', label: '−1 Erfarenhetspoäng', effects: { xp: 1 } };
+    if (value === 'corruption') return { value: 'corruption', label: '+1 Permanent korruption', effects: { corruption: 1 } };
+    return { value, label: value, effects: {} };
+  }
+
+  function getArtifactEffectLabel(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectValueLabel === 'function') {
+      try {
+        return String(helper.getArtifactEffectValueLabel(entry, artifactEffect, context) || '');
+      } catch (_) {}
+    }
+    return getArtifactEffectOption(entry, artifactEffect, context)?.label || 'Obunden';
+  }
+
+  function getArtifactEffectEffects(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectValueEffects === 'function') {
+      try {
+        return normalizeArtifactEffectTotals(
+          helper.getArtifactEffectValueEffects(entry, artifactEffect, context)
+        );
+      } catch (_) {}
+    }
+    return normalizeArtifactEffectTotals(
+      getArtifactEffectOption(entry, artifactEffect, context)?.effects || {}
+    );
+  }
+
+  function getArtifactEffectRules(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectValueRules === 'function') {
+      try {
+        const resolved = helper.getArtifactEffectValueRules(entry, artifactEffect, context);
+        if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) return resolved;
+      } catch (_) {}
+    }
+    const option = getArtifactEffectOption(entry, artifactEffect, context);
+    const raw = option?.regler;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    return { ...raw };
+  }
+
+  function createArtifactSnapshotSourceKey(entry, row) {
+    const entryId = entry?.id === undefined || entry?.id === null
+      ? String(entry?.namn || row?.name || '').trim()
+      : String(entry.id).trim();
+    const ts = Date.now().toString(36);
+    const rand = Math.floor(Math.random() * 1e9).toString(36);
+    return `artifact:${entryId}:${ts}:${rand}`;
+  }
+
+  function ensureArtifactSnapshotSourceKey(entry, row) {
+    if (!row || typeof row !== 'object') return '';
+    const key = row.snapshotSourceKey === undefined || row.snapshotSourceKey === null
+      ? ''
+      : String(row.snapshotSourceKey).trim();
+    if (key) return key;
+    const generated = createArtifactSnapshotSourceKey(entry, row);
+    row.snapshotSourceKey = generated;
+    return generated;
+  }
+
+  function isSameChoiceSource(left, right) {
+    if (!left || !right) return false;
+    const leftId = left.id === undefined || left.id === null ? '' : String(left.id).trim();
+    const rightId = right.id === undefined || right.id === null ? '' : String(right.id).trim();
+    if (leftId && rightId) return leftId === rightId;
+    const leftName = String(left.namn || left.name || '').trim();
+    const rightName = String(right.namn || right.name || '').trim();
+    return Boolean(leftName && rightName && leftName === rightName);
+  }
+
+  function getInventoryChoiceUsedValues(inv, entry, field, excludeRow = null) {
+    if (!field) return [];
+    return flattenInventory(Array.isArray(inv) ? inv : [])
+      .filter(row => row && row !== excludeRow && isSameChoiceSource(row, entry))
+      .map(row => row?.[field])
+      .filter(value => value !== undefined && value !== null && String(value).trim() !== '');
+  }
+
+  async function pickInventoryEntryChoice(options = {}) {
+    const picker = window.choicePopup;
+    if (!picker || typeof picker.getChoiceRule !== 'function' || typeof picker.pickForEntry !== 'function') {
+      return { hasChoice: false, cancelled: false };
+    }
+
+    const entry = options.entry;
+    if (!entry || typeof entry !== 'object') return { hasChoice: false, cancelled: false };
+    const fieldFilter = String(options.field || '').trim();
+    const list = Array.isArray(options.list) ? options.list : [];
+    const inv = Array.isArray(options.inv) ? options.inv : [];
+    const row = options.row && typeof options.row === 'object' ? options.row : null;
+    const context = {
+      list,
+      inventory: inv,
+      row,
+      entry,
+      sourceEntry: entry,
+      field: fieldFilter,
+      level: typeof options.level === 'string' ? options.level : (entry.nivå || ''),
+      sourceLevel: typeof options.level === 'string' ? options.level : (entry.nivå || '')
+    };
+    const rule = picker.getChoiceRule(entry, context, { fallbackLegacy: true });
+    if (!rule) return { hasChoice: false, cancelled: false };
+
+    const usedValues = Array.isArray(options.usedValues)
+      ? options.usedValues
+      : getInventoryChoiceUsedValues(inv, entry, rule.field, row);
+    const picked = await picker.pickForEntry({
+      entry,
+      context,
+      rule,
+      usedValues,
+      currentValue: options.currentValue,
+      fallbackLegacy: true
+    });
+    if (!picked?.hasChoice) return { hasChoice: false, cancelled: false };
+    if (picked.cancelled) {
+      return {
+        hasChoice: true,
+        cancelled: true,
+        noOptions: Boolean(picked.noOptions),
+        rule,
+        usedValues
+      };
+    }
+
+    const duplicate = await picker.enforceDuplicatePolicy({
+      rule,
+      value: picked.value,
+      usedValues,
+      label: picked.value
+    });
+    if (!duplicate.ok) {
+      return {
+        hasChoice: true,
+        cancelled: true,
+        duplicateRejected: true,
+        rule,
+        usedValues
+      };
+    }
+
+    return {
+      hasChoice: true,
+      cancelled: false,
+      rule,
+      value: picked.value,
+      usedValues,
+      duplicate
+    };
+  }
+
+  function normalizePositiveInt(value, fallback = 1) {
+    const num = Math.floor(Number(value));
+    if (!Number.isFinite(num)) return fallback;
+    return Math.max(0, num);
+  }
+
+  function listify(value) {
+    if (Array.isArray(value)) return value;
+    if (value === undefined || value === null) return [];
+    return [value];
+  }
+
+  function getInventoryMeta(entry) {
+    const invTag = entry?.taggar?.inventory;
+    return (invTag && typeof invTag === 'object' && !Array.isArray(invTag))
+      ? invTag
+      : {};
+  }
+
+  function isEntryStackable(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    const invMeta = getInventoryMeta(entry);
+    if (typeof invMeta.stackbar === 'boolean') return invMeta.stackbar;
+    const id = entry.id === undefined || entry.id === null ? '' : String(entry.id).trim();
+    return id ? LEGACY_STACKABLE_ID_SET.has(id) : false;
+  }
+
+  function isTraitBoundInventoryEntry(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (entry.bound) return true;
+    if (Array.isArray(entry.traits) && entry.traits.filter(Boolean).length > 0) return true;
+    const invMeta = getInventoryMeta(entry);
+    return invMeta.traitbunden === true || invMeta.traitBound === true;
+  }
+
+  function shouldShowRowTraitInName(row, entry) {
+    if (!row || !row.trait) return false;
+    return isTraitBoundInventoryEntry(entry);
+  }
+
+  function getEntryRuleListWithFallback(entry, key, options = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getRuleList === 'function') {
+      try {
+        const rules = helper.getRuleList(entry, key, options);
+        if (Array.isArray(rules)) return rules;
+      } catch (_) {
+        // Ignore malformed rules and fall through to empty.
+      }
+    }
+    return [];
+  }
+
+  function normalizeBundleRuleRef(raw) {
+    if (raw === undefined || raw === null) return null;
+    let id = '';
+    let name = '';
+    let qty = 1;
+
+    if (typeof raw === 'string' || typeof raw === 'number') {
+      const txt = String(raw).trim();
+      if (!txt) return null;
+      id = txt;
+    } else if (raw && typeof raw === 'object') {
+      id = raw.id === undefined || raw.id === null ? '' : String(raw.id).trim();
+      name = typeof raw.namn === 'string'
+        ? raw.namn.trim()
+        : (typeof raw.name === 'string' ? raw.name.trim() : '');
+      qty = normalizePositiveInt(raw.antal ?? raw.qty ?? raw.varde, 1);
+    }
+
+    if (!id && !name) return null;
+    if (!qty) return null;
+    return { id, name, qty };
+  }
+
+  function getInventoryBundleItems(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return [];
+    const level = options?.level ?? entry.nivå;
+    const rules = getEntryRuleListWithFallback(entry, 'ger', level ? { level } : {});
+    const aggregate = new Map();
+
+    rules.forEach(rule => {
+      if (String(rule?.mal || '').trim() !== 'foremal') return;
+      listify(rule?.foremal).forEach(raw => {
+        const parsed = normalizeBundleRuleRef(raw);
+        if (!parsed) return;
+        const resolved = getEntry(parsed.id || parsed.name);
+        const resolvedId = resolved?.id === undefined || resolved?.id === null
+          ? parsed.id
+          : String(resolved.id).trim();
+        const resolvedName = typeof resolved?.namn === 'string' && resolved.namn.trim()
+          ? resolved.namn.trim()
+          : parsed.name;
+        if (!resolvedId && !resolvedName) return;
+        const key = resolvedId ? `id:${resolvedId}` : `name:${resolvedName.toLowerCase()}`;
+        if (!aggregate.has(key)) {
+          aggregate.set(key, {
+            id: resolvedId || undefined,
+            name: resolvedName,
+            qty: 0,
+            entry: resolved && resolved.namn ? resolved : null
+          });
+        }
+        aggregate.get(key).qty += parsed.qty;
+      });
+    });
+
+    const fromRules = Array.from(aggregate.values()).filter(item => item.qty > 0);
+    return fromRules;
+  }
+
+  function isInventoryBundleEntry(entry, options = {}) {
+    return getInventoryBundleItems(entry, options).length > 0;
+  }
+
+  function getRowQuantityValue(row) {
+    if (!row || typeof row !== 'object') return 0;
+    if (row.qty === undefined || row.qty === null || row.qty === '') return 1;
+    return normalizePositiveInt(row.qty, 0);
+  }
+
+  function rowMatchesInventoryRef(row, ref) {
+    if (!row || !ref) return false;
+    const rowId = row.id === undefined || row.id === null ? '' : String(row.id).trim();
+    const refId = ref.id === undefined || ref.id === null ? '' : String(ref.id).trim();
+    if (refId) {
+      if (rowId) return rowId === refId;
+      const refName = ref.name === undefined || ref.name === null ? '' : String(ref.name).trim();
+      return refName && String(row.name || '').trim() === refName;
+    }
+    const refName = ref.name === undefined || ref.name === null ? '' : String(ref.name).trim();
+    if (!refName) return false;
+    return String(row.name || '').trim() === refName;
+  }
+
+  function getInventoryRefQuantity(inv, ref) {
+    return (Array.isArray(inv) ? inv : []).reduce((sum, row) => {
+      if (!rowMatchesInventoryRef(row, ref)) return sum;
+      return sum + getRowQuantityValue(row);
+    }, 0);
+  }
+
+  function buildBasicInventoryRow(entry, qty = 1) {
+    return {
+      id: entry.id,
+      name: entry.namn,
+      qty: normalizePositiveInt(qty, 1) || 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    };
+  }
+
+  function addInventoryEntryQuantity(inv, entry, qty, options = {}) {
+    if (!Array.isArray(inv) || !entry || !entry.namn) return false;
+    const amount = normalizePositiveInt(qty, 0);
+    if (!amount) return false;
+    const livePairs = Array.isArray(options.livePairs) ? options.livePairs : null;
+    const ref = { id: entry.id, name: entry.namn };
+    if (isIndividualItem(entry)) {
+      for (let i = 0; i < amount; i++) {
+        const row = buildBasicInventoryRow(entry, 1);
+        inv.push(row);
+        if (livePairs) livePairs.push({ prev: null, next: row });
+      }
+      return true;
+    }
+
+    const idx = inv.findIndex(row => rowMatchesInventoryRef(row, ref));
+    if (idx === -1) {
+      const row = buildBasicInventoryRow(entry, amount);
+      inv.push(row);
+      if (livePairs) livePairs.push({ prev: null, next: row });
+      return true;
+    }
+
+    const target = inv[idx];
+    const prevState = livePairs ? cloneRow(target) : null;
+    const curQty = getRowQuantityValue(target);
+    target.qty = curQty + amount;
+    if (livePairs) livePairs.push({ prev: prevState, next: target });
+    return true;
+  }
+
+  function addInventoryBundle(inv, entry, options = {}) {
+    const units = normalizePositiveInt(options?.units ?? 1, 1);
+    if (!units) return [];
+    const bundleItems = getInventoryBundleItems(entry, options);
+    if (!bundleItems.length) return [];
+    const livePairs = Array.isArray(options.livePairs) ? options.livePairs : null;
+    const refs = [];
+
+    bundleItems.forEach(item => {
+      const resolvedEntry = item.entry && item.entry.namn ? item.entry : getEntry(item.id || item.name);
+      if (!resolvedEntry || !resolvedEntry.namn) return;
+      const qty = item.qty * units;
+      const changed = addInventoryEntryQuantity(inv, resolvedEntry, qty, { livePairs });
+      if (!changed) return;
+      refs.push({
+        id: resolvedEntry.id === undefined || resolvedEntry.id === null ? undefined : String(resolvedEntry.id).trim(),
+        name: resolvedEntry.namn
+      });
+    });
+
+    const seen = new Set();
+    return refs.filter(ref => {
+      const key = ref.id ? `id:${ref.id}` : `name:${String(ref.name || '').trim().toLowerCase()}`;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function removeInventoryRefQuantity(inv, ref, qty) {
+    if (!Array.isArray(inv)) return 0;
+    let remaining = normalizePositiveInt(qty, 0);
+    if (!remaining) return 0;
+    let removed = 0;
+    for (let i = 0; i < inv.length && remaining > 0;) {
+      const row = inv[i];
+      if (!rowMatchesInventoryRef(row, ref)) {
+        i += 1;
+        continue;
+      }
+      const rowQty = getRowQuantityValue(row);
+      if (rowQty <= remaining) {
+        remaining -= rowQty;
+        removed += rowQty;
+        inv.splice(i, 1);
+        continue;
+      }
+      row.qty = rowQty - remaining;
+      removed += remaining;
+      remaining = 0;
+      i += 1;
+    }
+    return removed;
+  }
+
+  function removeInventoryBundle(inv, entry, units = 1, options = {}) {
+    const removeUnits = normalizePositiveInt(units, 0);
+    if (!removeUnits) return false;
+    const bundleItems = getInventoryBundleItems(entry, options);
+    if (!bundleItems.length) return false;
+    let changed = false;
+    bundleItems.forEach(item => {
+      const targetQty = item.qty * removeUnits;
+      if (!targetQty) return;
+      const removed = removeInventoryRefQuantity(inv, { id: item.id, name: item.name }, targetQty);
+      if (removed > 0) changed = true;
+    });
+    return changed;
+  }
+
+  function getInventoryBundleCount(inv, entry, options = {}) {
+    const bundleItems = getInventoryBundleItems(entry, options);
+    if (!bundleItems.length) return null;
+    const counts = bundleItems.map(item => {
+      const available = getInventoryRefQuantity(inv, { id: item.id, name: item.name });
+      return Math.floor(available / item.qty);
+    });
+    if (!counts.length) return 0;
+    return Math.max(0, Math.min(...counts));
+  }
+
+  function isHiddenType(entryOrTagTyp) {
+    const entry = entryOrTagTyp && typeof entryOrTagTyp === 'object' && !Array.isArray(entryOrTagTyp)
+      ? entryOrTagTyp
+      : null;
+    if (entry && typeof storeHelper?.isSearchHiddenEntry === 'function') {
+      try { return !!storeHelper.isSearchHiddenEntry(entry); }
+      catch { /* ignore and use legacy fallback */ }
+    }
+    const arr = Array.isArray(entryOrTagTyp)
+      ? entryOrTagTyp
+      : (Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : []);
     const primary = arr[0] ? String(arr[0]).toLowerCase() : '';
     return ['artefakt','kuriositet','skatt'].includes(primary);
   }
 
-  function hasArtifactTag(tagTyp) {
-    return (Array.isArray(tagTyp) ? tagTyp : [])
+  function hasArtifactTag(entryOrTagTyp) {
+    const arr = Array.isArray(entryOrTagTyp)
+      ? entryOrTagTyp
+      : (Array.isArray(entryOrTagTyp?.taggar?.typ) ? entryOrTagTyp.taggar.typ : []);
+    return arr
       .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
   }
 
-  function needsArtifactListSync(tagTyp) {
-    return isHiddenType(tagTyp) || hasArtifactTag(tagTyp);
+  function needsArtifactListSync(entryOrTagTyp) {
+    return isHiddenType(entryOrTagTyp) || hasArtifactTag(entryOrTagTyp);
   }
 
   const LEVEL_MARKERS = new Map([
@@ -329,63 +1990,147 @@
     return sortByType(entA, entB);
   }
 
-  function saveInventory(inv) {
-    normalizeInventoryQualities(inv);
-    const nonVeh = [];
-    const veh = [];
-    inv.forEach(row => {
-      const entry = getEntry(row.id || row.name);
-      if ((entry.taggar?.typ || []).includes('F\u00e4rdmedel')) veh.push(row);
-      else nonVeh.push(row);
-    });
-    inv.splice(0, inv.length, ...nonVeh, ...veh);
-    storeHelper.setInventory(store, inv);
-    recalcArtifactEffects();
-    if (window.updateXP) updateXP();
-    if (window.renderTraits) renderTraits();
-    if (window.indexViewUpdate) window.indexViewUpdate();
+  const MUTATION_FLOW_CONTEXT_KEYS = Object.freeze(['remove-item', 'add-item']);
+
+  function getActiveMutationScenarioId() {
+    const perf = window.symbaroumPerf;
+    return MUTATION_FLOW_CONTEXT_KEYS
+      .map((key) => perf?.getFlowContext?.(key))
+      .find(Boolean) || null;
   }
 
-  function addWellEquippedItems(inv) {
-    const freebies = [
-      { id: 'di12', name: 'Rep, 10 meter', qty: 3 },
-      { id: 'di23', name: 'Papper', qty: 1 },
-      { id: 'di18', name: 'Kritor', qty: 1 },
-      { id: 'di5',  name: 'Fackla', qty: 3 },
-      { id: 'i11',  name: 'Signalhorn', qty: 1 },
-      { id: 'elix34', name: 'Långfärdsbröd', qty: 3 },
-      { id: 'elix43', name: 'Örtkur', qty: 3 }
-    ];
-    freebies.forEach(it => {
-      const row = inv.find(r => r.id === it.id || r.name === it.name);
-      const entry = getEntry(it.id || it.name);
-      if (row) {
-        row.id = entry.id;
-        row.name = entry.namn;
-        row.qty += it.qty;
-        row.gratis = (row.gratis || 0) + it.qty;
-        row.perkGratis = (row.perkGratis || 0) + it.qty;
-        if (!row.perk) row.perk = 'Välutrustad';
-      } else {
-        inv.push({ id: entry.id, name: entry.namn, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
-      }
-    });
-  }
-
-  function removeWellEquippedItems(inv) {
-    for (let i = inv.length - 1; i >= 0; i--) {
-      const row = inv[i];
-      if (row.perk === 'Välutrustad') {
-        const pg = row.perkGratis || row.gratis || 0;
-        const removed = Math.min(pg, row.qty);
-        row.qty -= removed;
-        row.gratis = Math.max(0, (row.gratis || 0) - removed);
-        row.perkGratis = Math.max(0, (row.perkGratis || 0) - removed);
-        delete row.perk;
-        delete row.perkGratis;
-        if (row.qty <= 0) inv.splice(i, 1);
-      }
+  function timeActiveMutationStage(name, callback, detail = {}) {
+    const scenarioId = getActiveMutationScenarioId();
+    const perf = window.symbaroumPerf;
+    if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') {
+      return callback();
     }
+    return perf.timeScenarioStage(scenarioId, name, callback, detail);
+  }
+
+  function runCurrentCharacterMutationBatch(callback) {
+    if (typeof callback !== 'function') return undefined;
+    if (typeof storeHelper?.batchCurrentCharacterMutation === 'function') {
+      return storeHelper.batchCurrentCharacterMutation(store, {}, callback);
+    }
+    return callback();
+  }
+
+  function renderInventoryWithPerf(detail = {}) {
+    return timeActiveMutationStage('inventory-render', () => renderInventory(), {
+      surface: 'inventory',
+      ...detail
+    });
+  }
+
+  function saveInventory(inv, options = {}) {
+    timeActiveMutationStage('store-mutation', () => {
+      normalizeInventoryQualities(inv);
+      const nonVeh = [];
+      const veh = [];
+      inv.forEach(row => {
+        const entry = getEntry(row.id || row.name);
+        if ((entry.taggar?.typ || []).includes('F\u00e4rdmedel')) veh.push(row);
+        else nonVeh.push(row);
+      });
+      inv.splice(0, inv.length, ...nonVeh, ...veh);
+      runCurrentCharacterMutationBatch(() => {
+        storeHelper.setInventory(store, inv);
+        timeActiveMutationStage('artifact-effects-recalc', () => {
+          recalcArtifactEffects();
+        }, {
+          surface: 'inventory'
+        });
+      });
+    }, {
+      surface: 'inventory'
+    });
+    if (options.skipCharacterRefresh) return;
+    if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+      window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+        xp: true,
+        traits: true,
+        summary: true,
+        effects: true,
+        source: options.source || 'inventory-save',
+        afterPaint: options.afterPaint !== false
+      });
+    } else {
+      if (window.updateXP) updateXP();
+      if (window.renderTraits) renderTraits();
+      window.symbaroumViewBridge?.refreshCurrent({ summary: true, effects: true, strict: true });
+    }
+  }
+
+  function scheduleMoneyMutationRefresh(options = {}) {
+    if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+      window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+        role: 'character',
+        summary: true,
+        effects: true,
+        source: options.source || 'inventory-money-mutation',
+        afterPaint: options.afterPaint !== false
+      });
+      return;
+    }
+    window.symbaroumViewBridge?.refreshRole?.('character', {
+      summary: true,
+      effects: true,
+      strict: true
+    });
+  }
+
+  function getGrantSourceName(value) {
+    return String(value || '').trim();
+  }
+
+  function isGrantSourceActive(sourceName) {
+    const source = getGrantSourceName(sourceName);
+    if (!source) return false;
+    return storeHelper.getCurrentList(store).some(entry => entry?.namn === source);
+  }
+
+  function getGrantRemovalMessage(sourceName) {
+    const source = getGrantSourceName(sourceName);
+    if (!source) return 'Utrustningen kommer från en regelstyrd källa. Ta bort ändå?';
+    return `Utrustningen kommer från fördelen “${source}”. Ta bort ändå?`;
+  }
+
+  async function confirmGrantRemoval(sourceName) {
+    const source = getGrantSourceName(sourceName);
+    if (!source) return true;
+    if (!isGrantSourceActive(source)) return true;
+    return confirmPopup(getGrantRemovalMessage(source));
+  }
+
+  async function confirmSnapshotSourceRemoval(rows, options = {}) {
+    const helper = window.snapshotHelper;
+    const impacts = typeof helper?.getRowRemovalImpacts === 'function'
+      ? helper.getRowRemovalImpacts(store, rows, options)
+      : [];
+    const decision = typeof helper?.confirmRemovalDecision === 'function'
+      ? await helper.confirmRemovalDecision(impacts)
+      : 'noop';
+
+    if (decision === 'cancel') return false;
+    if (decision === 'remove') {
+      timeActiveMutationStage('snapshot-cleanup', () => {
+        impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+      }, {
+        surface: 'inventory',
+        mode: 'remove'
+      });
+      return true;
+    }
+    if (decision === 'detach') {
+      timeActiveMutationStage('snapshot-cleanup', () => {
+        impacts.forEach(impact => storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
+      }, {
+        surface: 'inventory',
+        mode: 'detach'
+      });
+    }
+    return true;
   }
 
   function flattenInventory(arr) {
@@ -477,7 +2222,7 @@
     const tagTyp = entry.taggar?.typ || [];
     const indivType = INDIVIDUAL_TYPES.some(t => tagTyp.includes(t));
     if (!indivType) return false;
-    if (STACKABLE_IDS.includes(entry.id)) return false;
+    if (isEntryStackable(entry)) return false;
     if (['kraft', 'ritual'].includes(entry.bound)) return false;
     return true;
   }
@@ -511,6 +2256,10 @@
     if (Array.isArray(source.removedKval) && source.removedKval.length) {
       const set = new Set([...(target.removedKval || []), ...source.removedKval]);
       target.removedKval = [...set];
+    }
+    if (Array.isArray(source.manualQualityOverride) && source.manualQualityOverride.length) {
+      const set = new Set([...(target.manualQualityOverride || []), ...source.manualQualityOverride]);
+      target.manualQualityOverride = [...set];
     }
 
     if (!target.basePrice && source.basePrice) {
@@ -563,6 +2312,9 @@
   function addToInventory(inv, row) {
     if (!row || !Array.isArray(inv)) return;
     const entry = getEntry(row.id || row.name);
+    if ((entry.taggar?.typ || []).includes('Artefakt')) {
+      ensureArtifactSnapshotSourceKey(entry, row);
+    }
     if (isIndividualItem(entry)) {
       inv.push(row);
       return;
@@ -576,6 +2328,9 @@
       }
       if (!Array.isArray(row.gratisKval)) row.gratisKval = row.gratisKval ? [row.gratisKval] : [];
       if (!Array.isArray(row.removedKval)) row.removedKval = row.removedKval ? [row.removedKval] : [];
+      if (!Array.isArray(row.manualQualityOverride)) {
+        row.manualQualityOverride = row.manualQualityOverride ? [row.manualQualityOverride] : [];
+      }
       if (Number(row.gratis) > Number(row.qty)) row.gratis = Number(row.qty) || 0;
       if (Number(row.perkGratis) > Number(row.qty)) row.perkGratis = Number(row.qty) || 0;
       inv.push(row);
@@ -603,17 +2358,87 @@
   }
 
   function recalcArtifactEffects() {
-    const inv = flattenInventory(storeHelper.getInventory(store));
-    const effects = inv.reduce((acc, row) => {
+    const rawInventory = storeHelper.getInventory(store);
+    const list = storeHelper.getCurrentList(store);
+    const flatInventory = flattenInventory(rawInventory);
+    const snapshotSources = [];
+    const effectToRuleMal = {
+      corruption: 'permanent_korruption',
+      pain: 'smartgrans_tillagg',
+      toughness: 'talighet_tillagg',
+      capacity: 'barkapacitet_tillagg'
+    };
+    const effects = flatInventory.reduce((acc, row) => {
       const entry = getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ || [];
       if (!tagTyp.includes('Artefakt')) return acc;
-      const eff = row.artifactEffect;
-      if (eff === 'corruption') acc.corruption += 1;
-      else if (eff === 'xp') acc.xp += 1;
+      const sourceKey = ensureArtifactSnapshotSourceKey(entry, row);
+      const rulesBlock = getArtifactEffectRules(entry, row.artifactEffect, {
+        entry,
+        sourceEntry: entry,
+        row,
+        list,
+        inventory: rawInventory,
+        field: 'artifactEffect'
+      });
+      const andrarRules = Array.isArray(rulesBlock?.andrar) ? rulesBlock.andrar : [];
+      if (sourceKey && andrarRules.length) {
+        snapshotSources.push({
+          sourceKey,
+          sourceName: String(entry?.namn || row?.name || '').trim(),
+          sourceType: 'artifact_binding',
+          sourceSignature: JSON.stringify({
+            artifactId: entry?.id || row?.id || '',
+            value: row?.artifactEffect || '',
+            rules: andrarRules
+          }),
+          sourceEntry: entry,
+          row,
+          sourceRef: {
+            kind: 'artifact_binding',
+            artifactId: entry?.id || '',
+            artifactName: entry?.namn || '',
+            artifactEffect: row?.artifactEffect || '',
+            snapshotSourceKey: sourceKey
+          },
+          rules: andrarRules
+        });
+      }
+      const resolved = getArtifactEffectEffects(entry, row.artifactEffect, {
+        entry,
+        sourceEntry: entry,
+        row,
+        list,
+        inventory: rawInventory,
+        field: 'artifactEffect'
+      });
+      const blockedEffects = new Set();
+      Object.keys(effectToRuleMal).forEach(effectKey => {
+        const targetMal = effectToRuleMal[effectKey];
+        if (andrarRules.some(rule => String(rule?.mal || '').trim() === targetMal)) {
+          blockedEffects.add(effectKey);
+        }
+      });
+      Object.keys(resolved).forEach(key => {
+        if (blockedEffects.has(key)) return;
+        const num = Number(resolved[key]);
+        if (!Number.isFinite(num) || num === 0) return;
+        acc[key] = (acc[key] || 0) + num;
+      });
       return acc;
-    }, { xp:0, corruption:0 });
-    storeHelper.setArtifactEffects(store, effects);
+    }, defaultArtifactEffectTotals());
+    storeHelper.setArtifactEffects(store, normalizeArtifactEffectTotals(effects));
+    if (typeof storeHelper.syncSnapshotRuleSources === 'function') {
+      timeActiveMutationStage('snapshot-cleanup', () => {
+        storeHelper.syncSnapshotRuleSources(store, snapshotSources, {
+          sourceType: 'artifact_binding',
+          removeMissing: true
+        });
+      }, {
+        surface: 'inventory',
+        mode: 'sync'
+      });
+    }
   }
 
   function makeNameMap(inv) {
@@ -622,7 +2447,7 @@
     inv.forEach(r => {
       const entry = getEntry(r.id || r.name);
       let n = r.name;
-      if (r.trait && (entry.bound || r.id === 'l9')) {
+      if (shouldShowRowTraitInName(r, entry)) {
         n += `: ${r.trait}`;
       }
       baseNames.set(r, n);
@@ -640,6 +2465,131 @@
       }
     });
     return map;
+  }
+
+  function getInventoryVehicleContext(inv) {
+    const inventory = Array.isArray(inv) ? inv : [];
+    const vehicles = inventory
+      .map((row, idx) => ({ row, entry: getEntry(row?.id || row?.name), idx }))
+      .filter(({ entry }) => (entry?.taggar?.typ || []).includes('Färdmedel'));
+    const flat = flattenInventoryWithPath(inventory);
+    const nameMap = makeNameMap(flat.map(item => item.row));
+    const vehicleNameMap = makeNameMap(vehicles.map(item => item.row));
+    const vehicleNames = new Map(
+      vehicles.map(({ row, entry, idx }) => [idx, vehicleNameMap.get(row) || entry?.namn || row?.name || 'Färdmedel'])
+    );
+    const vehicleIndexes = vehicles.map(item => item.idx);
+    return { vehicles, flat, nameMap, vehicleNames, vehicleIndexes };
+  }
+
+  function buildInventoryBatchCheckboxRow(label, path, meta = '') {
+    const safeLabel = escapeHtml(label || 'Okänt föremål');
+    const safeMeta = meta ? `<span class="inventory-batch-item-meta">${escapeHtml(meta)}</span>` : '';
+    return renderDaubCheckboxRow({
+      rowClass: 'price-item inventory-batch-item',
+      copyHtml: `
+        <span class="inventory-batch-item-copy">
+          <span class="inventory-batch-item-label">${safeLabel}</span>
+          ${safeMeta}
+        </span>
+      `,
+      inputAttrs: ` data-path="${escapeHtml(path)}"`
+    });
+  }
+
+  function buildInventoryBatchActionRow(label, actionLabel, path, meta = '') {
+    const safeLabel = escapeHtml(label || 'Okänt föremål');
+    const safeAction = escapeHtml(actionLabel || 'Verkställ');
+    const safeMeta = meta ? `<span class="inventory-batch-item-meta">${escapeHtml(meta)}</span>` : '';
+    return `
+      <div class="price-item inventory-batch-item inventory-batch-item-action">
+        <span class="inventory-batch-item-copy">
+          <span class="inventory-batch-item-label">${safeLabel}</span>
+          ${safeMeta}
+        </span>
+        <button type="button" class="db-btn db-btn--danger vehicle-money-action" data-path="${path}">${safeAction}</button>
+      </div>
+    `;
+  }
+
+  function getCharacterCarrySummary(inv) {
+    const inventory = Array.isArray(inv) ? inv : (storeHelper.getInventory(store) || []);
+    const allInv = flattenInventory(inventory);
+    const levels = getCraftLevels();
+    const totalCostO = allInv.reduce((sum, row) => sum + calcRowCostOWithLevels(row, levels), 0);
+    const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+    const diffO = moneyToO(totalMoney) - totalCostO;
+    const unusedMoney = oToMoney(Math.max(0, diffO));
+    const moneyWeight = calcMoneyWeight(unusedMoney);
+    const list = storeHelper.getCurrentList(store);
+    const usedWeight = allInv.reduce((sum, row) => {
+      const entry = getEntry(row.id || row.name);
+      const isVehicle = (entry.taggar?.typ || []).includes('Färdmedel');
+      return sum + (isVehicle ? 0 : calcRowWeight(row, list));
+    }, 0) + moneyWeight;
+    const traits = storeHelper.getTraits(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
+    const valStark = (traits['Stark'] || 0) + (bonus['Stark'] || 0) + (maskBonus['Stark'] || 0);
+    const maxCapacity = storeHelper.calcCarryCapacity(valStark, list) + Number(manualAdjust.capacity || 0);
+    return { usedWeight, maxCapacity };
+  }
+
+  function getVehicleCarrySummary(row) {
+    const entry = getEntry(row?.id || row?.name);
+    const qtyRaw = Number(row?.qty);
+    const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
+    const baseWeight = row?.vikt ?? entry?.vikt ?? entry?.stat?.vikt ?? 0;
+    const totalWeight = calcRowWeight(row || {});
+    const usedWeight = Math.max(0, totalWeight - (baseWeight * qty));
+    const maxCapacity = Number(entry?.stat?.bärkapacitet || 0);
+    return { usedWeight, maxCapacity, entry };
+  }
+
+  function formatBatchCapacityText(usedWeight, maxCapacity) {
+    const fmt = value => typeof formatWeight === 'function'
+      ? formatWeight(value)
+      : String(Math.round((Number(value) || 0) * 100) / 100);
+    return `Bärkapacitet: ${fmt(usedWeight)}/${fmt(maxCapacity)}`;
+  }
+
+  function buildInventoryBatchGroup({ title, subtitle = '', metaText = '', icon = '', count = '', itemsHtml = '', emptyText = '' }) {
+    const safeTitle = escapeHtml(title || 'Grupp');
+    const subtitleHtml = subtitle
+      ? `<span class="inventory-batch-group-subtitle">${escapeHtml(subtitle)}</span>`
+      : '';
+    const metaHtml = metaText
+      ? `<span class="inventory-batch-group-meta">${escapeHtml(metaText)}</span>`
+      : '';
+    const countText = count === '' || count === null || count === undefined
+      ? ''
+      : String(count);
+    const countHtml = countText
+      ? `<span class="inventory-batch-group-count">${escapeHtml(countText)}</span>`
+      : '';
+    const iconHtml = icon
+      ? `<span class="inventory-batch-group-icon" aria-hidden="true">${icon}</span>`
+      : '';
+    const content = itemsHtml || `<p class="inventory-batch-empty">${escapeHtml(emptyText || 'Inga valbara poster.')}</p>`;
+    return `
+      <section class="vehicle-group inventory-batch-group">
+        <header class="inventory-batch-group-header">
+          <span class="inventory-batch-group-title-wrap">
+            ${iconHtml}
+            <span class="inventory-batch-group-copy">
+              <span class="inventory-batch-group-title">${safeTitle}</span>
+              ${subtitleHtml}
+              ${metaHtml}
+            </span>
+          </span>
+          ${countHtml}
+        </header>
+        <div class="inventory-batch-group-items">
+          ${content}
+        </div>
+      </section>
+    `;
   }
 
   function sortAllInventories() {
@@ -701,59 +2651,246 @@
     if (!root) return;
     const pop  = root.getElementById('qualPopup');
     const box  = root.getElementById('qualOptions');
-    const cls  = root.getElementById('qualCancel');
+    const closeBtn = root.getElementById('qualClose');
+    const applyBtn = root.getElementById('qualApply');
+    const titleEl = root.getElementById('qualTitle');
+    const subtitleEl = root.getElementById('qualSubtitle');
+    const legendEl = root.getElementById('qualLegend');
+    const searchEl = root.getElementById('qualSearch');
+    const countEl = root.getElementById('qualCount');
+    const emptyEl = root.getElementById('qualEmpty');
+    if (!pop || !box || !closeBtn || !searchEl || !countEl || !emptyEl || !applyBtn) return;
 
+    const done = typeof callback === 'function' ? callback : () => {};
     const nameMap = makeNameMap(storeHelper.getInventory(store));
     const qualMode = list.every(it => isQual(it));
-    const items = qualMode
+    const selected = new Set();
+    const categoryOrder = ['positive', 'neutral', 'negative', 'mystic'];
+    const categoryLabel = {
+      positive: 'Positiva',
+      neutral: 'Neutrala',
+      negative: 'Negativa',
+      mystic: 'Mystiska'
+    };
+    const qualityCategory = (name) => {
+      if (isMysticQual(name)) return 'mystic';
+      if (isNegativeQual(name)) return 'negative';
+      if (isNeutralQual(name)) return 'neutral';
+      return 'positive';
+    };
+    const normalizeText = (value) => {
+      const source = String(value || '').trim().toLowerCase();
+      if (!source) return '';
+      if (typeof window.searchNormalize === 'function') return window.searchNormalize(source);
+      if (typeof source.normalize === 'function') {
+        return source.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      }
+      return source;
+    };
+    const items = (qualMode
       ? sortQualsForDisplay(list.map((item, idx) => ({ item, idx })))
-      : list.map((item, idx) => ({ item, idx }));
-    /* bygg knappar: stöd både namn och name */
-    box.innerHTML = items.map(({item, idx}) => {
-      const base  = item.namn || item.name;
-      const label = nameMap.get(item) || base;
-      let cls = 'char-btn';
+      : list.map((item, idx) => ({ item, idx })))
+      .map(({ item, idx }) => {
+        const base = String(item?.namn || item?.name || '');
+        const label = nameMap.get(item) || base;
+        const types = Array.isArray(item?.taggar?.typ) ? item.taggar.typ.join(' ') : '';
+        let controlClass = qualMode ? 'qual-popup-choice quality-option' : 'qual-popup-radio-option popup-radio-option';
+        if (qualMode) {
+          if (isNegativeQual(base)) controlClass += ' negative';
+          else if (isNeutralQual(base)) controlClass += ' neutral';
+          if (isMysticQual(base)) controlClass += ' mystic';
+        }
+        return {
+          idx,
+          label,
+          controlClass,
+          category: qualMode ? qualityCategory(base) : 'all',
+          searchKey: normalizeText(`${label} ${base} ${types}`)
+        };
+      });
+    let filtered = items.slice();
+
+    if (titleEl) {
+      titleEl.textContent = qualMode ? 'Lägg till kvalitet' : 'Välj föremål';
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = qualMode
+        ? 'Välj en eller flera kvaliteter att lägga på föremålet.'
+        : 'Välj vilket föremål som ska få kvaliteten.';
+    }
+    if (legendEl) legendEl.hidden = true;
+    searchEl.placeholder = qualMode ? 'Sök kvalitet...' : 'Sök föremål...';
+    searchEl.value = '';
+    applyBtn.hidden = !qualMode;
+    applyBtn.disabled = true;
+    applyBtn.textContent = 'Lägg till valda';
+
+    const updateApplyState = () => {
+      if (!qualMode) return;
+      const cnt = selected.size;
+      applyBtn.disabled = cnt <= 0;
+      applyBtn.textContent = cnt > 0 ? `Lägg till valda (${cnt})` : 'Lägg till valda';
+    };
+    const renderGroups = (rows) => categoryOrder
+      .map(key => ({
+        key,
+        rows: rows.filter(it => it.category === key)
+      }))
+      .filter(group => group.rows.length > 0)
+      .map(group => `
+        <section class="qual-popup-group" data-group="${group.key}">
+          <header class="qual-popup-group-head">
+            <span class="qual-popup-group-title">${categoryLabel[group.key] || group.key}</span>
+            <span class="qual-popup-group-count">${group.rows.length}</span>
+          </header>
+          <div class="qual-popup-group-list">
+            ${group.rows.map(it => renderDaubCheckboxRow({
+              rowClass: `${it.controlClass}${selected.has(it.idx) ? ' is-selected' : ''}`,
+              labelAttrs: ` data-i="${it.idx}" data-aa-key="qual:${it.idx}"`,
+              copyHtml: `<span class="qual-popup-option-copy">${escapeHtml(it.label)}</span>`,
+              inputAttrs: ` data-i="${it.idx}"`,
+              checked: selected.has(it.idx)
+            })).join('')}
+          </div>
+        </section>
+      `).join('');
+
+    const render = () => {
+      const term = normalizeText(searchEl.value);
+      filtered = term
+        ? items.filter(it => it.searchKey.includes(term))
+        : items.slice();
       if (qualMode) {
-        cls += ' quality';
-        if (isNegativeQual(base)) cls += ' negative';
-        else if (isNeutralQual(base)) cls += ' neutral';
-        if (isMysticQual(base)) cls += ' mystic';
+        box.innerHTML = renderGroups(filtered);
+      } else {
+        box.innerHTML = filtered.length
+          ? `<div class="db-radio-group qual-popup-radio-list">${filtered.map(it => renderDaubRadioRow({
+            rowClass: it.controlClass,
+            labelAttrs: ` data-i="${it.idx}" data-aa-key="qual:${it.idx}"`,
+            copyHtml: `<span class="qual-popup-option-copy">${escapeHtml(it.label)}</span>`,
+            inputAttrs: ` name="qualPopupSingleChoice" value="${it.idx}" data-i="${it.idx}"`
+          })).join('')}</div>`
+          : '';
       }
-      return `<button data-i="${idx}" class="${cls}">${label}</button>`;
-    }).join('');
+      window.DAUB?.init?.(box);
+      if (qualMode) {
+        const selectedTxt = `${selected.size} valda`;
+        countEl.textContent = term
+          ? `${filtered.length} av ${items.length} kvaliteter • ${selectedTxt}`
+          : `${items.length} kvaliteter • ${selectedTxt}`;
+      } else {
+        countEl.textContent = term
+          ? `${filtered.length} av ${items.length} föremål`
+          : `${items.length} föremål`;
+      }
+      if (!filtered.length) {
+        const q = searchEl.value.trim();
+        emptyEl.textContent = q
+          ? `Inga träffar för "${q}".`
+          : qualMode ? 'Inga kvaliteter matchar sökningen.' : 'Inga alternativ matchar sökningen.';
+        emptyEl.hidden = false;
+      } else {
+        emptyEl.hidden = true;
+      }
+      updateApplyState();
+    };
+    const applySelection = () => {
+      if (!qualMode || !selected.size) return;
+      const chosen = Array.from(selected)
+        .map(Number)
+        .filter(idx => Number.isInteger(idx) && idx >= 0)
+        .sort((a, b) => a - b);
+      if (!chosen.length) return;
+      close('submit');
+      done(chosen);
+    };
 
-    /* öppna */
     const popInner = pop.querySelector('.popup-inner');
-
-    pop.classList.add('open');
+    let popupSession = null;
+    let closed = false;
     window.autoResizeAll?.(pop);
-    if (popInner) popInner.scrollTop = 0;
-
-    /* local helpers */
-    const close = () => {
-      pop.classList.remove('open');
-      box.removeEventListener('click', onBtn);
-      cls.removeEventListener('click', close);
-      pop.removeEventListener('click', onOutside);
-      box.innerHTML = '';                      // rensa bort gamla knappar
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
+      box.removeEventListener('change', onInputChange);
+      closeBtn.removeEventListener('click', onCancel);
+      applyBtn.removeEventListener('click', onApply);
+      searchEl.removeEventListener('input', onSearch);
+      searchEl.removeEventListener('keydown', onSearchKeydown);
+      box.innerHTML = '';
+      searchEl.value = '';
+      countEl.textContent = '';
+      emptyEl.hidden = true;
+      selected.clear();
+      applyBtn.hidden = true;
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'Lägg till valda';
+      if (legendEl) legendEl.hidden = true;
     };
-    const onBtn = e => {
-      const b = e.target.closest('button[data-i]');
-      if (!b) return;
-      const idx = Number(b.dataset.i);
-      close();
-      callback(idx);
+    const close = (reason = 'cancel') => {
+      popupSession?.close(reason);
     };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        callback(null);
+    const onInputChange = e => {
+      const input = e.target instanceof HTMLInputElement ? e.target : null;
+      if (!input) return;
+      const idx = Number(input.dataset.i);
+      if (!Number.isInteger(idx)) return;
+      if (qualMode) {
+        if (input.checked) selected.add(idx);
+        else selected.delete(idx);
+        render();
+        return;
+      }
+      close('select');
+      done(idx);
+    };
+    const onSearch = () => render();
+    const onSearchKeydown = e => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close('escape');
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (qualMode) {
+          if (selected.size > 0) {
+            applySelection();
+            return;
+          }
+          if (filtered.length === 1) {
+            const idx = Number(filtered[0]?.idx);
+            if (!Number.isInteger(idx)) return;
+            if (selected.has(idx)) selected.delete(idx);
+            else selected.add(idx);
+            render();
+          }
+          return;
+        }
+        if (filtered.length !== 1) return;
+        const idx = Number(filtered[0]?.idx);
+        if (!Number.isInteger(idx)) return;
+        close('select');
+        done(idx);
       }
     };
+    const onApply = () => applySelection();
+    const onCancel = () => close('cancel');
 
-    box.addEventListener('click', onBtn);
-    cls.addEventListener('click', close);
-    pop.addEventListener('click', onOutside);
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+    if (popInner) popInner.scrollTop = 0;
+    window.daubMotion?.bindAutoAnimate?.(box, { duration: 100 });
+    render();
+    requestAnimationFrame(() => {
+      if (typeof searchEl.focus === 'function') {
+        try { searchEl.focus({ preventScroll: true }); } catch { searchEl.focus(); }
+      }
+    });
+    box.addEventListener('change', onInputChange);
+    closeBtn.addEventListener('click', onCancel);
+    applyBtn.addEventListener('click', onApply);
+    searchEl.addEventListener('input', onSearch);
+    searchEl.addEventListener('keydown', onSearchKeydown);
   }
 
   function openCustomPopup(arg1, arg2) {
@@ -764,10 +2901,15 @@
     }
     if (typeof callback !== 'function') callback = () => {};
 
-    const root = getToolbarRoot();
-    if (!root) return;
-    const pop    = root.getElementById('customPopup');
-    const popInner = pop ? pop.querySelector('.popup-inner') : null;
+    const root = requireInventoryPopupSurface('custom-item', 'customPopup');
+    if (!root) {
+      callback(null);
+      return;
+    }
+    cleanupInventoryHubSections('customPopup');
+    const hub = openInventoryItemsHub('custom-item', { focusSection: 'custom-item', activateView: false });
+    const section = root.getElementById('customPopup');
+    const popInner = section ? section.querySelector('.popup-inner') : null;
     const title  = root.getElementById('customTitle');
     const name   = root.getElementById('customName');
     const typeSel= root.getElementById('customType');
@@ -811,14 +2953,18 @@
         const wSet = new Set();
         const rSet = new Set();
         const skip = new Set(['artefakt','lägre artefakt','kuriositet','skatt','hemmagjort']);
+        const normalizeWeaponType = typeof window.normalizeWeaponTypeName === 'function'
+          ? window.normalizeWeaponTypeName
+          : (value => String(value || '').trim());
         for (const e of db) {
           const typs = (e.taggar?.typ) || [];
-          if (typs.includes('Vapen')) {
+          if (hasWeaponType(typs)) {
             for (const t of typs) {
-              if (t === 'Vapen' || t === 'Sköld') continue;
+              if (isWeaponBaseType(t) || t === 'Sköld') continue;
               const key = typeof t === 'string' ? t.trim().toLowerCase() : '';
               if (!key || skip.has(key)) continue;
-              wSet.add(t);
+              const normalized = normalizeWeaponType(t);
+              if (normalized) wSet.add(normalized);
             }
           }
           if (typs.includes('Rustning')) {
@@ -836,7 +2982,7 @@
         };
       } catch {
         return {
-          weapon: ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'],
+          weapon: ['Enhandsvapen','Korta vapen','Långa vapen','Tvåhandsvapen','Obeväpnad attack','Stav','Armborst','Pilbåge','Kastvapen','Slunga','Blåsrör','Belägringsvapen','Projektilvapen'],
           armor : ['Lätt Rustning','Medeltung Rustning','Tung Rustning']
         };
       }
@@ -859,7 +3005,13 @@
     const selectedTypes = new Set(['Hemmagjort']);
 
     const ensureBaseTypes = (val) => {
-      if (SUB.weapon.includes(val)) selectedTypes.add('Vapen');
+      if (SUB.weapon.includes(val)) {
+        if (isWeaponBaseType(val)) {
+          selectedTypes.add(val);
+        } else {
+          selectedTypes.add(isRangedWeaponType(val) ? RANGED_WEAPON_BASE_TYPE : MELEE_WEAPON_BASE_TYPE);
+        }
+      }
       if (SUB.armor.includes(val)) selectedTypes.add('Rustning');
     };
 
@@ -892,9 +3044,9 @@
       const tags = orderedTypes().map(t => {
         const label = catName(t);
         if (t === 'Hemmagjort') {
-          return `<span class="tag">${label}</span>`;
+          return `<span class="db-chip">${label}</span>`;
         }
-        return `<span class="tag removable" data-type="${t}">${label} ✕</span>`;
+        return `<span class="db-chip removable" data-type="${t}">${label}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`;
       }).join('');
       typeTags.innerHTML = tags;
     };
@@ -906,8 +3058,9 @@
     };
 
     const toggleLevelField = (el, show) => {
-      if (!el) return;
-      el.style.display = show ? '' : 'none';
+      const target = el?.closest?.('.tools-field') || el;
+      if (!target) return;
+      target.style.display = show ? '' : 'none';
     };
 
     const applyLevelMode = () => {
@@ -923,7 +3076,7 @@
     const updateTypeFields = () => {
       const selected = orderedTypes();
       const hasArtifact = selected.includes('Artefakt');
-      const hasWeapon = selected.includes('Vapen') || selected.includes('Sköld') || selected.includes('Pil/Lod') || selected.some(t => SUB.weapon.includes(t));
+      const hasWeapon = hasWeaponType(selected) || selected.includes('Sköld') || selected.includes('Pil/Lod') || selected.some(t => SUB.weapon.includes(t));
       const hasArmor = selected.includes('Rustning') || selected.some(t => SUB.armor.includes(t));
       const hasVehicle = selected.includes('F\u00e4rdmedel');
       const hasLevels = selected.includes('Elixir') || selected.includes('L\u00e4gre Artefakt') || selected.includes('F\u00e4lla');
@@ -1084,17 +3237,56 @@
         e.preventDefault();
         e.stopPropagation();
       }
-      const tag = e.target.closest('.tag.removable');
+      const tag = e.target.closest('.tag.removable, .db-chip.removable');
       if (!tag) return;
       const t = tag.dataset.type;
       removeType(t);
       updateTypeFields();
     };
 
+    const cleanup = () => {
+      add.removeEventListener('click', onAdd);
+      if (del) del.removeEventListener('click', onDelete);
+      cancel.removeEventListener('click', onCancel);
+      if (typeAdd) typeAdd.removeEventListener('click', onAddType);
+      if (typeTags) typeTags.removeEventListener('click', onTagsClick);
+      if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
+      if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
+      if (desc) desc.removeEventListener('input', markDescTouched);
+      if (section) section.__hubCleanup = null;
+      resetFields();
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effBox) effBox.style.display = 'none';
+      if (weaponBox) weaponBox.style.display = 'none';
+      if (armorBox) armorBox.style.display = 'none';
+    };
+
+    const close = (result) => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'customPopup' });
+      callback(result);
+    };
+
+    const switchToCreateMode = () => {
+      existing = null;
+      isEditing = false;
+      resetFields();
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effSel) effSel.value = 'corruption';
+      if (del) {
+        del.style.display = 'none';
+        del.disabled = true;
+      }
+      updateTypeFields();
+      requestAnimationFrame(() => name?.focus());
+    };
+
     const onAdd = () => {
       const nameVal = name.value.trim();
       const types = orderedTypes();
-      const hasWeapon = types.includes('Vapen') || types.includes('Sköld') || types.includes('Pil/Lod') || types.some(t => SUB.weapon.includes(t));
+      const hasWeapon = hasWeaponType(types) || types.includes('Sköld') || types.includes('Pil/Lod') || types.some(t => SUB.weapon.includes(t));
       const hasArmor = types.includes('Rustning') || types.some(t => SUB.armor.includes(t));
       const hasVehicle = types.includes('F\u00e4rdmedel');
       const hasBound = types.includes('L\u00e4gre Artefakt');
@@ -1171,19 +3363,22 @@
         }
       }
 
-      close();
       callback(entry);
+      if (isEditing) {
+        existing = entry;
+        originalDesc = entry.beskrivning || '';
+      } else {
+        switchToCreateMode();
+      }
     };
 
     const onCancel = () => {
-      close();
-      callback(null);
+      close(null);
     };
 
     const onDelete = () => {
       if (!isEditing) {
-        close();
-        callback(null);
+        close(null);
         return;
       }
       const payload = {
@@ -1191,41 +3386,14 @@
         id: existing?.id || '',
         namn: existing?.namn || ''
       };
-      close();
       callback(payload);
+      switchToCreateMode();
     };
 
-    const onOutside = e => {
-      if (!popInner) return;
-      const path = typeof e.composedPath === 'function' ? e.composedPath() : e.path;
-      if (Array.isArray(path) && path.includes(popInner)) return;
-      if (popInner.contains(e.target)) return;
-      close();
-      callback(null);
-    };
-
-    function close() {
-      pop.classList.remove('open');
-      add.removeEventListener('click', onAdd);
-      if (del) del.removeEventListener('click', onDelete);
-      cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      if (typeAdd) typeAdd.removeEventListener('click', onAddType);
-      if (typeTags) typeTags.removeEventListener('click', onTagsClick);
-      if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
-      if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
-      if (desc) desc.removeEventListener('input', markDescTouched);
-      resetFields();
-      if (title) title.textContent = 'Nytt föremål';
-      add.textContent = 'Spara';
-      if (effBox) effBox.style.display = 'none';
-      if (weaponBox) weaponBox.style.display = 'none';
-      if (armorBox) armorBox.style.display = 'none';
+    window.autoResizeAll?.(section || hub);
+    if (popInner) {
+      popInner.scrollTop = 0;
     }
-
-    pop.classList.add('open');
-    window.autoResizeAll?.(pop);
-    if (popInner) popInner.scrollTop = 0;
     const markDescTouched = () => {
       if (desc) desc.dataset.touched = '1';
     };
@@ -1244,7 +3412,6 @@
       }
     }
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
     const onAddPower = e => {
       e?.preventDefault();
       const row = document.createElement('div');
@@ -1252,7 +3419,7 @@
       row.innerHTML = `
         <input class="power-name" placeholder="Förmågans namn">
         <textarea class="power-desc auto-resize" placeholder="Beskrivning"></textarea>
-        <button class="char-btn danger power-del" type="button">✕</button>
+        <button class="db-btn db-btn--danger power-del" type="button">✕</button>
       `;
       powerList.appendChild(row);
       const descField = row.querySelector('.power-desc');
@@ -1264,29 +3431,34 @@
       });
     };
     if (powerAdd) powerAdd.addEventListener('click', onAddPower);
+    if (section) {
+      section.__hubCleanup = () => {
+        cleanup();
+        callback(null);
+      };
+    }
   }
 
   function openMoneyPopup() {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('money', 'moneyPopup');
     if (!root) return;
-    const pop   = root.getElementById('moneyPopup');
-    const dIn   = root.getElementById('moneyDaler');
-    const sIn   = root.getElementById('moneySkilling');
-    const oIn   = root.getElementById('moneyOrtegar');
+    cleanupInventoryHubSections('moneyPopup');
+    openInventoryEconomyHub('money', { focusSection: 'money', activateView: false });
+    const section = root.getElementById('moneyPopup');
     const balDIn = root.getElementById('moneyBalanceDaler');
     const balSIn = root.getElementById('moneyBalanceSkilling');
     const balOIn = root.getElementById('moneyBalanceOrtegar');
     const setBtn= root.getElementById('moneySetBtn');
     const addBtn= root.getElementById('moneyAddBtn');
-    const spendBtn = root.getElementById('moneySpendBtn');
     const cancel = root.getElementById('moneyCancel');
     const statusEl = root.getElementById('moneyStatus');
 
     // Fälten ska börja tomma oavsett aktuell summa pengar
-    [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
-
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    [balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
     const updateStatus = () => {
       if (!statusEl || typeof formatMoney !== 'function') return;
@@ -1302,23 +3474,27 @@
       statusEl.textContent = `Kontant: ${formatMoney(cash)} · Oanvänt: ${diffText}`;
     };
 
+    const clearBalanceInputs = ({ focus = false } = {}) => {
+      [balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+      if (focus && typeof balDIn?.focus === 'function') {
+        balDIn.focus();
+      }
+    };
+
     updateStatus();
 
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       setBtn.removeEventListener('click', onSet);
       addBtn.removeEventListener('click', onAdd);
-      if (spendBtn) spendBtn.removeEventListener('click', onSpend);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+      clearBalanceInputs();
       if (statusEl) statusEl.textContent = '';
+      if (section) section.__hubCleanup = null;
     };
-    const getSpendMoney = () => storeHelper.normalizeMoney({
-      daler: Number(dIn?.value) || 0,
-      skilling: Number(sIn?.value) || 0,
-      'örtegar': Number(oIn?.value) || 0
-    });
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'moneyPopup' });
+    };
     const getBalanceMoney = () => storeHelper.normalizeMoney({
       daler: Number(balDIn?.value) || 0,
       skilling: Number(balSIn?.value) || 0,
@@ -1329,15 +3505,15 @@
       const pos  = storeHelper.getPossessionMoney(store);
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) {
-        close();
         openAdvMoneyPopup(() => {
-          storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
           fn();
+          updateStatus();
         });
       } else {
-        close();
         fn();
+        updateStatus();
       }
     };
     const onSet = () => {
@@ -1345,6 +3521,10 @@
       maybeAdv(() => {
         storeHelper.setMoney(store, money);
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-money-set'
+        });
+        clearBalanceInputs({ focus: true });
       });
     };
     const onAdd = () => {
@@ -1358,37 +3538,17 @@
       maybeAdv(() => {
         storeHelper.setMoney(store, total);
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-money-add'
+        });
+        clearBalanceInputs({ focus: true });
       });
     };
-    const onSpend = () => {
-      const spendMoney = getSpendMoney();
-      const spendO = moneyToO(spendMoney);
-      if (spendO <= 0) {
-        if (dIn) dIn.focus();
-        return;
-      }
-      const pay = () => {
-        const curMoney = storeHelper.getMoney(store);
-        const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
-        storeHelper.setMoney(store, oToMoney(remainingO));
-        renderInventory();
-      };
-      if (typeof maybeAdv === 'function') {
-        maybeAdv(pay);
-      } else {
-        close();
-        pay();
-      }
-    };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
     setBtn.addEventListener('click', onSet);
     addBtn.addEventListener('click', onAdd);
-    if (spendBtn) spendBtn.addEventListener('click', onSpend);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   function removeCustomEntryFromInventory(arr, targetId, targetName) {
@@ -1451,7 +3611,7 @@
   }
 
   async function editArtifactEntry(entry, opts, onSave) {
-    if (!entry || typeof selectArtifactPayment !== 'function') return false;
+    if (!entry) return false;
     const options = opts && typeof opts === 'object' ? opts : {};
     const trait = options.trait ?? null;
     const inv = storeHelper.getInventory(store);
@@ -1473,10 +3633,21 @@
       const withoutTrait = matches.find(({ row }) => row && !row.trait);
       if (withoutTrait) target = withoutTrait;
     }
-    const current = target.row.artifactEffect || '';
-    const chosen = await selectArtifactPayment(current);
-    if (chosen === null) return true;
-    target.row.artifactEffect = chosen;
+    const choice = await pickInventoryEntryChoice({
+      entry,
+      row: target.row,
+      list: storeHelper.getCurrentList(store),
+      inv,
+      field: 'artifactEffect',
+      currentValue: target.row.artifactEffect || '',
+      usedValues: []
+    });
+    if (choice.hasChoice) {
+      if (choice.cancelled) return true;
+      target.row.artifactEffect = choice.value || '';
+    } else {
+      return true;
+    }
     saveInventory(inv);
     renderInventory();
     if (typeof onSave === 'function') onSave();
@@ -1484,138 +3655,162 @@
   }
 
   function openQtyPopup() {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('bulk-qty', 'qtyPopup');
     if (!root) return;
-    const pop   = root.getElementById('qtyPopup');
+    cleanupInventoryHubSections('qtyPopup');
+    openInventoryItemsHub('bulk-qty', { focusSection: 'bulk-qty', activateView: false });
+    const section = root.getElementById('qtyPopup');
     const inEl  = root.getElementById('qtyInput');
     const list  = root.getElementById('qtyItemList');
+    const apply = root.getElementById('qtyApply');
     const cancel= root.getElementById('qtyCancel');
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    const flat = flattenInventoryWithPath(inv);
-    const nameMap = makeNameMap(flat.map(f => f.row));
-    const vehicles = inv
-      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-    const vehIdx = vehicles.map(v => v.idx);
-    const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
-    const vehicleHtml = vehicles.map(v => {
-      const items = flattenInventoryWithPath(v.row.contains || [], [v.idx]);
-      if (!items.length) return '';
-      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
-      const inner = items
-        .map(o => `<button data-path="${o.path.join('.')}" class="char-btn">${nameMap.get(o.row)}</button>`)
+    const charCarry = getCharacterCarrySummary(inv);
+    const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
+    const regular = flat.filter(obj => !(vehicleIndexes.includes(obj.path[0]) && obj.path.length > 1));
+    const sections = [];
+    if (regular.length) {
+      const regularHtml = regular
+        .map(obj => buildInventoryBatchCheckboxRow(nameMap.get(obj.row), obj.path.join('.')))
         .join('');
-      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
-    }).join('');
-    list.innerHTML = regular
-      .map(obj => `<button data-path="${obj.path.join('.')}" class="char-btn">${nameMap.get(obj.row)}</button>`)
-      .join('') + vehicleHtml;
+      sections.push(buildInventoryBatchGroup({
+        title: 'Huvudinventarie',
+        metaText: formatBatchCapacityText(charCarry.usedWeight, charCarry.maxCapacity),
+        icon: '🎒',
+        count: regular.length,
+        itemsHtml: regularHtml
+      }));
+    }
+    vehicles.forEach(vehicle => {
+      const items = flattenInventoryWithPath(vehicle.row.contains || [], [vehicle.idx]);
+      if (!items.length) return;
+      const vehicleCarry = getVehicleCarrySummary(vehicle.row);
+      const itemsHtml = items
+        .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+        .join('');
+      sections.push(buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleNames.get(vehicle.idx),
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
+        count: items.length,
+        itemsHtml
+      }));
+    });
+    list.innerHTML = sections.join('') || '<p class="inventory-batch-empty">Det finns inga poster att mängdköpa just nu.</p>';
+    window.DAUB?.init?.(list);
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
-      list.removeEventListener('click', onBtn);
+    const cleanup = () => {
+      apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       list.innerHTML = '';
       inEl.value = '';
+      if (section) section.__hubCleanup = null;
     };
-    const onBtn = e => {
-      const b = e.target.closest('button[data-path]');
-      if (!b) return;
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'qtyPopup' });
+    };
+    const onApply = () => {
       const qty = parseInt(inEl.value, 10);
       if (!qty || qty <= 0) return;
-      const path = b.dataset.path.split('.').map(Number);
-      let parentArr = inv;
-      let row = null;
-      path.forEach((pIdx, i) => {
-        row = parentArr[pIdx];
-        if (i < path.length - 1) parentArr = row.contains || [];
-      });
-      if (!row) return;
-      const entry = getEntry(row.id || row.name);
-      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-        .some(t => entry.taggar?.typ?.includes(t)) &&
-        !STACKABLE_IDS.includes(entry.id) &&
-        !['kraft','ritual'].includes(entry.bound);
-
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
+        .map(ch => ch.dataset.path.split('.').map(Number));
+      if (!checks.length) return;
       const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
       const livePairs = liveEnabled ? [] : null;
+      checks.forEach(path => {
+        let parentArr = inv;
+        let row = null;
+        path.forEach((pIdx, i) => {
+          row = parentArr[pIdx];
+          if (i < path.length - 1) parentArr = row.contains || [];
+        });
+        if (!row) return;
+        const entry = getEntry(row.id || row.name);
+        const indiv = isIndividualItem(entry);
 
-      if (indiv) {
-        for (let i = 0; i < qty; i++) {
-          const clone = JSON.parse(JSON.stringify(row));
-          clone.qty = 1;
-          parentArr.push(clone);
-          if (livePairs) livePairs.push({ prev: null, next: clone });
+        if (indiv) {
+          for (let i = 0; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            if ((entry.taggar?.typ || []).includes('Artefakt')) {
+              clone.snapshotSourceKey = '';
+              ensureArtifactSnapshotSourceKey(entry, clone);
+            }
+            parentArr.push(clone);
+            if (livePairs) livePairs.push({ prev: null, next: clone });
+          }
+        } else {
+          const prevState = livePairs ? cloneRow(row) : null;
+          row.qty += qty;
+          if (livePairs) livePairs.push({ prev: prevState, next: row });
         }
-      } else {
-        const prevState = livePairs ? cloneRow(row) : null;
-        row.qty += qty;
-        if (livePairs) livePairs.push({ prev: prevState, next: row });
-      }
+      });
 
       if (livePairs && livePairs.length) applyLiveModePayment(livePairs);
       saveInventory(inv);
       renderInventory();
-      close();
+      cleanup();
+      openQtyPopup();
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
-    list.addEventListener('click', onBtn);
+    apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   async function buildInventoryRow({ entry, list } = {}) {
     if (!entry) return null;
     const row = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
     const tagTyp = entry.taggar?.typ || [];
-    const explode = typeof window.explodeTags === 'function' ? window.explodeTags : () => [];
     const curList = Array.isArray(list) ? list : storeHelper.getCurrentList(store);
+    const craftLevels = getCraftLevelsForList(curList);
+    const priceRuleList = buildPriceRuleSourceList(curList, craftLevels);
+    const requirementCheck = getRequirementCheckForEntry(entry, priceRuleList);
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const reqYrken = explode(entry.taggar?.ark_trad);
-      if (reqYrken.length) {
-        const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-        const skillArt = storeHelper.abilityLevel(curList, 'Artefaktmakande');
-        const artLevel = Math.max(partyArt, skillArt);
-        const lvlName = Object.keys(entry.niv\u00e5er || {}).find(l => l) || '';
-        const itemLevel = LEVEL_IDX[lvlName] || 0;
-        const hasYrke = reqYrken.some(req => curList.some(it => {
-          const nameTags = explode([it.namn]);
-          const isJob = typeof window.isYrke === 'function' ? window.isYrke(it) : false;
-          const isElite = typeof window.isElityrke === 'function' ? window.isElityrke(it) : false;
-          return (isJob || isElite) && nameTags.includes(req);
-        }));
-        let allowPurchase = hasYrke;
-        if (!allowPurchase && artLevel >= itemLevel) {
-          allowPurchase = true;
-        }
-        if (!allowPurchase) {
-          const reqTxt = reqYrken.join(', ');
-          const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${entry.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
-          if (typeof openDialog === 'function') {
-            const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
-            if (!ok) return null;
-          } else {
-            return null;
-          }
-          row.priceMult = 10;
+      const moneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
+      if (!requirementCheck.ok) {
+        const bullets = [];
+        (Array.isArray(requirementCheck.explicitMessages) ? requirementCheck.explicitMessages : [])
+          .map(msg => String(msg || '').trim())
+          .filter(Boolean)
+          .forEach(msg => bullets.push(`- ${msg}`));
+        if (!bullets.length) bullets.push('- Krav: Förkunskaper saknas');
+        const requirementBlock = bullets.length
+          ? `Krav:\n${bullets.join('\n')}\n\n`
+          : '';
+        const msg = `${entry.namn}: kraven uppfylls inte.\n\n${requirementBlock}Priset \u00e4r f\u00f6rh\u00f6jt (\u00d7${formatMultiplierLabel(moneyMult)}) och ut\u00f6vare av traditionen kan ta illa vid sig.\nL\u00e4gg till \u00e4nd\u00e5?`;
+        if (typeof openDialog === 'function') {
+          const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
+          if (!ok) return null;
+        } else {
+          return null;
         }
       }
     }
     if (tagTyp.includes('Artefakt')) {
-      if (typeof selectArtifactPayment === 'function') {
-        const val = await selectArtifactPayment();
-        if (val === null) return null;
-        if (val) row.artifactEffect = val;
+      ensureArtifactSnapshotSourceKey(entry, row);
+      const choice = await pickInventoryEntryChoice({
+        entry,
+        list: curList,
+        inv: storeHelper.getInventory(store),
+        field: 'artifactEffect',
+        currentValue: entry.artifactEffect || '',
+        usedValues: []
+      });
+      if (choice.hasChoice) {
+        if (choice.cancelled) return null;
+        row.artifactEffect = choice.value || '';
+      } else if (entry.artifactEffect) {
+        row.artifactEffect = entry.artifactEffect;
       }
     } else if (entry.artifactEffect) {
       row.artifactEffect = entry.artifactEffect;
@@ -1624,8 +3819,8 @@
   }
 
   function openLiveBuyPopup(entry, existingRow) {
-    const root = getToolbarRoot();
-    if (!root) return null;
+    const root = requireInventoryPopupSurface('live-buy', 'liveBuyPopup');
+    if (!root) return Promise.resolve(null);
     const pop    = root.getElementById('liveBuyPopup');
     const inner  = pop ? pop.querySelector('.popup-inner') : null;
     const nameEl = root.getElementById('liveBuyItemName');
@@ -1649,8 +3844,13 @@
       if (existingRow?.basePrice && src === 'live') {
         return storeHelper.normalizeMoney(existingRow.basePrice);
       }
-      const cost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
-      return storeHelper.normalizeMoney(cost);
+      const baseCost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
+      const mult = normalizeMultiplierValue(existingRow?.priceMult, 1);
+      if (Math.abs(mult - 1) < 0.001) {
+        return storeHelper.normalizeMoney(baseCost);
+      }
+      const totalO = Math.max(0, moneyToO(baseCost) * mult);
+      return storeHelper.normalizeMoney(oToMoney(totalO));
     };
 
     const fillPriceFields = money => {
@@ -1672,36 +3872,43 @@
       }
     }
 
-    pop.classList.add('open');
+    let popupSession = null;
+    let closed = false;
+    let pendingResult = null;
+    let resolver = () => {};
+    let onConfirm = () => {};
+    let onCancel = () => {};
+    let onKey = () => {};
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
+      confirm.removeEventListener('click', onConfirm);
+      cancel.removeEventListener('click', onCancel);
+      qtyEl.removeEventListener('keydown', onKey);
+      dEl.removeEventListener('keydown', onKey);
+      sEl.removeEventListener('keydown', onKey);
+      oEl.removeEventListener('keydown', onKey);
+      qtyEl.value = '';
+      dEl.value = '';
+      sEl.value = '';
+      oEl.value = '';
+      if (nameEl) {
+        nameEl.textContent = '';
+        nameEl.hidden = true;
+      }
+      resolver(pendingResult);
+    };
+    const close = (result, reason = 'cancel') => {
+      pendingResult = result;
+      popupSession?.close(reason);
+    };
+
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
     if (inner) inner.scrollTop = 0;
     setTimeout(() => qtyEl.focus(), 50);
 
     return new Promise(resolve => {
-      let closed = false;
-      const cleanup = () => {
-        confirm.removeEventListener('click', onConfirm);
-        cancel.removeEventListener('click', onCancel);
-        pop.removeEventListener('click', onOutside);
-        qtyEl.removeEventListener('keydown', onKey);
-        dEl.removeEventListener('keydown', onKey);
-        sEl.removeEventListener('keydown', onKey);
-        oEl.removeEventListener('keydown', onKey);
-      };
-      const close = result => {
-        if (closed) return;
-        closed = true;
-        cleanup();
-        qtyEl.value = '';
-        dEl.value = '';
-        sEl.value = '';
-        oEl.value = '';
-        if (nameEl) {
-          nameEl.textContent = '';
-          nameEl.hidden = true;
-        }
-        pop.classList.remove('open');
-        resolve(result);
-      };
+      resolver = resolve;
 
       const parseMoney = () => {
         const daler = parseInt(dEl.value, 10) || 0;
@@ -1710,7 +3917,7 @@
         return storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ort });
       };
 
-      const onConfirm = e => {
+      onConfirm = e => {
         e?.preventDefault();
         const qty = parseInt(qtyEl.value, 10);
         if (!Number.isFinite(qty) || qty <= 0) {
@@ -1720,17 +3927,13 @@
         const pricePerUnit = parseMoney();
         const pricePerUnitO = Math.max(0, moneyToO(pricePerUnit));
         const totalO = pricePerUnitO * qty;
-        close({ qty, pricePerUnit, pricePerUnitO, totalO });
+        close({ qty, pricePerUnit, pricePerUnitO, totalO }, 'confirm');
       };
-      const onCancel = e => {
+      onCancel = e => {
         e?.preventDefault();
-        close(null);
+        close(null, 'cancel');
       };
-      const onOutside = e => {
-        if (!inner || inner.contains(e.target)) return;
-        close(null);
-      };
-      const onKey = e => {
+      onKey = e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           onConfirm(e);
@@ -1742,7 +3945,6 @@
 
       confirm.addEventListener('click', onConfirm);
       cancel.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
       qtyEl.addEventListener('keydown', onKey);
       dEl.addEventListener('keydown', onKey);
       sEl.addEventListener('keydown', onKey);
@@ -1753,10 +3955,7 @@
   async function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx, onCancel: cancelCb, onConfirm: confirmCb, isNewRow = false }) {
     const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
     const tagTyp = entry.taggar?.typ || [];
-    const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-      .some(t => tagTyp.includes(t)) &&
-      !STACKABLE_IDS.includes(entry.id) &&
-      !['kraft','ritual'].includes(entry.bound);
+    const indiv = isIndividualItem(entry);
 
     const referenceId = row.id || entry?.id || null;
     const referenceName = row.name || entry?.namn || null;
@@ -1843,6 +4042,10 @@
           for (let i = 1; i < qty; i++) {
             const clone = JSON.parse(JSON.stringify(row));
             clone.qty = 1;
+            if ((entry.taggar?.typ || []).includes('Artefakt')) {
+              clone.snapshotSourceKey = '';
+              ensureArtifactSnapshotSourceKey(entry, clone);
+            }
             if (priceMoney) assignPrice(clone);
             parentArr.push(clone);
             result.highlightIdx = parentArr.length - 1;
@@ -1852,6 +4055,10 @@
           for (let i = 0; i < qty; i++) {
             const clone = JSON.parse(JSON.stringify(row));
             clone.qty = 1;
+            if ((entry.taggar?.typ || []).includes('Artefakt')) {
+              clone.snapshotSourceKey = '';
+              ensureArtifactSnapshotSourceKey(entry, clone);
+            }
             if (priceMoney) assignPrice(clone);
             parentArr.push(clone);
             if (livePairs) livePairs.push({ prev: null, next: clone });
@@ -1907,8 +4114,11 @@
       return;
     }
 
-    const root = getToolbarRoot();
-    if (!root) return;
+    const root = requireInventoryPopupSurface('buy-multiple', 'buyMultiplePopup');
+    if (!root) {
+      if (typeof cancelCb === 'function') cancelCb();
+      return;
+    }
     const pop       = root.getElementById('buyMultiplePopup');
     const inner     = pop ? pop.querySelector('.popup-inner') : null;
     const labelEl   = root.getElementById('buyMultipleItemName');
@@ -1941,26 +4151,25 @@
 
     input.value = '';
     clearInputValidity();
-    pop.classList.add('open');
-    if (inner) inner.scrollTop = 0;
-    setTimeout(() => input.focus(), 50);
-
     let closed = false;
-    const close = (reason = 'cancel') => {
+    let popupSession = null;
+    let handleCancel = () => {};
+    const cleanup = () => {
       if (closed) return;
       closed = true;
-      pop.classList.remove('open');
       confirm.removeEventListener('click', apply);
       cancelBtn.removeEventListener('click', handleCancel);
       removeBtn.removeEventListener('click', handleRemove);
-      pop.removeEventListener('click', onOutside);
       input.removeEventListener('keydown', onKey);
       input.removeEventListener('input', onInput);
       input.value = '';
       clearInputValidity();
-      if (reason !== 'confirm' && typeof cancelCb === 'function') {
+      if (!confirmed && typeof cancelCb === 'function') {
         cancelCb();
       }
+    };
+    const close = (reason = 'cancel') => {
+      popupSession?.close(reason);
     };
 
     const apply = () => {
@@ -1971,6 +4180,7 @@
         return;
       }
       processQty({ qty });
+      confirmed = true;
       close('confirm');
     };
 
@@ -1995,12 +4205,8 @@
         return;
       }
       processQty({ qty, mode: 'remove' });
+      confirmed = true;
       close('confirm');
-    };
-
-    const onOutside = e => {
-      if (!inner || inner.contains(e.target)) return;
-      close('cancel');
     };
 
     const onKey = e => {
@@ -2014,20 +4220,25 @@
     };
 
     const onInput = () => clearInputValidity();
+    let confirmed = false;
 
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => input.focus(), 50);
     confirm.addEventListener('click', apply);
-    const handleCancel = () => close('cancel');
+    handleCancel = () => close('cancel');
     cancelBtn.addEventListener('click', handleCancel);
     removeBtn.addEventListener('click', handleRemove);
-    pop.addEventListener('click', onOutside);
     input.addEventListener('keydown', onKey);
     input.addEventListener('input', onInput);
   }
 
   function openPricePopup() {
-    const root    = getToolbarRoot();
+    const root    = requireInventoryPopupSurface('bulk-price', 'pricePopup');
     if (!root) return;
-    const pop    = root.getElementById('pricePopup');
+    cleanupInventoryHubSections('pricePopup');
+    openInventoryEconomyHub('bulk-price', { focusSection: 'bulk-price', activateView: false });
+    const section = root.getElementById('pricePopup');
     const inEl   = root.getElementById('priceFactor');
     const list   = root.getElementById('priceItemList');
     const apply  = root.getElementById('priceApply');
@@ -2035,36 +4246,55 @@
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    const flat = flattenInventoryWithPath(inv);
-    const nameMap = makeNameMap(flat.map(f => f.row));
-    const vehicles = inv
-      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-    const vehIdx = vehicles.map(v => v.idx);
-    const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
-    const vehicleHtml = vehicles.map(v => {
-      const items = flattenInventoryWithPath(v.row.contains || [], [v.idx]);
-      if (!items.length) return '';
-      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
-      const inner = items.map(o => `
-        <label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`).join('');
-      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
-    }).join('');
-    list.innerHTML = regular
-      .map(obj => `
-        <label class="price-item"><span>${nameMap.get(obj.row)}</span><input type="checkbox" data-path="${obj.path.join('.')}"></label>`)
-      .join('') + vehicleHtml;
+    const charCarry = getCharacterCarrySummary(inv);
+    const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
+    const regular = flat.filter(obj => !(vehicleIndexes.includes(obj.path[0]) && obj.path.length > 1));
+    const sections = [];
+    if (regular.length) {
+      const regularHtml = regular
+        .map(obj => buildInventoryBatchCheckboxRow(nameMap.get(obj.row), obj.path.join('.')))
+        .join('');
+      sections.push(buildInventoryBatchGroup({
+        title: 'Huvudinventarie',
+        metaText: formatBatchCapacityText(charCarry.usedWeight, charCarry.maxCapacity),
+        icon: '🎒',
+        count: regular.length,
+        itemsHtml: regularHtml
+      }));
+    }
+    vehicles.forEach(vehicle => {
+      const items = flattenInventoryWithPath(vehicle.row.contains || [], [vehicle.idx]);
+      if (!items.length) return;
+      const vehicleCarry = getVehicleCarrySummary(vehicle.row);
+      const itemsHtml = items
+        .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+        .join('');
+      sections.push(buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleNames.get(vehicle.idx),
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
+        count: items.length,
+        itemsHtml
+      }));
+    });
+    list.innerHTML = sections.join('') || '<p class="inventory-batch-empty">Det finns inga poster att prisjustera.</p>';
+    window.DAUB?.init?.(list);
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       list.innerHTML = '';
       inEl.value = '';
+      if (section) section.__hubCleanup = null;
+    };
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'pricePopup' });
     };
     const onApply = () => {
       const factor = parseFloat(inEl.value);
@@ -2081,22 +4311,20 @@
         if (row) row.priceMult = (row.priceMult || 1) * factor;
       });
       saveInventory(inv);
-      // Stäng popuppen innan omrendering för snabbare feedback
-      close();
       renderInventory();
+      inEl.value = '';
+      [...list.querySelectorAll('input[type="checkbox"][data-path]')].forEach(chk => { chk.checked = false; });
+      if (typeof inEl.focus === 'function') inEl.focus();
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   function openRowPricePopup(row) {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('row-price', 'rowPricePopup');
     if (!root) return;
     const pop    = root.getElementById('rowPricePopup');
     const cancel = root.getElementById('rowPriceCancel');
@@ -2105,11 +4333,14 @@
     const apply  = root.getElementById('rowPriceApply');
     if (!pop || !presets) return;
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const close = (reason = 'cancel') => {
+      popupSession?.close(reason);
+    };
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       presets.removeEventListener('click', onPreset);
       apply?.removeEventListener('click', onApply);
       inEl?.removeEventListener('keydown', onKey);
@@ -2118,7 +4349,6 @@
       sEl?.removeEventListener('keydown', onBaseKey);
       oEl?.removeEventListener('keydown', onBaseKey);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       if (inEl) inEl.value = '';
     };
     const onPreset = e => {
@@ -2135,7 +4365,7 @@
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
       // Stäng popuppen direkt för snabbare UI-feedback
-      close();
+      close('select');
       // Rendera om inventariet efter att popuppen stängts
       renderInventory();
     };
@@ -2150,7 +4380,7 @@
       }
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
-      close();
+      close('submit');
       renderInventory();
     };
     const onKey = e => {
@@ -2173,11 +4403,7 @@
       if (oEl) oEl.value = '';
     }
 
-    const onCancel = (e) => { if (e) e.stopPropagation(); close(); };
-    const onOutside = e => {
-      e.stopPropagation();
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const onCancel = (e) => { if (e) e.stopPropagation(); close('cancel'); };
 
     const onSet = e => {
       e?.stopPropagation();
@@ -2193,7 +4419,7 @@
       }
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
-      close();
+      close('submit');
       renderInventory();
     };
     const onBaseKey = e => {
@@ -2201,6 +4427,8 @@
       e.stopPropagation();
     };
 
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     presets.addEventListener('click', onPreset);
     apply?.addEventListener('click', onApply);
     inEl?.addEventListener('keydown', onKey);
@@ -2209,7 +4437,6 @@
     sEl?.addEventListener('keydown', onBaseKey);
     oEl?.addEventListener('keydown', onBaseKey);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
   }
 
   function openVehicleQtyPrompt({ maxQty, itemName, mode, vehicleName }) {
@@ -2217,8 +4444,8 @@
     const max = Number.isFinite(maxRaw) && maxRaw > 0 ? Math.floor(maxRaw) : 0;
     const fallback = max > 0 ? max : 1;
     if (max <= 1) return Promise.resolve(fallback);
-    const root = getToolbarRoot();
-    if (!root) return Promise.resolve(fallback);
+    const root = requireInventoryPopupSurface('vehicle-qty', 'vehicleQtyPopup');
+    if (!root) return Promise.resolve(null);
     const pop     = root.getElementById('vehicleQtyPopup');
     const input   = root.getElementById('vehicleQtyInput');
     const confirm = root.getElementById('vehicleQtyConfirm');
@@ -2242,30 +4469,36 @@
     input.step = '1';
     input.max = String(max);
     if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
-    pop.classList.add('open');
-    if (inner) inner.scrollTop = 0;
-    setTimeout(() => { if (typeof input.focus === 'function') input.focus(); if (typeof input.select === 'function') input.select(); }, 40);
+    let popupSession = null;
+    let closed = false;
+    let pendingResult = null;
+    let resolver = () => {};
+    let onConfirm = () => {};
+    let onCancel = () => {};
+    let onKey = () => {};
     return new Promise(resolve => {
-      let closed = false;
+      resolver = resolve;
       const clearValidity = () => {
         if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
       };
-      const close = result => {
+      const cleanup = () => {
         if (closed) return;
         closed = true;
-        pop.classList.remove('open');
         confirm.removeEventListener('click', onConfirm);
         cancel.removeEventListener('click', onCancel);
-        pop.removeEventListener('click', onOutside);
         input.removeEventListener('keydown', onKey);
         input.removeEventListener('input', clearValidity);
         if (hint) hint.textContent = '';
         if (message) message.textContent = '';
         input.value = '';
         clearValidity();
-        resolve(result);
+        resolver(pendingResult);
       };
-      const onConfirm = () => {
+      const close = (result, reason = 'cancel') => {
+        pendingResult = result;
+        popupSession?.close(reason);
+      };
+      onConfirm = () => {
         clearValidity();
         const value = parseInt(input.value, 10);
         if (!Number.isFinite(value) || value <= 0) {
@@ -2280,14 +4513,10 @@
           input.focus();
           return;
         }
-        close(value);
+        close(value, 'confirm');
       };
-      const onCancel = () => close(null);
-      const onOutside = e => {
-        if (!inner || inner.contains(e.target)) return;
-        close(null);
-      };
-      const onKey = e => {
+      onCancel = () => close(null, 'cancel');
+      onKey = e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           onConfirm();
@@ -2296,9 +4525,14 @@
           onCancel();
         }
       };
+      popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+      if (inner) inner.scrollTop = 0;
+      setTimeout(() => {
+        if (typeof input.focus === 'function') input.focus();
+        if (typeof input.select === 'function') input.select();
+      }, 40);
       confirm.addEventListener('click', onConfirm);
       cancel.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
       input.addEventListener('keydown', onKey);
       input.addEventListener('input', clearValidity);
     });
@@ -2308,7 +4542,7 @@
     const maxNormalized = storeHelper.normalizeMoney(maxMoney || {});
     const maxTotalO = moneyToO(maxNormalized);
     if (!maxTotalO) return Promise.resolve(null);
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('vehicle-money', 'vehicleMoneyPopup');
     if (!root) return Promise.resolve(null);
     const pop      = root.getElementById('vehicleMoneyPopup');
     const title    = root.getElementById('vehicleMoneyTitle');
@@ -2333,25 +4567,31 @@
     }
     [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; });
     if (errorEl) errorEl.textContent = '';
-    pop.classList.add('open');
-    if (inner) inner.scrollTop = 0;
-    setTimeout(() => { if (typeof dInput?.focus === 'function') dInput.focus(); }, 40);
+    let popupSession = null;
+    let closed = false;
+    let pendingResult = null;
+    let resolver = () => {};
+    let onConfirm = () => {};
+    let onCancel = () => {};
+    let onKey = () => {};
 
     return new Promise(resolve => {
-      let closed = false;
-      const close = result => {
+      resolver = resolve;
+      const cleanup = () => {
         if (closed) return;
         closed = true;
-        pop.classList.remove('open');
         confirm.removeEventListener('click', onConfirm);
         cancel.removeEventListener('click', onCancel);
-        pop.removeEventListener('click', onOutside);
         [dInput, sInput, oInput].forEach(inp => { if (inp) inp.removeEventListener('keydown', onKey); });
         if (hint) hint.textContent = '';
         if (message) message.textContent = '';
         [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; if (typeof inp?.setCustomValidity === 'function') inp.setCustomValidity(''); });
         if (errorEl) errorEl.textContent = '';
-        resolve(result);
+        resolver(pendingResult);
+      };
+      const close = (result, reason = 'cancel') => {
+        pendingResult = result;
+        popupSession?.close(reason);
       };
       const parseNonNegInt = input => {
         if (!input) return 0;
@@ -2363,7 +4603,7 @@
         return num;
       };
       const showError = msg => { if (errorEl) errorEl.textContent = msg || ''; };
-      const onConfirm = () => {
+      onConfirm = () => {
         const d = parseNonNegInt(dInput);
         const s = parseNonNegInt(sInput);
         const o = parseNonNegInt(oInput);
@@ -2383,17 +4623,18 @@
           return;
         }
         showError('');
-        close(bundle);
+        close(bundle, 'confirm');
       };
-      const onCancel = () => close(null);
-      const onOutside = e => { if (!inner || inner.contains(e.target)) return; close(null); };
-      const onKey = e => {
+      onCancel = () => close(null, 'cancel');
+      onKey = e => {
         if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
         else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
       };
+      popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+      if (inner) inner.scrollTop = 0;
+      setTimeout(() => { if (typeof dInput?.focus === 'function') dInput.focus(); }, 40);
       confirm.addEventListener('click', onConfirm);
       cancel.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
       [dInput, sInput, oInput].forEach(inp => inp?.addEventListener('keydown', onKey));
     });
   }
@@ -2434,7 +4675,7 @@
         return { success: false, error: 'Du har inte så mycket pengar i bältesbörsen.' };
       }
       const remainingWallet = oToMoney(walletO - moneyO);
-      storeHelper.setMoney(store, remainingWallet);
+      storeHelper.setMoney(store, remainingWallet, { persist: false });
     }
     vehicle.contains = vehicle.contains || [];
     const existing = vehicle.contains.find(r => r?.typ === 'currency' && r.money);
@@ -2497,34 +4738,56 @@
       const walletO = moneyToO(wallet);
       storeHelper.setMoney(store, oToMoney(walletO + removeTotalO));
     }
-    if (moneyToO(remaining) <= 0) {
-      parentArr.splice(idx, 1);
-    } else {
-      row.money = remaining;
-      row.qty = 1;
-    }
-    saveInventory(inv);
-    renderInventory();
+    runCurrentCharacterMutationBatch(() => {
+      if (moneyToO(remaining) <= 0) {
+        parentArr.splice(idx, 1);
+      } else {
+        row.money = remaining;
+        row.qty = 1;
+      }
+      saveInventory(inv);
+    });
+    renderInventoryWithPerf({ trigger: 'vehicle-money-remove' });
     return { success: true, remaining };
   }
 
   function openVehiclePopup(preselectValue, precheckedPaths) {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('vehicle-load', 'vehiclePopup');
     if (!root) return;
-    const pop    = root.getElementById('vehiclePopup');
+    cleanupInventoryHubSections('vehiclePopup');
+    openInventoryItemsHub('vehicle-load', { focusSection: 'vehicle-load', activateView: false });
+    const section = root.getElementById('vehiclePopup');
     const sel    = root.getElementById('vehicleSelect');
     const list   = root.getElementById('vehicleItemList');
     const apply  = root.getElementById('vehicleApply');
     const cancel = root.getElementById('vehicleCancel');
 
     const inv = storeHelper.getInventory(store);
-    const vehicles = inv
-      .map((row,i)=>({row, entry:getEntry(row.id || row.name), idx:i}))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-    if (!vehicles.length) return;
-
-    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
-    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
+    const charCarry = getCharacterCarrySummary(inv);
+    const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
+    if (!vehicles.length) {
+      const cleanupEmptyState = () => {
+        cancel.onclick = null;
+        sel.disabled = false;
+        apply.disabled = false;
+        sel.innerHTML = '';
+        list.innerHTML = '';
+        if (section) section.__hubCleanup = null;
+      };
+      sel.innerHTML = '<option value="">Inga färdmedel</option>';
+      sel.disabled = true;
+      apply.disabled = true;
+      list.innerHTML = '<p class="inventory-batch-empty">Det finns inga färdmedel att lasta i ännu.</p>';
+      cancel.onclick = () => {
+        cleanupEmptyState();
+        closeInventoryHub({ skipSection: 'vehiclePopup' });
+      };
+      if (section) section.__hubCleanup = cleanupEmptyState;
+      window.DAUB?.init?.(list);
+      return;
+    }
+    sel.disabled = false;
+    apply.disabled = false;
 
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
@@ -2542,11 +4805,8 @@
     const initialIdx = resolvePreselectIdx(preselectValue);
     if (initialIdx !== null) sel.value = String(initialIdx);
 
-    const flat = flattenInventoryWithPath(inv);
-    const nameMap = makeNameMap(flat.map(f => f.row));
-    const vehIdx = vehicles.map(v => v.idx);
-    const movable = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length === 1));
-    const outside = movable.filter(obj => !vehIdx.includes(obj.path[0]));
+    const movable = flat.filter(obj => !(vehicleIndexes.includes(obj.path[0]) && obj.path.length === 1));
+    const outside = movable.filter(obj => !vehicleIndexes.includes(obj.path[0]));
     const moneyRowHtml = `
       <div class="vehicle-money-row">
         <span>Lägg till pengar</span>
@@ -2556,16 +4816,41 @@
           <input id="vehicleMoneyOrtegar" type="number" min="0" step="1" placeholder="Örtegar">
         </div>
       </div>`;
-    const vehicleHtml = vehicles.map(v => {
-      const items = movable.filter(o => o.path[0] === v.idx);
-      if (!items.length) return '';
-      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
-      const inner = items.map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`).join('');
-      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
-    }).join('');
-    list.innerHTML = moneyRowHtml + outside
-      .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`)
-      .join('') + vehicleHtml;
+    const sections = [
+      buildInventoryBatchGroup({
+        title: 'Bältesbörs',
+        subtitle: 'Lägg pengar i valt färdmedel',
+        icon: '💰',
+        itemsHtml: moneyRowHtml
+      })
+    ];
+    if (outside.length) {
+      sections.push(buildInventoryBatchGroup({
+        title: 'Huvudinventarie',
+        metaText: formatBatchCapacityText(charCarry.usedWeight, charCarry.maxCapacity),
+        icon: '🎒',
+        count: outside.length,
+        itemsHtml: outside
+          .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+          .join('')
+      }));
+    }
+    vehicles.forEach(vehicle => {
+      const items = movable.filter(item => item.path[0] === vehicle.idx);
+      if (!items.length) return;
+      const vehicleCarry = getVehicleCarrySummary(vehicle.row);
+      sections.push(buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleNames.get(vehicle.idx),
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
+        count: items.length,
+        itemsHtml: items
+          .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+          .join('')
+      }));
+    });
+    list.innerHTML = sections.join('');
     const dalerInput = root.getElementById('vehicleMoneyDaler');
     const skillingInput = root.getElementById('vehicleMoneySkilling');
     const ortegarInput = root.getElementById('vehicleMoneyOrtegar');
@@ -2574,9 +4859,11 @@
       [...list.querySelectorAll('input[type="checkbox"][data-path]')]
         .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
     }
-
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    window.DAUB?.init?.(list);
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
     const clearMoneyInputs = () => {
       [dalerInput, skillingInput, ortegarInput].forEach(inp => {
@@ -2586,14 +4873,17 @@
         }
       });
     };
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       clearMoneyInputs();
       sel.innerHTML = '';
       list.innerHTML = '';
+      if (section) section.__hubCleanup = null;
+    };
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'vehiclePopup' });
     };
     const onApply = async () => {
       const vIdx = Number(sel.value);
@@ -2684,35 +4974,53 @@
       vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
       renderInventory();
-      close();
+      const keepValue = vIdx;
+      cleanup();
+      openVehiclePopup(keepValue);
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
 }
 
   function openVehicleRemovePopup(preselectIdx, precheckedPaths) {
-    const root = getToolbarRoot();
+    const root = requireInventoryPopupSurface('vehicle-unload', 'vehicleRemovePopup');
     if (!root) return;
-    const pop    = root.getElementById('vehicleRemovePopup');
+    cleanupInventoryHubSections('vehicleRemovePopup');
+    openInventoryItemsHub('vehicle-unload', { focusSection: 'vehicle-unload', activateView: false });
+    const section = root.getElementById('vehicleRemovePopup');
     const sel    = root.getElementById('vehicleRemoveSelect');
     const list   = root.getElementById('vehicleRemoveItemList');
     const apply  = root.getElementById('vehicleRemoveApply');
     const cancel = root.getElementById('vehicleRemoveCancel');
 
     const inv = storeHelper.getInventory(store);
-    const vehicles = inv
-      .map((row,i)=>({row, entry:getEntry(row.id || row.name), idx:i}))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-    if (!vehicles.length) return;
-
-    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
-    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
+    const { vehicles, vehicleNames } = getInventoryVehicleContext(inv);
+    if (!vehicles.length) {
+      const cleanupEmptyState = () => {
+        cancel.onclick = null;
+        sel.disabled = false;
+        apply.disabled = false;
+        sel.innerHTML = '';
+        list.innerHTML = '';
+        if (section) section.__hubCleanup = null;
+      };
+      sel.innerHTML = '<option value="">Inga färdmedel</option>';
+      sel.disabled = true;
+      apply.disabled = true;
+      list.innerHTML = '<p class="inventory-batch-empty">Det finns inga färdmedel att lasta ur.</p>';
+      cancel.onclick = () => {
+        cleanupEmptyState();
+        closeInventoryHub({ skipSection: 'vehicleRemovePopup' });
+      };
+      if (section) section.__hubCleanup = cleanupEmptyState;
+      window.DAUB?.init?.(list);
+      return;
+    }
+    sel.disabled = false;
+    apply.disabled = false;
 
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
@@ -2730,22 +5038,32 @@
       }
       const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
       const nameMap = makeNameMap(items.map(i => i.row));
+      const vehicleCarry = getVehicleCarrySummary(vehicle);
       const parts = items.map(o => {
         const pathStr = o.path.join('.');
         if (isMoneyRow(o.row)) {
           const normalized = storeHelper.normalizeMoney(o.row.money || {});
           const amountText = typeof formatMoney === 'function' ? formatMoney(normalized) : nameMap.get(o.row);
           const label = nameMap.get(o.row) || 'Pengar';
-          return `<div class="price-item vehicle-money-action-row"><span>${label}: ${amountText}</span><button type="button" class="char-btn vehicle-money-action" data-path="${pathStr}">Ta ut pengar</button></div>`;
+          return buildInventoryBatchActionRow(label, 'Ta ut pengar', pathStr, `Tillgängligt: ${amountText}`);
         }
-        return `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${pathStr}"></label>`;
+        return buildInventoryBatchCheckboxRow(nameMap.get(o.row), pathStr);
       });
-      list.innerHTML = parts.join('');
+      list.innerHTML = buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleName || 'Färdmedel',
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[getEntry(vehicle.id || vehicle.name)?.namn] || '🛞',
+        count: items.length,
+        itemsHtml: parts.join(''),
+        emptyText: 'Det valda färdmedlet är tomt.'
+      });
       if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
         const set = new Set(precheckedPaths.map(String));
         [...list.querySelectorAll('input[type="checkbox"][data-path]')]
           .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
       }
+      window.DAUB?.init?.(list);
       [...list.querySelectorAll('.vehicle-money-action[data-path]')].forEach(btn => {
         btn.addEventListener('click', async () => {
           const path = btn.dataset.path?.split('.').map(Number);
@@ -2766,18 +5084,22 @@
     };
 
     fillList();
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
       sel.removeEventListener('change', fillList);
-      pop.removeEventListener('click', onOutside);
       sel.innerHTML = '';
       list.innerHTML = '';
+      if (section) section.__hubCleanup = null;
+    };
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'vehicleRemovePopup' });
     };
     const onApply = async () => {
       const vIdx = Number(sel.value);
@@ -2827,18 +5149,17 @@
         }
       });
       saveInventory(inv);
-      renderInventory();
-      close();
+      renderInventoryWithPerf({ trigger: 'vehicle-unload' });
+      const keepValue = vIdx;
+      cleanup();
+      openVehicleRemovePopup(keepValue);
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
     sel.addEventListener('change', fillList);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   function openDeleteContainerPopup(removeAll, removeOnly, options = {}) {
@@ -2856,34 +5177,34 @@
 
     const { message, allLabel, onlyLabel } = options || {};
 
+    if (!pop || !allBtn || !onlyBtn || !cancel || !textEl) return;
+
     if (textEl && message) textEl.textContent = message;
     if (allBtn && allLabel) allBtn.textContent = allLabel;
     if (onlyBtn && onlyLabel) onlyBtn.textContent = onlyLabel;
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       allBtn.removeEventListener('click', onAll);
       onlyBtn.removeEventListener('click', onOnly);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       if (textEl) textEl.textContent = defaultText;
       if (allBtn) allBtn.textContent = defaultAll;
       if (onlyBtn) onlyBtn.textContent = defaultOnly;
     };
-    const onAll = () => { removeAll(); close(); };
-    const onOnly = () => { removeOnly(); close(); };
-    const onCancel = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const close = (reason = 'cancel') => popupSession?.close(reason);
+    const onAll = () => { removeAll(); close('confirm'); };
+    const onOnly = () => { removeOnly(); close('confirm'); };
+    const onCancel = () => { close('cancel'); };
 
+    popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     allBtn.addEventListener('click', onAll);
     onlyBtn.addEventListener('click', onOnly);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
   }
 
   function openAdvMoneyPopup(onConfirm) {
@@ -2893,24 +5214,24 @@
     const cancel = root.getElementById('advMoneyCancel');
     const confirm= root.getElementById('advMoneyConfirm');
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    if (!pop || !cancel || !confirm) return;
 
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       cancel.removeEventListener('click', onCancel);
       confirm.removeEventListener('click', onConf);
-      pop.removeEventListener('click', onOutside);
     };
-    const onConf = () => { onConfirm(); close(); };
-    const onCancel = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const close = (reason = 'cancel') => popupSession?.close(reason);
+    const onConf = () => { onConfirm(); close('confirm'); };
+    const onCancel = () => { close('cancel'); };
 
+    popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     cancel.addEventListener('click', onCancel);
     confirm.addEventListener('click', onConf);
-    pop.addEventListener('click', onOutside);
   }
 
   function openSaveFreePopup() {
@@ -2920,35 +5241,35 @@
     const cancel = root.getElementById('saveFreeCancel');
     const confirm= root.getElementById('saveFreeConfirm');
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    if (!pop || !cancel || !confirm) return;
 
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       cancel.removeEventListener('click', onCancel);
       confirm.removeEventListener('click', onConfirm);
-      pop.removeEventListener('click', onOutside);
     };
+    const close = (reason = 'cancel') => popupSession?.close(reason);
     const onConfirm = () => {
       const priv = storeHelper.getPrivMoney(store);
       const pos  = storeHelper.getPossessionMoney(store);
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) {
-        close();
+        close('confirm');
         openAdvMoneyPopup(() => { massFreeAndSave(); });
       } else {
         massFreeAndSave();
-        close();
+        close('confirm');
       }
     };
-    const onCancel  = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const onCancel  = () => { close('cancel'); };
 
+    popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     cancel.addEventListener('click', onCancel);
     confirm.addEventListener('click', onConfirm);
-    pop.addEventListener('click', onOutside);
   }
 
   function massFreeAndSave() {
@@ -2978,14 +5299,14 @@
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.max(0, diffO));
-    storeHelper.setSavedUnusedMoney(store, diff);
-    storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-    storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+    storeHelper.setSavedUnusedMoney(store, diff, { persist: false });
+    storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+    storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
     storeHelper.setMoney(store, {
       daler: diff.d,
       skilling: diff.s,
       'örtegar': diff.o
-    });
+    }, { persist: false });
 
     flat.forEach(row => {
       row.basePrice = { daler: 0, skilling: 0, 'örtegar': 0 };
@@ -2999,7 +5320,8 @@
       ];
       const baseQ = baseQuals.filter(q => !removed.includes(q));
       const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter || [])]);
-      row.gratisKval = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+      const gratisbarSet = getGratisbarQualitySet(entry, allQ);
+      row.gratisKval = allQ.filter(q => gratisbarSet.has(q));
       // remove any price multiplier when everything is made free
       delete row.priceMult;
     });
@@ -3011,7 +5333,6 @@
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
-    const tagTyp = tagger.typ ?? [];
     const entryBase = moneyToO(entry.grundpris || {});
     const qtyNum = Math.max(0, Number(row.qty) || 0);
     const gratisNum = Math.max(0, Number(row.gratis) || 0);
@@ -3022,9 +5343,8 @@
     }
     const hasBaseOverride = row.basePrice != null && baseSource !== 'live';
     const overrideBase = hasBaseOverride ? moneyToO(row.basePrice || {}) : null;
-    let base = hasBaseOverride ? overrideBase : entryBase;
-    let fallbackBase = entryBase;
-    const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
+    const base = hasBaseOverride ? overrideBase : entryBase;
+    const fallbackBase = entryBase;
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -3034,89 +5354,62 @@
       ...baseQuals.filter(q => !removedQ.includes(q)),
       ...(row.kvaliteter || [])
     ]);
-    if (forgeLvl && forgeable) {
-      const posCnt = countPositiveQuals(allQuals);
-      const mystCnt = allQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
-      const qualifies =
-        (forgeLvl >= 1 && posCnt === 0) ||
-        (forgeLvl >= 2 && posCnt === 1 && mystCnt === 0) ||
-        (forgeLvl >= 3 && posCnt === 2 && mystCnt <= 1);
-      if (qualifies) {
-        base = dividePrice(base, 2);
-        fallbackBase = dividePrice(fallbackBase, 2);
-      }
-    }
-    if (tagTyp.includes('Elixir')) {
-      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) {
-        base = dividePrice(base, 2);
-        fallbackBase = dividePrice(fallbackBase, 2);
-      }
-    }
-    if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) {
-        base = dividePrice(base, 2);
-        fallbackBase = dividePrice(fallbackBase, 2);
-      }
-    }
-    // Build price chain and track before/after for each quality
-    const priceBase = base > 0 ? base : fallbackBase; // ensures qualities still cost after mark-free flows
-    let price = priceBase;
-    const steps = [];
-    const posQuals = allQuals.filter(q => !isNegativeQual(q));
-    const negQuals = allQuals.filter(q => isNegativeQual(q));
-    posQuals.forEach(q => {
-      const qEntry = getEntry(q);
-      const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-      const negat = false;
-      const neut  = Boolean(qEntry.neutral);
-      const before = price;
-      if (neut)  price *= 1;
-      else       price *= myst ? 10 : 5;
-      const after = price;
-      steps.push({ name: q, before, after, negat, neut });
-    });
+    const targetLevel = typeof row?.nivå === 'string' && row.nivå.trim()
+      ? row.nivå.trim()
+      : getEntryPrimaryLevelName(entry);
+    const targetEntry = targetLevel && getEntryPrimaryLevelName(entry) !== targetLevel
+      ? { ...entry, nivå: targetLevel }
+      : entry;
 
-    const mult = row.priceMult || 1;
+    const currentList = storeHelper.getCurrentList(store);
+    const priceRuleList = buildPriceRuleSourceList(currentList, {
+      forgeLvl,
+      alcLevel,
+      artLevel
+    });
+    const requirementCheck = getRequirementCheckForEntry(targetEntry, priceRuleList);
+    const requirementMoneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
+    const kravUppfyllda = requirementCheck.ok;
+    const priceEffects = getItemPriceEffects(priceRuleList, targetEntry, allQuals, {
+      targetLevel,
+      krav_uppfyllda: kravUppfyllda
+    });
+    const listAdditiveO = Number(priceEffects.listAdditiveO || 0);
+    const listFactor = normalizeMultiplierValue(priceEffects.listFactor, 1);
+    const qualityAdditiveO = Number(priceEffects.qualityAdditiveO || 0);
+    const qualityFactor = normalizeMultiplierValue(priceEffects.qualityFactor, 1);
+    const priceBase = base > 0 ? base : fallbackBase;
+    const valueBeforeQualityMultipliers = (priceBase + listAdditiveO + qualityAdditiveO) * listFactor;
+
+    const qualityEffects = priceEffects.qualityEffects || {};
+    const freeSet = new Set(
+      (Array.isArray(row.gratisKval) ? row.gratisKval : [])
+        .filter(q => allQuals.includes(q) && qualityEffects?.[q]?.gratisbar === true)
+    );
+    let freeQualityFactor = 1;
+    [...freeSet].forEach(name => {
+      freeQualityFactor *= normalizeMultiplierValue(qualityEffects?.[name]?.multiplier, 1);
+    });
+    const paidQualityFactor = freeQualityFactor > 0
+      ? normalizeMultiplierValue(qualityFactor / freeQualityFactor, 1)
+      : qualityFactor;
+
     const qty = qtyNum || 1;
     const baseOverrideZero = hasBaseOverride && overrideBase === 0;
     const rawFreeBase = Math.min(gratisNum, qty);
     const freeBase = baseOverrideZero ? qty : rawFreeBase;
+    const rowMult = normalizeMultiplierValue(row.priceMult || 1, 1);
 
-    // Full price before adjustments
-    const fullPerUnit = price * mult;
-    let total = fullPerUnit * qty;
+    let total = (valueBeforeQualityMultipliers * paidQualityFactor) * qty;
+    const baseCorePerUnit = (priceBase + listAdditiveO) * listFactor;
+    total -= baseCorePerUnit * freeBase;
+    total *= requirementMoneyMult;
+    total *= rowMult;
 
-    // Adjustment for free base price
-    total -= priceBase * mult * freeBase;
-
-    // Adjustment for free qualities (left to right)
-    const freeNames = (row.gratisKval || []).filter(q => {
-      const qEntry = getEntry(q);
-      return !qEntry.negativ && !qEntry.neutral;
-    });
-    const remaining = [...freeNames];
-    let qualAdjust = 0;
-    steps.forEach(s => {
-      const idx = remaining.indexOf(s.name);
-      if (idx !== -1) {
-        qualAdjust += (s.after - s.before);
-        remaining.splice(idx, 1); // consume to enforce left-to-right
-      }
-    });
-    total -= qualAdjust * mult * qty;
-
-    // Apply negative quality discount after all other adjustments
-    total = dividePrice(total, Math.pow(5, negQuals.length));
-
-    const totalO = Math.max(0, total);
-    return oToMoney(totalO);
+    return oToMoney(Math.max(0, Math.round(total)));
   }
 
-  function calcRowWeight(row) {
+  function calcRowWeight(row, list) {
     const entry  = getEntry(row.id || row.name);
     if (row.typ === 'currency' && row.money) {
       return calcMoneyWeight(storeHelper.normalizeMoney(row.money));
@@ -3133,9 +5426,12 @@
     ]);
     const massCnt = allQuals.filter(q => q === 'Massivt').length;
     const sub = Array.isArray(row.contains)
-      ? row.contains.reduce((s, r) => s + calcRowWeight(r), 0)
+      ? row.contains.reduce((s, r) => s + calcRowWeight(r, list), 0)
       : 0;
-    return (base + massCnt) * row.qty + sub;
+    const wMod = Array.isArray(list) && list.length && window.rulesHelper
+      ? window.rulesHelper.getItemWeightModifiers(list, entry)
+      : { faktor: 1, tillagg: 0 };
+    return ((base + massCnt) * wMod.faktor + wMod.tillagg) * row.qty + sub;
   }
 
   function calcMoneyWeight(money) {
@@ -3147,61 +5443,28 @@
 
   function calcEntryCost(entry) {
     const tagger = entry.taggar ?? {};
-    const tagTyp = tagger.typ ?? [];
-    let price = moneyToO(entry.grundpris || {});
-
-    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
-    const skillForge = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Smideskonst');
-    const forgeLevel = Math.max(partyForge, skillForge);
-    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
-    const skillAlc = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Alkemist');
-    const alcLevel = Math.max(partyAlc, skillAlc);
-    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-    const skillArt = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Artefaktmakande');
-    const artLevel = Math.max(partyArt, skillArt);
-
-    const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
-    const baseQuals = [
+    const basePrice = moneyToO(entry.grundpris || {});
+    const baseQuals = sanitizeArmorQualities(entry, [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
-    ];
-    if (forgeLevel && forgeable) {
-      const posCnt = countPositiveQuals(baseQuals);
-      const mystCnt = baseQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
-      if (
-        (forgeLevel === 1 && posCnt === 0) ||
-        (forgeLevel === 2 && mystCnt === 0 && posCnt <= 1) ||
-        (forgeLevel >= 3 && posCnt <= 2)
-      ) {
-        price = dividePrice(price, 2);
-      }
-    }
-    if (tagTyp.includes('Elixir')) {
-      const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) price = dividePrice(price, 2);
-    }
-    if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) price = dividePrice(price, 2);
-    }
-
-    const posBaseQuals = baseQuals.filter(q => !isNegativeQual(q));
-    const negBaseQuals = baseQuals.filter(q => isNegativeQual(q));
-    posBaseQuals.forEach(q => {
-      const qEntry = getEntry(q);
-      const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-      const neut  = Boolean(qEntry.neutral);
-      if (neut) price *= 1;
-      else      price *= myst ? 10 : 5;
+    ]);
+    const currentList = storeHelper.getCurrentList(store);
+    const levels = getCraftLevels();
+    const priceRuleList = buildPriceRuleSourceList(currentList, levels);
+    const targetLevel = getEntryPrimaryLevelName(entry);
+    const requirementCheck = getRequirementCheckForEntry(entry, priceRuleList);
+    const requirementMoneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
+    const kravUppfyllda = requirementCheck.ok;
+    const priceEffects = getItemPriceEffects(priceRuleList, entry, baseQuals, {
+      targetLevel,
+      krav_uppfyllda: kravUppfyllda
     });
-    price = dividePrice(price, Math.pow(5, negBaseQuals.length));
-    price = Math.max(0, price);
-    return oToMoney(price);
+    const listAdditiveO = Number(priceEffects.listAdditiveO || 0);
+    const listFactor = normalizeMultiplierValue(priceEffects.listFactor, 1);
+    const qualityAdditiveO = Number(priceEffects.qualityAdditiveO || 0);
+    const qualityFactor = normalizeMultiplierValue(priceEffects.qualityFactor, 1);
+    const total = (((basePrice + listAdditiveO + qualityAdditiveO) * listFactor) * qualityFactor) * requirementMoneyMult;
+    return oToMoney(Math.max(0, Math.round(total)));
   }
 
   function buildQualityInfoSections(qualities, freeQualities) {
@@ -3212,11 +5475,11 @@
       const name = String(q || '').trim();
       if (!name) return '';
       const qEntry = getEntry(name) || {};
-      const tagParts = [`<span class="tag">${base ? 'Grund' : 'Tillagd'}</span>`];
-      if (freeSet.has(name)) tagParts.push('<span class="tag free">Gratis</span>');
-      if (isMysticQual(name)) tagParts.push('<span class="tag mystic">Mystisk</span>');
-      if (isNegativeQual(name)) tagParts.push('<span class="tag negative">Negativ</span>');
-      else if (isNeutralQual(name)) tagParts.push('<span class="tag neutral">Neutral</span>');
+      const tagParts = [`<span class="db-chip">${base ? 'Grund' : 'Tillagd'}</span>`];
+      if (freeSet.has(name)) tagParts.push('<span class="db-chip free">Gratis</span>');
+      if (isMysticQual(name)) tagParts.push('<span class="db-chip mystic">Mystisk</span>');
+      if (isNegativeQual(name)) tagParts.push('<span class="db-chip negative">Negativ</span>');
+      else if (isNeutralQual(name)) tagParts.push('<span class="db-chip neutral">Neutral</span>');
 
       const descHtml = abilityHtml(qEntry);
       const effectText = typeof qEntry.effekt === 'string' ? qEntry.effekt.trim() : '';
@@ -3255,7 +5518,7 @@
     const typeTagParts = [];
     (tagger.typ ?? []).forEach(t => {
       const txt = String(t || '').trim();
-      if (txt) typeTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+      if (txt) typeTagParts.push(`<span class="db-chip">${escapeHtml(txt)}</span>`);
     });
     if (!isArtifact || isLArtifact) {
       const ability = abilityHtml(entry, rowLevel);
@@ -3264,35 +5527,39 @@
         infoBody += ability;
       }
     }
-    const arkTags = explodeTags(tagger.ark_trad);
-    const testTags = Array.isArray(tagger.test) ? tagger.test : [];
+    const arkTags = splitArkTags(tagger.ark_trad);
+    const testTags = typeof window.getEntryTestTags === 'function'
+      ? window.getEntryTestTags(entry, { level: rowLevel || row?.nivå })
+      : (Array.isArray(tagger.test) ? tagger.test : []);
     const infoTags = testTags.concat(
       arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : [])
     );
-    const tagList = infoTags.map(t => `<span class="tag">${t}</span>`);
+    const tagList = infoTags.map(t => `<span class="db-chip">${t}</span>`);
     infoTags.forEach(t => {
       const txt = String(t || '').trim();
-      if (txt) infoTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+      if (txt) infoTagParts.push(`<span class="db-chip">${escapeHtml(txt)}</span>`);
     });
     infoTagParts.push(...typeTagParts);
     if (rowLevel) {
-      tagList.push(`<span class="tag level">${rowLevel}</span>`);
-      infoTagParts.push(`<span class="tag level">${escapeHtml(rowLevel)}</span>`);
+      tagList.push(`<span class="db-chip level">${rowLevel}</span>`);
+      infoTagParts.push(`<span class="db-chip level">${escapeHtml(rowLevel)}</span>`);
     }
     if (freeCnt) {
       const freeTxt = `Gratis${freeCnt>1?`×${freeCnt}`:''}`;
-      tagList.push(`<span class="tag free removable" data-free="1">${freeTxt} ✕</span>`);
-      infoTagParts.push(`<span class="tag free">${escapeHtml(freeTxt)}</span>`);
+      tagList.push(`<span class="db-chip free removable" data-free="1">${freeTxt} ✕</span>`);
+      infoTagParts.push(`<span class="db-chip free">${escapeHtml(freeTxt)}</span>`);
     }
-    const priceMult = row.priceMult;
+    const rowPriceMult = Number(row.priceMult || 1);
+    const extraMult = Number.isFinite(rowPriceMult) && rowPriceMult > 0 ? rowPriceMult : 1;
     let priceMultTag = '';
-    if (priceMult && Math.abs(priceMult - 1) > 0.001) {
-      const mTxt = Number.isInteger(priceMult)
-        ? priceMult
-        : priceMult.toFixed(2).replace(/\.?0+$/, '');
-      const safeMult = escapeHtml(String(mTxt));
-      priceMultTag = `<span class="tag price-mult removable" data-mult="1">×${safeMult} ✕</span>`;
-      infoTagParts.push(`<span class="tag price-mult">×${safeMult}</span>`);
+    if (Math.abs(extraMult - 1) > 0.001) {
+      const extraTxt = Number.isInteger(extraMult)
+        ? extraMult
+        : extraMult.toFixed(2).replace(/\.?0+$/, '');
+      const safeExtra = escapeHtml(String(extraTxt));
+      const extraTag = `<span class="db-chip price-mult removable" data-mult="1">×${safeExtra} ✕</span>`;
+      priceMultTag += extraTag;
+      infoTagParts.push(`<span class="db-chip price-mult">×${safeExtra}</span>`);
     }
     if (row.basePrice) {
       const basePriceTxt = formatMoney(row.basePrice);
@@ -3300,8 +5567,8 @@
         ? 'Köpt för'
         : 'Grundpris';
       const baseLabel = escapeHtml(baseLabelRaw);
-      tagList.push(`<span class="tag price-base removable" data-price="1">${baseLabelRaw}: ${basePriceTxt} ✕</span>`);
-      infoTagParts.push(`<span class="tag price-base">${baseLabel}: ${escapeHtml(basePriceTxt)}</span>`);
+      tagList.push(`<span class="db-chip price-base removable" data-price="1">${baseLabelRaw}: ${basePriceTxt} ✕</span>`);
+      infoTagParts.push(`<span class="db-chip price-base">${baseLabel}: ${escapeHtml(basePriceTxt)}</span>`);
     }
     if (tagList.length) {
       desc += `<div class="tags info-tags">${tagList.join(' ')}</div>`;
@@ -3311,7 +5578,7 @@
       desc += statsHtml;
       infoBody += statsHtml;
     }
-    if (row.trait && !entry.bound && row.id !== 'l9') {
+    if (row.trait && !shouldShowRowTraitInName(row, entry)) {
       const label = entry.boundLabel || 'Karaktärsdrag';
       const traitHtml = `<br><strong>${label}:</strong> ${row.trait}`;
       desc += traitHtml;
@@ -3337,9 +5604,10 @@
     const visibleBaseQ = baseQ.filter(consumeAllowed);
     const visibleAddQ = addQ.filter(consumeAllowed);
     const allowedSet = new Set(allowedQuals);
+    const gratisbarSet = getGratisbarQualitySet(entry, allowedQuals);
     const freeQ = (row.gratisKval ?? [])
-      .filter(q => !isNegativeQual(q) && !isNeutralQual(q))
-      .filter(q => allowedSet.has(q));
+      .filter(q => allowedSet.has(q))
+      .filter(q => gratisbarSet.has(q));
     const all = [
       ...visibleBaseQ.map(q => ({ q, base: true })),
       ...visibleAddQ.map(q => ({ q, base: false }))
@@ -3348,7 +5616,7 @@
     if (all.length) {
       const qhtml = all.map(obj => {
         const q = obj.q;
-        const cls = `tag removable quality${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
+        const cls = `db-chip removable quality${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
         const baseAttr = obj.base ? ' data-base="1"' : '';
         return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
       }).join('');
@@ -3358,15 +5626,14 @@
 
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
     if (isArtifact) {
-      let txt, cls = 'tag';
-      if (effectVal === 'corruption') {
-        txt = '+1 Permanent korruption';
-      } else if (effectVal === 'xp') {
-        txt = '–1 Erfarenhetspoäng';
-      } else {
-        txt = 'Obunden';
-        cls += ' unbound';
-      }
+      const txt = getArtifactEffectLabel(entry, effectVal, {
+        entry,
+        sourceEntry: entry,
+        row,
+        field: 'artifactEffect'
+      });
+      let cls = 'tag';
+      if (!String(effectVal || '').trim()) cls += ' unbound';
       const effectHtml = `<br><span class="${cls}">${txt}</span>`;
       desc += effectHtml;
       infoBody += effectHtml;
@@ -3388,92 +5655,12 @@
             .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
         : []
     );
-    if (dom.invFormal) {
-      [...dom.invFormal.querySelectorAll('li.card')].forEach(li => {
-        if (!li.classList.contains('compact') && li.dataset.special) {
-          openKeys.add(li.dataset.special);
-        }
-      });
-
-      dom.invFormal.onclick = async e => {
-        if (e.target.closest('.entry-collapse-btn')) return;
-        const header = e.target.closest('.card-header');
-        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
-          return;
-        }
-
-        // Handle money +/- inside formal card
-        const btn = e.target.closest('button[data-act]');
-        if (!btn) return;
-        const act = btn.dataset.act;
-        if (act === 'moneyPlus' || act === 'moneyMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyPlus' ? 1 : -1;
-          const newD = (cur.daler || 0) + delta;
-          if (newD < 0) {
-            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, daler: newD });
-          }
-          renderInventory();
-          return;
-        }
-        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneySkillingPlus' ? 1 : -1;
-          const newS = (cur.skilling || 0) + delta;
-          if (newS < 0) {
-            const newD = Math.max(0, (cur.daler || 0) - 1);
-            const newSkilling = 3 + newS;
-            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
-          } else if (newS >= 4) {
-            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, skilling: newS });
-          }
-          renderInventory();
-          return;
-        }
-        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
-          const newO = (cur['örtegar'] || 0) + delta;
-          if (newO < 0) {
-            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
-            const newOrtegar = 8 + newO;
-            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
-            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
-          } else if (newO >= 8) {
-            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
-          }
-          renderInventory();
-          return;
-        }
-      };
-
-      if (!dom.invFormal.dataset.toggleBound) {
-        dom.invFormal.addEventListener('entry-card-toggle', e => {
-          updateCollapseBtnState();
-          const card = e.detail?.card;
-          if (!card) return;
-          const expanded = Boolean(e.detail?.expanded);
-          if (card.dataset.special === '__info__') {
-            localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
-          } else if (card.dataset.special === '__invfunc__') {
-            localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
-          }
-        });
-        dom.invFormal.dataset.toggleBound = '1';
-      }
-    }
+    // (Dashboard click handlers moved to bindDashPanel below)
 
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
     const nameMap = makeNameMap(allInv);
     recalcArtifactEffects();
-    if (window.updateXP) updateXP();
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
     const list = storeHelper.getCurrentList(store);
 
@@ -3509,14 +5696,13 @@
 
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.abs(diffO));
-    const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
     const unusedMoney = oToMoney(Math.max(0, diffO));
     const moneyWeight = calcMoneyWeight(unusedMoney);
 
     const usedWeight = allInv.reduce((s, r) => {
       const entry = getEntry(r.id || r.name);
       const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
-      return s + (isVeh ? 0 : calcRowWeight(r));
+      return s + (isVeh ? 0 : calcRowWeight(r, list));
     }, 0) + moneyWeight;
     const traits = storeHelper.getTraits(store);
     const manualAdjust = storeHelper.getManualAdjustments(store) || {};
@@ -3575,9 +5761,15 @@
       const entry = getEntry(row.id || row.name);
       const typTags = entry.taggar?.typ || [];
       const arkRaw = entry.taggar?.ark_trad;
-      const arkTags = explodeTags(arkRaw);
+      const arkTags = splitArkTags(arkRaw);
       const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
-      const testTags = entry.taggar?.test || [];
+      const testTags = typeof window.getEntryTestTags === 'function'
+        ? window.getEntryTestTags(entry)
+        : (Array.isArray(entry.taggar?.nivå_data?.Enkel?.test)
+          ? entry.taggar.nivå_data.Enkel.test
+          : (Array.isArray(entry.taggar?.niva_data?.Enkel?.test)
+            ? entry.taggar.niva_data.Enkel.test
+            : (entry.taggar?.test || [])));
       const itemTags = [...typTags, ...arkList, ...testTags];
 
       const tagHit = hasTagFilters && (
@@ -3609,87 +5801,233 @@
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
-    const moneyRow = moneyWeight
-      ? `<div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
-      : '';
-
-    const baseFunctionButtons = [
-      '<button id="addCustomBtn" class="char-btn">Nytt föremål</button>',
-      '<button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>',
-      '<button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>',
-      '<button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>'
-    ];
-    const vehicleButtons = vehicles.length
-      ? ['<button id="vehicleBtn" class="char-btn">Lasta i färdmedel</button>']
-      : [];
-    const trailingFunctionButtons = [
-      '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
-      '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
-    ];
-    const allFunctionButtons = [...baseFunctionButtons, ...vehicleButtons, ...trailingFunctionButtons];
-    const functionsState = localStorage.getItem(INV_TOOLS_KEY);
-    const functionsOpen = functionsState === null ? true : functionsState === '1';
-    if (functionsState === null) localStorage.setItem(INV_TOOLS_KEY, '1');
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
-    const liveToggleHtml = `
-      <div class="inv-live-toggle">
-        <label class="toggle-switch">
-          <input id="inventoryLiveToggle" type="checkbox" aria-label="Slå på eller av live-läge"${liveModeEnabled ? ' checked' : ''}>
-          <span class="toggle-switch-track" aria-hidden="true"></span>
-          <div class="toggle-switch-copy">
-            <span class="toggle-switch-title">Live-läge</span>
-            <span class="toggle-switch-sub">Dra pengar direkt och markera inköp som gratis</span>
-          </div>
-        </label>
-      </div>`;
-    const functionsCard = createEntryCard({
-      compact: !functionsOpen,
-      dataset: { special: '__invfunc__' },
-      nameHtml: 'Inventarie',
-      titleSuffixHtml: icon('basket', { className: 'title-icon', alt: 'Inventarie' }),
-      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${liveToggleHtml}</div>`,
-      collapsible: true
+
+    // --- Weight-by-type breakdown ---
+    const chartTypeIcons = {
+      'Närstridsvapen': 'skadetyp',
+      'Avståndsvapen': 'skadetyp',
+      Vapen: 'skadetyp',
+      'Pil/Lod': 'skadetyp',
+      Sköld: 'forsvar',
+      Rustning: 'forsvar',
+      Mat: 'grain',
+      Dryck: 'grain',
+      Mynt: 'money-bag',
+      Skatt: 'money-bag',
+      Kuriositet: 'basket',
+      Diverse: 'basket',
+      Specialverktyg: 'tool-box',
+      Förvaring: 'basket',
+      Fälla: 'basket',
+      Elixir: 'alkemi',
+      Artefakt: 'artefakt',
+      'Lägre Artefakt': 'artefakt',
+      Hemmagjort: 'basket',
+      Övrigt: 'basket'
+    };
+    const chartTypeSkip = new Set(['Hemmagjort']);
+    const getChartType = (row, entry) => {
+      if (row?.typ === 'currency' && row.money) return 'Mynt';
+      const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ.filter(Boolean) : [];
+      return types.find(type => !chartTypeSkip.has(type)) || types[0] || 'Övrigt';
+    };
+    const getChartIcon = (type) => {
+      if (chartTypeIcons[type]) return chartTypeIcons[type];
+      if (hasWeaponType([type])) return 'skadetyp';
+      return 'basket';
+    };
+    const weightGroups = new Map();
+    const addWeightGroup = (type, weight) => {
+      const key = type || 'Övrigt';
+      weightGroups.set(key, (weightGroups.get(key) || 0) + weight);
+    };
+    allInv.forEach(r => {
+      const entry = getEntry(r.id || r.name);
+      const types = entry.taggar?.typ || [];
+      if (types.includes('Färdmedel')) return;
+      const w = calcRowWeight(r, list);
+      if (w > 0) addWeightGroup(getChartType(r, entry), w);
     });
+    if (moneyWeight > 0) addWeightGroup('Mynt', moneyWeight);
 
-    const infoKey  = '__info__';
-    const infoState = localStorage.getItem(INV_INFO_KEY);
-    const infoOpen  = infoState === null ? true : infoState === '1';
-    if (infoState === null) localStorage.setItem(INV_INFO_KEY, '1');
+    const capPct = maxCapacity > 0 ? Math.round((usedWeight / maxCapacity) * 100) : 0;
+    const capProgressPct = Math.min(capPct, 100);
+    const isOverCap = remainingCap < 0;
+    const fmtDashWeight = value => formatWeight(value).replace('.', ',');
+    const fmtDashMoney = (money, sign = '') => {
+      const normalized = storeHelper.normalizeMoney(money);
+      return `${sign}${normalized.daler} D <span aria-hidden="true">·</span> ${normalized.skilling} S <span aria-hidden="true">·</span> ${normalized['örtegar']} Ö`;
+    };
+    const capTone = isOverCap ? 'crit' : capPct >= 90 ? 'warn' : 'ok';
+    const capStatusLabel = isOverCap ? 'Över max' : capPct >= 90 ? 'Nära max' : 'Stabil';
+    const kpiCapStatusLabel = isOverCap ? 'Över max' : capPct >= 80 ? 'Nära full' : 'Stabil';
 
-    const infoCardDesc = `
-          <div class="formal-section">
-            <div class="formal-title">Pengar
-              <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon icon-only" aria-label="Minska mynt" title="Minska mynt">${icon('minus')}</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon icon-only" aria-label="Öka mynt" title="Öka mynt">${icon('plus')}</button>
+    // --- Build weight chart bars ---
+    const weightGroupEntries = Array.from(weightGroups.entries())
+      .filter(([, w]) => w > 0)
+      .sort((a, b) => {
+        const byWeight = b[1] - a[1];
+        if (Math.abs(byWeight) > 0.0001) return byWeight;
+        return typeof catComparator === 'function' ? catComparator(a[0], b[0]) : a[0].localeCompare(b[0]);
+      });
+    const maxGroupWeight = Math.max(...weightGroupEntries.map(([, w]) => w), 0.01);
+    const chartBarsHtml = weightGroupEntries
+      .filter(([, w]) => w > 0)
+      .map(([type, w]) => {
+        const pct = Math.round((w / maxGroupWeight) * 100);
+        const label = typeof catName === 'function' ? catName(type) : type;
+        return `<div class="dash-chart-row">
+          <span class="dash-chart-label"><span class="dash-chart-icon" aria-hidden="true">${icon(getChartIcon(type), { alt: '', width: 22, height: 22 })}</span><span class="dash-chart-label-text">${escapeHtml(label)}</span></span>
+          <div class="db-progress dash-chart-bar"><div class="db-progress__bar" style="--db-progress:${pct}%"></div></div>
+          <span class="dash-chart-val">${fmtDashWeight(w)}</span>
+        </div>`;
+      }).join('');
+
+    // --- Vehicle money lines ---
+    const vehicleStatHtml = vehicleMoneyLines.map(v =>
+      `<div class="db-stat"><div class="db-stat__label">${escapeHtml(v.name)}</div><div class="db-stat__value">${v.money}</div></div>`
+    ).join('');
+
+    // --- Capacity status text ---
+    const capStatusText = isOverCap
+      ? `Över kapacitet med ${fmtDashWeight(Math.abs(remainingCap))}`
+      : remainingCap === 0
+        ? 'Exakt på gränsen'
+        : `${fmtDashWeight(remainingCap)} kvar`;
+
+    // --- KPI card sub-texts ---
+    const moneyWeightNote = moneyWeight ? `Myntvikt: ${fmtDashWeight(moneyWeight)}` : '';
+    const foodNote = foodCount === 0 ? '0 proviant' : `${foodCount} proviant`;
+
+
+    // --- Dashboard HTML for KPI sidebar panel (shadow DOM) ---
+    const dashPanelHtml = `
+      <div class="formal-dashboard-content">
+        <!-- KPI row -->
+        <div class="dash-kpi-row">
+          <div class="db-card dash-kpi dash-kpi-money">
+            <div class="dash-card-head">
+              <span class="dash-card-icon dash-card-icon--accent" aria-hidden="true">${icon('money-bag', { alt: '', width: 26, height: 26 })}</span>
+              <div class="db-stat__label">Kontanter</div>
+              <span class="dash-kpi-actions" aria-label="Justera mynt">
+                <button data-act="moneyMinus" class="dash-money-btn" aria-label="Minska mynt" title="Minska mynt">${icon('minus', { alt: '', width: 20, height: 20 }) || '&minus;'}</button>
+                <button data-act="moneyPlus" class="dash-money-btn" aria-label="Öka mynt" title="Öka mynt">${icon('plus', { alt: '', width: 20, height: 20 }) || '&plus;'}</button>
+              </span>
+            </div>
+            <div class="db-stat">
+              <div class="db-stat__value">${fmtDashMoney(cash)}</div>
+              ${moneyWeightNote ? `<div class="db-caption db-text-muted">${moneyWeightNote}</div>` : ''}
+            </div>
+            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn dash-kpi-action-btn--primary" data-dash-trigger="manageEconomyBtn" type="button"><span aria-hidden="true">${icon('money-bag', { alt: '', width: 21, height: 21 })}</span>Hantera ekonomi</button>
+          </div>
+
+          <div class="db-card dash-kpi">
+            <div class="dash-card-head">
+              <span class="dash-card-icon" aria-hidden="true">${icon('inventarie', { alt: '', width: 25, height: 25 })}</span>
+              <div class="db-stat__label">Tillgängligt</div>
+            </div>
+            <div class="db-stat">
+              <div class="db-stat__value dash-unused-out">${fmtDashMoney(unusedMoney)}</div>
+            </div>
+            ${vehicleStatHtml ? `<div class="dash-kpi-extra">${vehicleStatHtml}</div>` : ''}
+          </div>
+
+          <div class="db-card dash-kpi ${charCapClass}">
+            <div class="dash-card-head">
+              <span class="dash-card-icon dash-card-icon--warn" aria-hidden="true">${icon('inventarie', { alt: '', width: 25, height: 25 })}</span>
+              <div class="db-stat__label">Kapacitet</div>
+              <button id="clearInvBtn" class="db-btn db-btn--icon db-btn--danger dash-clear-inv-btn" type="button" title="Töm inventarie" aria-label="Töm inventarie">
+                ${icon('broom', { alt: '', width: 20, height: 20 })}
+              </button>
+            </div>
+            <div class="db-stat">
+              <div class="db-stat__value">${capStatusText}</div>
+              <span class="dash-status-badge dash-status-badge--${capTone}">${kpiCapStatusLabel}</span>
+            </div>
+            <button class="db-btn db-btn--ghost db-btn--sm dash-kpi-action-btn" data-dash-trigger="manageItemsBtn" type="button"><span aria-hidden="true">${icon('tool-box', { alt: '', width: 21, height: 21 })}</span>Hantera föremål</button>
+          </div>
+
+          <div class="db-card dash-kpi dash-kpi-live-card">
+            <div class="dash-card-head">
+              <span class="dash-card-icon" aria-hidden="true">${icon('basket', { alt: '', width: 25, height: 25 })}</span>
+              <div class="db-stat__label">Dra automatiskt vid inköp</div>
+            </div>
+            <div class="dash-live-inline">
+              <div class="db-stat__value">${liveModeEnabled ? 'På' : 'Av'}</div>
+              <button class="db-switch inventory-live-switch dash-live-switch dash-live-toggle" type="button" role="switch"
+                      aria-label="Slå på eller av live-läge" aria-checked="${liveModeEnabled ? 'true' : 'false'}">
+                <span class="db-switch__track" aria-hidden="true"><span class="db-switch__thumb"></span></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero capacity card -->
+        <div class="db-card dash-hero-cap ${charCapClass}">
+          <div class="db-card__header dash-hero-header">
+            <h3 class="db-card__title"><span class="dash-card-icon" aria-hidden="true">${icon('inventarie', { alt: '', width: 25, height: 25 })}</span>Bärkapacitet</h3>
+            <span class="dash-status-badge dash-status-badge--${capTone}">${capStatusLabel}</span>
+          </div>
+          <div class="db-card__body dash-hero-body">
+            <div class="dash-cap-meter">
+              <div class="dash-cap-labels">
+                <span>${fmtDashWeight(usedWeight)} / ${fmtDashWeight(maxCapacity)}</span>
+                <span>${capPct}%</span>
+              </div>
+              <div class="db-progress${isOverCap ? ' dash-progress-danger' : ''}">
+                <div class="db-progress__bar" style="--db-progress:${capProgressPct}%"></div>
               </div>
             </div>
-            <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
-            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
-            ${moneyRow}
-            ${vehicleMoneyLines.map(v => `<div class="money-line"><span class="label">Pengar på ${escapeHtml(v.name)}:</span><span class="value">${v.money}</span></div>`).join('')}
+            <span class="db-badge dash-food-badge${foodCount === 0 ? ' db-badge--warning' : ''}">${icon('grain', { alt: '', width: 18, height: 18 })}${foodNote}</span>
+            ${isOverCap ? `<div class="db-alert db-alert--error dash-cap-alert"><div class="db-alert__content">Över kapacitet med <strong>${fmtDashWeight(Math.abs(remainingCap))}</strong></div></div>` : ''}
+            ${chartBarsHtml ? `
+              <div class="dash-weight-chart">
+                <div class="db-caption db-text-muted dash-chart-title">Vikt per typ</div>
+                ${chartBarsHtml}
+              </div>
+            ` : ''}
           </div>
-          <div class="formal-section ${charCapClass}">
-            <div class="formal-title">Bärkapacitet</div>
-            <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
-            <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
-            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
-          </div>`;
-    const infoCard = createEntryCard({
-      compact: !infoOpen,
-      dataset: { special: infoKey },
-      nameHtml: 'Information',
-      titleSuffixHtml: icon('money-bag', { className: 'title-icon', alt: 'Information' }),
-      descHtml: `<div class="card-desc">${infoCardDesc}</div>`,
-      collapsible: true
-    });
+        </div>
+      </div>`;
+
+    // --- Snabbspendera HTML for bottom drawer (shadow DOM) ---
+    const spendPanelHtml = `
+      <div class="inv-spend-content">
+        <p class="db-caption db-text-muted">Betala direkt utan att spara köpet som inventariepost</p>
+        <div class="formal-spend-row">
+          <input class="db-input db-input--sm dash-spend-daler" type="number" min="0" step="1" placeholder="Daler" aria-label="Snabbspendera daler">
+          <input class="db-input db-input--sm dash-spend-skilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Snabbspendera skilling">
+          <input class="db-input db-input--sm dash-spend-ortegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Snabbspendera örtegar">
+          <button class="db-btn db-btn--primary db-btn--sm dash-spend-btn" type="button">Betala</button>
+        </div>
+      </div>`;
+
+    // No inline dashboard in invFormal anymore — content lives in sidebar/drawer panels
+    const formalHtml = '';
+
+    const buildInventoryStandardActionConfig = ({
+      qty = 0,
+      isGear = false,
+      canStack = false
+    } = {}) => {
+      const count = Math.max(0, Number(qty) || 0);
+      const config = {
+        remove: { act: 'del' }
+      };
+      if (isGear && !canStack) return config;
+      config.multi = { act: 'buyMulti' };
+      if (count > 1) config.minus = { act: 'sub' };
+      config.plus = { act: 'add' };
+      return config;
+    };
 
     const renderRowCard = (row, realIdx, entryOverride) => {
       const entry = entryOverride || getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ ?? [];
       const isVehicle = tagTyp.includes('F\u00e4rdmedel');
       const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
-      const rowWeight = calcRowWeight(row);
+      const rowWeight = calcRowWeight(row, list);
       const loadWeight = rowWeight - baseWeight * (row.qty || 0);
       const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
       const remaining = capacity - loadWeight;
@@ -3705,33 +6043,35 @@
 
       const isArtifact = tagTyp.includes('Artefakt');
       const isCustom = tagTyp.includes('Hemmagjort');
-      const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
-      const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
+      const isGear = [...WEAPON_AND_SHIELD_TYPES, 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+      const allowQual = [...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => tagTyp.includes(t));
       const canStack = ['kraft','ritual'].includes(entry.bound);
       const isCurrency = row.typ === 'currency' && row.money;
       const moneyAmount = (isCurrency && typeof formatMoney === 'function')
         ? formatMoney(storeHelper.normalizeMoney(row.money))
         : '';
-      const buttonParts = [];
-      if (isGear && !canStack) {
-        buttonParts.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
-      } else {
-        buttonParts.push(
-          `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
-          `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
-          `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
-          `<button data-act="buyMulti" class="char-btn icon icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
-        );
-      }
-      if (isCustom) buttonParts.push('<button data-act="editCustom" class="char-btn">✏️</button>');
-      if (allowQual) buttonParts.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
-      if (allowQual) buttonParts.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
-      if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
-      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
+      const buttonParts = [
+        ...(window.entryCardFactory?.buildStandardActionButtons?.(
+          buildInventoryStandardActionConfig({
+            qty: row.qty,
+            isGear,
+            canStack
+          }),
+          {
+            buttonName: row.name,
+            buttonId: row.id || row.name
+          }
+        ) || [])
+      ];
+      if (isCustom) buttonParts.push('<button data-act="editCustom" class="db-btn">✏️</button>');
+      if (allowQual) buttonParts.push(`<button data-act="addQual" class="db-btn">${icon('addqual')}</button>`);
+      if (allowQual) buttonParts.push(`<button data-act="freeQual" class="db-btn">${icon('qualfree')}</button>`);
+      if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="db-btn">↔</button>');
+      buttonParts.push(`<button data-act="free" class="db-btn${freeCnt ? ' db-btn--danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
       if (isVehicle) {
         buttonParts.push(
-          `<button data-act="vehicleLoad" class="char-btn icon icon-only" aria-label="Lasta i fordon">${icon('arrow-down')}</button>`,
-          `<button data-act="vehicleUnload" class="char-btn icon icon-only" aria-label="Ta ur fordon">${icon('arrow-up')}</button>`
+          `<button data-act="vehicleLoad" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Lasta i fordon">${icon('arrow-down')}</button>`,
+          `<button data-act="vehicleUnload" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Ta ur fordon">${icon('arrow-up')}</button>`
         );
       }
 
@@ -3817,7 +6157,7 @@
         const bodyStr = typeof bodyHtml === 'string' ? bodyHtml : String(bodyHtml || '');
         if (!tagsHtml.trim() && !metaItems.length && !bodyStr.trim() && !sectionItems.length) return '';
         const infoPanelHtml = buildInfoPanelHtml({ tagsHtml, bodyHtml: bodyStr, meta: metaItems, sections: sectionItems });
-        return `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
+        return `<button class="db-btn db-btn--icon db-btn--icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
       };
 
       const infoBtnHtml = buildInfoButton({
@@ -3827,37 +6167,43 @@
         sections: qualityInfoSections
       });
 
-      const badgeParts = [];
-      badgeParts.push(`<span class="meta-badge weight-badge${weightClass ? ` ${weightClass}` : ''}" title="Vikt">V: ${weightText}</span>`);
+      const invBadgeParts = [];
+      invBadgeParts.push(`<span class="meta-badge weight-badge${weightClass ? ` ${weightClass}` : ''}" title="Vikt">V: ${weightText}</span>`);
       if (isVehicle) {
-        badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${formatWeight(capacity)}</span>`);
-        badgeParts.push(`<span class="meta-badge remaining-badge${remaining < 0 ? ' cap-neg' : ''}" title="Återstående">ÅK: ${formatWeight(remaining)}</span>`);
+        invBadgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${formatWeight(capacity)}</span>`);
+        invBadgeParts.push(`<span class="meta-badge remaining-badge${remaining < 0 ? ' cap-neg' : ''}" title="Återstående">ÅK: ${formatWeight(remaining)}</span>`);
       }
-      const leftSections = badgeParts.length ? [`<div class="meta-badges">${badgeParts.join('')}</div>`] : [];
-
-      const descHtml = desc ? `<div class="card-desc">${desc}</div>` : '';
       const classes = [];
       if (isVehicle && remaining < 0) classes.push('vehicle-over');
 
       const displayName = nameMap.get(row) || row.name;
-      const baseName = (row.id === 'l9' && row.trait)
-        ? `${displayName}: ${row.trait}`
-        : `${displayName}`;
+      const baseName = `${displayName}`;
 
-      const li = createEntryCard({
+      // ── Build card via shared builder ──
+      const builder = window.entryCardBuilder;
+      const opts = builder ? builder.build(entry, {
+        compact: isCompact,
+        desc,
+        showInfo: false,
+        infoBoxOverride: infoBoxHtml,
+        extraClasses: classes,
+        extraDataset: dataset,
+        extraBadgeParts: invBadgeParts,
+      }) : {
         compact: isCompact,
         classes,
         dataset,
-        nameHtml: baseName,
-        titleSuffixHtml: badge,
+        descHtml: desc ? `<div class="card-desc">${desc}</div>` : '',
         infoBox: infoBoxHtml,
-        descHtml,
-        qualityHtml,
-        leftSections,
-        titleActions: infoBtnHtml ? [infoBtnHtml] : [],
-        buttonSections: buttonParts,
-        collapsible: true
-      });
+        collapsible: true,
+        leftSections: invBadgeParts.length ? [`<div class="meta-badges">${invBadgeParts.join('')}</div>`] : [],
+      };
+      opts.nameHtml = baseName;
+      opts.titleSuffixHtml = badge;
+      opts.qualityHtml = qualityHtml;
+      opts.titleActions = infoBtnHtml ? [infoBtnHtml] : [];
+      opts.buttonSections = buttonParts;
+      const li = createEntryCard(opts);
 
       const txt = (F.invTxt || '').toLowerCase();
       const filteredChildren = (() => {
@@ -3875,27 +6221,29 @@
         const cTagTyp = centry.taggar?.typ ?? [];
         const cIsArtifact = cTagTyp.includes('Artefakt');
         const cIsCustom = cTagTyp.includes('Hemmagjort');
-        const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
-        const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => cTagTyp.includes(t));
+        const cIsGear = [...WEAPON_AND_SHIELD_TYPES, 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
+        const cAllowQual = [...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => cTagTyp.includes(t));
         const cCanStack = ['kraft','ritual'].includes(centry.bound);
-        const cButtons = [];
-        if (cIsGear && !cCanStack) {
-          cButtons.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
-        } else {
-          cButtons.push(
-            `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
-            `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
-            `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
-            `<button data-act="buyMulti" class="char-btn icon icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
-          );
-        }
-        if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="char-btn">✏️</button>');
-        if (cAllowQual) cButtons.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
-        if (cAllowQual) cButtons.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
-        if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
+        const cButtons = [
+          ...(window.entryCardFactory?.buildStandardActionButtons?.(
+            buildInventoryStandardActionConfig({
+              qty: childRow.qty,
+              isGear: cIsGear,
+              canStack: cCanStack
+            }),
+            {
+              buttonName: childRow.name,
+              buttonId: childRow.id || childRow.name
+            }
+          ) || [])
+        ];
+        if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="db-btn">✏️</button>');
+        if (cAllowQual) cButtons.push(`<button data-act="addQual" class="db-btn">${icon('addqual')}</button>`);
+        if (cAllowQual) cButtons.push(`<button data-act="freeQual" class="db-btn">${icon('qualfree')}</button>`);
+        if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="db-btn">↔</button>');
 
         const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, qualityInfoSections: cQualityInfoSections, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
-        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
+        cButtons.push(`<button data-act="free" class="db-btn${cFreeCnt ? ' db-btn--danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
 
         const cIsCurrency = childRow.typ === 'currency' && childRow.money;
         const cMoneyAmount = cIsCurrency && typeof formatMoney === 'function'
@@ -3909,7 +6257,7 @@
           ? 'Belopp'
           : (cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris');
         const cPriceDisplay = `${cPriceLabel}: ${cPriceText}`.trim();
-        const cWeightText = formatWeight(calcRowWeight(childRow));
+        const cWeightText = formatWeight(calcRowWeight(childRow, list));
         const cWeightClass = capClassOf(loadWeight, capacity);
         const cKey = `${childRow.id || childRow.name}|${childRow.trait || ''}|${cRowLevel || ''}`;
 
@@ -3947,7 +6295,6 @@
         const cBadgeParts = [
           `<span class="meta-badge weight-badge${cWeightClass ? ` ${cWeightClass}` : ''}" title="Vikt">V: ${cWeightText}</span>`
         ];
-        const cLeftSections = cBadgeParts.length ? [`<div class="meta-badges">${cBadgeParts.join('')}</div>`] : [];
 
         const childDataset = {
           parent: String(realIdx),
@@ -3965,24 +6312,33 @@
         const childDisplayName = (cIsCurrency && cPriceText)
           ? `${childName} (${cPriceText})`
           : childName;
-        const childBaseName = (childRow.id === 'l9' && childRow.trait)
-          ? `${childDisplayName}: ${childRow.trait}`
-          : childDisplayName;
+        const childBaseName = childDisplayName;
 
-        const childLi = createEntryCard({
+        // ── Build child card via shared builder ──
+        const cBuilder = window.entryCardBuilder;
+        const cOpts = cBuilder ? cBuilder.build(centry, {
+          compact: childCompact,
+          desc: cDesc,
+          showInfo: false,
+          infoBoxOverride: cInfoBox,
+          extraClasses: childClasses,
+          extraDataset: childDataset,
+          extraBadgeParts: cBadgeParts,
+        }) : {
           compact: childCompact,
           classes: childClasses,
           dataset: childDataset,
-          nameHtml: childBaseName,
-          titleSuffixHtml: cBadge,
-          infoBox: cInfoBox,
           descHtml: cDesc ? `<div class="card-desc">${cDesc}</div>` : '',
-          qualityHtml: cQualityHtml,
-          leftSections: cLeftSections,
-          titleActions: cInfoBtnHtml ? [cInfoBtnHtml] : [],
-          buttonSections: cButtons,
-          collapsible: true
-        });
+          infoBox: cInfoBox,
+          collapsible: true,
+          leftSections: cBadgeParts.length ? [`<div class="meta-badges">${cBadgeParts.join('')}</div>`] : [],
+        };
+        cOpts.nameHtml = childBaseName;
+        cOpts.titleSuffixHtml = cBadge;
+        cOpts.qualityHtml = cQualityHtml;
+        cOpts.titleActions = cInfoBtnHtml ? [cInfoBtnHtml] : [];
+        cOpts.buttonSections = cButtons;
+        const childLi = createEntryCard(cOpts);
 
         return childLi;
       };
@@ -3996,106 +6352,142 @@
         });
         if (sublistEl.childElementCount) {
           const detailsHost = li.querySelector('.entry-card-details') || li;
-          detailsHost.appendChild(sublistEl);
+          const shellEl = document.createElement('div');
+          shellEl.className = 'vehicle-items-shell';
+          const headerEl = document.createElement('div');
+          headerEl.className = 'vehicle-items-header';
+          const titleEl = document.createElement('span');
+          titleEl.className = 'vehicle-items-title';
+          titleEl.textContent = `Innehåll i ${displayName}`;
+          const countEl = document.createElement('span');
+          countEl.className = 'vehicle-items-count';
+          countEl.textContent = String(filteredChildren.length);
+          headerEl.appendChild(titleEl);
+          headerEl.appendChild(countEl);
+          shellEl.appendChild(headerEl);
+          shellEl.appendChild(sublistEl);
+          detailsHost.appendChild(shellEl);
         }
       }
 
       return li;
     };
-    if (dom.invFormal) {
-      dom.invFormal.innerHTML = '';
-      dom.invFormal.appendChild(functionsCard);
-      dom.invFormal.appendChild(infoCard);
-    }
-
-    if (listEl) {
-      listEl.innerHTML = '';
-      if (filteredRows.length) {
-        const categories = new Map();
+    let categories = null;
+    let catKeys = [];
+    if (filteredRows.length) {
+      timeActiveMutationStage('sort-group-rebuild', () => {
+        categories = new Map();
         filteredRows.forEach(({ row, idx, entry }) => {
           const cat = (entry.taggar?.typ || [])[0] || 'Övrigt';
           const cardEl = renderRowCard(row, idx, entry);
           if (!categories.has(cat)) categories.set(cat, []);
           categories.get(cat).push(cardEl);
         });
-        const catState = loadInvCatState();
-        const catKeys = [...categories.keys()].sort(catComparator);
-        const fragment = document.createDocumentFragment();
-        catKeys.forEach(cat => {
-          const shouldOpen = hasSearch
-            ? true
-            : (forcedCatOpen.has(cat)
-                ? true
-                : (catState[cat] !== undefined ? catState[cat] : true));
-          const catLi = document.createElement('li');
-          catLi.className = 'cat-group';
-          const detailsEl = document.createElement('details');
-          detailsEl.dataset.cat = cat;
-          if (shouldOpen) detailsEl.open = true;
-          const summaryEl = document.createElement('summary');
-          summaryEl.textContent = catName(cat);
-          detailsEl.appendChild(summaryEl);
-          const innerUl = document.createElement('ul');
-          innerUl.className = 'card-list entry-card-list';
-          innerUl.dataset.cat = cat;
-          categories.get(cat).forEach(card => innerUl.appendChild(card));
-          detailsEl.appendChild(innerUl);
-          catLi.appendChild(detailsEl);
-          fragment.appendChild(catLi);
-        });
-        listEl.appendChild(fragment);
+        catKeys = [...categories.keys()].sort(catComparator);
+      }, {
+        surface: 'inventory',
+        rows: filteredRows.length
+      });
+    }
 
-        listEl.querySelectorAll('.cat-group > details').forEach(detailsEl => {
-          detailsEl.addEventListener('toggle', ev => {
-            if (!ev.isTrusted) return;
-            const cat = detailsEl.dataset.cat;
-            catState[cat] = detailsEl.open;
-            saveInvCatState(catState);
-            if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
-          });
-        });
-        if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
-      } else {
-        const emptyCard = createEntryCard({
-          classes: ['empty'],
-          nameHtml: 'Inga föremål.',
-          collapsible: false
-        });
-        listEl.appendChild(emptyCard);
-        if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+    timeActiveMutationStage('dom-patch', () => {
+      // Inject dashboard content into toolbar shadow DOM panels
+      const toolbar = document.querySelector('shared-toolbar');
+      if (toolbar) {
+        if (typeof toolbar.updateInvDash === 'function') toolbar.updateInvDash(dashPanelHtml);
+        if (typeof toolbar.updateInvSpend === 'function') toolbar.updateInvSpend(spendPanelHtml);
       }
-    } else if (typeof window.inventorySyncCats === 'function') {
-      window.inventorySyncCats();
-    }
 
+      if (dom.invFormal) {
+        dom.invFormal.innerHTML = formalHtml;
+      }
 
-    renderActiveFilters();
+      if (listEl) {
+        listEl.innerHTML = '';
+        if (filteredRows.length && categories) {
+          const catState = loadInvCatState();
+          const fragment = document.createDocumentFragment();
+          catKeys.forEach(cat => {
+            const shouldOpen = hasSearch
+              ? true
+              : (forcedCatOpen.has(cat)
+                  ? true
+                  : (catState[cat] !== undefined ? catState[cat] : true));
+            const catLi = document.createElement('li');
+            catLi.className = 'cat-group';
+            catLi.dataset.aaKey = `cat:${cat}`;
+            const detailsEl = document.createElement('details');
+            detailsEl.className = 'db-accordion__item';
+            detailsEl.dataset.cat = cat;
+            if (shouldOpen) detailsEl.open = true;
+            const summaryEl = document.createElement('summary');
+            summaryEl.className = 'db-accordion__trigger';
+            summaryEl.textContent = catName(cat);
+            detailsEl.appendChild(summaryEl);
+            const innerUl = document.createElement('ul');
+            innerUl.className = 'db-accordion__content card-list entry-card-list';
+            innerUl.dataset.cat = cat;
+            categories.get(cat).forEach(card => innerUl.appendChild(card));
+            detailsEl.appendChild(innerUl);
+            catLi.appendChild(detailsEl);
+            fragment.appendChild(catLi);
+          });
+          listEl.appendChild(fragment);
+          syncInventoryMotionTargets();
 
-    if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
-    if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.unusedOut = getEl('unusedOut');
-    if (dom.unusedOut) dom.unusedOut.textContent = diffText;
-    bindInv();
-    bindMoney();
-    if (typeof window.refreshEffectsPanel === 'function') {
-      window.refreshEffectsPanel();
-    }
+          listEl.querySelectorAll('.cat-group > details').forEach(detailsEl => {
+            detailsEl.addEventListener('toggle', ev => {
+              if (!ev.isTrusted) return;
+              const cat = detailsEl.dataset.cat;
+              catState[cat] = detailsEl.open;
+              saveInvCatState(catState);
+              if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+            });
+          });
+          if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+        } else {
+          const emptyCard = createEntryCard({
+            classes: ['empty'],
+            nameHtml: 'Inga föremål.',
+            collapsible: false
+          });
+          listEl.appendChild(emptyCard);
+          syncInventoryMotionTargets();
+          if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+        }
+      } else if (typeof window.inventorySyncCats === 'function') {
+        window.inventorySyncCats();
+      }
+
+      renderActiveFilters();
+
+      if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
+      if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
+      // Update unusedOut inside shadow DOM
+      const tbRoot = getToolbarRoot();
+      const unusedEl = tbRoot?.querySelector('.dash-unused-out');
+      if (unusedEl) {
+        unusedEl.innerHTML = `${diffO < 0 ? '-' : ''}${diff.d} D <span aria-hidden="true">·</span> ${diff.s} S <span aria-hidden="true">·</span> ${diff.o} Ö`;
+      }
+      bindInv();
+      bindMoney();
+    }, {
+      surface: 'inventory',
+      rows: filteredRows.length
+    });
   }
 
 
   function getInvCards() {
-    const formalCards = dom.invFormal ? [...dom.invFormal.querySelectorAll('li.card')] : [];
-    const listCards   = dom.invList   ? [...dom.invList.querySelectorAll('li.card')]   : [];
-    return [...formalCards, ...listCards];
+    return dom.invList ? [...dom.invList.querySelectorAll('li.card')] : [];
   }
 
   function updateCollapseBtnState() {
     if (!dom.collapseAllBtn) return;
     const cards = getInvCards();
     if (!cards.length) return;
-    // Follow same pattern as taskbar: ▶ when all collapsed, ▼ when any open
     const allCollapsed = cards.every(li => li.classList.contains('compact'));
-    dom.collapseAllBtn.textContent = allCollapsed ? '▶' : '▼';
+    { const ci = dom.collapseAllBtn.querySelector('.chevron-icon'); if (ci) ci.classList.toggle('collapsed', allCollapsed); }
     dom.collapseAllBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
   }
 
@@ -4108,6 +6500,20 @@
 
     const listEl = dom.invList;
     const searchEl = dom.sIn || getEl('searchField');
+    const manageItemsBtn = getEl('manageItemsBtn');
+    const manageEconomyBtn = getEl('manageEconomyBtn');
+    if (manageItemsBtn && manageItemsBtn.dataset.invBound !== '1') {
+      manageItemsBtn.dataset.invBound = '1';
+      manageItemsBtn.addEventListener('click', () => {
+        openInventoryItemsHub('custom-item');
+      });
+    }
+    if (manageEconomyBtn && manageEconomyBtn.dataset.invBound !== '1') {
+      manageEconomyBtn.dataset.invBound = '1';
+      manageEconomyBtn.addEventListener('click', () => {
+        openInventoryEconomyHub('money');
+      });
+    }
     const bindFilterSelect = (el, key) => {
       if (!el || el.dataset.invBound) return;
       el.dataset.invBound = '1';
@@ -4129,7 +6535,7 @@
     if (dom.active && !dom.active.dataset.invBound) {
       dom.active.dataset.invBound = '1';
       dom.active.addEventListener('click', e => {
-        const tag = e.target.closest('.tag.removable');
+        const tag = e.target.closest('.tag.removable, .db-chip.removable');
         if (!tag) return;
         const type = tag.dataset.type;
         if (type === 'text') {
@@ -4142,34 +6548,6 @@
         renderInventory();
       });
     }
-    const squareBtn = getEl('squareBtn');
-    if (squareBtn) squareBtn.onclick = openQtyPopup;
-    const customBtn = getEl('addCustomBtn');
-    if (customBtn) customBtn.onclick = () => {
-      openCustomPopup(entry => {
-        if (!entry) return;
-        const list = storeHelper.getCustomEntries(store);
-        list.push(entry);
-        const result = storeHelper.setCustomEntries(store, list);
-        if (result && result.idMap) {
-          const mappedId = result.idMap.get(entry.id);
-          if (mappedId) entry.id = mappedId;
-        }
-        if (result && Array.isArray(result.entries)) {
-          const persisted = result.entries.find(e => e.id === entry.id);
-          if (persisted) {
-            entry.namn = persisted.namn;
-            entry.artifactEffect = persisted.artifactEffect;
-          }
-        }
-        const inv = storeHelper.getInventory(store);
-        inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
-        saveInventory(inv);
-        renderInventory();
-        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
-      });
-    };
     if (dom.collapseAllBtn) {
       dom.collapseAllBtn.onclick = () => {
         const cards = getInvCards();
@@ -4177,26 +6555,12 @@
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
           window.entryCardFactory?.syncCollapse?.(li);
-          if (li.dataset.special === '__invfunc__') {
-            localStorage.setItem(INV_TOOLS_KEY, anyOpen ? '0' : '1');
-          } else if (li.dataset.special === '__info__') {
-            localStorage.setItem(INV_INFO_KEY, anyOpen ? '0' : '1');
-          }
         });
         updateCollapseBtnState();
       };
 
       listEl.addEventListener('entry-card-toggle', e => {
         updateCollapseBtnState();
-        const detail = e.detail || {};
-        const card = detail.card;
-        if (!card) return;
-        const expanded = Boolean(detail.expanded);
-        if (card.dataset.special === '__invfunc__') {
-          localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
-        } else if (card.dataset.special === '__info__') {
-          localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
-        }
       });
     }
     const getRowInfo = (inv, li) => {
@@ -4226,18 +6590,16 @@
           return;
         }
         // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
-        const removeTagBtn = e.target.closest('.tag.removable');
+        const removeTagBtn = e.target.closest('.tag.removable, .db-chip.removable');
         if (removeTagBtn) {
           const li   = removeTagBtn.closest('li');
           const inv  = storeHelper.getInventory(store);
           const { row } = getRowInfo(inv, li);
           if (!row) return;
           if (removeTagBtn.dataset.free) {
-            const perkActive = storeHelper.getCurrentList(store)
-              .some(x => x.namn === 'Välutrustad');
             const pg = row.perkGratis || 0;
-            if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-              if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+            if (pg > 0 && !(await confirmGrantRemoval(row.perk))) {
+              return;
             }
             row.gratis = 0;
             if (pg > 0) row.perkGratis = 0;
@@ -4265,6 +6627,11 @@
                 row.gratisKval = row.gratisKval.filter(x => x !== q);
               }
             }
+            if (Array.isArray(row.manualQualityOverride)) {
+              const keep = row.manualQualityOverride.filter(x => (row.kvaliteter || []).includes(x));
+              if (keep.length) row.manualQualityOverride = keep;
+              else delete row.manualQualityOverride;
+            }
           } else if (removeTagBtn.dataset.mult) {
             delete row.priceMult;
           } else if (removeTagBtn.dataset.price) {
@@ -4272,7 +6639,7 @@
             delete row.basePriceSource;
           }
           saveInventory(inv);
-          renderInventory();
+          renderInventoryWithPerf({ trigger: 'remove-tag' });
           return;
         }
 
@@ -4309,7 +6676,7 @@
         const next = idx === -1 ? levels[0] : (idx < levels.length - 1 ? levels[idx+1] : levels[0]);
         row.nivå = next;
         saveInventory(inv);
-        renderInventory();
+        renderInventoryWithPerf({ trigger: 'cycle-level' });
         return;
       }
 
@@ -4327,8 +6694,7 @@
         if (!entry) return;
         editCustomEntry(entry, () => {
           renderInventory();
-          if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-          if (window.indexViewUpdate) window.indexViewUpdate();
+          window.symbaroumViewBridge?.refreshCurrent({ filters: true });
         });
         return;
       }
@@ -4354,17 +6720,18 @@
           storeHelper.setMoney(store, { ...cur, daler: newD });
         }
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-card-money-daler'
+        });
         return;
       }
 
       // 3a) Röd soptunna tar bort hela posten
       if (act === 'del') {
         if (row) {
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
-          if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+          if (pg > 0 && !(await confirmGrantRemoval(row.perk))) {
+            return;
           }
           const entry  = getEntry(row.id || row.name);
           const tagTyp = entry.taggar?.typ || [];
@@ -4375,14 +6742,24 @@
           if (isVeh && hasStuff) {
             openDeleteContainerPopup(
               () => {
-                parentArr.splice(idx, 1);
-                saveInventory(inv);
-                renderInventory();
+                (async () => {
+                  if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: true }))) return;
+                  runCurrentCharacterMutationBatch(() => {
+                    parentArr.splice(idx, 1);
+                    saveInventory(inv);
+                  });
+                  renderInventoryWithPerf({ trigger: 'delete-container-all' });
+                })();
               },
               () => {
-                parentArr.splice(idx, 1, ...(row.contains || []));
-                saveInventory(inv);
-                renderInventory();
+                (async () => {
+                  if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
+                  runCurrentCharacterMutationBatch(() => {
+                    parentArr.splice(idx, 1, ...(row.contains || []));
+                    saveInventory(inv);
+                  });
+                  renderInventoryWithPerf({ trigger: 'delete-container-only' });
+                })();
               },
               {
                 message: 'Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort föremålen i färdmedlet?',
@@ -4390,19 +6767,31 @@
               }
             );
           } else {
-            parentArr.splice(idx, 1);
-            saveInventory(inv);
-            renderInventory();
-            const hidden = isHiddenType(tagTyp);
-            if (needsArtifactListSync(tagTyp)) {
-              const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
-              if (!still) {
-                let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
-                storeHelper.setCurrentList(store, list);
+            if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
+            let requiresDerivedRefresh = false;
+            runCurrentCharacterMutationBatch(() => {
+              parentArr.splice(idx, 1);
+              saveInventory(inv);
+              const hidden = isHiddenType(entry);
+              if (needsArtifactListSync(entry)) {
+                const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
+                if (!still) {
+                  const list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
+                  storeHelper.setCurrentList(store, list);
+                  if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
+                  requiresDerivedRefresh = true;
+                }
+              }
+            });
+            renderInventoryWithPerf({ trigger: 'delete-row' });
+            if (requiresDerivedRefresh) {
+              timeActiveMutationStage('derived-refresh', () => {
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
-              }
+              }, {
+                surface: 'inventory',
+                trigger: 'delete-row'
+              });
             }
           }
         }
@@ -4425,40 +6814,23 @@
           const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
           const livePairs = liveEnabled ? [] : null;
           let purchase = null;
-          if (entry.id === 'di79') {
-            const bundle = ['di10','di11','di12','di13','di14','di15'];
-            bundle.forEach(id => {
-              const ent = getEntry(id);
-              if (!ent.namn) return;
-              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-                .some(t => ent.taggar.typ.includes(t)) &&
-                !STACKABLE_IDS.includes(ent.id) &&
-                !['kraft','ritual'].includes(ent.bound);
-              const existing = inv.findIndex(r => r.id === ent.id);
-              if (indivItem || existing === -1) {
-                const obj = { id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-                inv.push(obj);
-                if (livePairs) livePairs.push({ prev: null, next: obj });
-              } else {
-                const target = inv[existing];
-                const prevState = livePairs ? cloneRow(target) : null;
-                target.qty++;
-                if (livePairs) livePairs.push({ prev: prevState, next: target });
-              }
-            });
+          const bundleRefs = addInventoryBundle(inv, entry, { livePairs });
+          if (bundleRefs.length) {
             if (livePairs && livePairs.length) {
               applyLiveModePayment(livePairs);
               livePairs.length = 0;
             }
             saveInventory(inv);
             renderInventory();
-            bundle.forEach(id => {
-              const ent = getEntry(id);
-              const i = inv.findIndex(r => r.id === id);
-              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(ent.namn)}"][data-idx="${i}"]`);
-              if (li) {
-                li.classList.add('inv-flash');
-                setTimeout(() => li.classList.remove('inv-flash'), 600);
+            bundleRefs.forEach(ref => {
+              const refName = String(ref?.name || '').trim();
+              if (!refName) return;
+              const i = inv.findIndex(r => rowMatchesInventoryRef(r, ref));
+              if (i < 0) return;
+              const flashLi = dom.invList?.querySelector(`li[data-name="${CSS.escape(refName)}"][data-idx="${i}"]`);
+              if (flashLi) {
+                flashLi.classList.add('inv-flash');
+                setTimeout(() => flashLi.classList.remove('inv-flash'), 600);
               }
             });
           } else {
@@ -4466,20 +6838,28 @@
               purchase = await openLiveBuyPopup(entry, row);
               if (!purchase) return;
             }
-            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-              .some(t => entry.taggar.typ.includes(t)) &&
-              !STACKABLE_IDS.includes(entry.id) &&
-              !['kraft','ritual'].includes(entry.bound);
+            const indiv = isIndividualItem(entry);
             const tagTyp = entry.taggar?.typ || [];
             let artifactEffect = '';
             if (tagTyp.includes('Artefakt')) {
-              const val = await selectArtifactPayment();
-              if (val === null) return;
-              artifactEffect = val;
+              const artifactChoice = await pickInventoryEntryChoice({
+                entry,
+                row,
+                list: storeHelper.getCurrentList(store),
+                inv,
+                field: 'artifactEffect',
+                currentValue: row?.artifactEffect || '',
+                usedValues: []
+              });
+              if (artifactChoice.hasChoice) {
+                if (artifactChoice.cancelled) return;
+                artifactEffect = artifactChoice.value || '';
+              }
             }
             const addRow = trait => {
               const qtyToAdd = Math.max(1, purchase?.qty || 1);
               const priceMoney = purchase ? purchase.pricePerUnit : null;
+              const inheritedPriceMult = normalizeMultiplierValue(row?.priceMult, 1);
               const applyLiveBase = target => {
                 if (!priceMoney || !target) return;
                 target.basePrice = {
@@ -4489,12 +6869,18 @@
                 };
                 target.basePriceSource = 'live';
               };
+              const applyInheritedMultipliers = target => {
+                if (!target || typeof target !== 'object') return;
+                if (Math.abs(inheritedPriceMult - 1) > 0.001) target.priceMult = inheritedPriceMult;
+              };
               let flashIdx;
               if (indiv) {
                 for (let iAdd = 0; iAdd < qtyToAdd; iAdd++) {
                   const obj = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
                   if (artifactEffect) obj.artifactEffect = artifactEffect;
+                  if (tagTyp.includes('Artefakt')) ensureArtifactSnapshotSourceKey(entry, obj);
                   if (trait) obj.trait = trait;
+                  applyInheritedMultipliers(obj);
                   applyLiveBase(obj);
                   parentArr.push(obj);
                   flashIdx = parentArr.length - 1;
@@ -4509,7 +6895,9 @@
               } else if (row && trait && row.trait !== trait) {
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
+                if (tagTyp.includes('Artefakt')) ensureArtifactSnapshotSourceKey(entry, obj);
                 obj.trait = trait;
+                applyInheritedMultipliers(obj);
                 applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
@@ -4517,7 +6905,9 @@
               } else {
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
+                if (tagTyp.includes('Artefakt')) ensureArtifactSnapshotSourceKey(entry, obj);
                 if (trait) obj.trait = trait;
+                applyInheritedMultipliers(obj);
                 applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
@@ -4530,9 +6920,9 @@
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
-              const hidden = isHiddenType(tagTyp);
+              const hidden = isHiddenType(entry);
               let addedToList = false;
-              if (needsArtifactListSync(tagTyp)) {
+              if (needsArtifactListSync(entry)) {
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
                   if (!entry.id && storeHelper.genId) {
@@ -4576,30 +6966,30 @@
                 setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
               }
             };
-            if (['kraft','ritual'].includes(entry.bound) && row?.trait) {
+            if (['kraft', 'ritual'].includes(entry.bound) && row?.trait) {
               addRow(row.trait);
-            } else if (entry.traits && window.maskSkill) {
-              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
-              maskSkill.pickTrait(used, async trait => {
-                if(!trait) return;
-                if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-                addRow(trait);
-              });
-            } else if (entry.bound === 'kraft' && window.powerPicker) {
-              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
-              powerPicker.pickKraft(used, async val => {
-                if(!val) return;
-                if (used.includes(val) && !STACKABLE_IDS.includes(entry.id) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-                addRow(val);
-              });
-            } else if (entry.bound === 'ritual' && window.powerPicker) {
-              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
-              powerPicker.pickRitual(used, async val => {
-                if(!val) return;
-                if (used.includes(val) && !STACKABLE_IDS.includes(entry.id) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-                addRow(val);
-              });
             } else {
+              const traitChoice = await pickInventoryEntryChoice({
+                entry,
+                row,
+                list: storeHelper.getCurrentList(store),
+                inv,
+                field: 'trait',
+                currentValue: row?.trait || '',
+                usedValues: isEntryStackable(entry) ? [] : undefined
+              });
+              if (traitChoice.hasChoice) {
+                if (traitChoice.cancelled) {
+                  if (traitChoice.noOptions) {
+                    await alertPopup('Inga val kvar för den här posten.');
+                  }
+                  return;
+                }
+                if (traitChoice.rule?.field === 'trait') {
+                  addRow(traitChoice.value);
+                  return;
+                }
+              }
               addRow();
             }
           }
@@ -4608,33 +6998,43 @@
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
         if (row) {
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
           const removingPerkItem = (row.qty - 1) < pg;
-          if (perkActive && row.perk === 'Välutrustad' && removingPerkItem) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+          if (removingPerkItem && !(await confirmGrantRemoval(row.perk))) {
+            return;
           }
           if (row.qty > 1) {
             row.qty--;
             if (row.gratis > row.qty) row.gratis = row.qty;
             if (removingPerkItem && pg > 0) row.perkGratis = pg - 1;
           } else {
+            if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
             parentArr.splice(idx, 1);
           }
           const parentIdx = Number(li.dataset.parent);
-          saveInventory(inv);
-          renderInventory();
-          const hidden = isHiddenType(tagTyp);
-          if (needsArtifactListSync(tagTyp)) {
-            const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
-            if (!still) {
-              let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
-              storeHelper.setCurrentList(store, list);
+          let requiresDerivedRefresh = false;
+          runCurrentCharacterMutationBatch(() => {
+            saveInventory(inv);
+            const hidden = isHiddenType(entry);
+            if (needsArtifactListSync(entry)) {
+              const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
+              if (!still) {
+                const list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
+                storeHelper.setCurrentList(store, list);
+                if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
+                requiresDerivedRefresh = true;
+              }
+            }
+          });
+          renderInventoryWithPerf({ trigger: 'decrement-row' });
+          if (requiresDerivedRefresh) {
+            timeActiveMutationStage('derived-refresh', () => {
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
-              if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
-            }
+            }, {
+              surface: 'inventory',
+              trigger: 'decrement-row'
+            });
           }
           const selector = !Number.isNaN(parentIdx)
             ? `li[data-name="${CSS.escape(itemName)}"][data-parent="${parentIdx}"][data-child="${idx}"]`
@@ -4651,37 +7051,94 @@
       // "🔨" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
+        if (![...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => tagTyp.includes(t))) return;
         const qualities = DB
           .filter(isQual)
-          .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true)
-          .filter(q => isQualityAllowedByRules(entry, row, q.namn || q.name));
+          .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true);
         if (!qualities.length) {
           if (window.alertPopup) await alertPopup('Inga passande kvaliteter för detta föremål.');
           return;
         }
-        openQualPopup(qualities, async qIdx => {
-          if (row && qualities[qIdx]) {
-            row.kvaliteter = row.kvaliteter || [];
-            const qn = qualities[qIdx].namn;
-            if (!isQualityAllowedByRules(entry, row, qn)) {
-              if (window.alertPopup) {
-                await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
-              }
+        openQualPopup(qualities, async qSelection => {
+          if (!row) return;
+          const indices = Array.isArray(qSelection) ? qSelection : [qSelection];
+          const chosen = Array.from(new Set(
+            indices
+              .map(val => Number(val))
+              .filter(idx => Number.isInteger(idx) && qualities[idx])
+          )).map(idx => qualities[idx]);
+          if (!chosen.length) return;
+
+          row.kvaliteter = row.kvaliteter || [];
+          const removed = row.removedKval ?? [];
+          const baseQuals = [
+            ...(entry.taggar?.kvalitet ?? []),
+            ...splitQuals(entry.kvalitet)
+          ];
+          const baseQ = baseQuals.filter(q => !removed.includes(q));
+
+          let addedCount = 0;
+          const blockedStops = [];
+          chosen.forEach(quality => {
+            const qn = quality?.namn || quality?.name;
+            if (!qn) return;
+            const existing = [...baseQ, ...(row.kvaliteter || [])];
+            if (existing.includes(qn)) return;
+            const allowance = evaluateQualityRuleAllowance(entry, row, qn);
+            if (!allowance.allowed) {
+              blockedStops.push({
+                qualityName: qn,
+                blockingConflicts: Array.isArray(allowance.blockingConflicts) ? allowance.blockingConflicts : [],
+                hardStops: Array.isArray(allowance.hardStops) ? allowance.hardStops : []
+              });
               return;
             }
-            const removed = row.removedKval ?? [];
-            const baseQuals = [
-              ...(entry.taggar?.kvalitet ?? []),
-              ...splitQuals(entry.kvalitet)
-            ];
-            const baseQ = baseQuals.filter(q => !removed.includes(q));
-            const existing = [...baseQ, ...row.kvaliteter];
-            if (!existing.includes(qn)) {
-              row.kvaliteter.push(qn);
-              saveInventory(inv);
-              renderInventory();
+            row.kvaliteter.push(qn);
+            addedCount++;
+          });
+
+          if (blockedStops.length) {
+            const blockingConflicts = blockedStops.flatMap(stop => stop.blockingConflicts || []);
+            const explicitHardStops = blockedStops.flatMap(stop => stop.hardStops || []);
+            const fallbackHardStops = blockedStops
+              .filter(stop => !(Array.isArray(stop.hardStops) && stop.hardStops.length))
+              .map(stop => ({
+                code: `quality_blocked_${String(stop?.qualityName || '').toLowerCase()}`,
+                message: `Kvalitet: ${stop?.qualityName || ''}`
+              }));
+            const hardStops = [...explicitHardStops, ...fallbackHardStops];
+            const stopResult = {
+              requirementReasons: [],
+              blockingConflicts,
+              replaceTargetNames: [],
+              grantedLevelStop: null,
+              hardStops,
+              hasStops: true
+            };
+            const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
+              ? window.rulesHelper.formatEntryStopMessages(entry?.namn || row?.name || 'föremålet', stopResult)
+              : hardStops.map(stop => stop.message);
+            const lines = messages.length ? messages : ['Spärrad av regel'];
+            const label = `“${String(entry?.namn || row?.name || 'föremålet').trim()}”`;
+            const text = `Följande regler blockerar valet:\n- ${lines.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
+            const forceOverride = !!(await confirmPopup(text));
+            if (forceOverride) {
+              row.manualQualityOverride = Array.isArray(row.manualQualityOverride) ? row.manualQualityOverride : [];
+              blockedStops.forEach(({ qualityName: qn }) => {
+                if (!row.kvaliteter.includes(qn)) {
+                  row.kvaliteter.push(qn);
+                  addedCount++;
+                }
+                if (!row.manualQualityOverride.includes(qn)) {
+                  row.manualQualityOverride.push(qn);
+                }
+              });
             }
+          }
+
+          if (addedCount > 0) {
+            saveInventory(inv);
+            renderInventory();
           }
         });
         return;
@@ -4697,11 +7154,12 @@
         const baseQ = baseQuals.filter(q => !removed.includes(q));
         const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter ?? [])]);
         if (!allQ.length) return;
+        const gratisbarSet = getGratisbarQualitySet(entry, allQ);
 
-        // Behåll endast positiva/mystiska gratis-kvaliteter
-        row.gratisKval = (row.gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+        // Behåll endast kvaliteter som både finns kvar och uttryckligen är gratisbara.
+        row.gratisKval = (row.gratisKval || []).filter(q => allQ.includes(q) && gratisbarSet.has(q));
         const existing = row.gratisKval.slice();
-        const candidates = allQ.filter(q => !existing.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
+        const candidates = allQ.filter(q => !existing.includes(q) && gratisbarSet.has(q));
         if (!candidates.length) return;
 
         row.gratisKval.push(candidates[0]);
@@ -4712,9 +7170,17 @@
 
       // "toggleEffect" växlar artefaktens effekt
       if (act === 'toggleEffect') {
-        const val = await selectArtifactPayment(row.artifactEffect);
-        if (val === null) return;
-        row.artifactEffect = val;
+        const effectChoice = await pickInventoryEntryChoice({
+          entry,
+          row,
+          list: storeHelper.getCurrentList(store),
+          inv,
+          field: 'artifactEffect',
+          currentValue: row?.artifactEffect || '',
+          usedValues: []
+        });
+        if (!effectChoice.hasChoice || effectChoice.cancelled) return;
+        row.artifactEffect = effectChoice.value || '';
         saveInventory(inv);
         renderInventory();
         return;
@@ -4735,15 +7201,11 @@
             if (newGratis > row.qty) newGratis = 0;
           }
 
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
           if (
-            perkActive &&
-            row.perk === 'Välutrustad' &&
             newGratis < currentGratis &&
             newGratis < (row.perkGratis || 0)
           ) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) {
+            if (!(await confirmGrantRemoval(row.perk))) {
               return;
             }
           }
@@ -4757,126 +7219,193 @@
     };
     }
 
-    // Bind clicks within the Formaliteter card when it is outside invList
-    if (dom.invFormal) {
-      dom.invFormal.onclick = async e => {
-        if (e.target.closest('.entry-collapse-btn')) return;
-        const header = e.target.closest('.card-header');
-        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
-          return;
-        }
-
-        // Handle money +/- inside formal card
-        const btn = e.target.closest('button[data-act]');
-        if (!btn) return;
-        const act = btn.dataset.act;
-        if (act === 'moneyPlus' || act === 'moneyMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyPlus' ? 1 : -1;
-          const newD = (cur.daler || 0) + delta;
-          if (newD < 0) {
-            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, daler: newD });
-          }
-          renderInventory();
-          return;
-        }
-        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneySkillingPlus' ? 1 : -1;
-          const newS = (cur.skilling || 0) + delta;
-          if (newS < 0) {
-            const newD = Math.max(0, (cur.daler || 0) - 1);
-            const newSkilling = 3 + newS;
-            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
-          } else if (newS >= 4) {
-            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, skilling: newS });
-          }
-          renderInventory();
-          return;
-        }
-        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
-          const newO = (cur['örtegar'] || 0) + delta;
-          if (newO < 0) {
-            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
-            const newOrtegar = 8 + newO;
-            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
-            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
-          } else if (newO >= 8) {
-            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
-          }
-          renderInventory();
-          return;
-        }
-      };
-
-      dom.invFormal.addEventListener('entry-card-toggle', e => {
-        updateCollapseBtnState();
-        const expanded = Boolean(e.detail?.expanded);
-        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
-      });
-    }
+    // Dashboard click handlers now bound via bindDashPanel
 
   }
 
+  function bindDashPanel() {
+    const tbRoot = getToolbarRoot();
+    if (!tbRoot) return;
+
+    // --- KPI sidebar: money +/-, trigger delegation, live toggle ---
+    const dashInner = tbRoot.querySelector('#invDashInner');
+    if (dashInner && dashInner.dataset.dashBound !== '1') {
+      dashInner.dataset.dashBound = '1';
+      dashInner.addEventListener('click', e => {
+        // Delegate trigger buttons to their real targets (outside shadow DOM)
+        const trigger = e.target.closest('button[data-dash-trigger]');
+        if (trigger) {
+          e.preventDefault();
+          e.stopPropagation();
+          const action = trigger.dataset.dashTrigger;
+          if (action === 'manageItemsBtn') {
+            openInventoryItemsHub('custom-item');
+          } else if (action === 'manageEconomyBtn') {
+            openInventoryEconomyHub('money');
+          } else {
+            const target = getEl(action);
+            if (target) target.click();
+          }
+          return;
+        }
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        handleDashMoneyClick(act);
+      });
+    }
+
+    // Live toggle inside shadow DOM
+    const liveToggle = tbRoot.querySelector('.dash-live-toggle');
+    if (liveToggle && liveToggle.dataset.boundLiveToggle !== '1') {
+      liveToggle.dataset.boundLiveToggle = '1';
+      const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+      if (typeof window.setDaubSwitchState === 'function') {
+        window.setDaubSwitchState(liveToggle, current);
+      } else {
+        liveToggle.setAttribute('aria-checked', current ? 'true' : 'false');
+      }
+      window.DAUB?.init?.(tbRoot);
+      liveToggle.addEventListener('db:change', (event) => {
+        const checked = typeof event.detail?.checked === 'boolean'
+          ? event.detail.checked
+          : liveToggle.getAttribute('aria-checked') === 'true';
+        if (typeof storeHelper?.setLiveMode === 'function') {
+          storeHelper.setLiveMode(store, Boolean(checked));
+          renderInventory();
+        }
+      });
+    }
+
+    // --- Snabbspendera drawer ---
+    const spendInner = tbRoot.querySelector('#invSpendInner');
+    if (spendInner) {
+      const quickSpendDaler = spendInner.querySelector('.dash-spend-daler');
+      const quickSpendSkilling = spendInner.querySelector('.dash-spend-skilling');
+      const quickSpendOrtegar = spendInner.querySelector('.dash-spend-ortegar');
+      const quickSpendBtn = spendInner.querySelector('.dash-spend-btn');
+      const runQuickSpend = () => {
+        const spendMoney = {
+          daler: Number(quickSpendDaler?.value) || 0,
+          skilling: Number(quickSpendSkilling?.value) || 0,
+          'örtegar': Number(quickSpendOrtegar?.value) || 0
+        };
+        const spendO = moneyToO(storeHelper.normalizeMoney(spendMoney));
+        if (spendO <= 0) {
+          quickSpendDaler?.focus();
+          return;
+        }
+        spendInventoryMoney(spendMoney, {
+          onComplete: () => {
+            [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
+              if (input) input.value = '';
+            });
+          }
+        });
+      };
+      if (quickSpendBtn) quickSpendBtn.onclick = runQuickSpend;
+      [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
+        if (!input) return;
+        input.onkeydown = e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            runQuickSpend();
+          }
+        };
+      });
+    }
+
+    // --- Floating button ---
+    const floatBtn = getEl('invDashFloatBtn');
+    if (floatBtn && floatBtn.dataset.dashBound !== '1') {
+      floatBtn.dataset.dashBound = '1';
+      floatBtn.addEventListener('click', () => {
+        const toolbar = document.querySelector('shared-toolbar');
+        if (toolbar) toolbar.toggle('invDashPanel');
+      });
+    }
+  }
+
+  function handleDashMoneyClick(act) {
+    if (act === 'moneyPlus' || act === 'moneyMinus') {
+      const cur = storeHelper.getMoney(store);
+      const delta = act === 'moneyPlus' ? 1 : -1;
+      const newD = (cur.daler || 0) + delta;
+      if (newD < 0) {
+        storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+      } else {
+        storeHelper.setMoney(store, { ...cur, daler: newD });
+      }
+      renderInventory();
+      scheduleMoneyMutationRefresh({ source: 'inventory-dash-money-daler' });
+      return;
+    }
+    if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
+      const cur = storeHelper.getMoney(store);
+      const delta = act === 'moneySkillingPlus' ? 1 : -1;
+      const newS = (cur.skilling || 0) + delta;
+      if (newS < 0) {
+        const newD = Math.max(0, (cur.daler || 0) - 1);
+        storeHelper.setMoney(store, { daler: newD, skilling: 3 + newS, 'örtegar': 0 });
+      } else if (newS >= 4) {
+        storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
+      } else {
+        storeHelper.setMoney(store, { ...cur, skilling: newS });
+      }
+      renderInventory();
+      scheduleMoneyMutationRefresh({ source: 'inventory-dash-money-skilling' });
+      return;
+    }
+    if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
+      const cur = storeHelper.getMoney(store);
+      const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
+      const newO = (cur['örtegar'] || 0) + delta;
+      if (newO < 0) {
+        const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
+        const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
+        storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': 8 + newO });
+      } else if (newO >= 8) {
+        storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
+      } else {
+        storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
+      }
+      renderInventory();
+      scheduleMoneyMutationRefresh({ source: 'inventory-dash-money-ortegar' });
+      return;
+    }
+  }
+
   function bindMoney() {
-    const manageBtn = getEl('manageMoneyBtn');
-    const multiBtn  = getEl('multiPriceBtn');
     const resetBtn  = getEl('moneyResetBtn');
     const clearBtn  = getEl('clearInvBtn');
-    const saveFreeBtn = getEl('saveFreeBtn');
-    // Bind existing buttons if present
-    if (manageBtn) manageBtn.onclick = openMoneyPopup;
-    if (multiBtn)  multiBtn.onclick  = openPricePopup;
-    if (saveFreeBtn) saveFreeBtn.onclick = openSaveFreePopup;
+    const saveFreeBtn = getEl('inventoryEconomySaveFreeBtn');
     if (resetBtn) resetBtn.onclick = () => {
       const doReset = () => {
-        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
         storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-money-reset'
+        });
       };
       const priv = storeHelper.getPrivMoney(store);
       const pos  = storeHelper.getPossessionMoney(store);
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) openAdvMoneyPopup(doReset); else doReset();
     };
+    if (saveFreeBtn) saveFreeBtn.onclick = () => openSaveFreePopup();
     if (clearBtn) clearBtn.onclick = async () => {
       if (await confirmPopup('Du håller på att tömma hela inventariet, är du säker?')) {
+        const inv = storeHelper.getInventory(store);
+        if (!(await confirmSnapshotSourceRemoval(inv, { includeChildren: true }))) return;
         saveInventory([]);
-        renderInventory();
+        renderInventoryWithPerf({ trigger: 'clear-inventory' });
       }
     };
 
-    const liveToggle = getEl('inventoryLiveToggle');
-    if (liveToggle) {
-      const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
-      liveToggle.checked = Boolean(current);
-      liveToggle.onchange = () => {
-        if (typeof storeHelper?.setLiveMode === 'function') {
-          storeHelper.setLiveMode(store, Boolean(liveToggle.checked));
-          renderInventory();
-        }
-      };
-    }
-
-
-    const inv = storeHelper.getInventory(store);
-    const hasVehicle = Array.isArray(inv) && inv.some(row => {
-      const entry = getEntry(row.id || row.name);
-      return (entry?.taggar?.typ || []).includes('Färdmedel');
-    });
-    const vehicleBtn = getEl('vehicleBtn');
-    if (vehicleBtn && hasVehicle) {
-      vehicleBtn.onclick = () => openVehiclePopup();
-    }
+    // Bind shadow DOM dashboard panels
+    bindDashPanel();
   }
 
   window.invUtil = {
@@ -4886,6 +7415,15 @@
     saveInventory,
     sortAllInventories,
     getEntry,
+    isEntryStackable,
+    isTraitBoundInventoryEntry,
+    shouldShowRowTraitInName,
+    isInventoryBundleEntry,
+    getInventoryBundleItems,
+    getInventoryBundleCount,
+    addInventoryBundle,
+    removeInventoryBundle,
+    isIndividualItem,
     calcRowCost,
     calcRowWeight,
     calcEntryCost,
@@ -4894,10 +7432,14 @@
     sortQualsForDisplay,
     openQualPopup,
     openCustomPopup,
+    openInventoryHub,
+    openInventoryItemsHub,
+    openInventoryEconomyHub,
     editCustomEntry,
     editArtifactEntry,
     openMoneyPopup,
     openQtyPopup,
+    spendInventoryMoney,
     applyLiveModePayment,
     openLiveBuyPopup,
     openPricePopup,
@@ -4912,10 +7454,30 @@
     openBuyMultiplePopup,
     massFreeAndSave,
     recalcArtifactEffects,
-    addWellEquippedItems,
-    removeWellEquippedItems,
+    syncMotionTargets: syncInventoryMotionTargets,
     renderInventory,
     bindInv,
     bindMoney
   };
+  inventoryPopupRegistry?.setOpenHandlers?.({
+    inventoryItemsPopup: openInventoryItemsHub,
+    inventoryEconomyPopup: openInventoryEconomyHub,
+    customPopup: openCustomPopup,
+    qtyPopup: openQtyPopup,
+    vehiclePopup: openVehiclePopup,
+    vehicleRemovePopup: openVehicleRemovePopup,
+    moneyPopup: openMoneyPopup,
+    pricePopup: openPricePopup,
+    liveBuyPopup: openLiveBuyPopup,
+    buyMultiplePopup: openBuyMultiplePopup,
+    rowPricePopup: openRowPricePopup,
+    vehicleQtyPopup: openVehicleQtyPrompt,
+    vehicleMoneyPopup: openVehicleMoneyPrompt,
+    saveFreePopup: openSaveFreePopup,
+    advMoneyPopup: openAdvMoneyPopup,
+    deleteContainerPopup: openDeleteContainerPopup
+  });
+  window.openInventoryHub = openInventoryHub;
+  window.openInventoryItemsHub = openInventoryItemsHub;
+  window.openInventoryEconomyHub = openInventoryEconomyHub;
 })(window);

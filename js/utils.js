@@ -1,6 +1,8 @@
 (function(window){
   const LVL   = ['Novis','Ges\u00e4ll','M\u00e4stare'];
   const EQUIP = [
+    'Närstridsvapen',
+    'Avståndsvapen',
     'Vapen',
     'Sköld',
     'Pil/Lod',
@@ -35,7 +37,8 @@
     remove    : 'icons/remove.svg',
     skadetyp  : 'icons/skadetyp.svg',
     settings  : 'icons/settings.svg',
-    smithing  : 'icons/smithing.svg'
+    smithing  : 'icons/smithing.svg',
+    grain     : 'icons/grain-icon.svg'
   });
 
   const DEFAULT_CHARACTER_ICON = ICON_SOURCES.character;
@@ -179,6 +182,7 @@
     'Yrke',
     'Elityrke',
     'Förmåga',
+    'Basförmåga',
     'Mystisk kraft',
     'Ritual',
     'Fördel',
@@ -186,6 +190,8 @@
     'Särdrag',
     'Monstruöst särdrag',
     'Rustning',
+    'Närstridsvapen',
+    'Avståndsvapen',
     'Vapen',
     'Pil/Lod',
     'Kvalitet',
@@ -206,6 +212,7 @@
     'Yrke': 'Yrken',
     'Elityrke': 'Elityrken',
     'Förmåga': 'Förmågor',
+    'Basförmåga': 'Basförmågor',
     'Mystisk kraft': 'Mystiska krafter',
     'Ritual': 'Ritualer',
     'Fördel': 'Fördelar',
@@ -213,6 +220,8 @@
     'Särdrag': 'Särdrag',
     'Monstruöst särdrag': 'Monstruösa särdrag',
     'Rustning': 'Rustningar',
+    'Närstridsvapen': 'Närstridsvapen',
+    'Avståndsvapen': 'Avståndsvapen',
     'Vapen': 'Vapen',
     'Pil/Lod': 'Pilar/Lod',
     'Sköld': 'Sköldar',
@@ -259,11 +268,14 @@
   }
   function normalizeRef(ref) {
     if (ref && typeof ref === 'object') {
-      const { id, namn, name } = ref;
+      const { id, namn, name, sourceEntryName } = ref;
+      const canonicalName = typeof sourceEntryName === 'string' && sourceEntryName.trim()
+        ? sourceEntryName.trim()
+        : undefined;
       return {
         id: id !== undefined && id !== null && String(id).trim() !== '' ? String(id).trim() : undefined,
-        name: typeof namn === 'string' && namn.trim() ? namn.trim()
-          : (typeof name === 'string' && name.trim() ? name.trim() : undefined)
+        name: canonicalName || (typeof namn === 'string' && namn.trim() ? namn.trim()
+          : (typeof name === 'string' && name.trim() ? name.trim() : undefined))
       };
     }
     if (ref === undefined || ref === null) return { id: undefined, name: undefined };
@@ -319,21 +331,26 @@
     const toWeapon  = qTypes.includes('Vapenkvalitet');
     const toShield  = qTypes.includes('Sköldkvalitet');
     const toArmor   = qTypes.includes('Rustningskvalitet');
-
-    const QUAL_ITEM_TYPES = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'];
+    const hasGeneralQualityTarget = () =>
+      hasWeaponType(itTypes)
+      || itTypes.includes('Sköld')
+      || itTypes.includes('Pil/Lod')
+      || itTypes.includes('Rustning')
+      || itTypes.includes('Artefakt')
+      || itTypes.includes('Lägre Artefakt');
 
     // Allmän kvalitet: endast för föremål som kan ha kvaliteter
     if (isGeneral) {
-      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
+      return hasGeneralQualityTarget();
     }
 
     // Om inga nya typer finns på kvaliteten: falla tillbaka till gamla beteendet
     // (kvaliteter gällde generellt för vapen/sköld/rustning)
     if (!toWeapon && !toShield && !toArmor) {
-      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
+      return hasGeneralQualityTarget();
     }
 
-    if (toWeapon && itTypes.includes('Vapen')) return true;
+    if (toWeapon && hasWeaponType(itTypes)) return true;
     if (toShield && itTypes.includes('Sköld')) return true;
     if (toArmor  && itTypes.includes('Rustning')) return true;
     return false;
@@ -392,6 +409,49 @@
     return compareSv(a.namn || '', b.namn || '');
   }
 
+  function splitTags(arr){
+    const source = Array.isArray(arr)
+      ? arr
+      : ((arr === undefined || arr === null) ? [] : [arr]);
+    return source
+      .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+      .filter(Boolean);
+  }
+
+  function getEntryTestTags(entry, opts = {}){
+    if (!entry || typeof entry !== 'object') return [];
+    const out = [];
+    const seen = new Set();
+    const add = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(add);
+        return;
+      }
+      const txt = String(value ?? '').trim();
+      if (!txt) return;
+      const key = searchNormalize(txt.toLowerCase());
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(txt);
+    };
+
+    const tags = entry.taggar || {};
+    add(tags.test);
+
+    const levelData = tags.nivå_data || tags.niva_data;
+    if (levelData && typeof levelData === 'object') {
+      const wantedLevel = String(opts.level || '').trim();
+      if (wantedLevel) {
+        const wantedKey = searchNormalize(wantedLevel.toLowerCase());
+        const matchKey = Object.keys(levelData).find(key => searchNormalize(String(key || '').toLowerCase()) === wantedKey);
+        if (matchKey) add(levelData[matchKey]?.test);
+      } else {
+        Object.values(levelData).forEach(meta => add(meta?.test));
+      }
+    }
+    return out;
+  }
+
   function explodeTags(arr){
     const map = {
       'H\u00e4xa': 'H\u00e4xkonst',
@@ -402,9 +462,7 @@
       'Teurg': 'Teurgi',
       'Teurgi': 'Teurgi'
     };
-    return (arr || [])
-      .flatMap(v => v.split(',').map(t => t.trim()))
-      .filter(Boolean)
+    return splitTags(arr)
       .map(t => map[t] || t);
   }
 
@@ -414,15 +472,79 @@
     return String(val).split(',').map(t=>t.trim()).filter(Boolean);
   }
 
-  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tunga vapen']);
   const normalizeTypeNameForMatch = value => String(value || '')
     .trim()
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+  const LEGACY_WEAPON_BASE_TYPE = 'Vapen';
+  const MELEE_WEAPON_BASE_TYPE = 'Närstridsvapen';
+  const RANGED_WEAPON_BASE_TYPE = 'Avståndsvapen';
+  const WEAPON_BASE_TYPES = Object.freeze([
+    MELEE_WEAPON_BASE_TYPE,
+    RANGED_WEAPON_BASE_TYPE,
+    LEGACY_WEAPON_BASE_TYPE
+  ]);
+  const WEAPON_TYPE_FALLBACK = Object.freeze([
+    'Enhandsvapen',
+    'Korta vapen',
+    'Långa vapen',
+    'Tvåhandsvapen',
+    'Obeväpnad attack',
+    'Stav',
+    'Armborst',
+    'Pilbåge',
+    'Kastvapen',
+    'Slunga',
+    'Blåsrör',
+    'Belägringsvapen',
+    'Projektilvapen'
+  ]);
+  const WEAPON_TYPE_KEYS = new Set(
+    [...WEAPON_BASE_TYPES, ...WEAPON_TYPE_FALLBACK]
+      .map(normalizeTypeNameForMatch)
+      .filter(Boolean)
+  );
+  const WEAPON_BASE_TYPE_KEYS = new Set(
+    WEAPON_BASE_TYPES.map(normalizeTypeNameForMatch).filter(Boolean)
+  );
+  const RANGED_WEAPON_TYPES = Object.freeze([
+    RANGED_WEAPON_BASE_TYPE,
+    'Armborst',
+    'Pilbåge',
+    'Kastvapen',
+    'Slunga',
+    'Blåsrör',
+    'Belägringsvapen',
+    'Projektilvapen',
+    'Pil/Lod'
+  ]);
+  const RANGED_WEAPON_TYPE_KEYS = new Set(
+    RANGED_WEAPON_TYPES.map(normalizeTypeNameForMatch).filter(Boolean)
+  );
+  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tvåhandsvapen', 'Tvåhandsvapen']);
   const TWO_HANDED_WEAPON_TYPE_KEYS = new Set(
     TWO_HANDED_WEAPON_TYPES.map(normalizeTypeNameForMatch)
   );
+
+  function isWeaponType(typeName) {
+    const key = normalizeTypeNameForMatch(typeName);
+    return key ? WEAPON_TYPE_KEYS.has(key) : false;
+  }
+
+  function hasWeaponType(types) {
+    return (Array.isArray(types) ? types : []).some(isWeaponType);
+  }
+
+  function isWeaponBaseType(typeName) {
+    const key = normalizeTypeNameForMatch(typeName);
+    return key ? WEAPON_BASE_TYPE_KEYS.has(key) : false;
+  }
+
+  function isRangedWeaponType(typeName) {
+    const key = normalizeTypeNameForMatch(typeName);
+    return key ? RANGED_WEAPON_TYPE_KEYS.has(key) : false;
+  }
 
   function isTwoHandedWeaponType(typeName) {
     if (!typeName) return false;
@@ -520,7 +642,7 @@
       }
       return parts.length ? `<br>${parts.join('<br>')}` : '';
     }
-    if (types.includes('Vapen') || types.includes('Sköld')) {
+    if (hasWeaponType(types) || types.includes('Sköld')) {
       const dmg = entry.stat?.skada;
       return dmg ? `<br>Skada: ${dmg}` : '';
     }
@@ -615,8 +737,7 @@
 
     const primaryTest = (ent) => {
       if (!ent || typeof ent !== 'object') return '';
-      const tags = ent.taggar || {};
-      const list = Array.isArray(tags.test) ? tags.test : [];
+      const list = getEntryTestTags(ent);
       return list[0] || '';
     };
 
@@ -624,7 +745,7 @@
       if (!ent || typeof ent !== 'object') return '';
       const tags = ent.taggar || {};
       if (Array.isArray(tags.ark_trad) && tags.ark_trad.length) {
-        const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : tags.ark_trad;
+        const exploded = typeof splitTags === 'function' ? splitTags(tags.ark_trad) : tags.ark_trad;
         if (Array.isArray(exploded) && exploded.length) return exploded[0];
         return tags.ark_trad[0] || '';
       }
@@ -741,48 +862,13 @@
     return result;
   }
 
-  const SKADETYP_NONE = new Set(['ingen', 'none', 'saknas', '']);
-  const armorStopWords = [/stoppas/i, /skyddar(?!\s*inte)/i];
-  const armorPierceWords = [/går igenom/i, /gar igenom/i, /skyddar inte/i];
-  const SKADETYP_ARMOR_KEYS = [
-    'Bepansring – rustningar',
-    'Naturligt pansar',
-    'Mystisk bepansring',
-    'Robust/Överlevnadsinstinkt'
-  ];
-  const ARMOR_DISPLAY_LABELS = new Map([
-    [searchNormalize('Bepansring – rustningar'.toLowerCase()), 'Rustningar']
+  const SKADETYP_NONE = new Set(['ingen', 'none', 'saknas', '-', '']);
+  const SKADETYP_SPLIT_RE = /\s*(?:&|\/|,|\boch\b)\s*/i;
+  const SKADETYP_ALIASES = new Map([
+    ['fysisk', ['Yttre fysisk']],
+    ['yttre fysisk och inre fysisk', ['Yttre fysisk', 'Inre fysisk']],
+    ['yttre fysisk & inre fysisk', ['Yttre fysisk', 'Inre fysisk']]
   ]);
-  const SKADETYP_MATRIX = {
-    'yttre fysisk': {
-      stop: SKADETYP_ARMOR_KEYS,
-      pierce: []
-    },
-    'inre fysisk': {
-      stop: [],
-      pierce: SKADETYP_ARMOR_KEYS
-    },
-    'elementär': {
-      stop: ['Naturligt pansar', 'Mystisk bepansring'],
-      pierce: ['Bepansring – rustningar', 'Robust/Överlevnadsinstinkt']
-    },
-    'mystisk': {
-      stop: ['Mystisk bepansring'],
-      pierce: ['Bepansring – rustningar', 'Naturligt pansar', 'Robust/Överlevnadsinstinkt']
-    },
-    'gift': {
-      stop: [],
-      pierce: SKADETYP_ARMOR_KEYS
-    },
-    'ignorerar bepansring': {
-      stop: ['Mystisk bepansring', 'Robust/Överlevnadsinstinkt'],
-      pierce: ['Bepansring – rustningar', 'Naturligt pansar']
-    },
-    'fallskada': {
-      stop: [],
-      pierce: SKADETYP_ARMOR_KEYS
-    }
-  };
 
   const normalizeSkadetyp = (value) => String(value ?? '').trim();
   const skadetypIsNone = (value) => {
@@ -810,93 +896,324 @@
     return getEntryDamageProfiles(entry).length > 0;
   }
 
-  function findSkadetypTable(tables = window.TABELLER) {
+  function findNamedTable(tables = window.TABELLER, options = {}) {
     const list = Array.isArray(tables) ? tables : [];
-    const byId = list.find(t => String(t.id || '').toLowerCase() === 'ta23');
+    const ids = Array.isArray(options.ids) ? options.ids.map(id => String(id || '').toLowerCase()) : [];
+    const names = Array.isArray(options.names)
+      ? options.names.map(name => searchNormalize(String(name || '').toLowerCase())).filter(Boolean)
+      : [];
+    const includes = Array.isArray(options.includes)
+      ? options.includes.map(name => searchNormalize(String(name || '').toLowerCase())).filter(Boolean)
+      : [];
+    const byId = ids.length
+      ? list.find(t => ids.includes(String(t?.id || '').toLowerCase()))
+      : null;
     if (byId) return byId;
-    return list.find(t => (t?.namn || '').toLowerCase().includes('skadetyper'));
+    const byName = names.length
+      ? list.find(t => names.includes(searchNormalize(String(t?.namn || '').toLowerCase())))
+      : null;
+    if (byName) return byName;
+    return includes.length
+      ? list.find(t => includes.some(part => searchNormalize(String(t?.namn || '').toLowerCase()).includes(part)))
+      : null;
   }
 
-  function classifyArmorResult(value) {
-    const norm = searchNormalize(String(value ?? '').toLowerCase());
-    if (!norm) return 'unknown';
-    if (armorStopWords.some(rx => rx.test(norm))) return 'stop';
-    if (armorPierceWords.some(rx => rx.test(norm))) return 'pierce';
-    return 'unknown';
+  function findSkadetypTable(tables = window.TABELLER) {
+    return findNamedTable(tables, {
+      ids: ['ta26'],
+      names: ['Skadetyper och penetrering'],
+      includes: ['skadetyper']
+    });
   }
 
-  function buildShieldingFromMatrix(normType) {
-    const matrix = SKADETYP_MATRIX[normType];
-    if (!matrix) return null;
-    const displayArmor = (label) => {
-      const norm = searchNormalize(String(label || '').toLowerCase());
-      return ARMOR_DISPLAY_LABELS.get(norm) || label;
-    };
-    const result = {
-      table: null,
-      skadetyp: normType,
-      stops: [],
-      pierces: [],
-      unknown: [],
-      armorKeys: SKADETYP_ARMOR_KEYS.slice()
-    };
-    matrix.stop.forEach(armor => {
-      result.stops.push({ armor: displayArmor(armor), text: 'Stoppas' });
+  function findBepansringTable(tables = window.TABELLER) {
+    return findNamedTable(tables, {
+      ids: ['ta25'],
+      names: ['Bepansring och skydd'],
+      includes: ['bepansring']
     });
-    matrix.pierce.forEach(armor => {
-      result.pierces.push({ armor: displayArmor(armor), text: 'Går igenom' });
-    });
-    // Any remaining armor keys not listed become unknown
-    const listed = new Set([...matrix.stop, ...matrix.pierce]);
-    SKADETYP_ARMOR_KEYS.forEach(armor => {
-      if (!listed.has(armor)) {
-        result.unknown.push({ armor: displayArmor(armor), text: '' });
+  }
+
+  function getTableRowLabelKey(table, fallbacks = []) {
+    const columns = Array.isArray(table?.kolumner) ? table.kolumner : [];
+    const normalizedFallbacks = fallbacks
+      .map(name => searchNormalize(String(name || '').toLowerCase()))
+      .filter(Boolean);
+    const byColumn = columns.find(col => normalizedFallbacks.includes(searchNormalize(String(col || '').toLowerCase())));
+    if (byColumn) return byColumn;
+
+    const firstRow = Array.isArray(table?.rader) && table.rader.length ? table.rader[0] : null;
+    if (!firstRow || typeof firstRow !== 'object') return '';
+    return Object.keys(firstRow).find(key => normalizedFallbacks.includes(searchNormalize(String(key || '').toLowerCase()))) || '';
+  }
+
+  function findMatchingColumn(table, label) {
+    const wanted = searchNormalize(String(label || '').toLowerCase());
+    const columns = Array.isArray(table?.kolumner) ? table.kolumner : [];
+    return columns.find(col => searchNormalize(String(col || '').toLowerCase()) === wanted) || '';
+  }
+
+  function resolveSkadetypLabels(skadetyp, tables = window.TABELLER) {
+    const raw = normalizeSkadetyp(skadetyp);
+    if (!raw || skadetypIsNone(raw)) return [];
+
+    const knownLabels = new Set();
+    const tablesToCheck = [findSkadetypTable(tables), findBepansringTable(tables)];
+    tablesToCheck.forEach(table => {
+      if (!table) return;
+      const rowKey = getTableRowLabelKey(table, ['Skadetyp', 'Bepansringstyp']);
+      if (rowKey) {
+        (Array.isArray(table.rader) ? table.rader : []).forEach(row => {
+          const label = String(row?.[rowKey] ?? '').trim();
+          if (label) knownLabels.add(label);
+        });
       }
+      (Array.isArray(table.kolumner) ? table.kolumner : []).forEach(col => {
+        const label = String(col ?? '').trim();
+        if (label) knownLabels.add(label);
+      });
     });
-    return result;
+
+    const dedupe = (values) => {
+      const seen = new Set();
+      return values.filter(value => {
+        const label = String(value ?? '').trim();
+        if (!label) return false;
+        const key = searchNormalize(label.toLowerCase());
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+
+    const tryDirect = dedupe([raw]).filter(label => {
+      const wanted = searchNormalize(label.toLowerCase());
+      for (const known of knownLabels) {
+        if (searchNormalize(String(known || '').toLowerCase()) === wanted) return true;
+      }
+      return false;
+    });
+    if (tryDirect.length) return tryDirect;
+
+    const alias = SKADETYP_ALIASES.get(searchNormalize(raw.toLowerCase()));
+    if (alias?.length) return dedupe(alias);
+
+    const parts = raw
+      .split(SKADETYP_SPLIT_RE)
+      .map(part => String(part || '').trim())
+      .filter(Boolean);
+    if (!parts.length) return [];
+
+    const expanded = parts.flatMap(part => {
+      const normalized = searchNormalize(part.toLowerCase());
+      return SKADETYP_ALIASES.get(normalized) || [part];
+    });
+    return dedupe(expanded);
+  }
+
+  function buildTableFactsFromRow(row, columns) {
+    return columns
+      .map(column => ({
+        label: String(column ?? '').trim(),
+        value: String(row?.[column] ?? '').trim()
+      }))
+      .filter(item => item.label && item.value);
+  }
+
+  function getSkadetypTableDetails(skadetyp, tables = window.TABELLER) {
+    const skadetypTable = findSkadetypTable(tables);
+    const bepansringTable = findBepansringTable(tables);
+    const labels = resolveSkadetypLabels(skadetyp, tables);
+    const details = {
+      labels,
+      tables: {
+        skadetyp: skadetypTable || null,
+        bepansring: bepansringTable || null
+      },
+      items: []
+    };
+    if (!labels.length) return details;
+
+    const penetrationRowKey = getTableRowLabelKey(skadetypTable, ['Skadetyp']);
+    const penetrationValueColumns = (Array.isArray(skadetypTable?.kolumner) ? skadetypTable.kolumner : [])
+      .filter(column => column !== penetrationRowKey);
+    const armorRowKey = getTableRowLabelKey(bepansringTable, ['Bepansringstyp']);
+
+    labels.forEach(label => {
+      const normalizedLabel = searchNormalize(String(label || '').toLowerCase());
+      let item = null;
+
+      if (skadetypTable && penetrationRowKey) {
+        const rows = Array.isArray(skadetypTable.rader) ? skadetypTable.rader : [];
+        const row = rows.find(entry => searchNormalize(String(entry?.[penetrationRowKey] || '').toLowerCase()) === normalizedLabel) || null;
+        if (row) {
+          item = {
+            label: String(row?.[penetrationRowKey] ?? label).trim() || label,
+            source: String(skadetypTable.namn || '').trim(),
+            facts: buildTableFactsFromRow(row, penetrationValueColumns)
+          };
+        }
+      }
+
+      if (!item && bepansringTable && armorRowKey) {
+        const matchingColumn = findMatchingColumn(bepansringTable, label);
+        if (matchingColumn) {
+          const rows = Array.isArray(bepansringTable.rader) ? bepansringTable.rader : [];
+          item = {
+            label,
+            source: String(bepansringTable.namn || '').trim(),
+            facts: rows
+              .map(row => ({
+                label: String(row?.[armorRowKey] ?? '').trim(),
+                value: String(row?.[matchingColumn] ?? '').trim()
+              }))
+              .filter(entry => entry.label && entry.value)
+          };
+        }
+      }
+
+      if (item) details.items.push(item);
+    });
+
+    return details;
   }
 
   function getSkadetypShielding(skadetyp, tables = window.TABELLER) {
-    const normType = searchNormalize(String(skadetyp || '').toLowerCase());
-    const staticResult = buildShieldingFromMatrix(normType);
-    if (staticResult) return staticResult;
-
-    const table = findSkadetypTable(tables);
-    const result = {
-      table: table || null,
+    const details = getSkadetypTableDetails(skadetyp, tables);
+    return {
+      table: details?.tables?.skadetyp || details?.tables?.bepansring || null,
       skadetyp,
+      labels: Array.isArray(details?.labels) ? details.labels.slice() : [],
+      items: Array.isArray(details?.items) ? details.items.slice() : [],
       stops: [],
       pierces: [],
-      unknown: [],
-      armorKeys: []
+      unknown: []
     };
-    if (!table) return result;
+  }
 
-    const displayArmor = (label) => {
-      const norm = searchNormalize(String(label || '').toLowerCase());
-      return ARMOR_DISPLAY_LABELS.get(norm) || label;
+  function describeSkadetypFactValue(value, sourceLabel = '') {
+    const raw = String(value ?? '').trim();
+    const norm = searchNormalize(raw.toLowerCase());
+    const sourceNorm = searchNormalize(String(sourceLabel || '').toLowerCase());
+    const fromSkadetypTable = sourceNorm.includes(searchNormalize('skadetyper och penetrering'));
+    const fromArmorTable = sourceNorm.includes(searchNormalize('bepansring och skydd'));
+
+    if (norm === 'ja') {
+      if (fromSkadetypTable) return { text: 'Stoppas', tone: 'blocked', pill: true };
+      if (fromArmorTable) return { text: 'Skyddar', tone: 'blocked', pill: true };
+    }
+    if (norm === 'nej') {
+      if (fromSkadetypTable) return { text: 'Går igenom', tone: 'piercing', pill: true };
+      if (fromArmorTable) return { text: 'Skyddar inte', tone: 'piercing', pill: true };
+    }
+    if (norm === 'stoppas' || norm === 'skyddar') {
+      return { text: raw, tone: 'blocked', pill: true };
+    }
+    if (norm === 'går igenom' || norm === 'gar igenom' || norm === 'skyddar inte') {
+      return { text: raw, tone: 'piercing', pill: true };
+    }
+    if (norm.includes('immun')) {
+      return { text: raw, tone: 'immunity', pill: false };
+    }
+    if (/\d/.test(raw)) {
+      return { text: raw, tone: 'scaled', pill: false };
+    }
+    return { text: raw, tone: 'neutral', pill: false };
+  }
+
+  function expandSkadetypLevelCodes(value) {
+    const map = {
+      n: 'Novis',
+      g: 'Gesäll',
+      m: 'Mästare',
+      alla: 'Alla nivåer',
+      'alla nivaer': 'Alla nivåer'
     };
+    return String(value ?? '')
+      .split('/')
+      .map(part => {
+        const label = String(part ?? '').trim();
+        if (!label) return '';
+        const norm = searchNormalize(label.toLowerCase());
+        return map[norm] || label;
+      })
+      .filter(Boolean)
+      .join(' / ');
+  }
 
-    const armorKeys = (Array.isArray(table.kolumner) ? table.kolumner : []).filter(col => {
-      const norm = searchNormalize(String(col || '').toLowerCase());
-      return norm && norm !== 'skadetyp';
+  function compactSkadetypLevelCodes(value) {
+    const map = {
+      novis: 'N',
+      gesall: 'G',
+      mastare: 'M',
+      alla: 'Alla',
+      'alla nivaer': 'Alla'
+    };
+    return String(value ?? '')
+      .split('/')
+      .map(part => {
+        const label = String(part ?? '').trim();
+        if (!label) return '';
+        const norm = searchNormalize(label.toLowerCase());
+        return map[norm] || label;
+      })
+      .filter(Boolean)
+      .join('/');
+  }
+
+  function describeSkadetypDamageAmount(value) {
+    const raw = String(value ?? '').trim();
+    const norm = searchNormalize(raw.toLowerCase());
+    if (norm === '100%') return 'Full skada';
+    if (norm === '50%') return 'Halv skada';
+    if (norm === 'immun') return 'Ingen skada';
+    const pct = raw.match(/^(\d+)%$/);
+    if (pct) return `${pct[1]}% skada`;
+    return raw;
+  }
+
+  function parseSkadetypValueBreakdown(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+    const parts = raw.split(/\s*,\s*/).filter(Boolean);
+    const parsed = parts.map(part => {
+      const colonMatch = part.match(/^(.+?)\s*:\s*(.+)$/);
+      if (colonMatch) {
+        return {
+          levelLabel: expandSkadetypLevelCodes(colonMatch[1]),
+          effectLabel: describeSkadetypDamageAmount(colonMatch[2])
+        };
+      }
+      const match = part.match(/^(.+?)\s*\(([^)]+)\)$/);
+      if (match) {
+        return {
+          levelLabel: expandSkadetypLevelCodes(match[2]),
+          effectLabel: describeSkadetypDamageAmount(match[1])
+        };
+      }
+      if (parts.length === 1) {
+        return {
+          levelLabel: '',
+          effectLabel: describeSkadetypDamageAmount(part)
+        };
+      }
+      return null;
     });
-    result.armorKeys = armorKeys;
+    return parsed.every(Boolean) ? parsed : null;
+  }
 
-    const rows = Array.isArray(table.rader) ? table.rader : [];
-    const row = rows.find(r => searchNormalize(String(r?.Skadetyp || r?.skadetyp || '').toLowerCase()) === normType) || null;
-    if (!row) return result;
-
-    armorKeys.forEach(key => {
-      const val = row[key] ?? '';
-      const verdict = classifyArmorResult(val);
-      const entry = { armor: displayArmor(key), text: String(val ?? '').trim() };
-      if (verdict === 'stop') result.stops.push(entry);
-      else if (verdict === 'pierce') result.pierces.push(entry);
-      else result.unknown.push(entry);
-    });
-
-    return result;
+  function buildSkadetypBreakdownHtml(value, escapeHtmlFn) {
+    const breakdown = parseSkadetypValueBreakdown(value);
+    if (!breakdown?.length) return '';
+    const escape = typeof escapeHtmlFn === 'function'
+      ? escapeHtmlFn
+      : (input => String(input ?? ''));
+    return `<span class="skadetyp-fact-breakdown">${breakdown.map(part => `
+      <span class="skadetyp-fact-segment">
+        <span class="skadetyp-fact-segment-label">${escape(part.levelLabel || 'Alla nivåer')}</span>
+        <span class="skadetyp-fact-segment-value">${escape(part.effectLabel)}</span>
+      </span>
+    `).join('')}</span>`;
   }
 
   function buildSkadetypPanelHtml(entry, opts = {}) {
@@ -907,6 +1224,9 @@
       '"': '&quot;',
       "'": '&#39;'
     })[ch]);
+    const toSafeDomKey = (value) => searchNormalize(String(value ?? '').toLowerCase())
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'item';
 
     if (!entry || typeof entry !== 'object') return null;
     const profiles = getEntryDamageProfiles(entry, { includeNone: true });
@@ -927,57 +1247,127 @@
       })
       .join('');
 
-    const renderList = (items, emptyText) => {
-      if (!items.length) {
-        return `<p class="skadetyp-empty">${escapeHtml(emptyText)}</p>`;
+    const renderFactPairs = (facts, sourceLabel = '') => {
+      if (!facts.length) {
+        return `<p class="skadetyp-empty">Ingen matchande rad hittades i tabellen.</p>`;
       }
-      return `<ul class="skadetyp-list">${items.map(it => {
-        const suffix = it.text && it.text.toLowerCase() !== 'stoppas' && it.text.toLowerCase() !== 'går igenom'
-          ? ` – ${escapeHtml(it.text)}`
-          : '';
-        return `<li><strong>${escapeHtml(it.armor)}</strong>${suffix}</li>`;
-      }).join('')}</ul>`;
+      const rowsHtml = facts.map(item => {
+        const display = describeSkadetypFactValue(item.value, sourceLabel);
+        const breakdownHtml = buildSkadetypBreakdownHtml(item.value, escapeHtml);
+        const rowClasses = ['skadetyp-fact-row'];
+        const valueClasses = ['summary-value', 'skadetyp-fact-value'];
+        if (display.tone) rowClasses.push(`is-${display.tone}`);
+        let valueHtml = '';
+        if (breakdownHtml) {
+          const breakdown = parseSkadetypValueBreakdown(item.value);
+          if (breakdown?.length === 1 && !breakdown[0].levelLabel) {
+            valueClasses.push('skadetyp-fact-badge-wrap');
+            valueHtml = `
+              <span class="skadetyp-status-badge is-scaled no-dot">
+                <span class="skadetyp-status-badge__label">${escapeHtml(breakdown[0].effectLabel)}</span>
+              </span>
+            `.trim();
+          } else {
+            valueClasses.push('skadetyp-fact-breakdown-wrap');
+            valueHtml = breakdownHtml;
+          }
+        } else if (display.pill) {
+          valueClasses.push('skadetyp-fact-badge-wrap');
+          valueHtml = `
+            <span class="skadetyp-status-badge${display.tone ? ` is-${display.tone}` : ''}">
+              <span class="skadetyp-status-badge__dot" aria-hidden="true"></span>
+              <span class="skadetyp-status-badge__label">${escapeHtml(display.text)}</span>
+            </span>
+          `.trim();
+        } else {
+          if (display.tone) valueClasses.push(`is-${display.tone}`);
+          valueHtml = escapeHtml(display.text);
+        }
+        return `
+          <li class="${rowClasses.join(' ')}">
+            <span class="summary-key">${escapeHtml(item.label)}</span>
+            <span class="${valueClasses.join(' ')}">${valueHtml}</span>
+          </li>`;
+      }).join('');
+      return `<ul class="summary-list summary-pairs skadetyp-pairs">${rowsHtml}</ul>`;
     };
 
     const renderLevelBlock = (profile) => {
       const lvl = profile.level || 'Okänd';
       const hasDamage = !skadetypIsNone(profile.skadetyp);
-      const shielding = hasDamage ? getSkadetypShielding(profile.skadetyp, opts.tables || window.TABELLER) : null;
-      const stops = shielding?.stops || [];
-      const pierces = shielding?.pierces || [];
-      const unknown = shielding?.unknown || [];
-      const hasShieldingData = shielding && (stops.length || pierces.length || unknown.length);
-      let armorSection;
+      const isActiveLevel = normalizeLevelKey(profile.level) === normalizeLevelKey(pick.level);
+      const tableDetails = hasDamage ? getSkadetypTableDetails(profile.skadetyp, opts.tables || window.TABELLER) : null;
+      const levelTypes = hasDamage
+        ? resolveSkadetypLabels(profile.skadetyp, opts.tables || window.TABELLER)
+        : [];
+      let armorSection = '';
       if (!hasDamage) {
         armorSection = `<p class="skadetyp-empty">Ingen skadetyp angiven för denna nivå.</p>`;
-      } else if (!shielding) {
-        armorSection = `<p class="skadetyp-empty">Ingen tabell för skadetyper hittades.</p>`;
-      } else if (!hasShieldingData) {
-        armorSection = `<p class="skadetyp-empty">Ingen tabellrad för skadetypen hittades.</p>`;
+      } else if (!(tableDetails?.tables?.skadetyp || tableDetails?.tables?.bepansring)) {
+        armorSection = `<p class="skadetyp-empty">Ingen skadetypstabell hittades.</p>`;
+      } else if (!tableDetails?.items?.length) {
+        armorSection = `<p class="skadetyp-empty">Ingen matchande rad eller kolumn hittades i skadetypstabellerna.</p>`;
+      } else if (tableDetails.items.length === 1) {
+        const item = tableDetails.items[0];
+        armorSection = `
+          <div class="skadetyp-columns">
+            <div class="skadetyp-col skadetyp-table-block">
+              <div class="skadetyp-col-title">${escapeHtml(item.label || 'Skadetyp')}</div>
+              ${item.source ? `<div class="skadetyp-source">${escapeHtml(item.source)}</div>` : ''}
+              ${renderFactPairs(Array.isArray(item.facts) ? item.facts : [], item.source || '')}
+            </div>
+          </div>`;
       } else {
-        armorSection = `<div class="skadetyp-columns">
-            <div class="skadetyp-col skadetyp-stop">
-              <div class="skadetyp-col-title">Stoppas av</div>
-              ${renderList(stops, 'Inga bepansringar stoppar denna skadetyp.')}
+        const switcherKey = [entry?.id || entry?.namn || 'skadetyp', lvl]
+          .map(toSafeDomKey)
+          .join('-');
+        armorSection = `
+          <div class="skadetyp-switcher" data-skadetyp-switcher>
+            <div class="skadetyp-switcher-tabs" role="tablist" aria-label="Skadetyper">
+              ${tableDetails.items.map((item, idx) => {
+                const targetId = `${switcherKey}-${toSafeDomKey(item.label || idx)}`;
+                return `<button
+                  class="skadetyp-switcher-tab${idx === 0 ? ' is-active' : ''}"
+                  type="button"
+                  role="tab"
+                  aria-selected="${idx === 0 ? 'true' : 'false'}"
+                  data-skadetyp-switcher-tab="${targetId}"
+                >${escapeHtml(item.label || 'Skadetyp')}</button>`;
+              }).join('')}
             </div>
-            <div class="skadetyp-col skadetyp-pierce">
-              <div class="skadetyp-col-title">Går igenom</div>
-            ${renderList(pierces, 'Går inte igenom någon bepansring.')}
+            <div class="skadetyp-switcher-panels">
+              ${tableDetails.items.map((item, idx) => {
+                const targetId = `${switcherKey}-${toSafeDomKey(item.label || idx)}`;
+                return `<div
+                  class="skadetyp-switcher-panel${idx === 0 ? ' is-active' : ''}"
+                  role="tabpanel"
+                  data-skadetyp-switcher-panel="${targetId}"
+                  ${idx === 0 ? '' : 'hidden'}
+                >
+                  <div class="skadetyp-col skadetyp-table-block">
+                    <div class="skadetyp-col-title">${escapeHtml(item.label || 'Skadetyp')}</div>
+                    ${item.source ? `<div class="skadetyp-source">${escapeHtml(item.source)}</div>` : ''}
+                    ${renderFactPairs(Array.isArray(item.facts) ? item.facts : [], item.source || '')}
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
-            ${unknown.length ? `<div class="skadetyp-col skadetyp-unknown">
-              <div class="skadetyp-col-title">Okänt</div>
-              ${renderList(unknown, 'Ingen uppgift.')}
-            </div>` : ''}
           </div>`;
       }
+      const levelTypeHtml = levelTypes.length > 1
+        ? `<span class="skadetyp-level-types tags">${levelTypes.map(type => `<span class="db-chip">${escapeHtml(type)}</span>`).join('')}</span>`
+        : `<span class="skadetyp-level-type">${escapeHtml(hasDamage ? (profile.skadetyp || '') : 'Ingen skadetyp')}</span>`;
       return `
-        <section class="skadetyp-level-block">
-          <div class="skadetyp-level-head">
-            <span class="tag">${escapeHtml(lvl)}</span>
-            <span class="skadetyp-level-type">${escapeHtml(hasDamage ? (profile.skadetyp || '') : 'Ingen skadetyp')}</span>
+        <details class="skadetyp-level-block skadetyp-level-details"${isActiveLevel ? ' open' : ''}>
+          <summary class="skadetyp-level-head">
+            <span class="db-chip">${escapeHtml(lvl)}</span>
+            ${levelTypeHtml}
+            <span class="skadetyp-level-toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="skadetyp-level-body">
+            ${armorSection}
           </div>
-          ${armorSection}
-        </section>`;
+        </details>`;
     };
 
     const levelBlocks = profiles.map(renderLevelBlock).join('');
@@ -1004,6 +1394,8 @@
     const titleName = entry?.namn ? `${entry.namn} – Skadetyp` : 'Skadetyp';
     if (window.yrkePanel?.open) {
       window.yrkePanel.open(titleName, html);
+    } else if (window.openTablePopup) {
+      void window.openTablePopup(html, titleName);
     } else if (window.tabellPopup?.open) {
       window.tabellPopup.open(html, titleName);
     } else {
@@ -1013,6 +1405,32 @@
     }
     return true;
   }
+
+  let skadetypSwitcherBound = false;
+  function ensureSkadetypSwitcherHandler() {
+    if (skadetypSwitcherBound || typeof document === 'undefined') return;
+    document.addEventListener('click', event => {
+      const button = event.target.closest('[data-skadetyp-switcher-tab]');
+      if (!button) return;
+      const wrap = button.closest('[data-skadetyp-switcher]');
+      if (!wrap) return;
+      const target = String(button.dataset.skadetypSwitcherTab || '').trim();
+      if (!target) return;
+      wrap.querySelectorAll('[data-skadetyp-switcher-tab]').forEach(tab => {
+        const active = tab === button;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      wrap.querySelectorAll('[data-skadetyp-switcher-panel]').forEach(panel => {
+        const active = String(panel.dataset.skadetypSwitcherPanel || '').trim() === target;
+        panel.classList.toggle('is-active', active);
+        panel.hidden = !active;
+      });
+    });
+    skadetypSwitcherBound = true;
+  }
+
+  ensureSkadetypSwitcherHandler();
 
   window.LVL = LVL;
   window.EQUIP = EQUIP;
@@ -1035,8 +1453,17 @@
   window.isNegativeQual = isNegativeQual;
   window.isNeutralQual = isNeutralQual;
   window.sortByType = sortByType;
+  window.splitTags = splitTags;
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
+  window.LEGACY_WEAPON_BASE_TYPE = LEGACY_WEAPON_BASE_TYPE;
+  window.MELEE_WEAPON_BASE_TYPE = MELEE_WEAPON_BASE_TYPE;
+  window.RANGED_WEAPON_BASE_TYPE = RANGED_WEAPON_BASE_TYPE;
+  window.WEAPON_BASE_TYPES = WEAPON_BASE_TYPES;
+  window.isWeaponType = isWeaponType;
+  window.hasWeaponType = hasWeaponType;
+  window.isWeaponBaseType = isWeaponBaseType;
+  window.isRangedWeaponType = isRangedWeaponType;
   window.TWO_HANDED_WEAPON_TYPES = TWO_HANDED_WEAPON_TYPES;
   window.isTwoHandedWeaponType = isTwoHandedWeaponType;
   window.isTwoHandedWeaponEntry = isTwoHandedWeaponEntry;
@@ -1052,6 +1479,7 @@
   window.createSearchSorter = createSearchSorter;
   window.normalizeEntrySortMode = normalizeEntrySortMode;
   window.entrySortComparator = entrySortComparator;
+  window.getEntryTestTags = getEntryTestTags;
   window.compareSv = compareSv;
   window.ENTRY_SORT_DEFAULT = ENTRY_SORT_DEFAULT;
   window.ENTRY_SORT_MODES = ENTRY_SORT_MODES;
@@ -1068,6 +1496,10 @@
   window.getEntryDamageProfiles = getEntryDamageProfiles;
   window.entryHasDamageType = entryHasDamageType;
   window.getSkadetypShielding = getSkadetypShielding;
+  window.describeSkadetypFactValue = describeSkadetypFactValue;
+  window.parseSkadetypValueBreakdown = parseSkadetypValueBreakdown;
+  window.compactSkadetypLevelCodes = compactSkadetypLevelCodes;
+  window.buildSkadetypBreakdownHtml = buildSkadetypBreakdownHtml;
   window.buildSkadetypPanelHtml = buildSkadetypPanelHtml;
   window.openSkadetypPanel = openSkadetypPanel;
 })(window);

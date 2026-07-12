@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rpg-db.local/schemas/catalog-v3.schema.json",
+  "title": "Catalog V3",
+  "description": "Canonical English gameplay catalog schema for authored entry data files.",
+  "type": "object",
+  "required": ["schema_version", "type_rules", "entries"],
+  "properties": {
+    "schema_version": { "const": 3 },
+    "type_rules": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/entryTemplate" }
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "stringOrStrings": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "ruleBlock": {
+      "type": "object",
+      "properties": {
+        "modify": { "type": "array", "items": { "$ref": "rule-v3.schema.json#/$defs/modifyRule" } },
+        "require": { "type": "array", "items": { "$ref": "rule-v3.schema.json#/$defs/requireRule" } },
+        "conflict": { "type": "array", "items": { "$ref": "rule-v3.schema.json#/$defs/conflictRule" } },
+        "grant": { "type": "array", "items": { "$ref": "rule-v3.schema.json#/$defs/grantRule" } },
+        "choice": { "type": "array", "items": { "$ref": "rule-v3.schema.json#/$defs/choiceRule" } },
+        "kraver_logik": { "type": "string", "enum": ["and", "or"] },
+        "kraver_typ_och_entry": { "type": "string", "enum": ["and", "or"] },
+        "ignorera_typ_kraver": { "type": "boolean" },
+        "ignorera_krav_popup": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "object",
+      "properties": {
+        "types": { "$ref": "#/$defs/stringOrStrings" },
+        "traditions": { "$ref": "#/$defs/stringOrStrings" },
+        "tests": { "$ref": "#/$defs/stringOrStrings" },
+        "qualities": { "$ref": "#/$defs/stringOrStrings" },
+        "max_count": { "type": "number" },
+        "hidden": { "type": "boolean" },
+        "race": { "$ref": "#/$defs/stringOrStrings" },
+        "artifact_binding": {
+          "oneOf": [
+            { "type": "object" },
+            { "type": "array" }
+          ]
+        },
+        "xp": { "type": "number" },
+        "inventory": { "type": "object" },
+        "arm_fast": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "level": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "description": { "type": "string" },
+            "actions": { "$ref": "#/$defs/stringOrStrings" },
+            "tests": { "$ref": "#/$defs/stringOrStrings" },
+            "damage_type": { "type": "string" },
+            "xp": { "type": "number" },
+            "rules": { "$ref": "#/$defs/ruleBlock" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "levels": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/level" }
+    },
+    "entryTemplate": {
+      "type": "object",
+      "properties": {
+        "tags": { "$ref": "#/$defs/tags" },
+        "levels": { "$ref": "#/$defs/levels" },
+        "rules": { "$ref": "#/$defs/ruleBlock" }
+      },
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "required": ["id", "name", "tags"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "tags": { "$ref": "#/$defs/tags" },
+        "levels": { "$ref": "#/$defs/levels" },
+        "rules": { "$ref": "#/$defs/ruleBlock" },
+        "elite_requirements": { "$ref": "elite-requirements-v3.schema.json" },
+        "key_traits": { "type": "string" },
+        "elite_abilities": { "type": "array", "items": { "type": "string" } },
+        "possible_benefits": { "type": "array", "items": { "type": "string" } },
+        "possible_drawbacks": { "type": "array", "items": { "type": "string" } },
+        "requirement_abilities": { "type": "string" },
+        "suggested_races": { "$ref": "#/$defs/stringOrStrings" },
+        "suggested_abilities": { "type": "array", "items": { "type": "string" } },
+        "female_names": { "type": "array", "items": { "type": "string" } },
+        "male_names": { "type": "array", "items": { "type": "string" } },
+        "trait_summary": { "type": "string" },
+        "stats": { "type": "object" },
+        "base_price": { "type": "object" },
+        "max_price": { "type": "object" },
+        "qualities": { "$ref": "#/$defs/stringOrStrings" },
+        "corruption": { "type": "string" },
+        "effect": { "type": "string" },
+        "negative": { "type": "boolean" },
+        "neutral": { "type": "boolean" },
+        "bound": { "type": "string" },
+        "boundLabel": { "type": "string" },
+        "extra": { "type": "string" },
+        "monsterjägarsällskap": { "type": "string" },
+        "traits": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}
