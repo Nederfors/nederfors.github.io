@@ -81,6 +81,8 @@ const revealApp = () => {
   const fallback = document.getElementById('boot-fallback');
   if (fallback) {
     fallback.hidden = true;
+    fallback.setAttribute('aria-hidden', 'true');
+    fallback.setAttribute('inert', '');
     fallback.classList.remove('is-error');
     fallback.setAttribute('role', 'status');
     fallback.removeAttribute('aria-modal');

@@ -12,7 +12,8 @@
    Traits card rules cannot shrink the controls back below a touch target. */
 @media (pointer: coarse) {
   .trait-btn,
-  .traits-hub-panel .trait-controls .trait-btn {
+  .traits-hub-panel .trait-controls .trait-btn,
+  .index-load-more-card .db-btn {
     min-width: 44px;
     min-height: 44px;
   }
@@ -31,4 +32,36 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 12rem;
   }
+}
+
+/* The complete stylesheet is also mounted inside <shared-toolbar>'s shadow
+   root. Preserve the narrow-screen navigation fit that the former reduced
+   shadow sheet supplied. */
+@media (max-width: 340px) {
+  .toolbar.db-bottom-nav {
+    padding-inline: .5rem;
+  }
+
+  .toolbar .db-bottom-nav__item {
+    padding-inline: 0;
+  }
+}
+
+/* Popups and slide-in drawers must leave the page behind them untouched:
+   no blur and no darkening. Cover descendants for blur declarations, then
+   make only the backdrop layers transparent so dialog/panel surfaces remain
+   opaque and readable. */
+:is(.popup, .offcanvas, .db-drawer--structured),
+:is(.popup, .offcanvas, .db-drawer--structured) *,
+:is(.popup, .offcanvas, .db-drawer--structured)::before {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.popup,
+.db-drawer--structured,
+.db-drawer--structured::before,
+.db-drawer--structured > .db-drawer__overlay {
+  background-color: transparent !important;
+  background-image: none !important;
 }

@@ -24,8 +24,14 @@ const removeToolbarUiPref = (key) => {
     toolbarUiPrefsStorage?.removeItem?.(key);
   } catch {}
 };
-const SHADOW_STYLESHEET_HREF = 'css/toolbar-shadow.css';
-const POPUP_STYLESHEET_HREF = 'css/popup-shell.css';
+// Shadow DOM blocks the document stylesheet cascade. Keep the complete app
+// stylesheet attached here: drawers and popups reuse component classes whose
+// rules live across components.css, overlays.css, mobile.css, and motion.css.
+// It references the same fingerprinted asset and cache key as the document,
+// restoring the component contract without maintaining a second CSS bundle.
+const getShadowStylesheetHref = () => (
+  window.__symbaroumAppStylesheetHref || 'css/toolbar-shadow.css'
+);
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 const LEVEL_OPTION_SPECS = Object.freeze([
@@ -372,7 +378,17 @@ class SharedToolbar extends HTMLElement {
 
   /* ------------------------------------------------------- */
   connectedCallback() {
+    const ready = this.initialize();
+    this._readyPromise = ready;
+    window.__symbaroumToolbarReady = ready;
+  }
+
+  async initialize() {
+    // Build the shadow tree in one parse. Splitting this markup across tasks
+    // exposes incomplete drawers/popups and makes each fragment parse without
+    // the surrounding HTML context.
     this.render();
+    if (!this.isConnected) return;
     window.popupUi?.normalizeTree?.(this.shadowRoot, getPopupMetaById());
     window.DAUB?.init?.(this.shadowRoot);
     window.autoResizeAll?.(this.shadowRoot);
@@ -1476,8 +1492,7 @@ class SharedToolbar extends HTMLElement {
           }
         }
       </style>
-      <link rel="stylesheet" href="${SHADOW_STYLESHEET_HREF}">
-      <link rel="stylesheet" href="${POPUP_STYLESHEET_HREF}">
+      <link rel="stylesheet" href="${getShadowStylesheetHref()}">
       <!-- ---------- Verktygsrad ---------- -->
       <nav class="toolbar db-bottom-nav db-bottom-nav--always" aria-label="Primär navigering">
         <div class="toolbar-top">

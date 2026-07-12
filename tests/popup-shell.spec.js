@@ -95,6 +95,50 @@ async function expectEconomyPanelReady(page, tabId, contentSelector) {
   expect(geometry.visibleCardHeight, `${tabId} card is clipped out of the modal`).toBeGreaterThan(100);
 }
 
+async function expectNoBackdropBlur(locator, { includeBefore = false } = {}) {
+  const blurred = await locator.evaluate((root, inspectBefore) => {
+    const inspect = (element, pseudo) => {
+      const style = window.getComputedStyle(element, pseudo);
+      return {
+        target: pseudo || element.id || element.className || element.tagName,
+        backdropFilter: style.backdropFilter,
+        webkitBackdropFilter: style.webkitBackdropFilter
+      };
+    };
+    return [
+      inspect(root),
+      ...(inspectBefore ? [inspect(root, '::before')] : []),
+      ...Array.from(root.querySelectorAll('*')).map(element => inspect(element))
+    ].filter(result => (
+      result.backdropFilter !== 'none'
+      || (result.webkitBackdropFilter && result.webkitBackdropFilter !== 'none')
+    ));
+  }, includeBefore);
+  expect(blurred).toEqual([]);
+}
+
+async function expectTransparentBackdrop(locator, { includeBefore = false } = {}) {
+  const backdrops = await locator.evaluate((root, inspectBefore) => {
+    const inspect = (element, pseudo, target) => {
+      const style = window.getComputedStyle(element, pseudo);
+      return {
+        target,
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage
+      };
+    };
+    return [
+      inspect(root, null, 'root'),
+      ...(inspectBefore ? [inspect(root, '::before', '::before')] : [])
+    ];
+  }, includeBefore);
+
+  for (const backdrop of backdrops) {
+    expect(backdrop.backgroundColor, `${backdrop.target} darkens the page`).toBe('rgba(0, 0, 0, 0)');
+    expect(backdrop.backgroundImage, `${backdrop.target} adds a backdrop image`).toBe('none');
+  }
+}
+
 test('desktop Traits tabs each expose one full-width panel', async ({ page }, testInfo) => {
   test.skip(!['chromium', 'webkit'].includes(testInfo.project.name), 'Desktop release projects own this geometry contract.');
 
@@ -138,7 +182,10 @@ test('desktop Character Tools is a 700px two-column dialog', async ({ page }, te
   await waitForApp(page, '/#/character');
   const toolbar = page.locator('shared-toolbar');
   await toolbar.locator('#filterToggle').click();
-  await expect(toolbar.locator('#filterPanel')).toHaveAttribute('aria-hidden', 'false');
+  const filterPanel = toolbar.locator('#filterPanel');
+  await expect(filterPanel).toHaveAttribute('aria-hidden', 'false');
+  await expectNoBackdropBlur(filterPanel, { includeBefore: true });
+  await expectTransparentBackdrop(filterPanel, { includeBefore: true });
   const toolsButton = toolbar.locator('#characterToolsBtn');
   if (!(await toolsButton.isVisible())) {
     await toolbar.locator('#filterFormalCard .card-title').click();
@@ -210,6 +257,94 @@ test('toolbar popups use unified DAUB shell and shared choice markup', async ({ 
   expect(popupState.folderHasHeaderClose).toBe(true);
   expect(popupState.folderHasFooterDone).toBe(false);
   expect(popupState.folderUsesCheckboxRows).toBe(true);
+});
+
+test('shadow-root drawers and choice controls keep their complete component layout', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await waitForApp(page, '/#/index');
+
+  const toolbar = page.locator('shared-toolbar');
+  await toolbar.locator('#filterToggle').click();
+  const filterPanel = toolbar.locator('#filterPanel');
+  await expect(filterPanel).toHaveAttribute('aria-hidden', 'false');
+  await expectNoBackdropBlur(filterPanel, { includeBefore: true });
+  await expectTransparentBackdrop(filterPanel, { includeBefore: true });
+
+  const formalCard = toolbar.locator('#filterFormalCard');
+  if (await formalCard.evaluate(card => card.classList.contains('compact'))) {
+    await formalCard.locator('.card-title').click();
+  }
+  const actionRow = formalCard.locator('.char-btn-row').first();
+  await expect(actionRow).toBeVisible();
+
+  const drawerGeometry = await toolbar.locator('#filterPanel').evaluate(panel => {
+    const actionRow = panel.querySelector('#filterFormalCard .char-btn-row');
+    const panelSurface = panel.querySelector('.db-drawer__panel');
+    const rowStyle = actionRow ? window.getComputedStyle(actionRow) : null;
+    const panelStyle = panelSurface ? window.getComputedStyle(panelSurface) : null;
+    return {
+      actionDisplay: rowStyle?.display || '',
+      actionColumns: rowStyle?.gridTemplateColumns.split(/\s+/).filter(Boolean).length || 0,
+      surfacePosition: panelStyle?.position || '',
+      surfaceOverflowY: panelStyle?.overflowY || ''
+    };
+  });
+
+  expect(drawerGeometry.actionDisplay).toBe('grid');
+  expect(drawerGeometry.actionColumns).toBeGreaterThanOrEqual(1);
+  expect(drawerGeometry.surfacePosition).toBe('absolute');
+  expect(['auto', 'scroll']).toContain(drawerGeometry.surfaceOverflowY);
+
+  const settingsCard = toolbar.locator('#filterSettingsCard');
+  if (await settingsCard.evaluate(card => card.classList.contains('compact'))) {
+    await settingsCard.locator('.card-title').click();
+  }
+  await toolbar.locator('#entrySortBtn').click();
+  const sortPopup = toolbar.locator('#entrySortPopup');
+  await expect(sortPopup).toBeVisible();
+  await expectNoBackdropBlur(sortPopup);
+  await expectTransparentBackdrop(sortPopup);
+  const firstChoice = sortPopup.locator('.popup-choice-row.db-radio').first();
+  await expect(firstChoice).toBeVisible();
+
+  const choiceGeometry = await firstChoice.evaluate(row => {
+    const input = row.querySelector('.db-radio__input');
+    const indicator = row.querySelector('.db-radio__circle');
+    const inputStyle = input ? window.getComputedStyle(input) : null;
+    const indicatorRect = indicator?.getBoundingClientRect() || null;
+    return {
+      display: window.getComputedStyle(row).display,
+      inputPosition: inputStyle?.position || '',
+      inputOpacity: inputStyle?.opacity || '',
+      inputWidth: inputStyle?.width || '',
+      indicatorWidth: indicatorRect?.width || 0,
+      indicatorHeight: indicatorRect?.height || 0
+    };
+  });
+
+  expect(choiceGeometry.display).toBe('flex');
+  expect(choiceGeometry.inputPosition).toBe('absolute');
+  expect(choiceGeometry.inputOpacity).toBe('0');
+  expect(choiceGeometry.inputWidth).toBe('0px');
+  expect(choiceGeometry.indicatorWidth).toBe(20);
+  expect(choiceGeometry.indicatorHeight).toBe(20);
+
+  await firstChoice.click();
+  await expect(firstChoice.locator('.db-radio__input')).toBeChecked();
+  await sortPopup.locator('#entrySortCancel').click();
+  await expect(sortPopup).toBeHidden();
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await toolbar.locator('#entrySortBtn').click();
+    await expect(sortPopup).toBeVisible();
+    await sortPopup.locator('#entrySortCancel').click();
+    await expect(sortPopup).toBeHidden();
+  }
+
+  await toolbar.locator('#filterPanel button[data-close="filterPanel"]').click();
+  await expect(filterPanel).toHaveAttribute('aria-hidden', 'true');
+  await toolbar.locator('#filterToggle').click();
+  await expect(filterPanel).toHaveAttribute('aria-hidden', 'false');
 });
 
 test('inventory managers use the Rollpersonshantering shell and shared tools structure', async ({ page }) => {

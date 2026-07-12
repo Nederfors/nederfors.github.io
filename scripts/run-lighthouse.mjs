@@ -61,7 +61,7 @@ function collectRuntimeErrors(page) {
   return errors;
 }
 
-function readinessState(target) {
+export function readinessState(target) {
   const renderedState = element => {
     if (!element?.isConnected) return false;
     const style = window.getComputedStyle(element);
@@ -98,7 +98,7 @@ function readinessState(target) {
     viewRootRendered: renderedState(viewRoot),
     sentinelSelector: target.sentinel
   };
-  return {
+  const result = {
     ...state,
     ready: state.bootCompleted
       && state.bodyRole === target.role
@@ -111,6 +111,7 @@ function readinessState(target) {
       && state.sentinelRendered
       && state.viewRootRendered
   };
+  return target.readyOnly ? result.ready : result;
 }
 
 async function safeReadinessState(page, target) {
@@ -149,7 +150,7 @@ async function runUnthrottledPreflight(browser, target, url) {
     if (!response?.ok()) {
       throw new Error(`HTTP ${responseStatus ?? 'unknown'}`);
     }
-    await page.waitForFunction(readinessState, target, { timeout: 20_000, polling: 50 });
+    await page.waitForFunction(readinessState, { ...target, readyOnly: true }, { timeout: 20_000, polling: 50 });
     await page.waitForTimeout(250);
     state = await safeReadinessState(page, target);
     if (!state.ready) throw new Error(`invalid ready state: ${JSON.stringify(state)}`);
@@ -219,7 +220,7 @@ async function runThrottledColdStart(browser, target, url) {
     }
     const remainingMs = APP_READY_BUDGET_MS - (Date.now() - navigationStartedAt);
     if (remainingMs <= 0) throw new Error(`app-ready budget exceeded before readiness polling`);
-    await page.waitForFunction(readinessState, target, {
+    await page.waitForFunction(readinessState, { ...target, readyOnly: true }, {
       polling: 50,
       timeout: remainingMs
     });

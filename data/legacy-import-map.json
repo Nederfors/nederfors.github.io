@@ -76,6 +76,9 @@
     "Gryningsblod": "elix63",
     "Tunga vapen": "nv17"
   },
+  "entry_display_names": {
+    "form71": "Krigarens skärpa"
+  },
   "quality_name_aliases": {
     "Balanserad": "Balanserat"
   },

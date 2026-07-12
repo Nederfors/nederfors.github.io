@@ -78,6 +78,10 @@ function visualDifference(actual, expected) {
 }
 
 export async function expectPortablePopupScreenshot(locator, name, testInfo) {
+  // Pointer-triggered launchers can be replaced by a popup control at the same
+  // screen coordinates. Move away so reviewed references capture the neutral
+  // control state instead of an incidental hover.
+  await locator.page().mouse.move(0, 0);
   await expectPopupViewportFit(locator);
 
   const useExactDarwinReference = process.platform === 'darwin'

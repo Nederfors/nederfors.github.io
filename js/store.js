@@ -9,6 +9,9 @@
   const STORAGE_META_KEY = 'rpall-meta';
   const STORAGE_CHAR_PREFIX = 'rpall-char-';
   const ENTRY_SORT_DEFAULT = (global.ENTRY_SORT_DEFAULT || 'alpha-asc');
+  const CHARACTER_FILE_FORMAT = 'symbapedia-character';
+  const CHARACTER_FILE_FORMAT_VERSION = 2;
+  const CHARACTER_RULESET_VERSION = 3;
 
   const charStorageKey = (id) => `${STORAGE_CHAR_PREFIX}${id}`;
 
@@ -104,6 +107,7 @@
     raw: raw && typeof raw === 'object' && !Array.isArray(raw) ? cloneValue(raw) : {},
     entryIdAliases: normalizeAliasMap(raw?.entry_id_aliases),
     entryNameAliases: normalizeAliasMap(raw?.entry_name_aliases),
+    entryDisplayNames: normalizeAliasMap(raw?.entry_display_names),
     qualityNameAliases: normalizeAliasMap(raw?.quality_name_aliases),
     typeAliases: normalizeAliasMap(raw?.type_aliases)
   });
@@ -127,6 +131,10 @@
 
   function canonicalizeLegacyEntryNameToId(name) {
     return aliasLookup(legacyImportMap.entryNameAliases, name);
+  }
+
+  function getLegacyEntryDisplayName(id) {
+    return aliasLookup(legacyImportMap.entryDisplayNames, canonicalizeLegacyEntryId(id));
   }
 
   function canonicalizeLegacyQualityName(name) {
@@ -220,7 +228,12 @@
     const effectiveId = nameMappedId || mappedId || idText;
     const entry = lookupCanonicalEntry(effectiveId, nameText, custom);
     const resolvedId = entry?.id !== undefined ? String(entry.id).trim() : effectiveId;
-    const resolvedName = String(entry?.namn ?? entry?.name ?? nameText ?? '').trim();
+    const preserveExplicitName = options.preserveExplicitName !== false && Boolean(nameText) && !nameMappedId;
+    const resolvedName = String(
+      preserveExplicitName
+        ? nameText
+        : (entry?.namn ?? entry?.name ?? nameText ?? '')
+    ).trim();
     let changed = false;
 
     if (resolvedId && target.id !== resolvedId) {
@@ -1357,7 +1370,7 @@
 
       initializeEntryMetadata(data);
 
-      return { data, mutated };
+      return { data, mutated, idMap };
     }
 
   /* ---------- 1. Grund­struktur ---------- */
@@ -4891,6 +4904,59 @@ function defaultTraits() {
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
+  function isLegacyCharacterFile(obj) {
+    const format = String(obj?.format || '').trim();
+    const version = Number(obj?.formatVersion);
+    return format !== CHARACTER_FILE_FORMAT
+      || !Number.isFinite(version)
+      || version < CHARACTER_FILE_FORMAT_VERSION;
+  }
+
+  function applyLegacyImportedDisplayNames(data) {
+    if (!data || typeof data !== 'object') return;
+    const rewrite = (target, field) => {
+      if (!target || typeof target !== 'object') return;
+      const id = target.id ?? target.i;
+      const displayName = getLegacyEntryDisplayName(id);
+      if (displayName) target[field] = displayName;
+    };
+    (Array.isArray(data.list) ? data.list : []).forEach(entry => rewrite(entry, 'namn'));
+    const rewriteInventory = rows => (Array.isArray(rows) ? rows : []).forEach(row => {
+      if (!row || typeof row !== 'object' || row.typ === 'currency') return;
+      rewrite(row, 'name');
+      rewriteInventory(row.contains);
+    });
+    rewriteInventory(data.inventory);
+    const setup = data.defenseSetup;
+    if (setup && typeof setup === 'object') {
+      rewrite(setup.armor, 'name');
+      (Array.isArray(setup.weapons) ? setup.weapons : []).forEach(item => rewrite(item, 'name'));
+      rewrite(setup.dancingWeapon, 'name');
+      Object.values(setup.separateWeapons || {}).flat().forEach(item => rewrite(item, 'name'));
+    }
+  }
+
+  function prepareImportedCharacterData(store, id, obj, charMeta) {
+    const source = cloneValue(obj?.data);
+    const usedCustomIds = collectUsedCustomIds(store);
+    const { data, idMap } = normalizeCharacterData(
+      store,
+      id,
+      source && typeof source === 'object' ? source : {},
+      charMeta,
+      usedCustomIds
+    );
+
+    // Character files store selected entries compactly. Resolve those
+    // references after defaults, custom-ID remaps, and legacy aliases have
+    // been normalized into one canonical import payload.
+    data.list = expandList(data.list, data.custom, idMap);
+    canonicalizeCharacterReferences(data, { custom: data.custom });
+    if (isLegacyCharacterFile(obj)) applyLegacyImportedDisplayNames(data);
+    initializeEntryMetadata(data);
+    return data;
+  }
+
   function exportCharacterJSON(store, id, includeFolder = true) {
     const charId = id || store.current;
     if (!charId) return null;
@@ -4916,6 +4982,9 @@ function defaultTraits() {
       }
     }
     return {
+      format: CHARACTER_FILE_FORMAT,
+      formatVersion: CHARACTER_FILE_FORMAT_VERSION,
+      rulesetVersion: CHARACTER_RULESET_VERSION,
       name: char.name,
       ...folderPayload,
       data: stripDefaults({
@@ -4962,35 +5031,10 @@ function defaultTraits() {
           if (standard) folderId = standard.id;
         }
       } catch {}
-      store.characters.push({ id, name: obj.name || 'Ny rollperson', folderId });
-      const data = obj.data || {};
-      const usedIds = collectUsedCustomIds(store);
-      const prefix = makeCustomIdPrefix(obj.name || '', id);
-      const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
-      data.list = expandList(data.list, custom, idMap);
-      data.inventory = expandInventory(data.inventory, custom, idMap);
-      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
-        data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
-      }
-      canonicalizeCharacterReferences(data, { custom });
-      store.data[id] = {
-        custom: [],
-        artifactEffects: defaultArtifactEffects(),
-        bonusMoney: defaultMoney(),
-        savedUnusedMoney: defaultMoney(),
-        privMoney: defaultMoney(),
-        possessionMoney: defaultMoney(),
-        possessionRemoved: 0,
-        notes: defaultNotes(),
-        liveMode: false,
-        ...data,
-        custom,
-        inventory: data.inventory
-      };
-      if (!store.data[id].notes) {
-        store.data[id].notes = defaultNotes();
-      }
-      initializeEntryMetadata(store.data[id]);
+      const charMeta = { id, name: obj?.name || 'Ny rollperson', folderId };
+      const data = prepareImportedCharacterData(store, id, obj, charMeta);
+      store.characters.push(charMeta);
+      store.data[id] = data;
       store.current = id;
       persistMeta(store);
       persistCharacter(store, id);

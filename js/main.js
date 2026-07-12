@@ -5795,23 +5795,32 @@ async function driveDownloadFile(fileId) {
   return await res.text();
 }
 
+async function createFullDatabaseCharacterImporter() {
+  await ensureFullDatabase();
+  if (databaseMode !== 'full') {
+    throw new Error('Full database is required before importing characters.');
+  }
+  return payload => storeHelper.importCharacterJSON(store, payload);
+}
+
 async function driveImportFile(fileId) {
   const text = await driveDownloadFile(fileId);
   const obj = JSON.parse(text);
+  const importCharacterJSON = await createFullDatabaseCharacterImporter();
   let imported = 0;
 
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      const id = storeHelper.importCharacterJSON(store, item);
+      const id = importCharacterJSON(item);
       if (id) imported++;
     }
   } else if (obj && Array.isArray(obj.characters)) {
     for (const item of obj.characters) {
-      const id = storeHelper.importCharacterJSON(store, item);
+      const id = importCharacterJSON(item);
       if (id) imported++;
     }
   } else if (obj && typeof obj === 'object') {
-    const id = storeHelper.importCharacterJSON(store, obj);
+    const id = importCharacterJSON(obj);
     if (id) imported++;
   }
 
@@ -5826,6 +5835,7 @@ async function driveImportFile(fileId) {
 
 async function driveImportFiles(fileIds) {
   const ids = Array.isArray(fileIds) ? fileIds.filter(Boolean) : [];
+  const importCharacterJSON = await createFullDatabaseCharacterImporter();
   let importedTotal = 0;
   let successFiles = 0;
   let failedFiles = 0;
@@ -5839,16 +5849,16 @@ async function driveImportFiles(fileIds) {
 
       if (Array.isArray(obj)) {
         for (const item of obj) {
-          const id = storeHelper.importCharacterJSON(store, item);
+          const id = importCharacterJSON(item);
           if (id) imported++;
         }
       } else if (obj && Array.isArray(obj.characters)) {
         for (const item of obj.characters) {
-          const id = storeHelper.importCharacterJSON(store, item);
+          const id = importCharacterJSON(item);
           if (id) imported++;
         }
       } else if (obj && typeof obj === 'object') {
-        const id = storeHelper.importCharacterJSON(store, obj);
+        const id = importCharacterJSON(obj);
         if (id) imported++;
       }
 
@@ -5900,6 +5910,7 @@ async function importCharactersFromLocal(settings) {
       files = await pickJsonFilesWithFallback();
     }
 
+    const importCharacterJSON = await createFullDatabaseCharacterImporter();
     const override = settings.mode === 'choose';
     let targetFolderId = '';
     let targetFolderName = '';
@@ -5935,7 +5946,7 @@ async function importCharactersFromLocal(settings) {
               const payload = override
                 ? { ...item, folder: targetFolderName, folderId: targetFolderId }
                 : item;
-              const id = storeHelper.importCharacterJSON(store, payload);
+              const id = importCharacterJSON(payload);
               if (id) {
                 imported++;
                 try {
@@ -5960,7 +5971,7 @@ async function importCharactersFromLocal(settings) {
                     payload = { ...item, folder: fname };
                     if (fid) payload.folderId = fid;
                   }
-                  const id = storeHelper.importCharacterJSON(store, payload);
+                  const id = importCharacterJSON(payload);
                   if (id) {
                     imported++;
                     try {
@@ -5979,7 +5990,7 @@ async function importCharactersFromLocal(settings) {
               const payload = override
                 ? { ...item, folder: targetFolderName, folderId: targetFolderId }
                 : item;
-              const id = storeHelper.importCharacterJSON(store, payload);
+              const id = importCharacterJSON(payload);
               if (id) {
                 imported++;
                 try {
@@ -5994,7 +6005,7 @@ async function importCharactersFromLocal(settings) {
           const payload = override
             ? { ...obj, folder: targetFolderName, folderId: targetFolderId }
             : obj;
-          const res = storeHelper.importCharacterJSON(store, payload);
+          const res = importCharacterJSON(payload);
           if (res) {
             imported++;
             try {

@@ -129,10 +129,13 @@ async function loadBundleOrScripts(bundleSrc, sources = []) {
 
 export function ensureSharedScripts() {
   if (!sharedScriptsPromise) {
-    sharedScriptsPromise = loadBundleOrScripts(
-      BUNDLE_SCRIPTS.shared,
-      [...PRELOAD_SCRIPTS, ...CORE_SCRIPTS]
-    );
+    sharedScriptsPromise = (async () => {
+      await loadBundleOrScripts(
+        BUNDLE_SCRIPTS.shared,
+        [...PRELOAD_SCRIPTS, ...CORE_SCRIPTS]
+      );
+      await window.__symbaroumToolbarReady;
+    })();
   }
   return sharedScriptsPromise;
 }

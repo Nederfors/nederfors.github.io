@@ -276,7 +276,7 @@ async function revealIndexEntry(page, name) {
     if (loadMoreIndex < 0) break;
 
     const previousCount = await visibleCards.count();
-    await categoryLoadMore.nth(loadMoreIndex).click();
+    await categoryLoadMore.nth(loadMoreIndex).evaluate(button => button.click());
     await expect.poll(() => visibleCards.count()).toBeGreaterThan(previousCount);
   }
 

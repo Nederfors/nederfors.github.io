@@ -15,6 +15,48 @@ function readLegacyFixtures() {
   });
 }
 
+async function readImportedParityState(page) {
+  return page.evaluate(() => {
+    const activeStore = window.storeHelper.load();
+    const flattenInventory = rows => (Array.isArray(rows) ? rows : []).flatMap(row => (
+      [row, ...flattenInventory(row?.contains)]
+    ));
+    const characters = (activeStore.characters || []).map(char => {
+      activeStore.current = char.id;
+      const data = activeStore.data[char.id] || {};
+      const list = window.storeHelper.getCurrentList(activeStore);
+      const artifactEffects = window.storeHelper.getArtifactEffects(activeStore);
+      const manualAdjustments = window.storeHelper.getManualAdjustments(activeStore);
+      const combinedEffects = {
+        xp: Number(artifactEffects?.xp || 0) + Number(manualAdjustments?.xp || 0),
+        corruption: Number(artifactEffects?.corruption || 0) + Number(manualAdjustments?.corruption || 0),
+        toughness: Number(artifactEffects?.toughness || 0) + Number(manualAdjustments?.toughness || 0),
+        pain: Number(artifactEffects?.pain || 0) + Number(manualAdjustments?.pain || 0),
+        capacity: Number(artifactEffects?.capacity || 0) + Number(manualAdjustments?.capacity || 0)
+      };
+      const baseXp = window.storeHelper.getBaseXP(activeStore);
+      const usedXp = window.storeHelper.calcUsedXP(list, combinedEffects);
+      const totalXp = window.storeHelper.calcTotalXP(baseXp, list);
+      return {
+        name: char.name,
+        xp: { baseXp, totalXp, usedXp, freeXp: totalXp - usedXp },
+        selectedCount: list.length,
+        catalogSummaryCount: list.filter(entry => entry?.__catalogSummary).length,
+        inventoryCount: flattenInventory(data.inventory).length,
+        selected: list.map(entry => [entry.id || '', entry.namn || '', entry.nivå || '']),
+        defenseSetup: data.defenseSetup || null,
+        custom: (data.custom || []).map(entry => [entry.id || '', entry.namn || '']),
+        inventory: flattenInventory(data.inventory).map(row => [row?.id || '', row?.name || '', row?.qty || 1])
+      };
+    });
+    activeStore.current = activeStore.characters.at(-1)?.id || '';
+    return {
+      databaseMode: window.catalogLoader?.mode || '',
+      characters
+    };
+  });
+}
+
 test('legacy character imports canonicalize weapon ids in the browser app', async ({ page }) => {
   const fixtures = readLegacyFixtures();
 
@@ -232,4 +274,107 @@ test('browser import maps ambiguous legacy elixir names to their canonical Novis
     ['elix63', 'Gryningsblod (Novis)'],
     ['elix66', 'Essensdrapa (Novis)']
   ]);
+});
+
+test('real OLD_VERSION batch import hydrates the full catalog and survives reload', async ({ page }) => {
+  test.setTimeout(60_000);
+  const expected = {
+    Briost: { xp: { baseXp: 260, totalXp: 285, usedXp: 285, freeXp: 0 }, selectedCount: 21, inventoryCount: 14 },
+    Brumhildemei: { xp: { baseXp: 300, totalXp: 320, usedXp: 280, freeXp: 40 }, selectedCount: 19, inventoryCount: 3 },
+    Hurley: { xp: { baseXp: 261, totalXp: 281, usedXp: 280, freeXp: 1 }, selectedCount: 18, inventoryCount: 21 },
+    Clemens: { xp: { baseXp: 300, totalXp: 325, usedXp: 330, freeXp: -5 }, selectedCount: 22, inventoryCount: 7 },
+    Testperson: { xp: { baseXp: 250, totalXp: 250, usedXp: 60, freeXp: 190 }, selectedCount: 1, inventoryCount: 13 },
+    Rex: { xp: { baseXp: 256, totalXp: 281, usedXp: 275, freeXp: 6 }, selectedCount: 30, inventoryCount: 36 },
+    Magnum: { xp: { baseXp: 268, totalXp: 293, usedXp: 276, freeXp: 17 }, selectedCount: 29, inventoryCount: 29 }
+  };
+
+  await page.addInitScript(() => {
+    for (const key of ['showOpenFilePicker', 'showDirectoryPicker']) {
+      try {
+        Object.defineProperty(window, key, {
+          configurable: true,
+          writable: true,
+          value: undefined
+        });
+      } catch {
+        try { window[key] = undefined; } catch {}
+      }
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  await page.goto('/#/index');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  expect(await page.evaluate(() => window.catalogLoader?.mode)).toBe('catalog');
+
+  const toolbar = page.locator('shared-toolbar');
+  await toolbar.locator('#filterToggle').click();
+  const storageButton = toolbar.locator('#driveStorageBtn');
+  if (!(await storageButton.isVisible())) {
+    await toolbar.locator('#filterFormalCard .card-title').click();
+  }
+  await storageButton.click();
+  const storagePopup = toolbar.locator('#driveStoragePopup');
+  await storagePopup.locator('#driveStorageTab-import').click();
+  const importButton = storagePopup
+    .locator('#driveStoragePanel-import button')
+    .filter({ hasText: /^Importera till vald mapp$/ });
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await importButton.click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles(path.join(CHARACTER_DIR, 'Rollpersoner.json'));
+
+  await expect.poll(() => page.evaluate(() => window.storeHelper.load().characters.length)).toBe(7);
+  await expect(toolbar.locator('#xpOut')).toHaveText('17');
+
+  const beforeReload = await readImportedParityState(page);
+  expect(beforeReload.databaseMode).toBe('full');
+  expect(beforeReload.characters.map(char => char.name)).toEqual(Object.keys(expected));
+  beforeReload.characters.forEach(char => {
+    expect({
+      xp: char.xp,
+      selectedCount: char.selectedCount,
+      inventoryCount: char.inventoryCount
+    }, char.name).toEqual(expected[char.name]);
+    expect(char.catalogSummaryCount, `${char.name}: summary entries`).toBe(0);
+  });
+
+  const clemens = beforeReload.characters.find(char => char.name === 'Clemens');
+  expect(clemens.selected).toContainEqual(['form71', 'Krigarens skärpa', 'Mästare']);
+  const rex = beforeReload.characters.find(char => char.name === 'Rex');
+  expect(rex.inventory).toContainEqual(['di10', 'Flinta & stål', 1]);
+  const magnum = beforeReload.characters.find(char => char.name === 'Magnum');
+  expect(magnum.custom.filter(([, name]) => name === 'Ruinen')).toHaveLength(3);
+
+  if (await toolbar.locator('#filterPanel').getAttribute('aria-hidden') !== 'false') {
+    await toolbar.locator('#filterToggle').click();
+  }
+  const charSelect = toolbar.locator('#charSelect');
+  if (!(await charSelect.isVisible())) {
+    await toolbar.locator('#filterFormalCard .card-title').click();
+  }
+  await charSelect.selectOption({ label: 'Clemens' });
+  await expect(toolbar.locator('#xpOut')).toHaveText('-5');
+  await toolbar.locator('#filterPanel aside button[data-close="filterPanel"]').click();
+  await toolbar.locator('#characterLink').click();
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'character'
+    && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+  ));
+  const legacyAbility = page.locator('#valda li[data-id="form71"]');
+  await expect(legacyAbility).toHaveCount(1);
+  await expect(legacyAbility).toContainText('Krigarens skärpa');
+  await expect(legacyAbility.locator('select.level')).toHaveValue('Mästare');
+  await legacyAbility.evaluate(element => {
+    const group = element.closest('details');
+    if (group) group.open = true;
+  });
+  await expect(legacyAbility).toBeVisible();
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => page.evaluate(() => window.storeHelper.load().characters.length)).toBe(7);
+  const afterReload = await readImportedParityState(page);
+  expect(afterReload.characters).toEqual(beforeReload.characters);
 });

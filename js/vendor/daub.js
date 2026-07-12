@@ -2043,6 +2043,9 @@
     ];
     checks.forEach(function(c) {
       root.querySelectorAll(c[0]).forEach(function(el) {
+        // Entry lists are populated asynchronously by the active route. An empty
+        // list during DAUB's initial DOM scan is valid, not malformed markup.
+        if (c[0] === '.db-accordion' && el.hasAttribute('data-entry-page') && !el.children.length) return;
         if (!el.querySelector(c[1])) console.warn(c[2], el);
       });
     });
