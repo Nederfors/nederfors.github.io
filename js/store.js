@@ -23,6 +23,11 @@
   const SNAPSHOT_RULES_KEY = 'snapshotRules';
   const SNAPSHOT_SOURCE_TYPE_ENTRY = 'entry';
   const SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING = 'artifact_binding';
+  const CURRENT_LIST_RECONCILIATION_VERSION_KEY = 'currentListReconciliationVersion';
+  const CURRENT_LIST_RECONCILIATION_STATE_KEY = 'currentListReconciliationState';
+  // Bump whenever the full reconciliation invariants change. Characters from
+  // an older build take one full pass before single-add increments are trusted.
+  const CURRENT_LIST_RECONCILIATION_VERSION = 2;
 
   const normalizeEntrySort = (mode) => {
     if (typeof global.normalizeEntrySortMode === 'function') {
@@ -516,7 +521,9 @@
     'suppressedEntryGrants',
     'darkPastSuppressed',
     SNAPSHOT_RULES_KEY,
-    'revealedArtifacts'
+    'revealedArtifacts',
+    CURRENT_LIST_RECONCILIATION_VERSION_KEY,
+    CURRENT_LIST_RECONCILIATION_STATE_KEY
   ]);
   const CUSTOM_ENTRY_MUTATION_FIELDS = Object.freeze([
     'custom',
@@ -785,6 +792,13 @@
     });
 
     if (mutated) {
+      if (res.updated > 0) {
+        // Catalog replacement can change grants, conflicts, snapshots, or
+        // list-wide dependencies without changing list topology. Force the
+        // next setCurrentList call through the full reconciliation path.
+        delete store.data[charId][CURRENT_LIST_RECONCILIATION_VERSION_KEY];
+        delete store.data[charId][CURRENT_LIST_RECONCILIATION_STATE_KEY];
+      }
       store.data[charId].list = list;
       persistCharacter(store, charId);
     }
@@ -858,6 +872,184 @@
     data.entryOrderCounter = counter;
   }
 
+  const CURRENT_LIST_ENTRY_RUNTIME_KEYS = new Set([
+    '__uid',
+    '__order'
+  ]);
+
+  function currentListEntryMutationSignature(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const comparable = {};
+    Object.keys(entry).forEach(key => {
+      if (CURRENT_LIST_ENTRY_RUNTIME_KEYS.has(key)) return;
+      comparable[key] = entry[key];
+    });
+    return stableSignature(comparable);
+  }
+
+  function normalizeCurrentListMoneyGrant(raw) {
+    const value = raw && typeof raw === 'object' ? raw : {};
+    return {
+      daler: Math.max(0, Math.floor(Number(value.daler || 0))),
+      skilling: Math.max(0, Math.floor(Number(value.skilling || 0))),
+      ortegar: Math.max(0, Math.floor(Number(value.ortegar ?? value['örtegar'] ?? 0)))
+    };
+  }
+
+  function normalizeCurrentListReconciliationState(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    if (typeof raw.hasListWideRules !== 'boolean') return null;
+    if (!raw.moneyGrant || typeof raw.moneyGrant !== 'object') return null;
+    return {
+      hasListWideRules: raw.hasListWideRules,
+      moneyGrant: normalizeCurrentListMoneyGrant(raw.moneyGrant)
+    };
+  }
+
+  function needsCurrentListReconciliation(store, charId = store?.current) {
+    const id = charId === undefined || charId === null ? '' : String(charId).trim();
+    if (!id) return false;
+    const data = store?.data?.[id];
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+    if (data[CURRENT_LIST_RECONCILIATION_VERSION_KEY] !== CURRENT_LIST_RECONCILIATION_VERSION) {
+      return true;
+    }
+    return !normalizeCurrentListReconciliationState(
+      data[CURRENT_LIST_RECONCILIATION_STATE_KEY]
+    );
+  }
+
+  function currentListRequiresFullReconciliation(entries) {
+    try {
+      return Boolean(global.rulesHelper?.requiresFullListReconciliation?.(entries));
+    } catch (_) {
+      return true;
+    }
+  }
+
+  function analyzeSingleEntryAddition(store, prevList, nextList) {
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const next = Array.isArray(nextList) ? nextList : [];
+    const full = (reason) => ({
+      mode: 'full',
+      reason,
+      addedEntry: null,
+      addedIndex: -1,
+      previousLength: prev.length
+    });
+
+    // A caller that mutates the live array destroys the before/after boundary.
+    // Never infer a fast path from that input even if the lengths look plausible.
+    if (prev === next) return full('same-array');
+    if (next.length !== prev.length + 1) return full('non-single-add');
+
+    const prevByUid = new Map();
+    for (const entry of prev) {
+      const uid = String(entry?.__uid || '').trim();
+      if (!uid || prevByUid.has(uid)) return full('missing-or-duplicate-previous-uid');
+      prevByUid.set(uid, entry);
+    }
+
+    const seenPreviousUids = new Set();
+    let addedEntry = null;
+    let addedIndex = -1;
+    for (let index = 0; index < next.length; index += 1) {
+      const entry = next[index];
+      const uid = String(entry?.__uid || '').trim();
+      const previous = uid ? prevByUid.get(uid) : null;
+      if (!previous) {
+        if (addedEntry) return full('multiple-added-entries');
+        addedEntry = entry;
+        addedIndex = index;
+        continue;
+      }
+      if (seenPreviousUids.has(uid)) return full('duplicate-next-uid');
+      seenPreviousUids.add(uid);
+      if (currentListEntryMutationSignature(previous) !== currentListEntryMutationSignature(entry)) {
+        return full('existing-entry-changed');
+      }
+    }
+
+    if (!addedEntry || seenPreviousUids.size !== prev.length) return full('ambiguous-topology');
+    // Full reconciliation is order-sensitive. The add UI appends, so only that
+    // shape can reuse the already-valid retained prefix safely.
+    if (addedIndex !== next.length - 1) return full('inserted-before-existing-entry');
+    const data = store?.current ? store.data?.[store.current] : null;
+    if (data?.[CURRENT_LIST_RECONCILIATION_VERSION_KEY] !== CURRENT_LIST_RECONCILIATION_VERSION) {
+      return full('reconciliation-version-mismatch');
+    }
+    const reconciliationState = normalizeCurrentListReconciliationState(
+      data?.[CURRENT_LIST_RECONCILIATION_STATE_KEY]
+    );
+    if (!reconciliationState) return full('reconciliation-state-missing');
+    if (reconciliationState.hasListWideRules) return full('list-wide-rule');
+    if (currentListRequiresFullReconciliation([addedEntry])) return full('list-wide-rule');
+    return {
+      mode: 'incremental',
+      reason: 'single-entry-add',
+      addedEntry,
+      addedIndex,
+      previousLength: prev.length
+    };
+  }
+
+  function collectAppendedEntriesAfterGrantSync(prevList, nextList, expectedFirstEntry) {
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const next = Array.isArray(nextList) ? nextList : [];
+    if (next.length <= prev.length) return null;
+
+    for (let index = 0; index < prev.length; index += 1) {
+      const previous = prev[index];
+      const candidate = next[index];
+      const previousUid = String(previous?.__uid || '').trim();
+      const candidateUid = String(candidate?.__uid || '').trim();
+      if (!previousUid || previousUid !== candidateUid) return null;
+      if (currentListEntryMutationSignature(previous) !== currentListEntryMutationSignature(candidate)) {
+        return null;
+      }
+    }
+
+    const appended = next.slice(prev.length);
+    if (!appended.length || appended[0] !== expectedFirstEntry) return null;
+    const previousUids = new Set(prev.map(entry => String(entry?.__uid || '').trim()).filter(Boolean));
+    if (appended.some(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      return uid && previousUids.has(uid);
+    })) return null;
+    return appended;
+  }
+
+  function syncAddedEntryMetadata(store, entries) {
+    if (!store?.current) return;
+    const data = store.data?.[store.current];
+    if (!data) return;
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    (Array.isArray(entries) ? entries : []).forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
+
+  function ensureEntriesAppliedDigests(entries) {
+    let mutated = false;
+    (Array.isArray(entries) ? entries : []).forEach(entry => {
+      if (!entry || typeof entry !== 'object' || entry.__appliedDigest) return;
+      const { dbDigest } = lookupDbEntryInfo(entry);
+      const digest = ensureAppliedDigest(entry, dbDigest);
+      if (digest) mutated = true;
+    });
+    return mutated;
+  }
+
   function snapshotCurrentListMutationState(store) {
     if (!store?.current) return null;
     const data = store.data?.[store.current];
@@ -871,7 +1063,11 @@
       revealedArtifacts: stableSignature(Array.isArray(data.revealedArtifacts) ? data.revealedArtifacts : []),
       privMoney: stableSignature(normalizeMoney(data.privMoney || defaultMoney())),
       possessionMoney: stableSignature(normalizeMoney(data.possessionMoney || defaultMoney())),
-      bonusMoney: stableSignature(normalizeMoney(data.bonusMoney || defaultMoney()))
+      bonusMoney: stableSignature(normalizeMoney(data.bonusMoney || defaultMoney())),
+      reconciliationVersion: data[CURRENT_LIST_RECONCILIATION_VERSION_KEY],
+      reconciliationState: stableSignature(
+        normalizeCurrentListReconciliationState(data[CURRENT_LIST_RECONCILIATION_STATE_KEY])
+      )
     };
   }
 
@@ -936,6 +1132,8 @@
     const darkPastSuppressedChanged = beforeState?.darkPastSuppressed !== afterState?.darkPastSuppressed;
     const snapshotRulesChanged = Boolean(options.snapshotRulesChanged)
       || beforeState?.snapshotRules !== afterState?.snapshotRules;
+    const reconciliationVersionChanged = beforeState?.reconciliationVersion !== afterState?.reconciliationVersion;
+    const reconciliationStateChanged = beforeState?.reconciliationState !== afterState?.reconciliationState;
 
     const changedFields = ['list'];
     if (inventoryChanged) changedFields.push('inventory');
@@ -947,6 +1145,8 @@
     if (darkPastSuppressedChanged) changedFields.push('darkPastSuppressed');
     if (snapshotRulesChanged) changedFields.push(SNAPSHOT_RULES_KEY);
     if (revealedChanged) changedFields.push('revealedArtifacts');
+    if (reconciliationVersionChanged) changedFields.push(CURRENT_LIST_RECONCILIATION_VERSION_KEY);
+    if (reconciliationStateChanged) changedFields.push(CURRENT_LIST_RECONCILIATION_STATE_KEY);
 
     return {
       changedFields,
@@ -956,7 +1156,9 @@
       grantedEntriesAdded: normalizeGrantedEntryList(options.grantedEntriesAdded, afterState?.list),
       inventoryChanged,
       moneyChanged,
-      revealedChanged
+      revealedChanged,
+      reconciliationMode: options.reconciliationMode === 'incremental' ? 'incremental' : 'full',
+      reconciliationReason: String(options.reconciliationReason || '')
     };
   }
 
@@ -2198,6 +2400,55 @@
     return changed;
   }
 
+  function syncAddedEntryRuleGrants(store, list, addedEntries, options = {}) {
+    if (!store?.current) return false;
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return false;
+    const now = Array.isArray(list) ? list : [];
+    const additions = Array.isArray(addedEntries) ? addedEntries.filter(Boolean) : [];
+    if (!additions.length) return false;
+
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const grantedEntriesAdded = Array.isArray(options?.grantedEntriesAdded)
+      ? options.grantedEntriesAdded
+      : null;
+    const suppressed = normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants);
+    const legacyTargetKey = `name:${normalizeEntryGrantName('Mörkt förflutet')}`;
+    if (data.darkPastSuppressed) {
+      addSuppressedEntryGrant(suppressed, 'Mörkt blod', legacyTargetKey);
+    }
+
+    const desiredBySource = new Map();
+    global.rulesHelper.getEntryGrantTargets(additions).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      const sourceTargets = desiredBySource.get(source);
+      if (!sourceTargets.has(resolvedTarget.key)) sourceTargets.set(resolvedTarget.key, resolvedTarget);
+    });
+
+    let changed = false;
+    desiredBySource.forEach((targets, source) => {
+      targets.forEach(target => {
+        if (listHasEntryByGrantTarget(now, target)) {
+          removeSuppressedEntryGrant(suppressed, source, target.key);
+          return;
+        }
+        if (!target?.entry || isSuppressedEntryGrant(suppressed, source, target.key)) return;
+        const grantedEntry = { ...target.entry };
+        if (isHamnskifteGrantEntry(grantedEntry)) grantedEntry.form = 'beast';
+        now.push(grantedEntry);
+        if (grantedEntriesAdded) grantedEntriesAdded.push(grantedEntry);
+        changed = true;
+      });
+    });
+
+    data.suppressedEntryGrants = suppressed;
+    data.darkPastSuppressed = isSuppressedEntryGrant(suppressed, 'Mörkt blod', legacyTargetKey);
+    return changed;
+  }
+
   function enforceEarthbound(list) {
     // Tidigare blockerades "Mörkt förflutet" av "Jordnära".
     // Ny regel: tillåtet – ingen borttagning här.
@@ -2248,6 +2499,57 @@
     if (kept.length !== list.length) {
       list.splice(0, list.length, ...kept);
     }
+  }
+
+  function enforceRuleConflictsForAppendedEntries(list, retainedPrefixLength) {
+    if (!Array.isArray(list) || list.length <= retainedPrefixLength) return true;
+    const hasResolutionHelper = typeof global.rulesHelper?.getConflictResolutionForCandidate === 'function';
+    const hasReasonHelper = typeof global.rulesHelper?.getConflictReasonsForCandidate === 'function';
+    if (!hasResolutionHelper && !hasReasonHelper) return true;
+
+    const normalizeName = (value) => String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    const kept = list.slice(0, retainedPrefixLength);
+    const appended = list.slice(retainedPrefixLength);
+
+    appended.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.manualRuleOverride) {
+        kept.push(entry);
+        return;
+      }
+      const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
+      const resolution = hasResolutionHelper
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        : {
+          blockingReasons: hasReasonHelper
+            ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level })
+            : [],
+          replaceTargetNames: []
+        };
+      if (resolution.blockingReasons.length) return;
+      if (Array.isArray(resolution.replaceTargetNames) && resolution.replaceTargetNames.length) {
+        const replaceSet = new Set(
+          resolution.replaceTargetNames
+            .map(name => normalizeName(name))
+            .filter(Boolean)
+        );
+        for (let index = kept.length - 1; index >= 0; index -= 1) {
+          if (replaceSet.has(normalizeName(kept[index]?.namn || '')) && !kept[index]?.manualRuleOverride) {
+            kept.splice(index, 1);
+          }
+        }
+      }
+      kept.push(entry);
+    });
+
+    if (kept.length !== list.length || kept.some((entry, index) => entry !== list[index])) {
+      list.splice(0, list.length, ...kept);
+    }
+    return true;
   }
 
   function normalizeGrantSourceName(value) {
@@ -2421,6 +2723,62 @@
     return changed;
   }
 
+  function syncAddedEntryInventoryGrants(store, addedEntries) {
+    if (!store?.current) return false;
+    if (typeof global.rulesHelper?.getInventoryGrantItems !== 'function') return false;
+    const additions = Array.isArray(addedEntries) ? addedEntries.filter(Boolean) : [];
+    if (!additions.length) return false;
+
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const inv = Array.isArray(data.inventory) ? data.inventory : [];
+    const grants = global.rulesHelper.getInventoryGrantItems(additions);
+    let changed = false;
+
+    grants.forEach(grant => {
+      const source = normalizeGrantSourceName(grant?.sourceEntryName || grant?.sourceEntryId);
+      const qty = Math.max(0, Math.floor(Number(grant?.qty || 0)));
+      if (!source || !qty) return;
+      const target = resolveInventoryGrantItem(grant);
+      if (!target.key) return;
+
+      let row = inv.find(candidate => {
+        if (!candidate || typeof candidate !== 'object') return false;
+        if (getInventoryGrantItemKey(candidate) !== target.key) return false;
+        const candidateSource = normalizeGrantSourceName(candidate.perk);
+        return candidateSource === source || !candidateSource;
+      });
+
+      if (!row) {
+        inv.push({
+          id: target.id,
+          name: target.name || '',
+          qty,
+          gratis: qty,
+          kvaliteter: [],
+          gratisKval: [],
+          removedKval: [],
+          perk: source,
+          perkGratis: qty
+        });
+        changed = true;
+        return;
+      }
+
+      const currentSource = normalizeGrantSourceName(row.perk);
+      if (currentSource && currentSource !== source) return;
+      if (!currentSource) row.perk = source;
+      if (target.id !== undefined && target.id !== null && row.id !== target.id) row.id = target.id;
+      if (target.name && row.name !== target.name) row.name = target.name;
+      row.qty = Math.max(0, Number(row.qty) || 0) + qty;
+      row.gratis = Math.max(0, Number(row.gratis) || 0) + qty;
+      row.perkGratis = Math.max(0, Math.floor(Number(row.perkGratis || 0))) + qty;
+      changed = true;
+    });
+
+    if (changed) data.inventory = inv;
+    return changed;
+  }
+
   function applyHamnskifteTraits(store, list) {
     // Migration shim: remove legacy Hamnskifte entries created by old applyHamnskifteTraits.
     // New entries are granted via syncRuleEntryGrants using ger rules on Hamnskifte (mystisk-kraft).
@@ -2537,12 +2895,16 @@
   }
 
   function syncRuleMoneyGrant(store, list, prev) {
-    if (!store?.current) return;
-    if (typeof global.rulesHelper?.getMoneyGrant !== 'function') return;
+    if (!store?.current) return normalizeCurrentListMoneyGrant(null);
+    if (typeof global.rulesHelper?.getMoneyGrant !== 'function') return normalizeCurrentListMoneyGrant(null);
     store.data[store.current] = store.data[store.current] || {};
     const data = store.data[store.current];
-    const prevGrant = global.rulesHelper.getMoneyGrant(Array.isArray(prev) ? prev : []);
-    const nowGrant  = global.rulesHelper.getMoneyGrant(Array.isArray(list) ? list : []);
+    const prevGrant = normalizeCurrentListMoneyGrant(
+      global.rulesHelper.getMoneyGrant(Array.isArray(prev) ? prev : [])
+    );
+    const nowGrant = normalizeCurrentListMoneyGrant(
+      global.rulesHelper.getMoneyGrant(Array.isArray(list) ? list : [])
+    );
     const prevHas = prevGrant.daler || prevGrant.skilling || prevGrant.ortegar;
     const nowHas  = nowGrant.daler  || nowGrant.skilling  || nowGrant.ortegar;
     const priv    = data.privMoney || defaultMoney();
@@ -2552,6 +2914,34 @@
     } else if (!nowHas && privHas) {
       data.privMoney = defaultMoney();
     }
+    return nowGrant;
+  }
+
+  function syncAddedEntryMoneyGrant(store, addedEntries, previousGrant) {
+    if (!store?.current) return normalizeCurrentListMoneyGrant(previousGrant);
+    if (typeof global.rulesHelper?.getMoneyGrant !== 'function') {
+      return normalizeCurrentListMoneyGrant(previousGrant);
+    }
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const prevGrant = normalizeCurrentListMoneyGrant(previousGrant);
+    const addition = normalizeCurrentListMoneyGrant(
+      global.rulesHelper.getMoneyGrant(Array.isArray(addedEntries) ? addedEntries : [])
+    );
+    const nowGrant = {
+      daler: prevGrant.daler + addition.daler,
+      skilling: prevGrant.skilling + addition.skilling,
+      ortegar: prevGrant.ortegar + addition.ortegar
+    };
+    const prevHas = prevGrant.daler || prevGrant.skilling || prevGrant.ortegar;
+    const nowHas = nowGrant.daler || nowGrant.skilling || nowGrant.ortegar;
+    if (nowHas && !prevHas) {
+      data.privMoney = {
+        daler: nowGrant.daler,
+        skilling: nowGrant.skilling,
+        'örtegar': nowGrant.ortegar
+      };
+    }
+    return nowGrant;
   }
 
   function buildSnapshotEvaluationList(baseList, snapshotRecords) {
@@ -2696,6 +3086,58 @@
         rule: cloneSnapshotValue(record.rule),
         sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
       })));
+    });
+
+    return setSnapshotRuleRecords(store, next, { persist: false });
+  }
+
+  function syncAddedEntrySnapshotRules(store, list, addedEntries) {
+    if (!store.current) return false;
+    const entries = Array.isArray(list) ? list : [];
+    const additions = Array.isArray(addedEntries) ? addedEntries.filter(Boolean) : [];
+    if (!additions.length) return false;
+
+    const existing = normalizeSnapshotRuleRecords(
+      store.data?.[store.current]?.[SNAPSHOT_RULES_KEY]
+    );
+    const next = existing.map(record => ({
+      ...record,
+      rule: cloneSnapshotValue(record.rule),
+      sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+    }));
+    const existingSourceKeys = new Set(next.map(record => String(record?.sourceKey || '').trim()).filter(Boolean));
+
+    additions.forEach(entry => {
+      const sourceKey = getEntrySnapshotSourceKey(entry);
+      if (!sourceKey || existingSourceKeys.has(sourceKey)) return;
+      const rules = getEntrySnapshotRules(entry);
+      if (!rules.length) return;
+      const sourceSignature = stableSignature({
+        rules,
+        level: entry?.nivå || ''
+      });
+      const materialized = materializeSnapshotSourceRules(
+        store,
+        {
+          sourceKey,
+          sourceType: SNAPSHOT_SOURCE_TYPE_ENTRY,
+          sourceName: String(entry?.namn || '').trim(),
+          sourceSignature,
+          rules,
+          sourceEntry: entry,
+          sourceRef: {
+            kind: SNAPSHOT_SOURCE_TYPE_ENTRY,
+            entryUid: entry.__uid || '',
+            entryId: entry.id || '',
+            entryName: entry.namn || ''
+          }
+        },
+        entries,
+        next
+      );
+      if (!materialized.length) return;
+      next.push(...materialized);
+      existingSourceKeys.add(sourceKey);
     });
 
     return setSnapshotRuleRecords(store, next, { persist: false });
@@ -2846,50 +3288,213 @@
     return setSnapshotRuleRecords(store, next);
   }
 
+  function getCurrentListMutationScenarioId() {
+    const perf = global.symbaroumPerf;
+    if (typeof perf?.getFlowContext !== 'function') return null;
+    return perf.getFlowContext('add-item')
+      || perf.getFlowContext('remove-item')
+      || perf.getFlowContext('character-level-change')
+      || null;
+  }
+
+  function timeCurrentListMutationStage(name, callback, detail = {}) {
+    const perf = global.symbaroumPerf;
+    const scenarioId = getCurrentListMutationScenarioId();
+    if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') return callback();
+    return perf.timeScenarioStage(scenarioId, name, callback, {
+      surface: 'store',
+      ...detail
+    });
+  }
+
   function setCurrentList(store, list) {
     if (!store.current) return null;
     store.data[store.current] = store.data[store.current] || {};
     const prev = store.data[store.current]?.list || [];
-    ensureListEntryMetadata(store, prev);
-    const beforeState = snapshotCurrentListMutationState(store);
+    const next = Array.isArray(list) ? list : [];
+
+    timeCurrentListMutationStage('list-metadata-prime', () => {
+      ensureListEntryMetadata(store, prev);
+    });
+    let reconciliation = timeCurrentListMutationStage('list-delta-analysis', () => (
+      analyzeSingleEntryAddition(store, prev, next)
+    ), {
+      previousCount: prev.length,
+      nextCount: next.length
+    });
+    const beforeState = timeCurrentListMutationStage('mutation-before-snapshot', () => (
+      snapshotCurrentListMutationState(store)
+    ));
     const grantedEntriesAdded = [];
-    syncRuleEntryGrants(store, list, prev, { grantedEntriesAdded });
-    enforceEarthbound(list);
-    enforceRuleConflicts(list);
-    applyHamnskifteTraits(store, list);
-    syncEntryMetadataFromPrev(store, prev, list);
-    const snapshotRulesChanged = syncEntrySnapshotRules(store, list);
-    store.data[store.current].list = list;
-    const hiddenRevealChanged = syncHiddenRevealedFromList(store, list);
-    const inventoryChanged = syncRuleInventoryGrants(store, list);
-    syncRuleMoneyGrant(store, list, prev);
 
-    const hasPos = list.some(x => x.namn === 'Besittning');
-    const pos    = store.data[store.current].possessionMoney || defaultMoney();
+    timeCurrentListMutationStage('rule-entry-grants', () => {
+      if (reconciliation.mode === 'incremental') {
+        syncAddedEntryRuleGrants(store, next, [reconciliation.addedEntry], { grantedEntriesAdded });
+      } else {
+        syncRuleEntryGrants(store, next, prev, { grantedEntriesAdded });
+      }
+    }, {
+      reconciliationMode: reconciliation.mode
+    });
 
-    if (!hasPos && (pos.daler || pos.skilling || pos['örtegar'])) {
-      store.data[store.current].possessionMoney = defaultMoney();
+    let appendedEntries = reconciliation.mode === 'incremental'
+      ? collectAppendedEntriesAfterGrantSync(prev, next, reconciliation.addedEntry)
+      : null;
+    if (reconciliation.mode === 'incremental' && !appendedEntries) {
+      reconciliation = {
+        ...reconciliation,
+        mode: 'full',
+        reason: 'grant-topology-ambiguous'
+      };
+      syncRuleEntryGrants(store, next, prev, { grantedEntriesAdded });
+    }
+    if (reconciliation.mode === 'incremental') {
+      if (currentListRequiresFullReconciliation(appendedEntries)) {
+        reconciliation = {
+          ...reconciliation,
+          mode: 'full',
+          reason: 'auto-granted-list-wide-rule'
+        };
+        appendedEntries = null;
+      }
     }
 
-    const total = normalizeMoney({
-      daler: store.data[store.current].privMoney.daler + store.data[store.current].possessionMoney.daler,
-      skilling: store.data[store.current].privMoney.skilling + store.data[store.current].possessionMoney.skilling,
-      'örtegar': store.data[store.current].privMoney['örtegar'] + store.data[store.current].possessionMoney['örtegar']
+    timeCurrentListMutationStage('rule-conflicts', () => {
+      enforceEarthbound(next);
+      if (reconciliation.mode === 'incremental') {
+        enforceRuleConflictsForAppendedEntries(next, reconciliation.previousLength);
+      } else {
+        enforceRuleConflicts(next);
+      }
+    }, {
+      reconciliationMode: reconciliation.mode,
+      appendedCount: appendedEntries?.length || 0
     });
-    store.data[store.current].bonusMoney = total;
-    ensureListAppliedDigests(list);
-    const afterState = snapshotCurrentListMutationState(store);
-    const summary = buildCurrentListMutationSummary(beforeState, afterState, {
-      grantedEntriesAdded,
-      inventoryChanged,
-      revealedChanged: hiddenRevealChanged,
-      snapshotRulesChanged
+
+    timeCurrentListMutationStage('legacy-grant-cleanup', () => {
+      applyHamnskifteTraits(store, next);
+    }, {
+      reconciliationMode: reconciliation.mode
+    });
+
+    if (reconciliation.mode === 'incremental') {
+      appendedEntries = collectAppendedEntriesAfterGrantSync(prev, next, reconciliation.addedEntry);
+      if (!appendedEntries) {
+        reconciliation = {
+          ...reconciliation,
+          mode: 'full',
+          reason: 'post-conflict-topology-ambiguous'
+        };
+        enforceRuleConflicts(next);
+      }
+    }
+
+    timeCurrentListMutationStage('entry-metadata', () => {
+      if (reconciliation.mode === 'incremental') {
+        syncAddedEntryMetadata(store, appendedEntries);
+      } else {
+        syncEntryMetadataFromPrev(store, prev, next);
+      }
+    }, {
+      reconciliationMode: reconciliation.mode,
+      affectedCount: reconciliation.mode === 'incremental' ? appendedEntries.length : next.length
+    });
+
+    const snapshotRulesChanged = timeCurrentListMutationStage('snapshot-rules', () => (
+      reconciliation.mode === 'incremental'
+        ? syncAddedEntrySnapshotRules(store, next, appendedEntries)
+        : syncEntrySnapshotRules(store, next)
+    ), {
+      reconciliationMode: reconciliation.mode,
+      affectedCount: reconciliation.mode === 'incremental' ? appendedEntries.length : next.length
+    });
+
+    store.data[store.current].list = next;
+    const hiddenRevealChanged = timeCurrentListMutationStage('hidden-reveals', () => (
+      syncHiddenRevealedFromList(
+        store,
+        reconciliation.mode === 'incremental' ? appendedEntries : next
+      )
+    ), {
+      reconciliationMode: reconciliation.mode
+    });
+    const inventoryChanged = timeCurrentListMutationStage('inventory-grants', () => (
+      reconciliation.mode === 'incremental'
+        ? syncAddedEntryInventoryGrants(store, appendedEntries)
+        : syncRuleInventoryGrants(store, next)
+    ), {
+      reconciliationMode: reconciliation.mode
+    });
+    const moneyGrant = timeCurrentListMutationStage('money-grants', () => {
+      const priorReconciliationState = normalizeCurrentListReconciliationState(
+        store.data[store.current][CURRENT_LIST_RECONCILIATION_STATE_KEY]
+      );
+      const nextMoneyGrant = reconciliation.mode === 'incremental'
+        ? syncAddedEntryMoneyGrant(store, appendedEntries, priorReconciliationState?.moneyGrant)
+        : syncRuleMoneyGrant(store, next, prev);
+
+      const hasPos = next.some(x => x.namn === 'Besittning');
+      const pos = store.data[store.current].possessionMoney || defaultMoney();
+      if (!hasPos && (pos.daler || pos.skilling || pos['örtegar'])) {
+        store.data[store.current].possessionMoney = defaultMoney();
+      }
+
+      const total = normalizeMoney({
+        daler: store.data[store.current].privMoney.daler + store.data[store.current].possessionMoney.daler,
+        skilling: store.data[store.current].privMoney.skilling + store.data[store.current].possessionMoney.skilling,
+        'örtegar': store.data[store.current].privMoney['örtegar'] + store.data[store.current].possessionMoney['örtegar']
+      });
+      store.data[store.current].bonusMoney = total;
+      return nextMoneyGrant;
+    }, {
+      reconciliationMode: reconciliation.mode
+    });
+
+    timeCurrentListMutationStage('entry-digests', () => {
+      if (reconciliation.mode === 'incremental') {
+        ensureEntriesAppliedDigests(appendedEntries);
+      } else {
+        ensureListAppliedDigests(next);
+      }
+    }, {
+      reconciliationMode: reconciliation.mode,
+      affectedCount: reconciliation.mode === 'incremental' ? appendedEntries.length : next.length
+    });
+
+    const hasListWideRules = reconciliation.mode === 'incremental'
+      ? false
+      : currentListRequiresFullReconciliation(next);
+    store.data[store.current][CURRENT_LIST_RECONCILIATION_STATE_KEY] = {
+      hasListWideRules,
+      moneyGrant: normalizeCurrentListMoneyGrant(moneyGrant)
+    };
+    store.data[store.current][CURRENT_LIST_RECONCILIATION_VERSION_KEY] = CURRENT_LIST_RECONCILIATION_VERSION;
+
+    const afterState = timeCurrentListMutationStage('mutation-after-snapshot', () => (
+      snapshotCurrentListMutationState(store)
+    ));
+    const summary = timeCurrentListMutationStage('mutation-summary', () => (
+      buildCurrentListMutationSummary(beforeState, afterState, {
+        grantedEntriesAdded,
+        inventoryChanged,
+        revealedChanged: hiddenRevealChanged,
+        snapshotRulesChanged,
+        reconciliationMode: reconciliation.mode,
+        reconciliationReason: reconciliation.reason
+      })
+    ), {
+      reconciliationMode: reconciliation.mode
     });
     store.data[store.current].lastCurrentListMutationSummary = summary;
     if (hiddenRevealChanged) bumpRuntimeVersion('revealed');
-    commitCurrentCharacterMutation(store, {
-      bumpDerived: true,
-      fields: summary.changedFields
+    timeCurrentListMutationStage('mutation-persistence-schedule', () => {
+      commitCurrentCharacterMutation(store, {
+        bumpDerived: true,
+        fields: summary.changedFields
+      });
+    }, {
+      reconciliationMode: reconciliation.mode,
+      changedFields: summary.changedFields
     });
     return summary;
   }
@@ -4462,6 +5067,8 @@ function defaultTraits() {
 
   function stripDefaults(data) {
     const obj = { ...(data || {}) };
+    delete obj[CURRENT_LIST_RECONCILIATION_VERSION_KEY];
+    delete obj[CURRENT_LIST_RECONCILIATION_STATE_KEY];
     const emptyMoney = defaultMoney();
     const emptyEff = defaultArtifactEffects();
     const emptyManual = defaultManualAdjustments();
@@ -4951,6 +5558,8 @@ function defaultTraits() {
     // references after defaults, custom-ID remaps, and legacy aliases have
     // been normalized into one canonical import payload.
     data.list = expandList(data.list, data.custom, idMap);
+    delete data[CURRENT_LIST_RECONCILIATION_VERSION_KEY];
+    delete data[CURRENT_LIST_RECONCILIATION_STATE_KEY];
     canonicalizeCharacterReferences(data, { custom: data.custom });
     if (isLegacyCharacterFile(obj)) applyLegacyImportedDisplayNames(data);
     initializeEntryMetadata(data);
@@ -5206,6 +5815,7 @@ function defaultTraits() {
     getRecentSearches,
     addRecentSearch,
     getCurrentList,
+    needsCurrentListReconciliation,
     getCharacterRaces,
     setCurrentList,
     getLastCurrentListMutationSummary: (store) => (

@@ -3,9 +3,23 @@ const DEFAULT_TIMEOUT_MS = 90_000;
 const AUTO_WARM_DELAY_MS = 3_000;
 const INPUT_QUIET_PERIOD_MS = 750;
 const WARM_PAUSE_MS = 900;
+const FOREGROUND_WARM_LEASE_MS = 120_000;
+const FOREGROUND_WARM_HEARTBEAT_MS = 30_000;
+const FOREGROUND_CONTROL_TIMEOUT_MS = 250;
 let automaticWarmScheduled = false;
 let rulesWarmActive = false;
 let lastInputAt = 0;
+let foregroundPauseSequence = 0;
+let foregroundPauseTimer = null;
+const foregroundPauseTokens = new Map();
+const foregroundPauseClientId = (() => {
+  try {
+    if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
+  } catch {
+    // Fall through to a page-local identifier.
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+})();
 
 function notify(detail) {
   listeners.forEach(listener => {
@@ -17,9 +31,18 @@ function notify(detail) {
   });
 }
 
+function currentWorkerController() {
+  try {
+    return navigator.serviceWorker?.controller || null;
+  } catch {
+    return null;
+  }
+}
+
 async function resolveWorker() {
   if (!('serviceWorker' in navigator)) return null;
-  if (navigator.serviceWorker.controller) return navigator.serviceWorker.controller;
+  const controller = currentWorkerController();
+  if (controller) return controller;
   try {
     const registration = await navigator.serviceWorker.ready;
     return registration.active || registration.waiting || registration.installing || null;
@@ -28,10 +51,13 @@ async function resolveWorker() {
   }
 }
 
-async function postToWorker(type, payload = {}, timeout = DEFAULT_TIMEOUT_MS) {
-  const worker = await resolveWorker();
+function postToResolvedWorker(worker, type, payload = {}, timeout = DEFAULT_TIMEOUT_MS) {
   if (!worker || typeof MessageChannel === 'undefined') {
-    return { ok: false, status: 'unavailable', error: 'Ingen aktiv service worker.' };
+    return Promise.resolve({
+      ok: false,
+      status: 'unavailable',
+      error: 'Ingen aktiv service worker.'
+    });
   }
 
   return new Promise(resolve => {
@@ -67,12 +93,148 @@ async function postToWorker(type, payload = {}, timeout = DEFAULT_TIMEOUT_MS) {
   });
 }
 
+async function postToWorker(type, payload = {}, timeout = DEFAULT_TIMEOUT_MS) {
+  // Avoid yielding to service-worker readiness when this page is already
+  // controlled. Calling the resolved-worker helper directly also guarantees
+  // postMessage runs in the caller's task before foreground work can begin.
+  const controller = currentWorkerController();
+  const worker = controller || await resolveWorker();
+  return postToResolvedWorker(worker, type, payload, timeout);
+}
+
 async function signalWorker(type, payload = {}) {
-  const worker = await resolveWorker();
+  // Keep controller messages synchronous. The readiness fallback remains
+  // asynchronous so a first install never delays foreground interaction.
+  const controller = currentWorkerController();
+  const worker = controller || await resolveWorker();
   try {
     worker?.postMessage?.({ type, ...payload });
+    return Boolean(worker);
   } catch {
     // A transient controller change should not interrupt the user interaction.
+    return false;
+  }
+}
+
+function foregroundWorkerTokenId(token) {
+  const record = foregroundPauseTokens.get(token);
+  return record?.workerTokenId || '';
+}
+
+function foregroundPausePayload(token) {
+  return {
+    durationMs: FOREGROUND_WARM_LEASE_MS,
+    tokenId: foregroundWorkerTokenId(token)
+  };
+}
+
+function signalForegroundPause(token, { acknowledge = false } = {}) {
+  const record = foregroundPauseTokens.get(token);
+  if (!record) return null;
+  lastInputAt = Date.now();
+
+  const controller = acknowledge ? currentWorkerController() : null;
+  if (controller && typeof MessageChannel !== 'undefined') {
+    // Start the acknowledgement request synchronously. withForegroundPriority
+    // consumes this same promise, avoiding a duplicate pause message.
+    record.pauseAcknowledgement = postToResolvedWorker(
+      controller,
+      'PAUSE_RULES_CACHE',
+      foregroundPausePayload(token),
+      FOREGROUND_CONTROL_TIMEOUT_MS
+    );
+    return record.pauseAcknowledgement;
+  }
+
+  void signalWorker('PAUSE_RULES_CACHE', foregroundPausePayload(token));
+  return null;
+}
+
+function renewForegroundPauses() {
+  if (!foregroundPauseTokens.size) return;
+  lastInputAt = Date.now();
+  foregroundPauseTokens.forEach((_record, token) => {
+    void signalWorker('PAUSE_RULES_CACHE', foregroundPausePayload(token));
+  });
+}
+
+function scheduleForegroundPauseHeartbeat() {
+  if (foregroundPauseTimer || !foregroundPauseTokens.size) return;
+  foregroundPauseTimer = window.setTimeout(() => {
+    foregroundPauseTimer = null;
+    renewForegroundPauses();
+    scheduleForegroundPauseHeartbeat();
+  }, FOREGROUND_WARM_HEARTBEAT_MS);
+}
+
+function pauseRules(reason = 'foreground') {
+  const token = Object.freeze({
+    id: ++foregroundPauseSequence,
+    reason: String(reason || 'foreground')
+  });
+  foregroundPauseTokens.set(token, {
+    reason: token.reason,
+    workerTokenId: `${foregroundPauseClientId}:${token.id}`,
+    pauseAcknowledgement: null
+  });
+  signalForegroundPause(token, { acknowledge: true });
+  scheduleForegroundPauseHeartbeat();
+  notify({
+    type: 'OFFLINE_RULES_PRIORITY',
+    status: 'paused',
+    reason: token.reason,
+    active: foregroundPauseTokens.size
+  });
+  return token;
+}
+
+async function yieldRules(token) {
+  const record = foregroundPauseTokens.get(token);
+  if (!record) return false;
+  lastInputAt = Date.now();
+  const acknowledgement = record.pauseAcknowledgement || postToWorker(
+      'PAUSE_RULES_CACHE',
+      foregroundPausePayload(token),
+      FOREGROUND_CONTROL_TIMEOUT_MS
+    );
+  record.pauseAcknowledgement = null;
+  await acknowledgement;
+  await new Promise(resolve => window.setTimeout(resolve, 0));
+  return true;
+}
+
+function resumeRules(token) {
+  const record = foregroundPauseTokens.get(token);
+  if (!record) return false;
+  foregroundPauseTokens.delete(token);
+  void signalWorker('RESUME_RULES_CACHE', { tokenId: record.workerTokenId });
+  if (!foregroundPauseTokens.size && foregroundPauseTimer) {
+    window.clearTimeout(foregroundPauseTimer);
+    foregroundPauseTimer = null;
+  }
+  notify({
+    type: 'OFFLINE_RULES_PRIORITY',
+    status: foregroundPauseTokens.size ? 'paused' : 'resumed',
+    reason: record.reason,
+    active: foregroundPauseTokens.size
+  });
+  return true;
+}
+
+async function withForegroundPriority(callback, { reason = 'foreground' } = {}) {
+  if (typeof callback !== 'function') return undefined;
+  const token = pauseRules(reason);
+  try {
+    const record = foregroundPauseTokens.get(token);
+    // An existing controller receives the pause synchronously in pauseRules.
+    // Wait only for that already-started, 250 ms-bounded acknowledgement. A
+    // first install without a controller still enters the callback at once.
+    if (record?.pauseAcknowledgement || (rulesWarmActive && currentWorkerController())) {
+      await yieldRules(token);
+    }
+    return await callback();
+  } finally {
+    resumeRules(token);
   }
 }
 
@@ -197,6 +359,10 @@ const offlineContent = Object.freeze({
   retryRules: () => warmRules({ force: true }),
   clearDocuments: () => postToWorker('CLEAR_DOCUMENT_CACHE'),
   requestStoragePersistence: () => storageStatus({ requestPersistence: true }),
+  pauseRules,
+  yieldRules,
+  resumeRules,
+  withForegroundPriority,
   subscribe,
   scheduleWarmRules
 });

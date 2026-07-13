@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const pwaOrPerformance = /(?:pwa|production-performance|performance-budget)\.spec\.js$/;
-const mobileOnly = /mobile-layout\.spec\.js$/;
-const responsiveCoverage = /(?:mobile-layout|popup-shell|route-switch|smoke|accessibility|loading-recovery)\.spec\.js$/;
+const mobileOnly = /(?:mobile-layout|mobile-popup-interaction)\.spec\.js$/;
+const responsiveCoverage = /(?:mobile-layout|mobile-popup-interaction|popup-shell|route-switch|smoke|accessibility|loading-recovery)\.spec\.js$/;
 const evidenceSuite = String(process.env.PLAYWRIGHT_EVIDENCE_SUITE || '')
   .trim()
   .replace(/[^a-z0-9_-]+/gi, '-');

@@ -20,6 +20,42 @@ const CORE_ROUTES = [
   '/#/notes'
 ];
 
+const PARITY_PROFILE = Object.freeze({
+  meta: {
+    current: 'mobile-layout-parity',
+    characters: [
+      { id: 'mobile-layout-parity', name: 'Layout Hero', folderId: 'fd-standard' }
+    ],
+    folders: [
+      { id: 'fd-standard', name: 'Standard', order: 0, system: true }
+    ],
+    activeFolder: 'ALL',
+    filterUnion: false,
+    compactEntries: true,
+    onlySelected: false,
+    recentSearches: [],
+    liveMode: false,
+    entrySort: 'alpha-asc'
+  },
+  character: {
+    list: [],
+    inventory: [],
+    custom: [],
+    traits: {},
+    notes: {},
+    money: { daler: 0, skilling: 0, 'örtegar': 0 }
+  }
+});
+
+async function seedParityProfile(page) {
+  await page.addInitScript(({ meta, character }) => {
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem('rpall-meta', JSON.stringify(meta));
+    localStorage.setItem(`rpall-char-${meta.current}`, JSON.stringify(character));
+  }, PARITY_PROFILE);
+}
+
 async function loadRoute(page, path) {
   const requestedRole = String(path).split('/').filter(Boolean).at(-1) || 'index';
   const expectedRole = requestedRole === 'summary' || requestedRole === 'effects'
@@ -91,7 +127,19 @@ function measureShell() {
           && style.visibility !== 'hidden'
           && Number.parseFloat(style.opacity || '1') > 0
           && visibleWidth > 1;
-      }).length
+      }).length,
+      fullLabelVisible: (() => {
+        const label = document.querySelector('.traits-tab__label-full');
+        const rect = label?.getBoundingClientRect() || null;
+        return Boolean(rect && rect.width > 0 && rect.height > 0);
+      })(),
+      compactLabelVisible: (() => {
+        const label = document.querySelector('.traits-tab__label-compact');
+        const rect = label?.getBoundingClientRect() || null;
+        return Boolean(rect && rect.width > 0 && rect.height > 0);
+      })(),
+      xpHeaderDisplay: window.getComputedStyle(document.querySelector('.trait-xp-header')).display,
+      xpControlsDisplay: window.getComputedStyle(document.querySelector('.trait-xp-buttons')).display
     }
   };
 }
@@ -137,6 +185,10 @@ for (const viewport of PHONE_VIEWPORTS) {
       target.width >= 44 && target.height >= 44
     ))).toBe(true);
     expect(metrics.traits.visiblePanels).toBe(1);
+    expect(metrics.traits.fullLabelVisible).toBe(true);
+    expect(metrics.traits.compactLabelVisible).toBe(false);
+    expect(metrics.traits.xpHeaderDisplay).toBe('flex');
+    expect(metrics.traits.xpControlsDisplay).toBe('flex');
   });
 }
 
@@ -205,12 +257,8 @@ for (const viewport of COARSE_TABLET_VIEWPORTS) {
   });
 }
 
-for (const { width, expectedColumns } of [
-  { width: 320, expectedColumns: 1 },
-  { width: 340, expectedColumns: 1 },
-  { width: 360, expectedColumns: 2 }
-]) {
-  test(`${width}px Inventory header actions use ${expectedColumns} column${expectedColumns === 1 ? '' : 's'} without clipping or overlap`, async ({ page }) => {
+for (const width of [320, 340, 360, 390]) {
+  test(`${width}px Inventory keeps the desktop action row without clipping or overlap`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await loadRoute(page, '/#/inventory');
 
@@ -229,20 +277,33 @@ for (const { width, expectedColumns } of [
       const overlaps = titleRect && actionsRect
         ? intersects(titleRect, actionsRect)
         : false;
-      const controls = [...(actions?.querySelectorAll('button, .db-btn') || [])].map(control => {
+      const actionControls = [...(actions?.querySelectorAll(':scope > button, :scope > .db-btn') || [])];
+      const controls = actionControls.map(control => {
         const rect = control.getBoundingClientRect();
-        return { left: rect.left, right: rect.right, width: rect.width, height: rect.height };
+        return {
+          id: control.id,
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height,
+          textClipped: control.scrollWidth > control.clientWidth + 1
+        };
       });
+      const controlOverlaps = controls.some((control, index) => (
+        controls.slice(index + 1).some(other => intersects(control, other))
+      ));
       return {
         viewportWidth: window.innerWidth,
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
         actionsLeft: actionsRect?.left ?? -1,
         actionsRight: actionsRect?.right ?? -1,
-        gridColumns: actions
-          ? window.getComputedStyle(actions).gridTemplateColumns.split(/\s+/).filter(Boolean).length
-          : 0,
+        actionsDisplay: actions ? window.getComputedStyle(actions).display : '',
+        fabPosition: fab ? window.getComputedStyle(fab).position : '',
         overlaps,
+        controlOverlaps,
         fabTitleOverlap: intersects(fabRect, titleRect),
         fabLeft: fabRect?.left ?? -1,
         fabRight: fabRect?.right ?? -1,
@@ -253,17 +314,24 @@ for (const { width, expectedColumns } of [
     expect(metrics.scrollWidth).toBe(metrics.clientWidth);
     expect(metrics.actionsLeft).toBeGreaterThanOrEqual(0);
     expect(metrics.actionsRight).toBeLessThanOrEqual(metrics.viewportWidth + 0.5);
-    expect(metrics.gridColumns).toBe(expectedColumns);
+    expect(metrics.actionsDisplay).toBe('flex');
+    expect(metrics.fabPosition).toBe('fixed');
     expect(metrics.overlaps).toBe(false);
+    expect(metrics.controlOverlaps).toBe(false);
     expect(metrics.fabTitleOverlap).toBe(false);
     expect(metrics.fabLeft).toBeGreaterThanOrEqual(0);
     expect(metrics.fabRight).toBeLessThanOrEqual(metrics.viewportWidth + 0.5);
-    expect(metrics.controls.length).toBeGreaterThan(0);
+    expect(metrics.controls.map(control => control.id)).toEqual([
+      'manageItemsBtn',
+      'manageEconomyBtn',
+      'invDashFloatBtn'
+    ]);
     expect(metrics.controls.every(control => (
       control.left >= 0
       && control.right <= metrics.viewportWidth + 0.5
       && control.width >= 44
       && control.height >= 44
+      && !control.textClipped
     ))).toBe(true);
   });
 }
@@ -279,21 +347,59 @@ test('360px index cards and the functions drawer retain touch targets and access
 
   const cardMetrics = await page.evaluate(() => {
     const card = document.querySelector('.entry-card.compact');
+    const summary = card?.querySelector('.entry-card-summary');
+    const header = summary?.querySelector('.entry-row-header');
+    const actions = summary?.querySelector('.entry-row-actions');
+    const headerRect = header?.getBoundingClientRect() || null;
+    const actionsRect = actions?.getBoundingClientRect() || null;
     const controls = card
       ? [...card.querySelectorAll('.entry-collapse-btn, .info-btn, .entry-standard-action, .add-btn')]
+      : [];
+    const titles = card
+      ? [...document.querySelectorAll('.entry-card.compact .entry-title-main')]
       : [];
     return {
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
+      summaryDisplay: summary ? window.getComputedStyle(summary).display : '',
+      rowOrder: [...(summary?.children || [])].map(element => (
+        element.classList.contains('entry-row-header')
+          ? 'header'
+          : (element.classList.contains('entry-row-actions') ? 'actions' : 'other')
+      )),
+      actionsFollowHeader: Boolean(
+        headerRect && actionsRect && actionsRect.top >= headerRect.bottom - 1
+      ),
       controls: controls.map(element => {
         const box = element.getBoundingClientRect();
         return { width: box.width, height: box.height };
-      })
+      }),
+      titles: titles.map(element => ({
+        clientWidth: element.clientWidth,
+        clientHeight: element.clientHeight,
+        scrollWidth: element.scrollWidth,
+        scrollHeight: element.scrollHeight,
+        whiteSpace: window.getComputedStyle(element).whiteSpace,
+        overflow: window.getComputedStyle(element).overflow,
+        overflowWrap: window.getComputedStyle(element).overflowWrap,
+        textOverflow: window.getComputedStyle(element).textOverflow
+      }))
     };
   });
   expect(cardMetrics.scrollWidth).toBe(cardMetrics.clientWidth);
+  expect(cardMetrics.summaryDisplay).toBe('flex');
+  expect(cardMetrics.rowOrder).toEqual(['header', 'actions']);
+  expect(cardMetrics.actionsFollowHeader).toBe(true);
   expect(cardMetrics.controls.length).toBeGreaterThan(0);
   expect(cardMetrics.controls.every(control => control.width >= 44 && control.height >= 44)).toBe(true);
+  expect(cardMetrics.titles.length).toBeGreaterThan(0);
+  expect(cardMetrics.titles.every(title => (
+    title.whiteSpace === 'normal'
+    && title.overflow === 'visible'
+    && title.overflowWrap === 'break-word'
+    && title.textOverflow === 'clip'
+    && title.scrollWidth <= title.clientWidth + 1
+  ))).toBe(true);
 
   const toolbar = page.locator('shared-toolbar');
   const filterToggle = toolbar.locator('#filterToggle');
@@ -345,6 +451,48 @@ test('360px index cards and the functions drawer retain touch targets and access
       returnedToTrigger: root?.activeElement?.id === 'filterToggle'
     } : null;
   })).toEqual({ ariaHidden: 'true', inert: true, daubOpen: false, returnedToTrigger: true });
+});
+
+test('phone routes preserve the desktop content and control order', async ({ browser }) => {
+  const desktopContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const phoneContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true
+  });
+  const desktopPage = await desktopContext.newPage();
+  const phonePage = await phoneContext.newPage();
+  await Promise.all([seedParityProfile(desktopPage), seedParityProfile(phonePage)]);
+
+  const readSignature = page => page.evaluate(() => (
+    [...document.querySelectorAll('#view-root h1, #view-root h2, #view-root h3, #view-root button, #view-root a, #view-root input, #view-root select, #view-root textarea, #view-root summary, #view-root [data-entry-page]')]
+      .map(element => ({
+        tag: element.tagName.toLowerCase(),
+        id: element.id || '',
+        entryPage: element.dataset.entryPage || '',
+        traitsTab: element.dataset.traitsTab || '',
+        action: element.dataset.act || '',
+        type: element.getAttribute('type') || '',
+        href: element.getAttribute('href') || '',
+        ariaLabel: element.getAttribute('aria-label') || '',
+        text: ['h1', 'h2', 'h3', 'button', 'a', 'summary'].includes(element.tagName.toLowerCase())
+          ? String(element.textContent || '').replace(/\s+/g, ' ').trim()
+          : ''
+      }))
+  ));
+
+  try {
+    for (const path of CORE_ROUTES) {
+      await Promise.all([loadRoute(desktopPage, path), loadRoute(phonePage, path)]);
+      const [desktopSignature, phoneSignature] = await Promise.all([
+        readSignature(desktopPage),
+        readSignature(phonePage)
+      ]);
+      expect(phoneSignature, `${path} must retain the desktop content/control order`).toEqual(desktopSignature);
+    }
+  } finally {
+    await Promise.all([desktopContext.close(), phoneContext.close()]);
+  }
 });
 
 test('every Traits tab settles as the only visible full-width slide', async ({ page }) => {
@@ -469,7 +617,7 @@ test('Traits panels advance through a real browser swipe gesture', async ({ page
   }
 });
 
-test('Character Tools uses the 700px two-column desktop shell and one-column mobile form', async ({ page }) => {
+test('Character Tools keeps its desktop shell and uses a fullscreen one-column phone form', async ({ page }) => {
   const openFromFunctionsDrawer = async () => {
     const toolbar = page.locator('shared-toolbar');
     if ((await toolbar.locator('#filterPanel').getAttribute('aria-hidden')) !== 'false') {
@@ -520,26 +668,43 @@ test('Character Tools uses the 700px two-column desktop shell and one-column mob
 
   const mobile = await page.locator('#characterToolsPopup').evaluate(popup => {
     const modal = popup.querySelector('.db-modal');
+    const header = popup.querySelector('.popup-modal-header');
+    const title = header?.querySelector('.db-modal__title');
+    const close = header?.querySelector('.db-modal__close');
+    const body = popup.querySelector('.popup-modal-body');
     const grids = [...popup.querySelectorAll('.tools-panel.active .tools-grid.two-col')]
       .filter(grid => grid.getBoundingClientRect().height > 0);
     const modalRect = modal?.getBoundingClientRect() || null;
+    const viewport = window.visualViewport;
     return {
-      viewportWidth: window.innerWidth,
+      viewportWidth: viewport?.width || window.innerWidth,
+      viewportHeight: viewport?.height || window.innerHeight,
       modalWidth: modalRect?.width || 0,
+      modalHeight: modalRect?.height || 0,
       modalLeft: modalRect?.left ?? -1,
+      modalTop: modalRect?.top ?? -1,
       modalRight: modalRect?.right ?? -1,
+      modalBottom: modalRect?.bottom ?? -1,
       gridColumns: grids.map(grid => window.getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length),
       horizontalOverflow: modal ? modal.scrollWidth - modal.clientWidth : 1,
-      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      bodyOverflowY: body ? window.getComputedStyle(body).overflowY : '',
+      headerExtras: Array.from(header?.children || [])
+        .filter(element => element !== title && element !== close)
+        .length
     };
   });
 
-  expect(mobile.modalWidth).toBeGreaterThan(0);
-  expect(mobile.modalWidth).toBeLessThan(mobile.viewportWidth);
-  expect(mobile.modalLeft).toBeGreaterThanOrEqual(0);
-  expect(mobile.modalRight).toBeLessThanOrEqual(mobile.viewportWidth);
+  expect(Math.abs(mobile.modalWidth - mobile.viewportWidth)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mobile.modalHeight - mobile.viewportHeight)).toBeLessThanOrEqual(1);
+  expect(mobile.modalLeft).toBeGreaterThanOrEqual(-1);
+  expect(mobile.modalTop).toBeGreaterThanOrEqual(-1);
+  expect(mobile.modalRight).toBeLessThanOrEqual(mobile.viewportWidth + 1);
+  expect(mobile.modalBottom).toBeLessThanOrEqual(mobile.viewportHeight + 1);
   expect(mobile.gridColumns.length).toBeGreaterThan(0);
   expect(mobile.gridColumns.every(columns => columns === 1)).toBe(true);
   expect(mobile.horizontalOverflow).toBeLessThanOrEqual(0);
   expect(mobile.pageOverflow).toBe(0);
+  expect(mobile.bodyOverflowY).toBe('auto');
+  expect(mobile.headerExtras).toBe(0);
 });

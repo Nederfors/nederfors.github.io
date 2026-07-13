@@ -1,4 +1,10 @@
-/* 360px cross-platform baseline. This is intentionally imported last. */
+/*
+ * Phone scaling for the shared desktop layout.
+ *
+ * The routed views use the same hierarchy at every width. Keep structural
+ * overrides scoped to #view-root so this layer can never reshape the popup
+ * and drawer shells that also consume the application stylesheet.
+ */
 .traits-tab__label-compact { display: none; }
 
 @media (max-width: 640px) {
@@ -17,7 +23,7 @@
     line-height: 1.15;
   }
 
-  .panel {
+  #view-root .panel {
     width: var(--shell-width);
     max-width: var(--shell-width);
     padding: .75rem;
@@ -48,95 +54,155 @@
   }
   .toolbar .db-bottom-nav__item .btn-icon { width: 1.45rem; height: 1.45rem; }
 
-  .traits-tabs-shell { padding: .75rem; }
-  .traits-tabs { gap: .3rem; margin-bottom: 1rem; padding: .3rem; }
-  .traits-tab { min-height: 44px; padding: .55rem .35rem; font-size: .92rem; }
-  .traits-tab__label-full { display: none; }
-  .traits-tab__label-compact { display: inline; }
-
-  .trait-xp-summary { padding: .8rem; gap: .65rem; }
-  .trait-xp-header { display: grid; grid-template-columns: 1fr; gap: .45rem; }
-  .trait-xp-buttons {
-    display: grid;
-    grid-template-columns: var(--app-touch-target) minmax(5rem, 6rem) var(--app-touch-target);
-    justify-content: center;
-    gap: .45rem;
-    width: 100%;
+  #view-root .traits-tabs-shell { padding: .75rem; }
+  #view-root .traits-tabs { gap: .3rem; margin-bottom: 1rem; padding: .3rem; }
+  #view-root .traits-tab {
+    min-height: 44px;
+    padding: .55rem .2rem;
+    font-size: clamp(.68rem, 3.2vw, .86rem);
+    letter-spacing: 0;
   }
-  .trait-xp-buttons .db-btn {
+  #view-root .traits-tab__label-full { display: inline; }
+  #view-root .traits-tab__label-compact { display: none; }
+
+  #view-root .trait-xp-summary { padding: .8rem; gap: .65rem; }
+  #view-root .trait-xp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .55rem;
+  }
+  #view-root .trait-xp-buttons {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: .45rem;
+    width: auto;
+  }
+  #view-root .trait-xp-buttons .db-btn {
     width: var(--app-touch-target);
     min-width: var(--app-touch-target);
     height: var(--app-touch-target);
     padding: 0;
   }
-  .trait-xp-buttons input {
-    width: 100%;
+  #view-root .trait-xp-buttons input {
+    width: clamp(4.25rem, 20vw, 5.5rem);
     min-width: 0;
     height: var(--app-touch-target);
     text-align: center;
   }
-  .trait-xp-row { gap: .6rem; justify-content: space-between; }
-  .trait-xp-label { font-size: .68rem; letter-spacing: .04em; }
-  .trait-xp-value { font-size: 1.1rem; }
+  #view-root .trait-xp-row { gap: .6rem; justify-content: center; }
+  #view-root .trait-xp-label { font-size: .68rem; letter-spacing: .04em; }
+  #view-root .trait-xp-value { font-size: 1.1rem; }
 
-  .trait-controls {
+  #view-root .traits-hub-panel .trait-controls {
     display: grid;
     grid-template-columns: repeat(4, minmax(var(--app-touch-target), 1fr));
     gap: .35rem;
     width: 100%;
+    max-width: 15.5rem;
   }
-  .trait-btn,
-  .traits-hub-panel .trait-controls .trait-btn {
+  #view-root .trait-btn,
+  #view-root .traits-hub-panel .trait-controls .trait-btn {
     min-width: var(--app-touch-target);
     min-height: var(--app-touch-target);
     padding: .35rem;
     font-size: .9rem;
   }
-  .traits-reset-btn,
-  .traits-hub-panel .traits-reset-btn.db-btn--danger {
+  #view-root .traits-reset-btn,
+  #view-root .traits-hub-panel .traits-reset-btn.db-btn--danger {
     width: var(--app-touch-target);
     height: var(--app-touch-target);
   }
 
-  .db-card.entry-card { padding: .4rem .5rem; gap: .25rem; }
-  .entry-card.compact .entry-collapse-btn {
+  #view-root .db-card.entry-card {
+    padding: .55rem .6rem;
+    gap: .3rem;
+    border-radius: .65rem;
+  }
+  #view-root .entry-card.compact .card-title .entry-title-main {
+    font-size: clamp(1rem, 4.35vw, 1.1rem);
+    overflow: visible;
+    overflow-wrap: break-word;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.15;
+  }
+  #view-root .entry-card.compact .entry-collapse-btn {
     width: var(--app-touch-target);
     min-width: var(--app-touch-target);
     height: var(--app-touch-target);
-    margin: -.35rem 0 -.35rem -.35rem;
+    margin: -.25rem 0 -.25rem -.25rem;
   }
-  .entry-card.compact .entry-header-actions .info-btn {
+  #view-root .entry-card.compact .entry-header-actions .info-btn {
     width: var(--app-touch-target);
     min-width: var(--app-touch-target);
     height: var(--app-touch-target);
   }
-  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--app-touch-target);
-    align-items: center;
-    gap: .25rem;
+  #view-root .entry-card.compact .entry-row-actions .control-buttons .entry-standard-action,
+  #view-root .entry-card.compact .entry-row-actions .control-buttons .char-btn,
+  #view-root .entry-card.compact .entry-row-actions .control-buttons .db-btn {
+    width: var(--app-touch-target);
+    min-width: var(--app-touch-target);
+    height: var(--app-touch-target);
   }
-  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-row-header {
-    grid-column: 1;
-    min-width: 0;
-  }
-  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-row-actions {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
-    margin: 0;
-  }
-  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-action-controls,
-  .entry-card.compact .entry-card-summary:has(.entry-row-actions.only-standard .entry-action-group-standard > :only-child) .entry-action-group-standard {
+
+  /* Keep the desktop Inventory header/FAB composition. Text and controls
+     scale down, but their order and positioning do not change on phones. */
+  #view-root .inventory-panel .panel-header {
     display: flex;
-    flex: 0 0 auto;
-    flex-wrap: nowrap;
+    grid-template-columns: none;
+    align-items: center;
+    gap: .55rem;
   }
-  .entry-card.compact .entry-row-actions .control-buttons .entry-standard-action,
-  .entry-card.compact .entry-row-actions .control-buttons .char-btn,
-  .entry-card.compact .entry-row-actions .control-buttons .db-btn {
+  #view-root .inventory-panel .panel-header .header-actions {
+    display: flex;
+    grid-template-columns: none;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin-left: auto;
+    padding-right: calc(var(--app-touch-target) + .4rem);
+    gap: .4rem;
+  }
+  #view-root .inventory-panel .panel-header .header-actions > :is(.db-btn, button):not(.inv-dash-float-btn) {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    min-height: var(--app-touch-target);
+    padding: .45rem .35rem;
+    font-size: clamp(.75rem, 2.8vw, .95rem);
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  #view-root .inventory-panel .inv-dash-float-btn {
+    position: fixed;
+    inset: var(--db-space-4, 1rem) var(--db-space-4, 1rem) auto auto;
+    flex: none;
+    grid-column: auto;
     width: var(--app-touch-target);
     min-width: var(--app-touch-target);
     height: var(--app-touch-target);
+    padding: 0;
+  }
+}
+
+/* components.css starts card headers and tag rows differently below 680px.
+   Restore the desktop alignment while allowing ordinary flex wrapping. */
+@media (max-width: 680px) {
+  #view-root .entry-row-header {
+    align-items: center;
+    gap: .4rem;
+  }
+
+  #view-root .entry-row-header .entry-header-actions {
+    align-self: center;
+  }
+
+  #view-root .entry-tags {
+    width: auto;
+    max-height: calc(var(--entry-tag-row, 1.35rem) * 2 + .25rem);
+    flex-flow: column wrap;
   }
 }

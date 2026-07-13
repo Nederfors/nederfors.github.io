@@ -540,6 +540,37 @@ test('index popup adds close the choice popup before store mutation and stay on 
   }).toBe('Gesäll');
 });
 
+test('character repeated additions hold foreground catalog priority', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+  await seedNamedEntries(page, [{
+    name: 'Arkivarie'
+  }]);
+  await page.evaluate(() => {
+    window.__characterAddPriorityEvents = [];
+    window.__characterAddPriorityUnsubscribe?.();
+    window.__characterAddPriorityUnsubscribe = window.symbaroumOffline?.subscribe?.(detail => {
+      if (detail.type === 'OFFLINE_RULES_PRIORITY' && detail.reason === 'catalog-add') {
+        window.__characterAddPriorityEvents.push({
+          status: detail.status,
+          active: detail.active
+        });
+      }
+    });
+  });
+
+  const card = await revealCharacterEntry(page, 'Arkivarie');
+  await expect(card.locator('button[data-act="add"]')).toBeVisible();
+  await card.locator('button[data-act="add"]').click();
+
+  await expect.poll(async () => (await readListEntries(page, 'Arkivarie')).length).toBe(2);
+  const priorityEvents = await page.evaluate(() => window.__characterAddPriorityEvents || []);
+  expect(priorityEvents).toEqual(expect.arrayContaining([
+    expect.objectContaining({ status: 'paused' }),
+    expect.objectContaining({ status: 'resumed', active: 0 })
+  ]));
+});
+
 test('choice-popup add with replace_existing upgrades the existing Exceptionellt karaktärsdrag entry', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');

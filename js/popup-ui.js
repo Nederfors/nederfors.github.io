@@ -51,6 +51,38 @@
   const DISMISS_ID_RE = /(cancel|close)$/i;
   const BODY_ACTION_CLASS_RE = /\b(confirm-row|button-row|popup-footer|requirement-popup-actions|picker-popup-actions|qual-popup-actions|header-actions)\b/;
   let generatedTitleId = 0;
+  let visualViewportFrame = 0;
+
+  function syncVisualViewportVariables() {
+    visualViewportFrame = 0;
+    const root = document.documentElement;
+    if (!(root instanceof HTMLElement)) return;
+
+    const viewport = window.visualViewport;
+    const width = Math.max(0, Number(viewport?.width) || window.innerWidth || root.clientWidth || 0);
+    const height = Math.max(0, Number(viewport?.height) || window.innerHeight || root.clientHeight || 0);
+    const offsetTop = Math.max(0, Number(viewport?.offsetTop) || 0);
+    const offsetLeft = Math.max(0, Number(viewport?.offsetLeft) || 0);
+    const toCssPixels = value => `${Math.round(value * 100) / 100}px`;
+
+    root.style.setProperty('--popup-visual-viewport-width', toCssPixels(width));
+    root.style.setProperty('--popup-visual-viewport-height', toCssPixels(height));
+    root.style.setProperty('--popup-visual-viewport-top', toCssPixels(offsetTop));
+    root.style.setProperty('--popup-visual-viewport-left', toCssPixels(offsetLeft));
+  }
+
+  function scheduleVisualViewportSync() {
+    if (visualViewportFrame) return;
+    visualViewportFrame = window.requestAnimationFrame(syncVisualViewportVariables);
+  }
+
+  function bindVisualViewportSync() {
+    syncVisualViewportVariables();
+    window.addEventListener('resize', scheduleVisualViewportSync, { passive: true });
+    window.addEventListener('orientationchange', scheduleVisualViewportSync, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleVisualViewportSync, { passive: true });
+    window.visualViewport?.addEventListener('scroll', scheduleVisualViewportSync, { passive: true });
+  }
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -151,8 +183,10 @@
     return overlay.querySelector('.db-modal, .popup-inner') || null;
   }
 
-  function findFirstHeading(modal) {
-    return modal?.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > .popup-header h1, :scope > .popup-header h2, :scope > .popup-header h3, :scope > .master-header h1, :scope > .master-header h2, :scope > .master-header h3') || null;
+  function findFirstHeading(modal, header = null) {
+    return header?.querySelector('h1, h2, h3')
+      || modal?.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > :is(.popup-header, .master-header, .qual-popup-header, .inventory-hub-header, .defense-calc-header, .db-modal__header) :is(h1, h2, h3)')
+      || null;
   }
 
   function findHeaderCandidate(modal) {
@@ -177,9 +211,14 @@
 
   function ensureTitleNode(header, modal, overlayId, options = {}) {
     let title = header.querySelector('.db-modal__title');
-    if (title) return title;
+    if (title) {
+      if (title.parentElement !== header) {
+        header.insertBefore(title, header.firstChild || null);
+      }
+      return title;
+    }
 
-    const heading = findFirstHeading(modal);
+    const heading = findFirstHeading(modal, header);
     if (heading) {
       heading.classList.add('db-modal__title');
       if (heading.parentElement !== header) {
@@ -275,6 +314,29 @@
     if (footer) modal.insertBefore(body, footer);
     else modal.appendChild(body);
     return body;
+  }
+
+  function moveHeaderExtrasToBody(header, body, title, closeButton) {
+    if (!(header instanceof Element) || !(body instanceof Element)) return null;
+    const extraNodes = Array.from(header.childNodes).filter(node => {
+      if (node === title || node === closeButton) return false;
+      if (node.nodeType === Node.TEXT_NODE && !String(node.textContent || '').trim()) {
+        node.remove();
+        return false;
+      }
+      return true;
+    });
+    if (!extraNodes.length) return body.querySelector(':scope > .popup-modal-intro');
+
+    let intro = body.querySelector(':scope > .popup-modal-intro');
+    if (!intro) {
+      intro = document.createElement('div');
+      intro.className = 'popup-modal-intro';
+      intro.dataset.popupHeaderExtras = 'true';
+      body.insertBefore(intro, body.firstChild || null);
+    }
+    extraNodes.forEach(node => intro.appendChild(node));
+    return intro;
   }
 
   function ensureFooter(modal) {
@@ -385,6 +447,7 @@
     }
     if (header instanceof HTMLElement) {
       header.style.display = 'flex';
+      header.style.flexDirection = 'row';
       header.style.alignItems = 'flex-start';
       header.style.justifyContent = 'space-between';
       header.style.gap = '1rem';
@@ -473,9 +536,10 @@
     const header = ensureHeader(overlay, modal, options);
     const title = ensureTitleNode(header, modal, String(overlay.id || '').trim(), options);
     applyDialogSemantics(overlay, modal, title);
-    ensureCloseButton(overlay, header);
+    const closeButton = ensureCloseButton(overlay, header);
     ensureFooter(modal);
     const body = ensureBody(modal);
+    moveHeaderExtrasToBody(header, body, title, closeButton);
     pruneFooter(overlay, modal);
     applyShellLayout(modal, header, body, modal.querySelector(':scope > .db-modal__footer'));
     return overlay;
@@ -502,7 +566,9 @@
     renderRadioRow,
     setDaubSwitchState,
     syncDaubRadioSelection,
+    syncVisualViewport: scheduleVisualViewportSync,
     normalizeModal,
     normalizeTree
   };
+  bindVisualViewportSync();
 })(window);

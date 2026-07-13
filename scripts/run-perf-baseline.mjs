@@ -28,7 +28,8 @@ function renderMarkdownSummary(summary) {
   Object.entries(summary.scenarios.scenarios).forEach(([name, scenario]) => {
     const avg = scenario?.avgMs != null ? `${scenario.avgMs.toFixed(1)} ms` : 'n/a';
     const median = scenario?.medianMs != null ? `${scenario.medianMs.toFixed(1)} ms` : 'n/a';
-    lines.push(`- ${name}: avg ${avg}, median ${median}`);
+    const p95 = scenario?.p95Ms != null ? `${scenario.p95Ms.toFixed(1)} ms` : 'n/a';
+    lines.push(`- ${name}: avg ${avg}, median ${median}, p95 ${p95}`);
   });
 
   lines.push('', '## Web Vitals');

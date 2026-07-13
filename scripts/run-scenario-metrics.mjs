@@ -182,6 +182,16 @@ function median(values = []) {
   return sorted[middle];
 }
 
+function percentile(values = [], fraction = 0.95) {
+  const numeric = values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .sort((left, right) => left - right);
+  if (!numeric.length) return null;
+  const index = Math.min(numeric.length - 1, Math.ceil(numeric.length * fraction) - 1);
+  return numeric[index];
+}
+
 function summarizeDetail(detail = {}) {
   return {
     scope: detail.scope || null,
@@ -201,6 +211,7 @@ function aggregateNumbers(values = []) {
     return {
       avgMs: null,
       medianMs: null,
+      p95Ms: null,
       minMs: null,
       maxMs: null
     };
@@ -209,6 +220,7 @@ function aggregateNumbers(values = []) {
   return {
     avgMs: sum / numeric.length,
     medianMs: median(numeric),
+    p95Ms: percentile(numeric, 0.95),
     minMs: Math.min(...numeric),
     maxMs: Math.max(...numeric)
   };
@@ -216,6 +228,12 @@ function aggregateNumbers(values = []) {
 
 function aggregateScenarioRuns(name, runs = []) {
   const durations = runs.map((run) => Number(run?.duration || 0));
+  const usesFullCatalogRender = (run) => {
+    const stageNames = (run?.detail?.profile?.stages || []).map((stage) => stage.name);
+    return run?.detail?.renderMode === 'full'
+      || stageNames.includes('full-list-render')
+      || stageNames.includes('sort-group-rebuild');
+  };
   const stageNames = [...new Set(runs.flatMap((run) => (
     Array.isArray(run?.detail?.profile?.stages)
       ? run.detail.profile.stages.map((stage) => stage.name)
@@ -234,9 +252,11 @@ function aggregateScenarioRuns(name, runs = []) {
     name,
     iterations: runs.length,
     ...aggregateNumbers(durations),
+    fullCatalogRenderCount: runs.filter(usesFullCatalogRender).length,
     stages,
     samples: runs.map((run) => ({
       durationMs: Number(run?.duration || 0),
+      fullCatalogRender: usesFullCatalogRender(run),
       detail: summarizeDetail(run?.detail || {})
     })),
     detail: summarizeDetail(runs[0]?.detail || {})
@@ -786,7 +806,11 @@ async function runSearchFilter(browser, iterations) {
 
 async function runIndexAdd(browser, iterations, kind) {
   const runs = await collectRuns(browser, iterations, async () => (
-    withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
+    withSeededPage(browser, {
+      pathName: '/#/index',
+      readySelector: '#lista',
+      profile: kind === 'list' ? 'interaction-heavy' : 'base'
+    }, async (page) => {
       await revealIndexPerfTarget(page, kind);
       await clearPerfHistory(page);
       const target = await clickDeterministicAddButton(page, kind);

@@ -37,10 +37,13 @@ const SPA_NAVIGATION_PATHS = new Set([scopePath, INDEX_PATH, WEBAPP_PATH]);
 const RULE_WARM_CONCURRENCY = 2;
 const RULE_WARM_BATCH_YIELD_MS = 32;
 const RULE_WARM_PAUSE_MAX_MS = 2_000;
+const RULE_WARM_FOREGROUND_LEASE_DEFAULT_MS = 120_000;
+const RULE_WARM_FOREGROUND_LEASE_MAX_MS = 300_000;
 let rulesWarmupPromise = null;
 let rulesWarmupIsForced = false;
 let queuedForcedRulesWarmupPromise = null;
 let rulesWarmPausedUntil = 0;
+const rulesWarmForegroundLeases = new Map();
 const pdfFullFetches = new Map();
 let documentCacheGeneration = 0;
 let documentCacheMutationQueue = Promise.resolve();
@@ -454,22 +457,70 @@ async function cleanupSupersededRulesCaches(activeName) {
   )));
 }
 
-function pauseRulesWarmup(durationMs = 750) {
-  const boundedDuration = Math.max(0, Math.min(Number(durationMs) || 0, RULE_WARM_PAUSE_MAX_MS));
-  rulesWarmPausedUntil = Math.max(rulesWarmPausedUntil, Date.now() + boundedDuration);
+function normalizeRulesWarmTokenId(value) {
+  return typeof value === 'string' ? value.trim().slice(0, 256) : '';
+}
+
+function pruneExpiredRulesWarmForegroundLeases(now = Date.now()) {
+  rulesWarmForegroundLeases.forEach((expiresAt, tokenId) => {
+    if (expiresAt <= now) rulesWarmForegroundLeases.delete(tokenId);
+  });
+}
+
+function rulesWarmPauseState(now = Date.now()) {
+  pruneExpiredRulesWarmForegroundLeases(now);
+  let until = rulesWarmPausedUntil;
+  rulesWarmForegroundLeases.forEach(expiresAt => {
+    if (expiresAt > until) until = expiresAt;
+  });
+  return {
+    paused: until > now,
+    until,
+    remaining: Math.max(0, until - now),
+    activeTokens: rulesWarmForegroundLeases.size
+  };
+}
+
+function pauseRulesWarmup(durationMs = 750, tokenIdValue = '') {
+  const tokenId = normalizeRulesWarmTokenId(tokenIdValue);
+  const now = Date.now();
+  if (tokenId) {
+    const requestedDuration = Number(durationMs) || RULE_WARM_FOREGROUND_LEASE_DEFAULT_MS;
+    const boundedDuration = Math.max(
+      1_000,
+      Math.min(requestedDuration, RULE_WARM_FOREGROUND_LEASE_MAX_MS)
+    );
+    const expiresAt = now + boundedDuration;
+    rulesWarmForegroundLeases.set(
+      tokenId,
+      Math.max(rulesWarmForegroundLeases.get(tokenId) || 0, expiresAt)
+    );
+  } else {
+    const boundedDuration = Math.max(0, Math.min(Number(durationMs) || 0, RULE_WARM_PAUSE_MAX_MS));
+    rulesWarmPausedUntil = Math.max(rulesWarmPausedUntil, now + boundedDuration);
+  }
+  return rulesWarmPauseState(now);
+}
+
+function resumeRulesWarmup(tokenIdValue) {
+  const tokenId = normalizeRulesWarmTokenId(tokenIdValue);
+  if (tokenId) rulesWarmForegroundLeases.delete(tokenId);
+  return rulesWarmPauseState();
 }
 
 async function waitForRulesWarmupTurn() {
   const scheduling = self.navigator?.scheduling;
   while (true) {
-    while (rulesWarmPausedUntil > Date.now() || scheduling?.isInputPending?.()) {
-      const remaining = Math.max(0, rulesWarmPausedUntil - Date.now());
+    let pauseState = rulesWarmPauseState();
+    while (pauseState.paused || scheduling?.isInputPending?.()) {
+      const remaining = pauseState.remaining;
       await new Promise(resolve => setTimeout(resolve, Math.min(Math.max(remaining, 50), 250)));
+      pauseState = rulesWarmPauseState();
     }
     // Keep warming measurably lower priority even on a zero-latency local
     // origin, and re-check input after the yield before starting the batch.
     await new Promise(resolve => setTimeout(resolve, RULE_WARM_BATCH_YIELD_MS));
-    if (rulesWarmPausedUntil <= Date.now() && !scheduling?.isInputPending?.()) return;
+    if (!rulesWarmPauseState().paused && !scheduling?.isInputPending?.()) return;
   }
 }
 
@@ -907,8 +958,18 @@ self.addEventListener('message', event => {
   }
 
   if (type === 'PAUSE_RULES_CACHE') {
-    pauseRulesWarmup(data.durationMs);
-    respondToPort(event, { ok: true, status: 'paused', until: rulesWarmPausedUntil });
+    const pauseState = pauseRulesWarmup(data.durationMs, data.tokenId);
+    respondToPort(event, { ok: true, status: 'paused', ...pauseState });
+    return;
+  }
+
+  if (type === 'RESUME_RULES_CACHE') {
+    const pauseState = resumeRulesWarmup(data.tokenId);
+    respondToPort(event, {
+      ok: true,
+      status: pauseState.paused ? 'paused' : 'resumed',
+      ...pauseState
+    });
     return;
   }
 

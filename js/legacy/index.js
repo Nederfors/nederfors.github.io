@@ -1164,6 +1164,7 @@
     const cancelAddScenario = (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
       const perf = window.symbaroumPerf;
+      releaseScenarioBusyControl(scenarioId);
       perf?.clearFlowContext?.(ADD_FLOW_CONTEXT_KEY, scenarioId);
       return perf?.cancelScenario?.(scenarioId, detail) || null;
     };
@@ -1176,19 +1177,23 @@
     const finishAddScenario = async (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
       const perf = window.symbaroumPerf;
-      if (window.__symbaroumPerfAwaitFlush && typeof perf?.timeScenarioStage === 'function') {
-        await perf.timeScenarioStage(scenarioId, 'persistence-flush', () => (
-          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'add-scenario' })
-        ), {
-          surface: 'index'
-        });
+      try {
+        if (window.__symbaroumPerfAwaitFlush && typeof perf?.timeScenarioStage === 'function') {
+          await perf.timeScenarioStage(scenarioId, 'persistence-flush', () => (
+            window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'add-scenario' })
+          ), {
+            surface: 'index'
+          });
+        }
+        if (typeof perf?.afterNextPaint === 'function') {
+          await perf.afterNextPaint(2);
+        }
+        perf?.markScenario?.(scenarioId, 'post-render-paint-complete', detail);
+        perf?.clearFlowContext?.(ADD_FLOW_CONTEXT_KEY, scenarioId);
+        return perf?.endScenario?.(scenarioId, detail) || null;
+      } finally {
+        releaseScenarioBusyControl(scenarioId);
       }
-      if (typeof perf?.afterNextPaint === 'function') {
-        await perf.afterNextPaint(2);
-      }
-      perf?.markScenario?.(scenarioId, 'post-render-paint-complete', detail);
-      perf?.clearFlowContext?.(ADD_FLOW_CONTEXT_KEY, scenarioId);
-      return perf?.endScenario?.(scenarioId, detail) || null;
     };
     const finishRemoveScenario = async (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
@@ -1248,7 +1253,7 @@
       return callback();
     };
     const waitForDeferredMutationTurn = async (options = {}) => {
-      const afterPaint = options.afterPaint !== false;
+      const afterPaint = options.afterPaint === true;
       if (afterPaint && typeof window.requestAnimationFrame === 'function') {
         await new Promise(resolve => {
           window.requestAnimationFrame(() => {
@@ -1263,10 +1268,56 @@
       await waitForDeferredMutationTurn(options);
       return runCurrentCharacterMutationBatch(callback);
     };
+    const runForegroundCatalogMutation = callback => {
+      const withPriority = window.symbaroumOffline?.withForegroundPriority;
+      if (typeof withPriority === 'function') {
+        return withPriority(callback, { reason: 'catalog-add' });
+      }
+      return callback();
+    };
+    const scenarioBusyControls = new Map();
+    const setBusyInteractionState = (control, busy) => {
+      if (!control || typeof control !== 'object') return;
+      const card = typeof control.closest === 'function'
+        ? control.closest('li.entry-card, li.db-card')
+        : null;
+      if (busy) {
+        if (control.dataset) control.dataset.mutationBusy = '1';
+        if (card) {
+          card.classList.add('entry-busy');
+          card.setAttribute('aria-busy', 'true');
+        }
+        if ('disabled' in control) {
+          control.dataset.mutationBusyWasDisabled = control.disabled ? '1' : '0';
+          control.disabled = true;
+        }
+        return;
+      }
+      if (control.dataset) delete control.dataset.mutationBusy;
+      if (card) {
+        card.classList.remove('entry-busy');
+        card.removeAttribute('aria-busy');
+      }
+      if ('disabled' in control) {
+        control.disabled = control.dataset?.mutationBusyWasDisabled === '1';
+        if (control.dataset) delete control.dataset.mutationBusyWasDisabled;
+      }
+    };
+    const beginScenarioBusyControl = (scenarioId, control) => {
+      if (!scenarioId || !control || scenarioBusyControls.has(scenarioId)) return;
+      scenarioBusyControls.set(scenarioId, control);
+      setBusyInteractionState(control, true);
+    };
+    function releaseScenarioBusyControl(scenarioId) {
+      const control = scenarioBusyControls.get(scenarioId);
+      if (!control) return;
+      scenarioBusyControls.delete(scenarioId);
+      setBusyInteractionState(control, false);
+    }
     const withBusyInteraction = async (control, callback) => {
       if (typeof callback !== 'function') return undefined;
       if (!control || typeof control !== 'object') return callback();
-      if (control.dataset?.mutationBusy === '1') return undefined;
+      if (control.dataset?.mutationBusy === '1') return callback();
       const card = typeof control.closest === 'function'
         ? control.closest('li.entry-card, li.db-card')
         : null;
@@ -1505,19 +1556,24 @@
 
       while (queue.length) {
         const pendingEntry = queue.shift();
-        const latestList = storeHelper.getCurrentList(store);
-        if (!Array.isArray(latestList) || !latestList.length) break;
-        const liveEntry = findMatchingListEntry(latestList, pendingEntry, buildChoiceEntryMatchOptions(pendingEntry));
+        const currentList = storeHelper.getCurrentList(store);
+        if (!Array.isArray(currentList) || !currentList.length) break;
+        const nextList = currentList.map(entry => ({ ...entry }));
+        const liveEntry = findMatchingListEntry(nextList, pendingEntry, buildChoiceEntryMatchOptions(pendingEntry));
         if (!liveEntry) continue;
         const seenKey = String(liveEntry?.__uid || entryDiffKey(liveEntry) || '');
         if (seenKey && seen.has(seenKey)) continue;
         if (seenKey) seen.add(seenKey);
-        const choiceResult = await pickListEntryChoice(liveEntry, latestList, liveEntry.nivå || '', liveEntry, {
+        const choiceResult = await pickListEntryChoice(liveEntry, nextList, liveEntry.nivå || '', liveEntry, {
           promptIfMissingOnly: true
         });
         if (!choiceResult?.hasChoice || choiceResult.cancelled) continue;
-        if (!applyChoiceSelectionToListEntry(latestList, liveEntry, choiceResult)) continue;
-        const summary = storeHelper.setCurrentList(store, latestList) || null;
+        if (!applyChoiceSelectionToListEntry(nextList, liveEntry, choiceResult)) continue;
+        const summary = await runForegroundCatalogMutation(() => (
+          runDeferredCurrentCharacterMutation(() => (
+            storeHelper.setCurrentList(store, nextList) || null
+          ))
+        ));
         summaries.push(summary);
         changed = true;
         (summary?.grantedEntriesAdded || []).forEach(entry => {
@@ -3558,6 +3614,8 @@
       let p = null;
       let lvl = null;
       let addBranch = null;
+      let addReconciliationMode = null;
+      let addReconciliationReason = '';
       let removeBranch = null;
       let removeRenderMode = 'incremental';
       const resolveAddRenderMode = () => {
@@ -3571,6 +3629,8 @@
         entry: name,
         branch: addBranch || null,
         renderMode: resolveAddRenderMode(),
+        reconciliationMode: addReconciliationMode,
+        reconciliationReason: addReconciliationReason || null,
         ...detail
       });
       const completeRemoveScenario = (detail = {}) => finishRemoveScenario(removeScenarioId, {
@@ -3718,10 +3778,13 @@
         return;
       }
 
+      if (act === 'add') beginScenarioBusyControl(addScenarioId, btn);
+
       const pendingUpdates = new Set();
       let needsFullRefresh = false;
       let skipIndexRerender = false;
       let skipImmediateDerivedRefresh = false;
+      let affectedIndexCardsPatched = false;
       const queueUpdate = (entry) => {
         if (entry) pendingUpdates.add(entry);
       };
@@ -3730,9 +3793,20 @@
         if (isInv(p)) {
           const inv = storeHelper.getInventory(store);
           const list = storeHelper.getCurrentList(store);
-          const bundleRefs = addBundleForEntry(inv, p);
+          const hasBundle = getBundleCountForEntry(inv, p) !== null;
+          const bundleRefs = hasBundle
+            ? ((await withBusyInteraction(btn, () => (
+              runForegroundCatalogMutation(() => {
+                const refs = addBundleForEntry(inv, p);
+                if (refs.length) {
+                  invUtil.saveInventory(inv);
+                  invUtil.renderInventory();
+                }
+                return refs;
+              })
+            ))) || [])
+            : [];
           if (bundleRefs.length) {
-            invUtil.saveInventory(inv); invUtil.renderInventory();
             skipIndexRerender = true;
             skipImmediateDerivedRefresh = true;
             queueUpdate(p);
@@ -3806,75 +3880,80 @@
               );
               livePairs.length = 0;
             };
-            const addRow = trait => {
-              let flashIdx;
-              const qtyToAdd = desiredQty;
-              if (indiv) {
-                for (let i = 0; i < qtyToAdd; i++) {
-                  const instance = cloneInvRow(rowTemplate);
-                  instance.qty = 1;
-                  if (trait) instance.trait = trait;
-                  assignPrice(instance);
-                  inv.push(instance);
-                  flashIdx = inv.length - 1;
-                  if (livePairs) livePairs.push({ prev: null, next: instance });
-                }
-              } else {
-                const match = inv.find(x => x.id === p.id && (!trait || x.trait === trait));
-                if (match) {
-                  const prevState = livePairs ? cloneInvRow(match) : null;
-                  match.qty = (Number(match.qty) || 0) + qtyToAdd;
-                  if (trait) match.trait = trait;
-                  assignPrice(match);
-                  flashIdx = inv.indexOf(match);
-                  if (livePairs) livePairs.push({ prev: prevState, next: match });
+            const addRow = trait => withBusyInteraction(btn, () => (
+              runForegroundCatalogMutation(() => {
+                let flashIdx;
+                const qtyToAdd = desiredQty;
+                if (indiv) {
+                  for (let i = 0; i < qtyToAdd; i++) {
+                    const instance = cloneInvRow(rowTemplate);
+                    instance.qty = 1;
+                    if (trait) instance.trait = trait;
+                    assignPrice(instance);
+                    inv.push(instance);
+                    flashIdx = inv.length - 1;
+                    if (livePairs) livePairs.push({ prev: null, next: instance });
+                  }
                 } else {
-                  const instance = cloneInvRow(rowTemplate);
-                  instance.qty = qtyToAdd;
-                  if (trait) instance.trait = trait;
-                  assignPrice(instance);
-                  inv.push(instance);
-                  flashIdx = inv.length - 1;
-                  if (livePairs) livePairs.push({ prev: null, next: instance });
+                  const match = inv.find(x => x.id === p.id && (!trait || x.trait === trait));
+                  if (match) {
+                    const prevState = livePairs ? cloneInvRow(match) : null;
+                    match.qty = (Number(match.qty) || 0) + qtyToAdd;
+                    if (trait) match.trait = trait;
+                    assignPrice(match);
+                    flashIdx = inv.indexOf(match);
+                    if (livePairs) livePairs.push({ prev: prevState, next: match });
+                  } else {
+                    const instance = cloneInvRow(rowTemplate);
+                    instance.qty = qtyToAdd;
+                    if (trait) instance.trait = trait;
+                    assignPrice(instance);
+                    inv.push(instance);
+                    flashIdx = inv.length - 1;
+                    if (livePairs) livePairs.push({ prev: null, next: instance });
+                  }
                 }
-              }
-              finalizeLivePayment();
-              invUtil.saveInventory(inv); invUtil.renderInventory();
-              const hidden = isHidden(p);
-              const artifactTagged = hasArtifactTag(p);
-              let addedToList = false;
-              skipImmediateDerivedRefresh = true;
-              if (hidden || artifactTagged) {
-                const list = storeHelper.getCurrentList(store);
-                if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
-                  list.push({ ...p, noInv: true });
-                  storeHelper.setCurrentList(store, list);
-                  addedToList = true;
+                finalizeLivePayment();
+                invUtil.saveInventory(inv);
+                invUtil.renderInventory();
+                const hidden = isHidden(p);
+                const artifactTagged = hasArtifactTag(p);
+                let addedToList = false;
+                skipImmediateDerivedRefresh = true;
+                if (hidden || artifactTagged) {
+                  const list = [...storeHelper.getCurrentList(store)];
+                  if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
+                    list.push({ ...p, noInv: true });
+                    const mutationSummary = storeHelper.setCurrentList(store, list);
+                    addReconciliationMode = mutationSummary?.reconciliationMode || addReconciliationMode;
+                    addReconciliationReason = mutationSummary?.reconciliationReason || addReconciliationReason;
+                    addedToList = true;
+                  }
+                  if (addedToList || hidden) {
+                    scheduleCharacterMutationRefresh({
+                      xp: true,
+                      traits: true,
+                      summary: true,
+                      effects: true,
+                      source: 'index-inventory-add'
+                    });
+                  }
+                  if (hidden && p.id) {
+                    storeHelper.addRevealedArtifact(store, p.id);
+                  }
                 }
-                if (addedToList || hidden) {
-                  scheduleCharacterMutationRefresh({
-                    xp: true,
-                    traits: true,
-                    summary: true,
-                    effects: true,
-                    source: 'index-inventory-add'
-                  });
+                if (!hidden && !addedToList) {
+                  skipIndexRerender = true;
                 }
-                if (hidden && p.id) {
-                  storeHelper.addRevealedArtifact(store, p.id);
+                queueUpdate(p);
+                if (hidden || addedToList) needsFullRefresh = true;
+                const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
+                if (li) {
+                  li.classList.add('inv-flash');
+                  setTimeout(() => li.classList.remove('inv-flash'), 1000);
                 }
-              }
-              if (!hidden && !addedToList) {
-                skipIndexRerender = true;
-              }
-              queueUpdate(p);
-              if (hidden || addedToList) needsFullRefresh = true;
-              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
-              if (li) {
-                li.classList.add('inv-flash');
-                setTimeout(() => li.classList.remove('inv-flash'), 1000);
-              }
-            };
+              })
+            ));
             const inventoryChoice = await pickListEntryChoice(
               p,
               inv,
@@ -3898,19 +3977,23 @@
                 return;
               }
               if (inventoryChoice.rule?.field === 'trait') {
-                addRow(inventoryChoice.value);
+                await addRow(inventoryChoice.value);
               } else {
-                addRow();
+                await addRow();
               }
             } else {
-              addRow();
+              await addRow();
             }
           }
         } else {
-          let list = storeHelper.getCurrentList(store);
+          let list = [...storeHelper.getCurrentList(store)];
           const beforeList = list.map(item => ({ ...item }));
           const disBefore = storeHelper.countDisadvantages(list);
-          let requiresFullRefresh = hasActiveIndexFilters();
+          // Adding a selection does not invalidate search/type/source filter
+          // membership. Keep the filtered catalog in place and patch the
+          // affected cards; structural rule changes can still opt into a full
+          // refresh below.
+          let requiresFullRefresh = false;
           let requirementAffectedEntries = [];
           const getDisadvWarning = () => {
             const cap = Number(storeHelper.getErfRules?.()?.disadvantageCap || 5);
@@ -3954,12 +4037,13 @@
             }
           }
 
-          const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
-            ? window.rulesHelper.evaluateEntryStops(levelCandidate, list, {
-              action: 'add',
-              level: lvl
-            })
-            : (() => {
+          const stopResult = timeActiveAddStage('rule-stop-preflight', () => (
+            typeof window.rulesHelper?.evaluateEntryStops === 'function'
+              ? window.rulesHelper.evaluateEntryStops(levelCandidate, list, {
+                action: 'add',
+                level: lvl
+              })
+              : (() => {
               const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
                 ? window.rulesHelper.getMissingRequirementReasonsForCandidate(levelCandidate, list, { level: lvl })
                 : []);
@@ -3973,9 +4057,13 @@
                 replaceTargetNames: conflictRes.replaceTargetNames || [],
                 grantedLevelStop: null,
                 hardStops: [],
-              hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
-            };
-          })();
+                hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
+              };
+            })()
+          ), {
+            branch: 'list',
+            surface: 'index'
+          });
           const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
           let forceRuleOverride = false;
           let conflictBaseList = list;
@@ -4020,7 +4108,12 @@
             );
           }
           list = conflictBaseList;
-          const listChoice = await pickListEntryChoice(p, list, lvl);
+          const listChoice = await timeActiveAddStage('choice-popup', () => (
+            pickListEntryChoice(p, list, lvl)
+          ), {
+            branch: 'list',
+            surface: 'index'
+          });
           if (listChoice.hasChoice && listChoice.cancelled) {
             if (listChoice.noOptions) {
               await alertPopup(`Inga val kvar för "${p.namn}".`);
@@ -4051,16 +4144,20 @@
                 if (forceRuleOverride) existing.manualRuleOverride = true;
                 const disadvWarning = getDisadvWarning();
                 const mutationSummary = await withBusyInteraction(btn, () => (
-                  runDeferredCurrentCharacterMutation(() => (
-                    timeActiveAddStage('store-mutation', () => (
-                      storeHelper.setCurrentList(store, list)
-                    ), {
-                      branch: 'list',
-                      mode: 'replace-existing',
-                      surface: 'index'
-                    })
+                  runForegroundCatalogMutation(() => (
+                    runDeferredCurrentCharacterMutation(() => (
+                      timeActiveAddStage('store-mutation', () => (
+                        storeHelper.setCurrentList(store, list)
+                      ), {
+                        branch: 'list',
+                        mode: 'replace-existing',
+                        surface: 'index'
+                      })
+                    ))
                   ))
                 ));
+                addReconciliationMode = mutationSummary?.reconciliationMode || addReconciliationMode;
+                addReconciliationReason = mutationSummary?.reconciliationReason || addReconciliationReason;
                 const pendingChoiceEntries = []
                   .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
                   .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
@@ -4072,7 +4169,7 @@
                   mode: 'replace-existing',
                   surface: 'index'
                 });
-                needsFullRefresh = needsFullRefresh || requiresFullRefresh || hasActiveIndexFilters();
+                needsFullRefresh = needsFullRefresh || requiresFullRefresh;
                 scheduleCharacterMutationRefresh({
                   xp: true,
                   traits: true,
@@ -4113,16 +4210,20 @@
           const finishAdd = async added => {
             const disadvWarning = getDisadvWarning();
             const mutationSummary = await withBusyInteraction(btn, () => (
-              runDeferredCurrentCharacterMutation(() => (
-                timeActiveAddStage('store-mutation', () => (
-                  storeHelper.setCurrentList(store, list)
-                ), {
-                  branch: 'list',
-                  mode: 'add',
-                  surface: 'index'
-                })
+              runForegroundCatalogMutation(() => (
+                runDeferredCurrentCharacterMutation(() => (
+                  timeActiveAddStage('store-mutation', () => (
+                    storeHelper.setCurrentList(store, list)
+                  ), {
+                    branch: 'list',
+                    mode: 'add',
+                    surface: 'index'
+                  })
+                ))
               ))
             ));
+            addReconciliationMode = mutationSummary?.reconciliationMode || addReconciliationMode;
+            addReconciliationReason = mutationSummary?.reconciliationReason || addReconciliationReason;
             const pendingChoiceEntries = []
               .concat(Array.isArray(mutationSummary?.addedEntries) ? mutationSummary.addedEntries : [])
               .concat(Array.isArray(requirementAffectedEntries) ? requirementAffectedEntries : [])
@@ -4146,7 +4247,7 @@
               requiresFullRefresh = true;
             }
             skipImmediateDerivedRefresh = true;
-            needsFullRefresh = needsFullRefresh || requiresFullRefresh || hasActiveIndexFilters();
+            needsFullRefresh = needsFullRefresh || requiresFullRefresh;
             scheduleCharacterMutationRefresh({
               xp: true,
               traits: true,
@@ -4172,6 +4273,7 @@
               mode: 'add',
               surface: 'index'
             });
+            affectedIndexCardsPatched = true;
             await showDisadvWarning(disadvWarning);
           };
           const added = { ...addedBase };
@@ -4431,14 +4533,16 @@
         }
       }
       pendingUpdates.add(p);
-      if (skipIndexRerender) {
-        pendingUpdates.forEach(entry => {
-          updateEntryCardUI(entry);
-        });
-      } else {
-        pendingUpdates.forEach(entry => {
-          if (!updateEntryCardUI(entry)) needsFullRefresh = true;
-        });
+      if (!affectedIndexCardsPatched) {
+        if (skipIndexRerender) {
+          pendingUpdates.forEach(entry => {
+            updateEntryCardUI(entry);
+          });
+        } else {
+          pendingUpdates.forEach(entry => {
+            if (!updateEntryCardUI(entry)) needsFullRefresh = true;
+          });
+        }
       }
       if (act === 'add') {
         timeActiveAddStage('tag-refresh', () => {
@@ -4450,7 +4554,7 @@
         if (!skipImmediateDerivedRefresh) renderTraits();
         flashAdded(name, tr);
         if (skipImmediateDerivedRefresh) {
-          await waitForCharacterMutationRefresh();
+          void waitForCharacterMutationRefresh();
         }
         await completeAddScenario();
       } else if (act === 'sub' || act === 'del' || act === 'rem') {

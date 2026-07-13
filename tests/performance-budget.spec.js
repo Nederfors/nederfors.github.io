@@ -2,6 +2,31 @@ import { expect, test } from '@playwright/test';
 
 const SEARCH_BUDGET_MS = 150;
 const CPU_THROTTLE_RATE = 4;
+const CATALOG_ADD_CHARACTER_ID = 'catalog-add-priority-char';
+
+async function seedCatalogAddCharacter(page) {
+  await page.addInitScript(({ characterId }) => {
+    localStorage.setItem('rpall-meta', JSON.stringify({
+      current: characterId,
+      characters: [{ id: characterId, name: 'Priority Hero', folderId: 'fd-standard' }],
+      folders: [{ id: 'fd-standard', name: 'Standard', order: 0, system: true }],
+      activeFolder: 'ALL',
+      filterUnion: false,
+      compactEntries: true,
+      onlySelected: false,
+      recentSearches: [],
+      liveMode: false,
+      entrySort: 'alpha-asc'
+    }));
+    localStorage.setItem(`rpall-char-${characterId}`, JSON.stringify({
+      list: [],
+      inventory: [],
+      custom: [],
+      notes: {},
+      money: { daler: 5, skilling: 0, 'örtegar': 0 }
+    }));
+  }, { characterId: CATALOG_ADD_CHARACTER_ID });
+}
 
 function percentile(values, fraction) {
   const sorted = [...values].sort((left, right) => left - right);
@@ -133,6 +158,22 @@ async function startRulesWarmProbe(page) {
   ), undefined, { timeout: 15_000 });
 }
 
+async function clearRulesWarmCache(page) {
+  await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    const rawScopePath = new URL(registration.scope).pathname;
+    const scopePath = rawScopePath.endsWith('/') ? rawScopePath : `${rawScopePath}/`;
+    const namespace = `symbaroum-${encodeURIComponent(scopePath)}`;
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter(key => (
+        key.startsWith(`${namespace}-rules-`)
+        || key === `${namespace}-offline-meta`
+      ))
+      .map(key => caches.delete(key)));
+  });
+}
+
 async function readRulesWarmProbe(page) {
   return page.evaluate(() => JSON.parse(JSON.stringify(window.__performanceWarmProbe)));
 }
@@ -163,19 +204,7 @@ test('throttled mobile search keeps priority while offline rules are warming', a
     effectiveType: navigator.connection?.effectiveType
   }))).toEqual({ saveData: true, effectiveType: '4g' });
 
-  await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.ready;
-    const rawScopePath = new URL(registration.scope).pathname;
-    const scopePath = rawScopePath.endsWith('/') ? rawScopePath : `${rawScopePath}/`;
-    const namespace = `symbaroum-${encodeURIComponent(scopePath)}`;
-    const keys = await caches.keys();
-    await Promise.all(keys
-      .filter(key => (
-        key.startsWith(`${namespace}-rules-`)
-        || key === `${namespace}-offline-meta`
-      ))
-      .map(key => caches.delete(key)));
-  });
+  await clearRulesWarmCache(page);
   await startRulesWarmProbe(page);
 
   const warmBeforeFirstSample = await readRulesWarmProbe(page);
@@ -213,4 +242,106 @@ test('throttled mobile search keeps priority while offline rules are warming', a
     Number(event.atAbs) > Number(firstScenario.finishedAtAbs)
   ))).toBe(true);
   expect(completedWarm.result?.ok).toBe(true);
+});
+
+test('choice-based catalog additions pause active rule warming and let it continue afterwards', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'CPU throttling is a Chromium DevTools capability.');
+  test.setTimeout(60_000);
+
+  await seedCatalogAddCharacter(page);
+  const session = await prepareThrottledSearch(page);
+  await clearRulesWarmCache(page);
+  await startRulesWarmProbe(page);
+
+  await page.evaluate(async () => {
+    window.__catalogAddPriorityEvents = [];
+    window.__catalogAddPriorityUnsubscribe?.();
+    window.__catalogAddPriorityUnsubscribe = window.symbaroumOffline.subscribe(detail => {
+      if (detail.type !== 'OFFLINE_RULES_PRIORITY') return;
+      window.__catalogAddPriorityEvents.push({
+        ...detail,
+        atAbs: performance.timeOrigin + performance.now()
+      });
+    });
+    window.__catalogAddSetupPauses = [
+      window.symbaroumOffline.pauseRules('test-setup-primary'),
+      window.symbaroumOffline.pauseRules('test-setup-secondary')
+    ];
+    await Promise.all(window.__catalogAddSetupPauses.map(token => (
+      window.symbaroumOffline.yieldRules(token)
+    )));
+  });
+
+  // Let any batch that was already in flight finish, then verify token leases
+  // remain active beyond the old two-second anonymous pause ceiling.
+  await page.waitForTimeout(250);
+  const heldProgressCount = (await readRulesWarmProbe(page)).progress.length;
+  await page.waitForTimeout(2_250);
+  expect((await readRulesWarmProbe(page)).progress).toHaveLength(heldProgressCount);
+
+  // Releasing one token must not resume warming while another foreground
+  // holder is still active.
+  await page.evaluate(() => {
+    window.symbaroumOffline.resumeRules(window.__catalogAddSetupPauses.shift());
+  });
+  await page.waitForTimeout(300);
+  expect((await readRulesWarmProbe(page)).progress).toHaveLength(heldProgressCount);
+
+  const searchField = page.locator('shared-toolbar').locator('#searchField');
+  await searchField.fill('Monsterlärd');
+  await searchField.press('Enter');
+  const card = page.locator('#lista li.entry-card[data-name="Monsterlärd"], #lista li.card[data-name="Monsterlärd"]').first();
+  await expect(card).toBeVisible();
+  await card.locator('select.level').evaluate((select) => {
+    select.value = 'Gesäll';
+    window.entryCardFactory?.syncLevelControl?.(select);
+  });
+  await card.locator('button[data-act="add"]').click();
+  await expect(page.locator('#choicePopup')).toBeVisible();
+
+  const beforeChoice = await readRulesWarmProbe(page);
+  expect(beforeChoice.settled).toBe(false);
+  await page.evaluate(() => {
+    window.__catalogAddSetupPauses.splice(0).forEach(token => {
+      window.symbaroumOffline.resumeRules(token);
+    });
+  });
+  await page.locator('#choicePopup .db-radio', { hasText: 'Bestar' }).click();
+
+  await page.waitForFunction(() => (
+    window.symbaroumPerf?.getSnapshot?.().scenarios.some(entry => (
+      entry.name === 'add-item-to-character' && entry.status === 'completed'
+    ))
+  ));
+  const result = await page.evaluate(() => {
+    const scenarios = window.symbaroumPerf?.getSnapshot?.().scenarios || [];
+    const scenario = scenarios.filter(entry => (
+      entry.name === 'add-item-to-character' && entry.status === 'completed'
+    )).at(-1);
+    const priorityEvents = (window.__catalogAddPriorityEvents || [])
+      .filter(event => event.reason === 'catalog-add');
+    return { scenario, priorityEvents };
+  });
+
+  const storeStage = (result.scenario?.detail?.profile?.stages || [])
+    .find(stage => stage.name === 'store-mutation');
+  const pauseEvent = result.priorityEvents.find(event => event.status === 'paused');
+  const resumeEvent = result.priorityEvents.find(event => event.status === 'resumed');
+  expect(storeStage).toBeTruthy();
+  expect(pauseEvent?.active).toBeGreaterThan(0);
+  expect(resumeEvent?.active).toBe(0);
+  expect(pauseEvent?.atAbs).toBeLessThanOrEqual(storeStage?.startedAtAbs || Infinity);
+  expect(resumeEvent?.atAbs).toBeGreaterThanOrEqual(storeStage?.finishedAtAbs || 0);
+
+  const progressDuringMutation = (await readRulesWarmProbe(page)).progress.filter(event => (
+    event.atAbs >= pauseEvent.atAbs && event.atAbs <= resumeEvent.atAbs
+  ));
+  expect(progressDuringMutation).toHaveLength(0);
+
+  await session.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  const warmResult = await page.evaluate(() => window.__performanceWarmPromise);
+  expect(warmResult.ok).toBe(true);
+  const completedWarm = await readRulesWarmProbe(page);
+  expect(completedWarm.settled).toBe(true);
+  expect(completedWarm.progress.some(event => event.atAbs > resumeEvent.atAbs)).toBe(true);
 });

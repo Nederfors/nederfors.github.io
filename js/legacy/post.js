@@ -168,6 +168,12 @@ window.syncCharacterPanels = syncCharacterPanels;
 
   function resolveTouchProfile(el) {
     const raw = String(el?.dataset?.touchProfile || '').trim().toLowerCase();
+    if (
+      el?.matches?.('.popup[data-popup-unified="true"]')
+      && window.matchMedia?.('(max-width: 640px), (max-height: 500px) and (pointer: coarse)')?.matches
+    ) {
+      return 'sheet-down';
+    }
     if (raw === 'panel-right' || raw === 'sheet-down' || raw === 'none') return raw;
     if (el?.classList?.contains('offcanvas')) return 'panel-right';
     return 'none';
@@ -179,7 +185,7 @@ window.syncCharacterPanels = syncCharacterPanels;
       return el.querySelector('.db-drawer__panel') || el;
     }
     if (profile === 'sheet-down') {
-      return el.querySelector('.popup-inner') || el;
+      return el.querySelector('.db-modal, .popup-inner, .inventory-hub-ui') || el;
     }
     return el;
   }
@@ -239,6 +245,15 @@ window.syncCharacterPanels = syncCharacterPanels;
       target?.closest?.('input, textarea, select, option, [contenteditable="true"]')
     );
 
+    const startedFromSheetHeader = event => {
+      const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+      return path.some(node => (
+        node instanceof Element
+        && node.matches('.popup-modal-header, .db-modal__header')
+        && el.contains(node)
+      ));
+    };
+
     el.addEventListener('touchstart', event => {
       if (!window.daubMotion?.isTouchUi?.()) return;
       if (!el.classList.contains('open')) return;
@@ -248,10 +263,10 @@ window.syncCharacterPanels = syncCharacterPanels;
 
       const profile = resolveTouchProfile(el);
       if (profile === 'none') return;
+      if (profile === 'sheet-down' && !startedFromSheetHeader(event)) return;
 
       const movingEl = getGestureTarget(el, profile);
       if (!(movingEl instanceof HTMLElement)) return;
-      if (profile === 'sheet-down' && movingEl.scrollTop > 4) return;
 
       const touch = event.touches[0];
       overlayTouchState.set(el, {
@@ -283,7 +298,6 @@ window.syncCharacterPanels = syncCharacterPanels;
           if (deltaX <= 0 || Math.abs(deltaX) < 10 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
         } else if (state.profile === 'sheet-down') {
           if (deltaY <= 0 || Math.abs(deltaY) < 10 || Math.abs(deltaY) <= Math.abs(deltaX)) return;
-          if (state.movingEl.scrollTop > 4) return;
         } else {
           return;
         }
@@ -2194,6 +2208,61 @@ async function ensureEntriesData(entries = []) {
   return list.map(entry => entry?.__catalogSummary ? (findHydratedEntry(entry) || entry) : entry);
 }
 
+const currentListReconciliationPromises = new Map();
+
+function reconcileCurrentListNow(charId = store?.current) {
+  const id = charId === undefined || charId === null ? '' : String(charId).trim();
+  if (!id || id !== String(store?.current || '')) return { reconciled: false, reason: 'inactive-character' };
+  if (typeof storeHelper?.needsCurrentListReconciliation !== 'function') {
+    return { reconciled: false, reason: 'unsupported' };
+  }
+  if (!storeHelper.needsCurrentListReconciliation(store, id)) {
+    return { reconciled: false, reason: 'current' };
+  }
+  const currentList = storeHelper.getCurrentList(store);
+  const nextList = (Array.isArray(currentList) ? currentList : [])
+    .map(entry => (entry && typeof entry === 'object' ? { ...entry } : entry));
+  const summary = storeHelper.setCurrentList(store, nextList);
+  return { reconciled: true, reason: 'version-upgrade', summary };
+}
+
+async function ensureCurrentListReconciliation(options = {}) {
+  const id = String(options.charId ?? store?.current ?? '').trim();
+  if (!id || id !== String(store?.current || '')) {
+    return { reconciled: false, reason: 'inactive-character' };
+  }
+  if (typeof storeHelper?.needsCurrentListReconciliation !== 'function'
+      || !storeHelper.needsCurrentListReconciliation(store, id)) {
+    return { reconciled: false, reason: 'current' };
+  }
+  if (currentListReconciliationPromises.has(id)) {
+    return currentListReconciliationPromises.get(id);
+  }
+
+  const promise = (async () => {
+    // The catalog build initially contains summaries only. Hydrate the source
+    // chunks represented by the saved list so automatic grant lookups use the
+    // same rule data as the full build during the one-time repair pass.
+    if (databaseMode !== 'full') {
+      const currentList = storeHelper.getCurrentList(store);
+      const catalogRefs = (Array.isArray(currentList) ? currentList : [])
+        .map(entry => findEntryInCollections(entry))
+        .filter(entry => entry?.__catalogSummary && entry.__sourceFile);
+      if (catalogRefs.length) await ensureEntriesData(catalogRefs);
+    }
+    if (id !== String(store?.current || '')) {
+      return { reconciled: false, reason: 'character-changed' };
+    }
+    return reconcileCurrentListNow(id);
+  })().finally(() => {
+    currentListReconciliationPromises.delete(id);
+  });
+  currentListReconciliationPromises.set(id, promise);
+  return promise;
+}
+
+window.ensureCurrentListReconciliation = ensureCurrentListReconciliation;
+
 function ensureFullDatabase() {
   if (databaseMode === 'full') {
     return Promise.resolve({ entries: DB, tables: TABELLER, catalogOnly: false });
@@ -2242,6 +2311,7 @@ databaseLoadPromise = (isInitialIndexRole()
       entries: normalizedEntries,
       tables: normalizedTables
     }, { catalogOnly });
+    await ensureCurrentListReconciliation({ reason: 'boot' });
     await boot();
     if (!catalogOnly) runQueuedPostUpdateEntrySync();
     dispatchDatabaseReady({ catalogOnly });
@@ -3005,7 +3075,8 @@ function bindToolbar() {
       : null;
     store.current = dom.charSel.value;
     storeHelper.save(store);
-    applyCharacterChange();
+    await ensureCurrentListReconciliation({ charId: nextCharId, reason: 'character-switch' });
+    applyCharacterChange({ reloadStore: false });
     finishPerfScenario(scenarioId, { trigger: 'char-select' });
     await flushPersistenceNow('switch-character');
   });
@@ -3031,11 +3102,15 @@ function bindToolbar() {
           });
           store.current = firstInFolder.id;
           storeHelper.save(store);
+          await ensureCurrentListReconciliation({
+            charId: firstInFolder.id,
+            reason: 'folder-character-switch'
+          });
           // Uppdatera visat namn om det finns i denna vy
           if (dom.cName) dom.cName.textContent = firstInFolder.name || '';
           // Uppdatera vyer utan omladdning
           if (ROLE === 'character' || ROLE === 'notes') {
-            applyCharacterChange();
+            applyCharacterChange({ reloadStore: false });
             finishPerfScenario(scenarioId, { trigger: 'folder-filter' });
             await flushPersistenceNow('switch-character');
             return;
@@ -3069,6 +3144,7 @@ function bindToolbar() {
       store.characters.push({ id: charId, name, folderId: folderId || '' });
       store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
       store.current = charId;
+      storeHelper.setCurrentList(store, []);
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);
       if (folderId && prevActive !== folderId) {
@@ -3336,7 +3412,7 @@ async function generateCharacterFromSettings(settings) {
   return true;
 }
 
-function duplicateCharacterWithSettings(settings) {
+async function duplicateCharacterWithSettings(settings) {
   const sourceId = settings?.sourceId || store.current || '';
   if (!sourceId) return '';
   const src = (store.characters || []).find(c => c.id === sourceId);
@@ -3356,8 +3432,9 @@ function duplicateCharacterWithSettings(settings) {
     storeHelper.setActiveFolder(store, folderId);
   }
   store.current = newId;
+  await ensureCurrentListReconciliation({ charId: newId, reason: 'duplicate-character' });
   storeHelper.save(store);
-  applyCharacterChange();
+  applyCharacterChange({ reloadStore: false });
   return newId;
 }
 
@@ -3406,7 +3483,7 @@ async function runDuplicateCharacterFlow() {
   const defaultFolder = storeHelper.getCharacterFolder(store, store.current);
   const res = await openDuplicateCharPopupWithFolder(defaultFolder, defaultName);
   if (!res) return;
-  duplicateCharacterWithSettings({
+  await duplicateCharacterWithSettings({
     sourceId: store.current,
     name: res.name,
     folderId: res.folderId
@@ -3796,7 +3873,7 @@ function openCharacterToolsPopup(initialTab = 'generate') {
           nameIn.focus();
           return;
         }
-        const newId = duplicateCharacterWithSettings({
+        const newId = await duplicateCharacterWithSettings({
           sourceId,
           name,
           folderId: folderSel.value || ''
@@ -5804,7 +5881,11 @@ async function createFullDatabaseCharacterImporter() {
   if (databaseMode !== 'full') {
     throw new Error('Full database is required before importing characters.');
   }
-  return payload => storeHelper.importCharacterJSON(store, payload);
+  return payload => {
+    const id = storeHelper.importCharacterJSON(store, payload);
+    if (id) reconcileCurrentListNow(id);
+    return id;
+  };
 }
 
 async function driveImportFile(fileId) {
@@ -7708,7 +7789,7 @@ async function requireCharacter() {
       wrap.style.display = '';
       select.focus();
     };
-    onSelect = function onSelect() {
+    onSelect = async function onSelect() {
       const val = select.value;
       if (!val) return;
       store.current = val;
@@ -7716,7 +7797,8 @@ async function requireCharacter() {
       refreshCharSelect();
       if (dom.cName) dom.cName.textContent = store.characters.find(c=>c.id===val)?.name||'';
       close(true, 'select');
-      applyCharacterChange();
+      await ensureCurrentListReconciliation({ charId: val, reason: 'required-character' });
+      applyCharacterChange({ reloadStore: false });
     };
     onNew = async function onNew() {
       const restorePopup = () => {
@@ -7734,6 +7816,7 @@ async function requireCharacter() {
       store.characters.push({ id: charId, name, folderId: folderId || '' });
       store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
       store.current = charId;
+      storeHelper.setCurrentList(store, []);
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);
       if (folderId && prevActive !== folderId) {

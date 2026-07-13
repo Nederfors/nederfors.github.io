@@ -7,9 +7,12 @@ body.app-shell .offcanvas[data-touch-profile="panel-right"] {
   touch-action: pan-y;
 }
 
-body.app-shell .popup[data-touch-profile="sheet-down"] .popup-inner,
-body.app-shell .popup[data-touch-profile="sheet-down"] .inventory-hub-ui {
+body.app-shell .popup[data-popup-unified="true"] .popup-modal-header {
   touch-action: pan-x;
+}
+
+body.app-shell .popup[data-popup-unified="true"] .popup-modal-body {
+  touch-action: pan-y;
 }
 
 .daub-swipe-tabs {

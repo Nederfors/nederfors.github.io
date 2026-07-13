@@ -464,7 +464,7 @@ test('dynamic and legacy-created popups close through the unified header close',
   await expect(choicePopup).toBeVisible();
   await expect(choicePopup.locator('.db-modal__header .db-modal__close#choiceClose')).toHaveCount(1);
   await expect(choicePopup.locator('#choiceCancel')).toHaveCount(0);
-  await choicePopup.click({ position: { x: 5, y: 5 } });
+  await choicePopup.locator('.db-modal__header .db-modal__close#choiceClose').click();
   await expect(choicePopup).toBeHidden();
 
   await page.evaluate(() => {

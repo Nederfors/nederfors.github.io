@@ -50,10 +50,23 @@
 }
 
 .popup[data-popup-unified='true'] .popup-modal-header .db-modal__title {
+  min-width: 0;
   margin: 0;
   color: var(--db-color-text, var(--txt, #fff3e4));
   font-size: 1.08rem;
   line-height: 1.3;
+}
+
+.popup[data-popup-unified='true'] .popup-modal-intro {
+  display: flex;
+  min-width: 0;
+  flex: none;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.popup[data-popup-unified='true'] .popup-modal-intro:empty {
+  display: none;
 }
 
 .popup[data-popup-unified='true'] .popup-modal-body {
@@ -234,12 +247,128 @@
   gap: .35rem;
 }
 
-@media (max-width: 640px) {
-  .popup[data-popup-unified='true'][data-popup-layout='tools-popup-lg'] {
-    --popup-shell-width: calc(100vw - 1rem);
-    --popup-shell-max-width: calc(100vw - 1rem);
-    --popup-shell-max-height: calc(100dvh - 1rem);
-    padding: .5rem;
+@media (max-width: 640px), (max-height: 500px) and (pointer: coarse) {
+  .popup[data-popup-unified='true'] {
+    --popup-control-height: 2.75rem;
+    --popup-icon-button-size: 2.75rem;
+    --popup-tab-height: 2.75rem;
+    --popup-shell-width: 100%;
+    --popup-shell-max-width: 100%;
+    --popup-shell-max-height: 100%;
+    position: fixed !important;
+    inset: var(--popup-visual-viewport-top, 0px) auto auto var(--popup-visual-viewport-left, 0px) !important;
+    width: var(--popup-visual-viewport-width, 100vw) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    height: var(--popup-visual-viewport-height, 100dvh) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* The inert ID branch gives this phone-only contract enough specificity to
+     beat legacy per-popup ID rules without enumerating every historical ID. */
+  :is(#popup-phone-fullscreen-specificity, .popup)[data-popup-unified='true'] :is(.popup-inner.popup-shell--daub, .db-modal.popup-shell--daub) {
+    display: flex !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-width: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-header {
+    position: relative;
+    min-height: calc(3.75rem + env(safe-area-inset-top, 0px));
+    flex: none;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: .65rem !important;
+    padding: calc(.65rem + env(safe-area-inset-top, 0px)) max(.75rem, env(safe-area-inset-right, 0px)) .55rem max(.75rem, env(safe-area-inset-left, 0px)) !important;
+    user-select: none;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-header::before {
+    position: absolute;
+    top: calc(.25rem + env(safe-area-inset-top, 0px));
+    left: 50%;
+    width: 2.25rem;
+    height: .22rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .24);
+    background: color-mix(in srgb, currentColor 28%, transparent);
+    content: '';
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-header .db-modal__title {
+    display: -webkit-box;
+    overflow: hidden;
+    flex: 1 1 auto;
+    font-size: 1rem !important;
+    line-height: 1.22 !important;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-header .db-modal__close {
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    flex: 0 0 2.75rem;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-body,
+  .popup[data-popup-unified='true'][data-popup-layout^='tabbed-popup'] .popup-modal-body,
+  .popup[data-popup-unified='true'][data-popup-layout='tools-popup-lg'] .popup-modal-body {
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    gap: .75rem !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: .75rem max(.8rem, env(safe-area-inset-right, 0px)) 1rem max(.8rem, env(safe-area-inset-left, 0px)) !important;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-footer {
+    flex: none !important;
+    padding: .65rem max(.8rem, env(safe-area-inset-right, 0px)) calc(.65rem + env(safe-area-inset-bottom, 0px)) max(.8rem, env(safe-area-inset-left, 0px)) !important;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-body :is(
+    .picker-popup-options,
+    .requirement-popup-options,
+    .qual-popup-options,
+    .tools-char-list,
+    .tools-folder-list,
+    .drive-character-list,
+    .drive-import-list,
+    #masterOpts
+  ) {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .popup[data-popup-unified='true'] .popup-modal-body #tabellContent {
+    min-height: auto !important;
+    max-height: none !important;
+    flex: none !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
   }
 
   .popup[data-popup-unified='true'][data-popup-layout='tools-popup-lg'] :is(.popup-tabs__list, .db-tabs__list.tools-tabs) {

@@ -1,5 +1,6 @@
 (function(window){
   const RULE_KEYS = Object.freeze(['andrar', 'kraver', 'krockar', 'ger', 'val']);
+  const ENTRY_RULES_CACHE = new WeakMap();
   const DEFAULT_LEVEL_ORDER = Object.freeze(['novis', 'gesall', 'mastare']);
   const LEVEL_VALUE_MAP = Object.freeze({
     novis: 1,
@@ -841,17 +842,150 @@
 
   function getEntryRules(entry, options = {}) {
     const level = options && typeof options === 'object' ? options.level : '';
+    const cacheable = Boolean(entry && typeof entry === 'object' && !Array.isArray(entry));
+    const cacheKey = normalizeLevelName(level || '');
+    const catalogRef = Array.isArray(window.DB) ? window.DB : null;
+    const catalogSize = catalogRef?.length || 0;
+    const catalogGeneration = Number.isFinite(window.__entryDataVersions?.db)
+      ? window.__entryDataVersions.db
+      : null;
+    if (cacheable) {
+      const cached = ENTRY_RULES_CACHE.get(entry);
+      if (cached?.catalogRef === catalogRef
+          && cached?.catalogSize === catalogSize
+          && cached?.catalogGeneration === catalogGeneration
+          && cached.byLevel.has(cacheKey)) {
+        return cached.byLevel.get(cacheKey);
+      }
+    }
     const sourceEntry = resolveRuleSourceEntry(entry);
     const typeRules = getTypeRules(sourceEntry, level);
     const entryRules = !level
       ? getTopLevelRules(sourceEntry)
       : mergeRuleBlocks(getTopLevelRules(sourceEntry), getLevelRules(sourceEntry, level));
-    return mergeRuleBlocksByHierarchy(typeRules, entryRules);
+    const result = mergeRuleBlocksByHierarchy(typeRules, entryRules);
+    if (cacheable) {
+      let cached = ENTRY_RULES_CACHE.get(entry);
+      if (!cached
+          || cached.catalogRef !== catalogRef
+          || cached.catalogSize !== catalogSize
+          || cached.catalogGeneration !== catalogGeneration) {
+        cached = {
+          catalogRef,
+          catalogSize,
+          catalogGeneration,
+          byLevel: new Map()
+        };
+        ENTRY_RULES_CACHE.set(entry, cached);
+      }
+      cached.byLevel.set(cacheKey, result);
+    }
+    return result;
   }
 
   function getRuleList(entry, key, options = {}) {
     if (!RULE_KEYS.includes(key)) return [];
     return toRuleList(getEntryRules(entry, options)[key]);
+  }
+
+  const FULL_LIST_RECONCILIATION_FLAG_KEYS = Object.freeze([
+    'list_wide',
+    'listWide',
+    'reconcile_all',
+    'reconcileAll',
+    'requires_full_reconciliation',
+    'requiresFullReconciliation'
+  ]);
+  const LIST_MEMBERSHIP_CONDITION_KEYS = new Set([
+    'har_namn',
+    'har_namn_minst_niva',
+    'har_namn_minst_nivå',
+    'saknar_namn',
+    'nagon_av_namn',
+    'antal_namn_max',
+    'antal_typ_max',
+    ...NAR_ONLY_SELECTED_KEYS
+  ]);
+
+  function requestsFullListReconciliation(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    if (FULL_LIST_RECONCILIATION_FLAG_KEYS.some(key => (
+      Object.prototype.hasOwnProperty.call(value, key) && isTruthyRuleValue(value[key])
+    ))) return true;
+    const scope = String(
+      value.reconciliation_scope
+      ?? value.reconciliationScope
+      ?? ''
+    ).trim().toLowerCase();
+    return scope === 'list' || scope === 'list-wide' || scope === 'list_wide';
+  }
+
+  function whenDependsOnListMembership(node) {
+    if (!node || typeof node !== 'object') return false;
+    if (Array.isArray(node)) return node.some(whenDependsOnListMembership);
+    const field = String(node.field || '').trim().toLowerCase();
+    if (field === 'selected' || field.startsWith('selected.') || field === 'list' || field.startsWith('list.')) {
+      return true;
+    }
+    return ['all', 'any'].some(key => (
+      Array.isArray(node[key]) && node[key].some(whenDependsOnListMembership)
+    )) || whenDependsOnListMembership(node.not);
+  }
+
+  function legacyConditionDependsOnListMembership(node) {
+    if (!node || typeof node !== 'object') return false;
+    if (Array.isArray(node)) return node.some(legacyConditionDependsOnListMembership);
+    return Object.entries(node).some(([key, value]) => (
+      LIST_MEMBERSHIP_CONDITION_KEYS.has(key)
+      || legacyConditionDependsOnListMembership(value)
+    ));
+  }
+
+  function ruleDependsOnListMembership(rule) {
+    if (!rule || typeof rule !== 'object' || Array.isArray(rule)) return false;
+    if (whenDependsOnListMembership(rule.when)) return true;
+    const nar = getRuleCondition(rule);
+    if (!nar || typeof nar !== 'object' || Array.isArray(nar)) return false;
+    return legacyConditionDependsOnListMembership(nar);
+  }
+
+  function getRawReconciliationRuleBlocks(entry, level = '') {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
+    return [
+      entry,
+      getTopLevelRuleContainer(entry),
+      ...getLevelRuleContainers(entry, level)
+    ].filter(block => block && typeof block === 'object' && !Array.isArray(block));
+  }
+
+  // Incremental list reconciliation is deliberately opt-out. Rules whose
+  // outcome can change for retained entries when any list member changes can
+  // declare one of the flags above on the entry, its rule block, or a rule.
+  // Keeping this check in the rule layer also covers inherited type rules.
+  function requiresFullListReconciliation(entries) {
+    const list = Array.isArray(entries) ? entries : [];
+    return list.some(entry => {
+      if (!entry || typeof entry !== 'object') return false;
+      const level = typeof entry.nivå === 'string' ? entry.nivå : '';
+      const sourceEntry = resolveRuleSourceEntry(entry);
+      const rawRuleBlocks = getRawReconciliationRuleBlocks(entry, level);
+      if (sourceEntry && sourceEntry !== entry) {
+        rawRuleBlocks.push(...getRawReconciliationRuleBlocks(sourceEntry, level));
+      }
+      getTypeRuleTemplateEntries(sourceEntry || entry).forEach(templateEntry => {
+        rawRuleBlocks.push(...getRawReconciliationRuleBlocks(templateEntry, level));
+      });
+      if (rawRuleBlocks.some(requestsFullListReconciliation)) return true;
+      const rules = getEntryRules(entry, level ? { level } : {});
+      if (requestsFullListReconciliation(rules)) return true;
+      return RULE_KEYS.some(key => toRuleList(rules?.[key]).some(rule => {
+        if (requestsFullListReconciliation(rule)) return true;
+        if (key !== 'ger') return false;
+        const target = getRuleTarget(rule);
+        return ['post', 'foremal', 'pengar'].includes(target)
+          && ruleDependsOnListMembership(rule);
+      }));
+    });
   }
 
   function normalizeChoiceField(value) {
@@ -6813,6 +6947,7 @@
     getTypeRules,
     getEntryRules,
     getRuleList,
+    requiresFullListReconciliation,
     getEntryChoiceRule,
     getEntryChoiceDisplay,
     formatEntryDisplayName,

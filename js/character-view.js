@@ -304,7 +304,7 @@
       window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
     );
     const waitForDeferredMutationTurn = async (options = {}) => {
-      const afterPaint = options.afterPaint !== false;
+      const afterPaint = options.afterPaint === true;
       if (afterPaint && typeof window.requestAnimationFrame === 'function') {
         await new Promise(resolve => {
           window.requestAnimationFrame(() => {
@@ -318,6 +318,13 @@
     const runDeferredCurrentCharacterMutation = async (callback, options = {}) => {
       await waitForDeferredMutationTurn(options);
       return runCurrentCharacterMutationBatch(callback);
+    };
+    const runForegroundCatalogMutation = callback => {
+      const withPriority = window.symbaroumOffline?.withForegroundPriority;
+      if (typeof withPriority === 'function') {
+        return withPriority(callback, { reason: 'catalog-add' });
+      }
+      return callback();
     };
     const withBusyInteraction = async (control, callback) => {
       if (typeof callback !== 'function') return undefined;
@@ -1219,19 +1226,24 @@
 
       while (queue.length) {
         const pendingEntry = queue.shift();
-        const latestList = storeHelper.getCurrentList(store);
-        if (!Array.isArray(latestList) || !latestList.length) break;
-        const liveEntry = findMatchingCharacterListEntry(latestList, pendingEntry, buildChoiceEntryMatchOptions(pendingEntry));
+        const currentList = storeHelper.getCurrentList(store);
+        if (!Array.isArray(currentList) || !currentList.length) break;
+        const nextList = currentList.map(entry => ({ ...entry }));
+        const liveEntry = findMatchingCharacterListEntry(nextList, pendingEntry, buildChoiceEntryMatchOptions(pendingEntry));
         if (!liveEntry) continue;
         const seenKey = String(liveEntry?.__uid || entryDiffKey(liveEntry) || '');
         if (seenKey && seen.has(seenKey)) continue;
         if (seenKey) seen.add(seenKey);
-        const choiceResult = await pickCharacterEntryChoice(liveEntry, latestList, liveEntry.nivå || '', liveEntry, {
+        const choiceResult = await pickCharacterEntryChoice(liveEntry, nextList, liveEntry.nivå || '', liveEntry, {
           promptIfMissingOnly: true
         });
         if (!choiceResult?.hasChoice || choiceResult.cancelled) continue;
-        if (!applyChoiceSelectionToCharacterEntry(latestList, liveEntry, choiceResult)) continue;
-        const summary = storeHelper.setCurrentList(store, latestList) || null;
+        if (!applyChoiceSelectionToCharacterEntry(nextList, liveEntry, choiceResult)) continue;
+        const summary = await runForegroundCatalogMutation(() => (
+          runDeferredCurrentCharacterMutation(() => (
+            storeHelper.setCurrentList(store, nextList) || null
+          ))
+        ));
         summaries.push(summary);
         changed = true;
         (summary?.grantedEntriesAdded || []).forEach(entry => {
@@ -2962,8 +2974,10 @@
         });
       } else {
         mutationSummary = await withBusyInteraction(actBtn, () => (
-          runDeferredCurrentCharacterMutation(() => (
-            storeHelper.setCurrentList(store, list)
+          runForegroundCatalogMutation(() => (
+            runDeferredCurrentCharacterMutation(() => (
+              storeHelper.setCurrentList(store, list)
+            ))
           ))
         ));
         const pendingChoiceEntries = []

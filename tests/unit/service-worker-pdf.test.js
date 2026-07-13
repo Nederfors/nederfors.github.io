@@ -204,20 +204,33 @@ describe('service-worker PDF routing', () => {
   it('keeps active caches while an update waits, then cleans and claims on activation', async () => {
     const stores = new Map();
     const oldCore = 'symbaroum-%2Fapp%2F-pwa-v30-old-build-core';
-    const fetchFresh = async request => new FetchResponse(
-      request.url.includes('.html') ? '<!doctype html>' : '{}',
-      {
-        status: 200,
-        headers: {
-          'content-type': request.url.includes('.html') ? 'text/html' : 'application/json'
+    let online = true;
+    const fetchFresh = async request => {
+      if (!online) throw new Error('offline after activation');
+      return new FetchResponse(
+        request.url.includes('.html')
+          ? '<!doctype html><meta name="pwa-build" content="new-build">'
+          : '{}',
+        {
+          status: 200,
+          headers: {
+            'content-type': request.url.includes('.html') ? 'text/html' : 'application/json'
+          }
         }
-      }
-    );
+      );
+    };
     const worker = loadWorker(fetchFresh, {
       buildId: 'new-build',
       stores
     });
-    await worker.caches.open(oldCore);
+    const oldCache = await worker.caches.open(oldCore);
+    await oldCache.put(
+      'https://example.test/app/index.html',
+      new FetchResponse('<!doctype html><meta name="pwa-build" content="old-build">', {
+        status: 200,
+        headers: { 'content-type': 'text/html' }
+      })
+    );
 
     await worker.dispatchExtendable('install');
     expect(worker.skipWaiting).not.toHaveBeenCalled();
@@ -228,6 +241,14 @@ describe('service-worker PDF routing', () => {
     expect(await worker.caches.keys()).not.toContain(oldCore);
     expect(await worker.caches.keys()).toContain(worker.api.CORE_CACHE);
     expect(worker.claim).toHaveBeenCalledOnce();
+
+    online = false;
+    const navigation = await worker.api.navigationStaleWhileRevalidate(
+      new FetchRequest('https://example.test/app/index.html'),
+      'index.html'
+    );
+    expect(await navigation.response.text()).toContain('content="new-build"');
+    expect(await navigation.refresh).toBeNull();
   });
 
   it('never overwrites the canonical HTML shell with a non-HTML refresh', async () => {

@@ -77,11 +77,15 @@ function createSandbox(storageSeed = {}, overrides = {}) {
   return sandbox;
 }
 
-function loadRulesHelper(overrides = {}) {
+function loadRulesSandbox(overrides = {}) {
   const sandbox = createSandbox({}, overrides);
   vm.runInNewContext(catalogSchemaSource, sandbox, { filename: catalogSchemaPath });
   vm.runInNewContext(rulesHelperSource, sandbox, { filename: rulesHelperPath });
-  return sandbox.window.rulesHelper;
+  return sandbox;
+}
+
+function loadRulesHelper(overrides = {}) {
+  return loadRulesSandbox(overrides).window.rulesHelper;
 }
 
 function loadCatalogSchema(overrides = {}) {
@@ -91,6 +95,105 @@ function loadCatalogSchema(overrides = {}) {
 }
 
 describe('rules-helper unit coverage', () => {
+  it('invalidates cached entry rules when the catalog generation changes', () => {
+    const catalogEntry = value => ({
+      id: 'cache-source',
+      namn: 'Cache source',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          andrar: [{ mal: 'cache_probe', varde: value }]
+        }
+      }
+    });
+    const firstCatalog = [catalogEntry(1)];
+    const sandbox = loadRulesSandbox({
+      DB: firstCatalog,
+      DBIndex: { 'Cache source': firstCatalog[0] },
+      __entryDataVersions: { db: 1, tables: 0 },
+      lookupEntry({ id, name }) {
+        return this.DB.find(entry => String(entry?.id || '') === String(id || ''))
+          || this.DB.find(entry => entry?.namn === name)
+          || null;
+      }
+    });
+    const savedEntry = { id: 'cache-source', namn: 'Cache source', nivå: 'Novis' };
+
+    expect(sandbox.rulesHelper.getRuleList(savedEntry, 'andrar', { level: 'Novis' })[0]?.varde).toBe(1);
+
+    // Hydration/database refresh can replace source objects without changing
+    // either the DB array identity or its length.
+    sandbox.DB[0] = catalogEntry(2);
+    sandbox.DBIndex = { 'Cache source': sandbox.DB[0] };
+    sandbox.__entryDataVersions.db += 1;
+
+    expect(sandbox.rulesHelper.getRuleList(savedEntry, 'andrar', { level: 'Novis' })[0]?.varde).toBe(2);
+
+    // Environments without a generation counter still invalidate when the
+    // catalog array itself is replaced at the same size.
+    delete sandbox.__entryDataVersions;
+    sandbox.DB = [catalogEntry(3)];
+    sandbox.DBIndex = { 'Cache source': sandbox.DB[0] };
+    expect(sandbox.rulesHelper.getRuleList(savedEntry, 'andrar', { level: 'Novis' })[0]?.varde).toBe(3);
+  });
+
+  it('detects nested legacy and level/type list-wide reconciliation rules', () => {
+    const rulesHelper = loadRulesHelper();
+    const nestedLegacy = {
+      id: 'nested-list-wide',
+      namn: 'Nested list-wide',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          ger: [{
+            mal: 'post',
+            post: ['Villkorad gåva'],
+            nar: {
+              inte: {
+                eller: [
+                  { har_namn: ['Spärr'] },
+                  { saknar_namn: ['Nyckel'] }
+                ]
+              }
+            }
+          }]
+        }
+      }
+    };
+    const levelFlag = {
+      id: 'level-list-wide',
+      namn: 'Level list-wide',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Förmåga'],
+        nivå_data: {
+          Novis: {
+            regler: { list_wide: true }
+          }
+        }
+      }
+    };
+    const typeFlag = {
+      id: 'type-list-wide',
+      namn: 'Type list-wide',
+      nivå: 'Novis',
+      taggar: { typ: ['Förmåga'] }
+    };
+    Object.defineProperty(typeFlag, '__typ_regler', {
+      value: {
+        Förmåga: {
+          regler: { requires_full_reconciliation: true }
+        }
+      },
+      enumerable: false,
+      configurable: true
+    });
+
+    expect(rulesHelper.requiresFullListReconciliation([nestedLegacy])).toBe(true);
+    expect(rulesHelper.requiresFullListReconciliation([levelFlag])).toBe(true);
+    expect(rulesHelper.requiresFullListReconciliation([typeFlag])).toBe(true);
+  });
+
   it('supports nested requirement groups with mixed and/or logic', () => {
     const rulesHelper = loadRulesHelper();
     const getMissingReasons = rulesHelper.getMissingRequirementReasonsForCandidate;
