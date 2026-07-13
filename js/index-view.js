@@ -509,8 +509,10 @@
     let fixedRandomEntries = null;
 
     const STATE_KEY = 'indexViewState';
-    // Smaller chunks keep category expansion below a perceptible main-thread stall on mobile.
+    // Desktop categories expand in chunks; phones show the complete category immediately.
     const CATEGORY_BATCH_SIZE = 12;
+    const MOBILE_INDEX_QUERY = '(max-width: 640px)';
+    const isMobileIndexViewport = () => window.matchMedia?.(MOBILE_INDEX_QUERY)?.matches === true;
     const catRenderLimits = {};
     let catState = {};
     const loadState = () => {
@@ -2490,7 +2492,7 @@
         }
         cats[cat].sort(entrySorter);
         const limit = Math.max(CATEGORY_BATCH_SIZE, Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE);
-        const visible = cats[cat].slice(0, limit);
+        const visible = isMobileIndexViewport() ? cats[cat] : cats[cat].slice(0, limit);
         visibleEntriesByCat.set(cat, visible);
         hydrationQueue.push(...visible);
       });
@@ -2802,7 +2804,7 @@
             if (descEl) highlightInElement(descEl, terms);
           }
         });
-        if (shouldOpen && entriesToRender.length < cats[cat].length) {
+        if (!isMobileIndexViewport() && shouldOpen && entriesToRender.length < cats[cat].length) {
           const remaining = cats[cat].length - entriesToRender.length;
           const moreLi = document.createElement('li');
           moreLi.className = 'db-card entry-card index-load-more-card compact';

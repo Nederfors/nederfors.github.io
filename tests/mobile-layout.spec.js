@@ -189,6 +189,13 @@ for (const viewport of PHONE_VIEWPORTS) {
     expect(metrics.traits.compactLabelVisible).toBe(false);
     expect(metrics.traits.xpHeaderDisplay).toBe('flex');
     expect(metrics.traits.xpControlsDisplay).toBe('flex');
+
+    await loadRoute(page, '/#/index');
+    await page.locator('details[data-cat="Förmåga"] > summary').click();
+    await expect(page.locator('button[data-load-more-cat="Förmåga"]')).toHaveCount(0);
+    await expect.poll(() => (
+      page.locator('details[data-cat="Förmåga"] li.entry-card').count()
+    )).toBeGreaterThan(12);
   });
 }
 
