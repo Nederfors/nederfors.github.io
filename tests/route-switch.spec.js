@@ -65,6 +65,60 @@ test('inventory and traits render after in-app route changes', async ({ page }) 
   await expect(page.locator('#charName')).toContainText('Route Hero');
 });
 
+test('trait controls apply each increment once after traits view initialization', async ({ page }) => {
+  const metaState = {
+    current: 'trait-increment-char',
+    characters: [
+      { id: 'trait-increment-char', name: 'Trait Increment Hero', folderId: 'fd-standard' }
+    ],
+    folders: [
+      { id: 'fd-standard', name: 'Standard', order: 0, system: true }
+    ],
+    activeFolder: 'ALL',
+    filterUnion: false,
+    compactEntries: true,
+    onlySelected: false,
+    recentSearches: [],
+    liveMode: false,
+    entrySort: 'alpha-asc'
+  };
+
+  const characterState = {
+    list: [],
+    inventory: [],
+    custom: [],
+    traits: {
+      Diskret: 5,
+      Kvick: 7,
+      Listig: 9,
+      Stark: 11,
+      Träffsäker: 13,
+      Vaksam: 14,
+      Viljestark: 10,
+      Övertygande: 8
+    },
+    notes: {},
+    money: { daler: 0, skilling: 0, 'örtegar': 0 }
+  };
+
+  await page.addInitScript(({ metaState, characterState }) => {
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem('rpall-meta', JSON.stringify(metaState));
+    localStorage.setItem(`rpall-char-${metaState.current}`, JSON.stringify(characterState));
+  }, { metaState, characterState });
+
+  await page.goto('/#/traits');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+
+  const trait = page.locator('.trait[data-key="Diskret"]');
+  await expect(trait.locator('.trait-label')).toHaveText('Diskret: 5');
+  await trait.locator('.trait-btn[data-d="1"]').click();
+  await expect(trait.locator('.trait-label')).toHaveText('Diskret: 6');
+  await trait.locator('.trait-btn[data-d="5"]').click();
+  await expect(trait.locator('.trait-label')).toHaveText('Diskret: 11');
+});
+
 test('trait count opens index with only-selected and trait filters', async ({ page }) => {
   const metaState = {
     current: 'trait-filter-char',
