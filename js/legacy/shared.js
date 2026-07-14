@@ -25914,6 +25914,8 @@ function defaultTraits() {
 
   function bindTraits(){
     if(!dom.traits) return;
+    if (dom.traits.dataset.traitsBound === '1') return;
+    dom.traits.dataset.traitsBound = '1';
     dom.traits.addEventListener('click', async e => {
       const countBtn = e.target.closest('.trait-count');
       if (countBtn) {
