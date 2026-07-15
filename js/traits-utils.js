@@ -910,6 +910,267 @@
   }
 
   let traitRenderSequence = 0;
+  let latestCombatDerivedSnapshot = null;
+  let latestTraitBaseSnapshot = null;
+
+  function computeLocalTraitDerived(list, vals, artifactEffects, manualAdjust) {
+    const corruptionStats = storeHelper.calcCorruptionTrackStats(list, vals.Viljestark);
+    const effectsWithDark = {
+      xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+      corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0),
+      korruptionstroskel: corruptionStats.korruptionstroskel
+    };
+    return {
+      corruptionStats,
+      permanentCorruption: storeHelper.calcPermanentCorruption(list, effectsWithDark),
+      carryCapacity: storeHelper.calcCarryCapacity(vals.Stark, list)
+        + Number(artifactEffects?.capacity || 0)
+        + Number(manualAdjust?.capacity || 0),
+      toughness: storeHelper.calcToughness(vals.Stark, list)
+        + Number(artifactEffects?.toughness || 0)
+        + Number(manualAdjust?.toughness || 0),
+      painThreshold: storeHelper.calcPainThreshold(vals.Stark, list, effectsWithDark)
+        + Number(artifactEffects?.pain || 0)
+        + Number(manualAdjust?.pain || 0)
+    };
+  }
+
+  function buildCombatDerivedSnapshot(list, inv, vals) {
+    const storedSetup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : null;
+    const autoSetup = storedSetup?.enabled
+      ? null
+      : getAutoDefenseSetup({ list, inv, traitValues: vals });
+    const resolvedSetup = storedSetup?.enabled
+      ? storedSetup
+      : { ...(autoSetup || {}), enabled: true };
+    const defTrait = resolvedSetup.trait || getDefenseTraitName(list, vals, { setup: resolvedSetup, inv });
+    const defs = calcDefense(vals[defTrait], {
+      mode: 'standard',
+      list,
+      inv,
+      traitValues: vals,
+      setupOverride: resolvedSetup
+    });
+    const dancingTrait = resolvedSetup.dancingTrait || '';
+    const dancingDefs = dancingTrait
+      ? calcDefense(vals[dancingTrait], {
+          mode: 'dancing',
+          list,
+          inv,
+          traitValues: vals,
+          setupOverride: resolvedSetup
+        })
+      : [];
+    const separateDefs = calcSeparateDefense(defTrait, vals, {
+      list,
+      inv,
+      setupOverride: resolvedSetup
+    });
+    const accuracyEntries = calcAccuracy({
+      list,
+      inv,
+      traitValues: vals,
+      setupOverride: resolvedSetup
+    });
+    const accuracyByTrait = accuracyEntries.reduce((acc, entry) => {
+      const trait = typeof entry?.trait === 'string' ? entry.trait.trim() : '';
+      if (!trait) return acc;
+      if (!acc[trait]) acc[trait] = [];
+      acc[trait].push(entry);
+      return acc;
+    }, {});
+    const attackNotesByTrait = getAttackTraitRuleNotes(list).reduce((acc, note) => {
+      const trait = typeof note?.trait === 'string' ? note.trait.trim() : '';
+      const text = typeof note?.extraText === 'string' ? note.extraText.trim() : '';
+      if (!trait || !text) return acc;
+      if (!acc[trait]) acc[trait] = [];
+      acc[trait].push(text);
+      return acc;
+    }, {});
+    const dependencies = new Set([
+      ...getAutomaticDefenseTraitCandidates(list),
+      ...getAutomaticDancingDefenseTraitCandidates(list),
+      ...getAutomaticAttackTraitCandidates(list),
+      defTrait,
+      dancingTrait,
+      resolvedSetup.attackTrait || '',
+      ...separateDefs.map(entry => entry.trait),
+      ...Object.keys(accuracyByTrait),
+      ...Object.keys(attackNotesByTrait),
+      ...(window.rulesHelper?.getSeparateDefenseTraitRules?.(list) || []).map(rule => rule?.varde)
+    ].map(value => String(value || '').trim()).filter(Boolean));
+    return {
+      charId: store.current || '',
+      version: storeHelper.getDerivedVersion?.(store) || 0,
+      dependencies,
+      defTrait,
+      defs,
+      dancingTrait,
+      dancingDefs,
+      separateDefs,
+      accuracyByTrait,
+      attackNotesByTrait
+    };
+  }
+
+  function getReusableTraitBaseSnapshot() {
+    if (!latestTraitBaseSnapshot || latestTraitBaseSnapshot.charId !== (store.current || '')) return null;
+    if (latestTraitBaseSnapshot.listSource !== (store.data?.[store.current]?.list || null)) return null;
+    if (latestTraitBaseSnapshot.inv !== storeHelper.getInventory(store)) return null;
+    return latestTraitBaseSnapshot;
+  }
+
+  function updateTraitTotalStatus(data, list, inv, snapshot = null) {
+    const reusable = snapshot || getReusableTraitBaseSnapshot();
+    const bonus = reusable?.bonus || (window.exceptionSkill ? exceptionSkill.getBonuses(list) : {});
+    const maskBonus = reusable?.maskBonus || (window.maskSkill ? maskSkill.getBonuses(inv) : {});
+    const total = TRAIT_KEYS.reduce((sum, key) => sum + (data[key] || 0) + (bonus[key] || 0) + (maskBonus[key] || 0), 0);
+    const maxTotal = Number.isFinite(Number(reusable?.maxTotal))
+      ? Number(reusable.maxTotal)
+      : storeHelper.calcTraitTotalMax(list, inv);
+    if (dom.traitsTot) dom.traitsTot.textContent = total;
+    if (dom.traitsMax) dom.traitsMax.textContent = maxTotal;
+    const parent = dom.traitsTot?.closest('.traits-total');
+    if (parent) {
+      parent.classList.remove('good', 'under', 'over');
+      parent.classList.add(total === maxTotal ? 'good' : (total < maxTotal ? 'under' : 'over'));
+    }
+  }
+
+  function replaceTraitExtraDomain(traitKey, domain, entries) {
+    const card = dom.traits?.querySelector(`.trait[data-key="${CSS.escape(traitKey)}"]`);
+    const host = card?.querySelector('.trait-extras');
+    if (!host) return false;
+    host.querySelectorAll(`[data-extra-domain="${domain}"]`).forEach(node => node.remove());
+    const fragment = document.createDocumentFragment();
+    (Array.isArray(entries) ? entries : []).forEach(entry => {
+      const node = document.createElement('div');
+      node.className = 'trait-extra';
+      node.dataset.extraDomain = domain;
+      if (entry?.key) node.dataset.extraKey = entry.key;
+      node.textContent = entry?.text || '';
+      fragment.appendChild(node);
+    });
+    if (domain === 'derived') host.prepend(fragment);
+    else host.appendChild(fragment);
+    return true;
+  }
+
+  function getDerivedTraitExtras(key, derived) {
+    if (key === 'Stark') {
+      return [
+        { key: 'toughness', text: `Tålighet: ${Number(derived.toughness || 0)}` },
+        { key: 'pain', text: ` Smärtgräns: ${Number(derived.painThreshold || 0)}` },
+        { key: 'capacity', text: `Bärkapacitet: ${formatWeight(Number(derived.carryCapacity || 0))}` }
+      ];
+    }
+    if (key === 'Viljestark') {
+      const corruptionStats = derived.corruptionStats || {};
+      return [
+        { key: 'monster-threshold', text: `Styggelsetröskel: ${Number(corruptionStats.styggelsetroskel || 0)}` },
+        { key: 'corruption-threshold', text: `Korruptionströskel: ${Number(corruptionStats.korruptionstroskel || 0)}` },
+        { key: 'permanent-corruption', text: `Permanent korruption: ${Number(derived.permanentCorruption || 0)}` }
+      ];
+    }
+    return [];
+  }
+
+  function getCombatTraitExtras(key, snapshot) {
+    const extras = [];
+    (snapshot.attackNotesByTrait[key] || []).forEach(text => extras.push({ text }));
+    (snapshot.accuracyByTrait[key] || []).forEach(entry => {
+      const value = Number(entry?.value);
+      if (!Number.isFinite(value)) return;
+      extras.push({ text: `Träffsäkerhet${entry?.name ? ` (${entry.name})` : ''}: ${value}` });
+    });
+    if (key === snapshot.defTrait) {
+      snapshot.defs.forEach(entry => {
+        extras.push({ text: `Försvar${entry.name ? ` (${entry.name})` : ''}: ${entry.value}` });
+      });
+    }
+    if (key === snapshot.dancingTrait) {
+      snapshot.dancingDefs.forEach(entry => {
+        extras.push({ text: `${entry.name ? `Försvar (Dansande v. ${entry.name})` : 'Försvar (Dansande v.)'}: ${entry.value}` });
+      });
+    }
+    snapshot.separateDefs.filter(entry => entry.trait === key).forEach(entry => {
+      extras.push({ text: `${entry.name ? `Försvar (${entry.name})` : 'Försvar'}: ${entry.value}` });
+    });
+    return extras;
+  }
+
+  function patchTraitBaseFeedback(changedKeys) {
+    const keys = Array.isArray(changedKeys) ? changedKeys : [changedKeys];
+    const snapshot = getReusableTraitBaseSnapshot();
+    const list = snapshot?.list || storeHelper.getCurrentList(store);
+    const inv = snapshot?.inv || storeHelper.getInventory(store);
+    const data = storeHelper.getTraits(store);
+    const vals = snapshot
+      ? { ...snapshot.vals }
+      : getCurrentTraitValues(list, inv);
+    keys.forEach(key => {
+      if (snapshot) {
+        vals[key] = (data[key] || 0) + (snapshot.bonus[key] || 0) + (snapshot.maskBonus[key] || 0);
+      }
+      const label = dom.traits?.querySelector(`.trait[data-key="${CSS.escape(key)}"] .trait-label`);
+      if (label) label.textContent = `${key}: ${vals[key] || 0}`;
+    });
+    if (snapshot) snapshot.vals = vals;
+    updateTraitTotalStatus(data, list, inv, snapshot);
+  }
+
+  function getActiveTraitMutationScenarioId() {
+    return window.symbaroumPerf?.getFlowContext?.('trait-mutation') || null;
+  }
+
+  function markActiveTraitMutationCheckpoint(name, detail = {}) {
+    const perf = window.symbaroumPerf;
+    const scenarioId = getActiveTraitMutationScenarioId();
+    if (!scenarioId || typeof perf?.markScenario !== 'function') return null;
+    return perf.markScenario(scenarioId, name, {
+      surface: 'traits',
+      ...detail
+    });
+  }
+
+  function refreshTraitTargets(options = {}) {
+    const changedKeys = Array.isArray(options.targets?.traits)
+      ? options.targets.traits.filter(key => TRAIT_KEYS.includes(key))
+      : [];
+    if (!changedKeys.length || !dom.traits?.children.length) return renderTraits();
+    const baseSnapshot = getReusableTraitBaseSnapshot();
+    const list = baseSnapshot?.list || storeHelper.getCurrentList(store);
+    const inv = baseSnapshot?.inv || storeHelper.getInventory(store);
+    const vals = baseSnapshot?.vals || getCurrentTraitValues(list, inv);
+    const artifactEffects = storeHelper.getArtifactEffects(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store);
+    const derived = computeLocalTraitDerived(list, vals, artifactEffects, manualAdjust);
+    if (baseSnapshot) baseSnapshot.derived = derived;
+    changedKeys.forEach(key => {
+      if (key === 'Stark' || key === 'Viljestark') {
+        replaceTraitExtraDomain(key, 'derived', getDerivedTraitExtras(key, derived));
+      }
+    });
+    const requestedCombat = (options.invalidates || []).includes('combat');
+    const cachedDependencies = latestCombatDerivedSnapshot?.dependencies || new Set();
+    if (requestedCombat || changedKeys.some(key => cachedDependencies.has(key))) {
+      latestCombatDerivedSnapshot = buildCombatDerivedSnapshot(list, inv, vals);
+      TRAIT_KEYS.forEach(key => {
+        replaceTraitExtraDomain(key, 'combat', getCombatTraitExtras(key, latestCombatDerivedSnapshot));
+      });
+    }
+    return {
+      changedKeys,
+      combat: requestedCombat || changedKeys.some(key => cachedDependencies.has(key))
+    };
+  }
+
+  function traitCanAffectCombat(key) {
+    if (!latestCombatDerivedSnapshot) return true;
+    return latestCombatDerivedSnapshot.dependencies.has(key);
+  }
 
   async function renderTraits(){
     if(!dom.traits) return;
@@ -944,27 +1205,6 @@
       }).length;
       vals[k] = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
     });
-    const computeLocalDerived = () => {
-      const corruptionStats = storeHelper.calcCorruptionTrackStats(list, vals['Viljestark']);
-      const effectsWithDark = {
-        xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
-        corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0),
-        korruptionstroskel: corruptionStats.korruptionstroskel
-      };
-      return {
-        corruptionStats,
-        permanentCorruption: storeHelper.calcPermanentCorruption(list, effectsWithDark),
-        carryCapacity: storeHelper.calcCarryCapacity(vals['Stark'], list)
-          + Number(artifactEffects?.capacity || 0)
-          + Number(manualAdjust?.capacity || 0),
-        toughness: storeHelper.calcToughness(vals['Stark'], list)
-          + Number(artifactEffects?.toughness || 0)
-          + Number(manualAdjust?.toughness || 0),
-        painThreshold: storeHelper.calcPainThreshold(vals['Stark'], list, effectsWithDark)
-          + Number(artifactEffects?.pain || 0)
-          + Number(manualAdjust?.pain || 0)
-      };
-    };
     let derived = null;
     try {
       derived = await window.symbaroumDerivedState?.requestCurrentCharacterDerived?.({
@@ -978,7 +1218,7 @@
       });
     } catch {}
     if (!derived) {
-      derived = computeLocalDerived();
+      derived = computeLocalTraitDerived(list, vals, artifactEffects, manualAdjust);
     }
     if (sequence !== traitRenderSequence) return;
     const corruptionStats = derived.corruptionStats || { korruptionstroskel: 0, styggelsetroskel: 0 };
@@ -986,32 +1226,20 @@
     const thresh = Number(corruptionStats.korruptionstroskel || 0);
     const permBase = Number(derived.permanentCorruption || 0);
 
-    const defTrait = getDefenseTraitName(list, vals);
-    const defs = calcDefense(vals[defTrait], { mode: 'standard' });
-    const dancingTrait = getDancingDefenseTraitName(list);
-    const dancingDefs = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
-    const separateDefs = calcSeparateDefense(defTrait, vals);
-    const accuracyPreview = getAccuracyPreview({
+    const inv = storeHelper.getInventory(store);
+    latestCombatDerivedSnapshot = buildCombatDerivedSnapshot(list, inv, vals);
+    latestTraitBaseSnapshot = {
+      charId: store.current || '',
+      listSource: store.data?.[store.current]?.list || null,
       list,
-      inv: storeHelper.getInventory(store),
-      traitValues: vals
-    });
-    const accuracyByTrait = (accuracyPreview?.entries || []).reduce((acc, entry) => {
-      const trait = typeof entry?.trait === 'string' ? entry.trait.trim() : '';
-      if (!trait) return acc;
-      if (!acc[trait]) acc[trait] = [];
-      acc[trait].push(entry);
-      return acc;
-    }, {});
-    const attackRuleNotes = getAttackTraitRuleNotes(list);
-    const attackNotesByTrait = attackRuleNotes.reduce((acc, note) => {
-      const trait = typeof note?.trait === 'string' ? note.trait.trim() : '';
-      const text = typeof note?.extraText === 'string' ? note.extraText.trim() : '';
-      if (!trait || !text) return acc;
-      if (!acc[trait]) acc[trait] = [];
-      acc[trait].push(text);
-      return acc;
-    }, {});
+      inv,
+      bonus,
+      maskBonus,
+      counts,
+      vals: { ...vals },
+      maxTotal: storeHelper.calcTraitTotalMax(list, inv),
+      derived
+    };
     if (dom.defenseCalcBtn) {
       const setup = typeof storeHelper.getDefenseSetup === 'function'
         ? storeHelper.getDefenseSetup(store)
@@ -1026,51 +1254,19 @@
       const countMarkup = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
 
       if (k === 'Stark') {
-        const capacity = Number(derived.carryCapacity || 0);
-        const tal = Number(derived.toughness || 0);
-        const pain = Number(derived.painThreshold || 0);
-
-
-        extras.push(`Tålighet: ${tal}`)
-        extras.push(` Smärtgräns: ${pain}`);
-        extras.push(`Bärkapacitet: ${formatWeight(capacity)}`);
+        extras.push(...getDerivedTraitExtras(k, derived).map(entry => ({ ...entry, domain: 'derived' })));
       } else if (k === 'Viljestark') {
-        const perm = permBase;
-        extras.push(`Styggelsetröskel: ${maxCor}`);
-        extras.push(`Korruptionströskel: ${thresh}`);
-        extras.push(`Permanent korruption: ${perm}`);
+        extras.push(...getDerivedTraitExtras(k, {
+          ...derived,
+          corruptionStats: { styggelsetroskel: maxCor, korruptionstroskel: thresh },
+          permanentCorruption: permBase
+        }).map(entry => ({ ...entry, domain: 'derived' })));
       }
+      extras.push(...getCombatTraitExtras(k, latestCombatDerivedSnapshot).map(entry => ({ ...entry, domain: 'combat' })));
 
-      (attackNotesByTrait[k] || []).forEach(text => extras.push(text));
-      (accuracyByTrait[k] || []).forEach(entry => {
-        const sourceLabel = entry?.name ? ` (${entry.name})` : '';
-        const value = Number(entry?.value);
-        if (!Number.isFinite(value)) return;
-        extras.push(`Tr\u00e4ffs\u00e4kerhet${sourceLabel}: ${value}`);
-      });
-
-      if (k === defTrait) {
-        defs.forEach(d => {
-          extras.push(`Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}`);
-        });
-      }
-
-      if (k === dancingTrait && dancingDefs.length) {
-        dancingDefs.forEach(d => {
-          const label = d.name ? `Försvar (Dansande v. ${d.name})` : 'Försvar (Dansande v.)';
-          extras.push(`${label}: ${d.value}`);
-        });
-      }
-
-      const traitSeparateDefs = separateDefs.filter(d => d.trait === k);
-      if (traitSeparateDefs.length) {
-        traitSeparateDefs.forEach(d => {
-          const label = d.name ? `Försvar (${d.name})` : 'Försvar';
-          extras.push(`${label}: ${d.value}`);
-        });
-      }
-
-      const extrasHtml = extras.map(text => `<div class="trait-extra">${text}</div>`).join('');
+      const extrasHtml = extras.map(entry => (
+        `<div class="trait-extra" data-extra-domain="${entry.domain}"${entry.key ? ` data-extra-key="${entry.key}"` : ''}>${entry.text}</div>`
+      )).join('');
 
       return `
       <div class="trait" data-key="${k}">
@@ -1086,27 +1282,10 @@
         <div class="trait-count-row">
           ${countMarkup}
         </div>
-        ${extrasHtml}
+        <div class="trait-extras">${extrasHtml}</div>
       </div>`;
     }).join('');
-
-    const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0)+(maskBonus[k]||0),0);
-
-    const inv = storeHelper.getInventory(store);
-    const maxTot = storeHelper.calcTraitTotalMax(list, inv);
-    if (dom.traitsTot) dom.traitsTot.textContent = total;
-    if (dom.traitsMax) dom.traitsMax.textContent = maxTot;
-    const parent = dom.traitsTot.closest('.traits-total');
-    if (parent) {
-      parent.classList.remove('good','under','over');
-      if (total === maxTot) {
-        parent.classList.add('good');
-      } else if (total < maxTot) {
-        parent.classList.add('under');
-      } else {
-        parent.classList.add('over');
-      }
-    }
+    updateTraitTotalStatus(data, list, inv, latestTraitBaseSnapshot);
 
     if (dom.traitStats) {
       dom.traitStats.textContent = "";
@@ -1136,15 +1315,27 @@
       if(!btn) return;
       const key = btn.closest('.trait').dataset.key;
       const d   = Number(btn.dataset.d);
+      markActiveTraitMutationCheckpoint('handler-entry', { key, delta: d });
 
       const t   = storeHelper.getTraits(store);
-      const bonusEx = window.exceptionSkill ? exceptionSkill.getBonus(key) : 0;
-      const bonusMask = window.maskSkill ? maskSkill.getBonus(key) : 0;
+      const baseSnapshot = getReusableTraitBaseSnapshot();
+      const bonusEx = baseSnapshot
+        ? Number(baseSnapshot.bonus?.[key] || 0)
+        : (window.exceptionSkill ? exceptionSkill.getBonus(key) : 0);
+      const bonusMask = baseSnapshot
+        ? Number(baseSnapshot.maskBonus?.[key] || 0)
+        : (window.maskSkill ? maskSkill.getBonus(key) : 0);
       const bonus = bonusEx + bonusMask;
       const min   = bonus;
       const currentVal = t[key] || 0;
       const next  = Math.max(0, currentVal + d);
       const proposed = Math.max(min - bonus, next);
+      markActiveTraitMutationCheckpoint(baseSnapshot ? 'trait-snapshot-hit' : 'trait-snapshot-miss', { key });
+      markActiveTraitMutationCheckpoint('surface-preparation-end', {
+        key,
+        delta: d,
+        snapshotHit: Boolean(baseSnapshot)
+      });
 
       const isIncrease = d > 0 && proposed > currentVal;
       if (isIncrease) {
@@ -1186,14 +1377,40 @@
         if (!ok) return;
       }
 
+      markActiveTraitMutationCheckpoint('validation-end', { key, delta: d });
+
       t[key] = proposed;
-      storeHelper.setTraits(store, t);
-      renderTraits();
-      window.symbaroumViewBridge?.refreshCurrent({ summary: true, effects: true });
+      const invalidates = ['traits.base', 'summary.traits'];
+      if (key === 'Stark') invalidates.push('traits.stark-derived', 'inventory.totals');
+      if (key === 'Viljestark') invalidates.push('traits.willpower-derived');
+      if (traitCanAffectCombat(key)) invalidates.push('combat', 'summary.combat');
+      const mutation = storeHelper.setTraits(store, t, {
+        invalidates,
+        targets: { traits: [key], summary: [key] },
+        afterCommit: summary => {
+          window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+            charId: summary.charId,
+            version: summary.version,
+            invalidates: summary.invalidates,
+            targets: summary.targets,
+            topology: 'row',
+            source: 'trait-base-value',
+            afterPaint: true
+          });
+        }
+      });
+      if (!mutation) return;
+      patchTraitBaseFeedback(mutation.changedKeys);
+      markActiveTraitMutationCheckpoint('first-feedback-dom', {
+        key,
+        delta: d,
+        value: proposed
+      });
     });
   }
 
   window.renderTraits = renderTraits;
+  window.refreshTraitTargets = refreshTraitTargets;
   window.bindTraits = bindTraits;
   window.calcDefense = calcDefense;
   window.calcAccuracy = calcAccuracy;
@@ -1202,6 +1419,15 @@
   window.getDefensePreview = getDefensePreview;
   window.getAccuracyPreview = getAccuracyPreview;
   window.getCombatExtraItemInfos = buildCombatExtraItemInfos;
+  window.getTraitMutationSnapshot = () => {
+    const snapshot = getReusableTraitBaseSnapshot();
+    if (!snapshot) return null;
+    return {
+      vals: { ...snapshot.vals },
+      derived: snapshot.derived ? { ...snapshot.derived } : null,
+      combat: latestCombatDerivedSnapshot
+    };
+  };
   window.getDefenseTraitName = getDefenseTraitName;
   window.getDancingDefenseTraitName = getDancingDefenseTraitName;
   window.getAttackTraitRuleNotes = getAttackTraitRuleNotes;

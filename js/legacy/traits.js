@@ -979,6 +979,77 @@
   const renderSummaryInto = (container) => {
     if (!container) return;
     container.innerHTML = renderSummaryHtml();
+    delete container.dataset.summaryDirty;
+  };
+
+  const isSummaryPanelActive = (container) => {
+    const panel = container?.closest?.('#summaryTabPanel, [data-tab-panel="summary"]');
+    return Boolean(panel?.classList?.contains('active') && panel.getAttribute('aria-hidden') !== 'true');
+  };
+
+  const findSummarySection = (container, title) => [...(container?.querySelectorAll?.('.summary-section') || [])]
+    .find(section => section.querySelector('h3')?.textContent?.trim() === title) || null;
+
+  const patchSummaryValue = (container, sectionTitle, label, value) => {
+    const section = findSummarySection(container, sectionTitle);
+    if (!section) return false;
+    const row = [...section.querySelectorAll('li')].find(candidate => (
+      String(candidate.querySelector('.summary-key')?.textContent || '').replace(/:\s*$/, '').trim() === label
+    ));
+    const target = row?.querySelector('.summary-value');
+    if (!target) return false;
+    target.textContent = String(value ?? '–');
+    return true;
+  };
+
+  const patchTraitSummary = (container, options = {}) => {
+    const changedKeys = Array.isArray(options.targets?.traits) ? options.targets.traits : [];
+    const snapshot = window.getTraitMutationSnapshot?.();
+    if (!changedKeys.length || !snapshot?.vals) return false;
+    let patched = false;
+    changedKeys.forEach(key => {
+      patched = patchSummaryValue(container, 'Karaktärsdrag', key, snapshot.vals[key]) || patched;
+    });
+
+    const derived = snapshot.derived || {};
+    if (changedKeys.includes('Stark')) {
+      patched = patchSummaryValue(container, 'Hälsa', 'Tålighet', Number(derived.toughness || 0)) || patched;
+      patched = patchSummaryValue(container, 'Hälsa', 'Smärtgräns', Number(derived.painThreshold || 0)) || patched;
+      patched = patchSummaryValue(container, 'Hälsa', 'Bärkapacitet', Number(derived.carryCapacity || 0).toFixed(2)) || patched;
+    }
+    if (changedKeys.includes('Viljestark')) {
+      const corruption = derived.corruptionStats || {};
+      patched = patchSummaryValue(container, 'Korruption', 'Maximal korruption', Number(corruption.styggelsetroskel || 0)) || patched;
+      patched = patchSummaryValue(container, 'Korruption', 'Permanent korruption', Number(derived.permanentCorruption || 0)) || patched;
+      patched = patchSummaryValue(container, 'Korruption', 'Korruptionströskel', Number(corruption.korruptionstroskel || 0)) || patched;
+    }
+
+    if ((options.invalidates || []).includes('combat') && snapshot.combat) {
+      const combat = snapshot.combat;
+      const standardDefense = (combat.defs || [])
+        .map(entry => Number(entry?.value))
+        .filter(Number.isFinite);
+      if (standardDefense.length) {
+        patched = patchSummaryValue(container, 'Försvar', 'Försvar', Math.max(...standardDefense)) || patched;
+      }
+      patched = patchSummaryValue(container, 'Försvar', 'Försvarstärning', combat.defTrait || '') || patched;
+      const dancingDefense = (combat.dancingDefs || [])
+        .map(entry => Number(entry?.value))
+        .filter(Number.isFinite);
+      if (dancingDefense.length) {
+        patched = patchSummaryValue(container, 'Försvar', 'Försvar (Dansande v.)', Math.max(...dancingDefense)) || patched;
+      }
+      const accuracyEntries = Object.values(combat.accuracyByTrait || {}).flat();
+      const accuracyValues = accuracyEntries.map(entry => Number(entry?.value)).filter(Number.isFinite);
+      if (accuracyValues.length) {
+        patched = patchSummaryValue(container, 'Träffsäkerhet', 'Träffsäkerhet', Math.max(...accuracyValues)) || patched;
+      }
+      accuracyEntries.forEach(entry => {
+        const label = `${entry?.name ? `Träffsäker (${entry.name})` : 'Träffsäker'}${entry?.trait ? ` [${entry.trait}]` : ''}`;
+        patched = patchSummaryValue(container, 'Träffsäkerhet', label, Number(entry?.value || 0)) || patched;
+      });
+    }
+    return patched;
   };
 
   const renderEffectsInto = (container) => {
@@ -1074,6 +1145,12 @@
     });
 
     setTraitsViewTitle(TRAITS_TABS[tabName].label);
+    if (tabName === 'summary') {
+      const summaryContent = document.getElementById('summaryContent');
+      if (summaryContent?.dataset?.summaryDirty === '1') {
+        EFFECT_STATE.summaryRenderer?.();
+      }
+    }
 
     if (syncTouch && touchTabsActive) {
       window.daubMotion.slideTabsTo?.(
@@ -1117,11 +1194,24 @@
     const container = document.getElementById('summaryContent');
     if (!container) return;
     const render = () => renderSummaryInto(container);
+    const refresh = (options = {}) => {
+      if (!isSummaryPanelActive(container)) {
+        container.dataset.summaryDirty = '1';
+        return { deferred: true };
+      }
+      if (patchTraitSummary(container, options)) {
+        delete container.dataset.summaryDirty;
+        return { targeted: true };
+      }
+      render();
+      return { targeted: false };
+    };
     EFFECT_STATE.summaryRenderer = render;
     window.symbaroumViewBridge?.registerViewHooks('traits', {
-      refreshSummary: () => EFFECT_STATE.summaryRenderer && EFFECT_STATE.summaryRenderer()
+      refreshSummary: refresh
     });
-    render();
+    if (getTraitsTabFromHash() === 'summary') render();
+    else container.dataset.summaryDirty = '1';
     if (container.dataset.bound === '1') return;
     container.dataset.bound = '1';
     container.addEventListener('click', e => {
@@ -1147,9 +1237,11 @@
     window.symbaroumViewBridge?.registerViewHooks('traits', {
       refreshTraits: () => {
         if (typeof window.renderTraits === 'function') {
-          window.renderTraits();
+          return window.renderTraits();
         }
-      }
+        return undefined;
+      },
+      refreshTraitTargets: options => window.refreshTraitTargets?.(options)
     });
     if (typeof window.renderTraits === 'function') {
       window.renderTraits();

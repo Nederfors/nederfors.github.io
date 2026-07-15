@@ -231,6 +231,7 @@
       refreshName: updateCharName,
       refreshFilters: refreshInventoryFilters,
       refreshInventory: refreshInventoryPanel,
+      refreshInventoryTotals: options => window.invUtil?.refreshInventoryTotals?.(options),
       refresh: refreshInventoryPanel
     });
 

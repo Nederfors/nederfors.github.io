@@ -355,6 +355,33 @@
         .filter(Boolean)
     )];
   };
+
+  const normalizeMutationInvalidations = (invalidates) => {
+    const source = Array.isArray(invalidates)
+      ? invalidates
+      : (invalidates === undefined || invalidates === null ? [] : [invalidates]);
+    return [...new Set(source.map(value => String(value || '').trim()).filter(Boolean))];
+  };
+
+  const mergeMutationTargets = (targetMap, targets) => {
+    if (!targets || typeof targets !== 'object' || Array.isArray(targets)) return;
+    Object.entries(targets).forEach(([key, values]) => {
+      if (!targetMap.has(key)) targetMap.set(key, new Set());
+      const targetValues = Array.isArray(values) ? values : [values];
+      targetValues
+        .filter(value => value !== undefined && value !== null)
+        .forEach(value => targetMap.get(key).add(value));
+    });
+  };
+
+  const serializeMutationTargets = (targetMap) => Object.fromEntries(
+    [...targetMap.entries()].map(([key, values]) => [key, [...values]])
+  );
+
+  const collectAfterCommitCallbacks = (target, value) => {
+    const callbacks = Array.isArray(value) ? value : [value];
+    callbacks.filter(callback => typeof callback === 'function').forEach(callback => target.add(callback));
+  };
   const getCharacterFieldPatch = (store, charId, fields) => {
     const normalizedFields = normalizeMutationFields(fields);
     const data = store?.data?.[charId];
@@ -444,13 +471,35 @@
       } else {
         activeBatch.requiresFullPersist = true;
       }
+      normalizeMutationInvalidations(options.invalidates).forEach(domain => activeBatch.invalidates.add(domain));
+      mergeMutationTargets(activeBatch.targets, options.targets);
+      collectAfterCommitCallbacks(activeBatch.afterCommit, options.afterCommit);
       return charId;
     }
-    if (options.bumpDerived) bumpDerivedVersion(store, charId);
-    if (options.persist !== false) {
-      persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
-    }
-    return charId;
+    return timeCurrentListMutationStage('common-commit', () => {
+      const version = options.bumpDerived
+        ? bumpDerivedVersion(store, charId)
+        : getDerivedVersionMeta(store, charId);
+      if (options.persist !== false) {
+        persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
+      }
+      const commitSummary = {
+        charId,
+        version,
+        fields: normalizedFields,
+        invalidates: normalizeMutationInvalidations(options.invalidates),
+        targets: options.targets && typeof options.targets === 'object' ? options.targets : {},
+        persisted: options.persist !== false
+      };
+      const callbacks = new Set();
+      collectAfterCommitCallbacks(callbacks, options.afterCommit);
+      callbacks.forEach(callback => callback(commitSummary));
+      return charId;
+    }, {
+      charId,
+      fields: normalizedFields,
+      bumpDerived: Boolean(options.bumpDerived)
+    });
   }
 
   function normalizeRuleOverrideKeys(value) {
@@ -515,6 +564,9 @@
           charId,
           depth: 0,
           fields: new Set(),
+          invalidates: new Set(),
+          targets: new Map(),
+          afterCommit: new Set(),
           bumpDerived: false,
           shouldPersist: false,
           requiresFullPersist: false
@@ -532,6 +584,9 @@
     }
     if (options.bumpDerived) batch.bumpDerived = true;
     if (options.persist !== false) batch.shouldPersist = true;
+    normalizeMutationInvalidations(options.invalidates).forEach(domain => batch.invalidates.add(domain));
+    mergeMutationTargets(batch.targets, options.targets);
+    collectAfterCommitCallbacks(batch.afterCommit, options.afterCommit);
 
     const finalize = () => {
       batch.depth -= 1;
@@ -539,12 +594,27 @@
       if (currentCharacterMutationBatch === batch) {
         currentCharacterMutationBatch = null;
       }
-      if (batch.bumpDerived) {
-        bumpDerivedVersion(store, charId);
-      }
-      if (batch.shouldPersist) {
-        persistCharacter(store, charId, batch.requiresFullPersist ? {} : { fields: [...batch.fields] });
-      }
+      timeCurrentListMutationStage('common-commit', () => {
+        const version = batch.bumpDerived
+          ? bumpDerivedVersion(store, charId)
+          : getDerivedVersionMeta(store, charId);
+        if (batch.shouldPersist) {
+          persistCharacter(store, charId, batch.requiresFullPersist ? {} : { fields: [...batch.fields] });
+        }
+        const commitSummary = {
+          charId,
+          version,
+          fields: [...batch.fields],
+          invalidates: [...batch.invalidates],
+          targets: serializeMutationTargets(batch.targets),
+          persisted: batch.shouldPersist
+        };
+        batch.afterCommit.forEach(callback => callback(commitSummary));
+      }, {
+        charId,
+        fields: [...batch.fields],
+        bumpDerived: batch.bumpDerived
+      });
     };
 
     try {
@@ -3350,6 +3420,8 @@
     return perf.getFlowContext('add-item')
       || perf.getFlowContext('remove-item')
       || perf.getFlowContext('character-level-change')
+      || perf.getFlowContext('inventory-mutation')
+      || perf.getFlowContext('trait-mutation')
       || null;
   }
 
@@ -3562,10 +3634,27 @@
       : [];
   }
 
+  function ensureInventoryRowUids(inventory) {
+    const seen = new Set();
+    const visit = rows => {
+      if (!Array.isArray(rows)) return rows;
+      rows.forEach(row => {
+        if (!row || typeof row !== 'object') return;
+        let uid = String(row.__uid || '').trim();
+        if (!uid || seen.has(uid)) uid = `inv-${genId()}`;
+        row.__uid = uid;
+        seen.add(uid);
+        if (Array.isArray(row.contains)) visit(row.contains);
+      });
+      return rows;
+    };
+    return visit(inventory);
+  }
+
   function setInventory(store, inv) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].inventory = inv;
+    store.data[store.current].inventory = ensureInventoryRowUids(inv);
     commitCurrentCharacterMutation(store, {
       bumpDerived: true,
       fields: INVENTORY_MUTATION_FIELDS
@@ -4380,17 +4469,26 @@ function defaultTraits() {
     return { ...defaultTraits(), ...(data.traits || {}) };
   }
 
-  function setTraits(store, traits) {
-    if (!store.current) return;
+  function setTraits(store, traits, options = {}) {
+    if (!store.current) return null;
     store.data[store.current] = store.data[store.current] || {};
     const next = { ...defaultTraits(), ...traits };
     const prev = { ...defaultTraits(), ...(store.data[store.current].traits || {}) };
-    if (JSON.stringify(prev) === JSON.stringify(next)) return;
+    if (JSON.stringify(prev) === JSON.stringify(next)) return null;
+    const changedKeys = TRAIT_KEYS.filter(key => prev[key] !== next[key]);
     store.data[store.current].traits = next;
     commitCurrentCharacterMutation(store, {
       bumpDerived: true,
-      fields: ['traits']
+      fields: ['traits'],
+      invalidates: options.invalidates,
+      targets: options.targets || { traits: changedKeys },
+      afterCommit: options.afterCommit
     });
+    return {
+      charId: store.current,
+      version: getDerivedVersionMeta(store, store.current),
+      changedKeys
+    };
   }
 
   /* ---------- 6b. Anteckningar ---------- */
@@ -5300,6 +5398,7 @@ function defaultTraits() {
       const moneyRaw = row.money ?? row.m;
       if (typeRaw === 'currency' || moneyRaw) {
         const res = { t: 'currency' };
+        if (row.__uid) res.u = row.__uid;
         const src = (moneyRaw && typeof moneyRaw === 'object') ? moneyRaw : {};
         res.m = sanitizeMoneyStruct({
           daler: src.daler ?? src.d,
@@ -5318,6 +5417,7 @@ function defaultTraits() {
         return res;
       }
       const res = {};
+      if (row.__uid) res.u = row.__uid;
       if (row.id !== undefined) res.i = row.id;
       const canonical = row.id !== undefined && typeof global.lookupEntry === 'function'
         ? global.lookupEntry({ id: row.id })
@@ -5428,6 +5528,8 @@ function defaultTraits() {
             qty,
             money
           };
+          const rowUid = String(row.__uid ?? row.u ?? '').trim();
+          if (rowUid) expanded.__uid = rowUid;
           const weightRaw = row.vikt ?? row.w;
           if (weightRaw !== undefined) {
             const weightNum = Number(weightRaw);
@@ -5510,6 +5612,8 @@ function defaultTraits() {
           removedKval,
           artifactEffect
         };
+        const rowUid = String(row.__uid ?? row.u ?? '').trim();
+        if (rowUid) expanded.__uid = rowUid;
         if (snapshotSourceKey) expanded.snapshotSourceKey = snapshotSourceKey;
         if (equippedSlot) expanded.equippedSlot = equippedSlot;
         if (manualQualityOverride.length) {
@@ -5563,7 +5667,7 @@ function defaultTraits() {
         return expanded;
       });
     };
-    return expandRows(inv);
+    return ensureInventoryRowUids(expandRows(inv));
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */

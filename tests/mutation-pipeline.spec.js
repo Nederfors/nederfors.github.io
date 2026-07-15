@@ -571,6 +571,44 @@ test('character repeated additions hold foreground catalog priority', async ({ p
   ]));
 });
 
+test('character simple remove uses the shared refresh pipeline and preserves unaffected cards', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+  await seedNamedEntries(page, [
+    { name: 'Akrobatik', level: 'Novis' },
+    { name: 'Arkivarie' }
+  ]);
+  const akrobatik = await revealCharacterEntry(page, 'Akrobatik');
+  const arkivarie = await revealCharacterEntry(page, 'Arkivarie');
+  await page.evaluate(() => {
+    window.__characterRemoveProbe = {
+      unaffected: [...document.querySelectorAll('#valda li.entry-card, #valda li.card')]
+        .find(card => card.dataset.name === 'Arkivarie') || null,
+      refreshes: []
+    };
+    const pipeline = window.symbaroumMutationPipeline;
+    const originalSchedule = pipeline.scheduleCharacterRefresh;
+    pipeline.scheduleCharacterRefresh = options => {
+      window.__characterRemoveProbe.refreshes.push({ source: options.source || '' });
+      return originalSchedule(options);
+    };
+  });
+
+  await akrobatik.locator('button[data-act="del"], button[data-act="rem"]').first().click();
+  await expect.poll(async () => await readListEntries(page, 'Akrobatik')).toEqual([]);
+  await page.evaluate(() => window.symbaroumMutationPipeline.waitForCharacterRefresh());
+
+  await expect(akrobatik).toHaveCount(0);
+  await expect(arkivarie).toBeVisible();
+  const result = await page.evaluate(() => ({
+    unaffectedPreserved: [...document.querySelectorAll('#valda li.entry-card, #valda li.card')]
+      .find(card => card.dataset.name === 'Arkivarie') === window.__characterRemoveProbe.unaffected,
+    refreshes: window.__characterRemoveProbe.refreshes
+  }));
+  expect(result.unaffectedPreserved).toBe(true);
+  expect(result.refreshes).toEqual([{ source: 'character-list-remove' }]);
+});
+
 test('choice-popup add with replace_existing upgrades the existing Exceptionellt karaktärsdrag entry', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');
@@ -749,19 +787,83 @@ test('Inventory UI add, subtract, and remove actions persist their resulting qua
 
   const card = page.locator('#invList li[data-name="Bandage"]').first();
   await expect(card).toBeVisible();
+  const stableRowUid = await page.evaluate(() => (
+    window.storeHelper.getInventory(typeof store === 'object' && store ? store : window.storeHelper.load())
+      .find(row => row?.name === 'Bandage')?.__uid || ''
+  ));
+  expect(stableRowUid).toBeTruthy();
+
+  await page.evaluate(() => {
+    const card = document.querySelector('#invList li[data-name="Bandage"]');
+    window.__quantityFastPathProbe = {
+      card,
+      plus: card?.querySelector('button[data-standard-slot="plus"]'),
+      refreshes: []
+    };
+    const pipeline = window.symbaroumMutationPipeline;
+    const originalSchedule = pipeline.scheduleCharacterRefresh;
+    window.__quantityFastPathProbe.restore = () => {
+      pipeline.scheduleCharacterRefresh = originalSchedule;
+    };
+    pipeline.scheduleCharacterRefresh = options => {
+      window.__quantityFastPathProbe.refreshes.push({
+        invalidates: options.invalidates || [],
+        topology: options.topology || ''
+      });
+      return originalSchedule(options);
+    };
+  });
 
   await clickInventoryAction(page, 'Bandage', 'add');
   await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 2 }]);
   await expect(card.locator('.count-badge')).toHaveText('×2');
+  const addFastPath = await page.evaluate(async () => {
+    await window.symbaroumMutationPipeline.waitForCharacterRefresh();
+    const current = document.querySelector('#invList li[data-name="Bandage"]');
+    return {
+      cardPreserved: current === window.__quantityFastPathProbe.card,
+      plusPreserved: current?.querySelector('button[data-standard-slot="plus"]') === window.__quantityFastPathProbe.plus,
+      hasMinus: Boolean(current?.querySelector('button[data-standard-slot="minus"]')),
+      refreshes: window.__quantityFastPathProbe.refreshes
+    };
+  });
+  expect(addFastPath).toEqual({
+    cardPreserved: true,
+    plusPreserved: true,
+    hasMinus: true,
+    refreshes: [{
+      invalidates: ['inventory.row', 'inventory.totals', 'summary.economy'],
+      topology: 'row'
+    }]
+  });
   await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-add-acceptance' }));
 
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
   await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 2 }]);
+  expect(await page.evaluate(() => (
+    window.storeHelper.getInventory(typeof store === 'object' && store ? store : window.storeHelper.load())
+      .find(row => row?.name === 'Bandage')?.__uid || ''
+  ))).toBe(stableRowUid);
+
+  await page.evaluate(() => {
+    const card = document.querySelector('#invList li[data-name="Bandage"]');
+    window.__quantitySubtractProbe = {
+      card,
+      plus: card?.querySelector('button[data-standard-slot="plus"]')
+    };
+  });
 
   await clickInventoryAction(page, 'Bandage', 'sub');
   await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 1 }]);
   await expect(page.locator('#invList li[data-name="Bandage"] button[data-act="sub"]')).toHaveCount(0);
+  expect(await page.evaluate(() => {
+    const current = document.querySelector('#invList li[data-name="Bandage"]');
+    return {
+      cardPreserved: current === window.__quantitySubtractProbe.card,
+      plusPreserved: current?.querySelector('button[data-standard-slot="plus"]') === window.__quantitySubtractProbe.plus
+    };
+  })).toEqual({ cardPreserved: true, plusPreserved: true });
   await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-subtract-acceptance' }));
 
   await page.reload();
@@ -795,4 +897,225 @@ test('character level changes revert when higher-level requirements are blocked'
 
   const scenario = await readLatestScenario(page, 'character-level-change', 'cancelled');
   expect(scenario?.detail?.reason).toBe('requirements-blocked');
+});
+
+test('refresh tickets coalesce rapid schedules and wait for promise-returning view hooks', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+
+  const result = await page.evaluate(async () => {
+    let hookCalls = 0;
+    let releaseHook;
+    window.symbaroumViewBridge.registerViewHooks('character', {
+      refreshSummary: () => {
+        hookCalls += 1;
+        return new Promise(resolve => {
+          releaseHook = resolve;
+        });
+      }
+    });
+
+    const tickets = Array.from({ length: 5 }, () => (
+      window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+        summary: true,
+        source: 'ticket-coalescing-test',
+        afterPaint: false
+      })
+    ));
+    while (!releaseHook) await new Promise(resolve => setTimeout(resolve, 0));
+
+    let completed = false;
+    const completion = window.symbaroumMutationPipeline
+      .waitForCharacterRefresh(tickets.at(-1))
+      .then(value => {
+        completed = true;
+        return value;
+      });
+    await Promise.resolve();
+    const waitedForHook = completed === false;
+    releaseHook({ ok: true });
+    const refreshResult = await completion;
+
+    return {
+      hookCalls,
+      waitedForHook,
+      generations: tickets.map(ticket => ticket.generation),
+      completedGenerations: refreshResult.generations
+    };
+  });
+
+  expect(result.hookCalls).toBe(1);
+  expect(result.waitedForHook).toBe(true);
+  expect(result.generations).toEqual([...result.generations].sort((a, b) => a - b));
+  expect(new Set(result.generations).size).toBe(5);
+  expect(result.completedGenerations).toEqual(result.generations);
+});
+
+test('refresh scheduled during an active flush receives a separate consistency barrier', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+
+  const result = await page.evaluate(async () => {
+    let releaseSummary;
+    let releaseEffects;
+    let summaryStarted = false;
+    let effectsStarted = false;
+    window.symbaroumViewBridge.registerViewHooks('character', {
+      refreshSummary: () => {
+        summaryStarted = true;
+        return new Promise(resolve => { releaseSummary = resolve; });
+      },
+      refreshEffects: () => {
+        effectsStarted = true;
+        return new Promise(resolve => { releaseEffects = resolve; });
+      }
+    });
+
+    const first = window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+      summary: true,
+      source: 'refresh-race-first',
+      afterPaint: false
+    });
+    while (!summaryStarted) await new Promise(resolve => setTimeout(resolve, 0));
+
+    const second = window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+      effects: true,
+      source: 'refresh-race-second',
+      afterPaint: false
+    });
+    let secondCompleted = false;
+    second.consistencyReady.then(() => { secondCompleted = true; });
+
+    releaseSummary();
+    const firstResult = await first.consistencyReady;
+    const secondWasPending = !secondCompleted;
+    while (!effectsStarted) await new Promise(resolve => setTimeout(resolve, 0));
+    const secondStillPendingAtHook = !secondCompleted;
+    releaseEffects();
+    const secondResult = await second.consistencyReady;
+
+    return {
+      firstGeneration: first.generation,
+      secondGeneration: second.generation,
+      firstCompleted: firstResult.generations,
+      secondCompleted: secondResult.generations,
+      secondWasPending,
+      secondStillPendingAtHook
+    };
+  });
+
+  expect(result.secondGeneration).toBeGreaterThan(result.firstGeneration);
+  expect(result.firstCompleted).toEqual([result.firstGeneration]);
+  expect(result.secondCompleted).toEqual([result.secondGeneration]);
+  expect(result.secondWasPending).toBe(true);
+  expect(result.secondStillPendingAtHook).toBe(true);
+});
+
+test('superseded derived requests settle from the latest queued version', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+
+  const result = await page.evaluate(async () => {
+    await window.symbaroumMutationPipeline.waitForCharacterRefresh();
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const worker = window.symbaroumRulesWorker;
+    const originalCompute = worker.computeDerivedCharacter;
+    let workerCalls = 0;
+    worker.computeDerivedCharacter = async () => {
+      workerCalls += 1;
+      return {
+        usedXp: 1,
+        totalXp: 9,
+        freeXp: 8,
+        corruptionStats: { korruptionstroskel: 5, styggelsetroskel: 10 },
+        permanentCorruption: 0,
+        carryCapacity: 10,
+        toughness: 10,
+        painThreshold: 5
+      };
+    };
+
+    try {
+      const traits = window.storeHelper.getTraits(activeStore);
+      window.storeHelper.setTraits(activeStore, { ...traits, Diskret: traits.Diskret + 1 });
+      const firstVersion = window.storeHelper.getDerivedVersion(activeStore);
+      const first = window.symbaroumDerivedState.requestCurrentCharacterDerived({
+        version: firstVersion,
+        afterPaint: true,
+        source: 'superseded-derived-first'
+      });
+
+      window.storeHelper.setTraits(activeStore, { ...traits, Diskret: traits.Diskret + 2 });
+      const secondVersion = window.storeHelper.getDerivedVersion(activeStore);
+      const second = window.symbaroumDerivedState.requestCurrentCharacterDerived({
+        version: secondVersion,
+        afterPaint: true,
+        source: 'superseded-derived-second'
+      });
+
+      const [firstResult, secondResult] = await Promise.all([first, second]);
+      return {
+        firstVersion,
+        secondVersion,
+        workerCalls,
+        firstFreeXp: firstResult?.freeXp,
+        secondFreeXp: secondResult?.freeXp
+      };
+    } finally {
+      worker.computeDerivedCharacter = originalCompute;
+    }
+  });
+
+  expect(result.secondVersion).toBe(result.firstVersion + 1);
+  expect(result.workerCalls).toBe(1);
+  expect(result.firstFreeXp).toBe(8);
+  expect(result.secondFreeXp).toBe(8);
+});
+
+test('nested character batches union invalidations and run each afterCommit callback once', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+
+  const result = await page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const callbacks = [];
+    const sharedCallback = summary => callbacks.push({ type: 'shared', summary });
+    const nestedCallback = summary => callbacks.push({ type: 'nested', summary });
+    window.storeHelper.batchCurrentCharacterMutation(activeStore, {
+      invalidates: ['traits.base'],
+      targets: { traits: ['Diskret'] },
+      afterCommit: sharedCallback
+    }, () => {
+      const traits = window.storeHelper.getTraits(activeStore);
+      window.storeHelper.setTraits(activeStore, { ...traits, Diskret: traits.Diskret + 1 }, {
+        invalidates: ['summary.traits'],
+        targets: { summary: ['Diskret'] },
+        afterCommit: sharedCallback
+      });
+      window.storeHelper.batchCurrentCharacterMutation(activeStore, {
+        invalidates: ['traits.stark-derived'],
+        targets: { traits: ['Stark'] },
+        afterCommit: nestedCallback
+      }, () => {});
+    });
+    return callbacks.map(entry => ({
+      type: entry.type,
+      invalidates: entry.summary.invalidates,
+      targets: entry.summary.targets,
+      version: entry.summary.version
+    }));
+  });
+
+  expect(result).toHaveLength(2);
+  expect(result.map(entry => entry.type).sort()).toEqual(['nested', 'shared']);
+  result.forEach(entry => {
+    expect(entry.invalidates).toEqual(expect.arrayContaining([
+      'traits.base',
+      'summary.traits',
+      'traits.stark-derived'
+    ]));
+    expect(entry.targets.traits).toEqual(expect.arrayContaining(['Diskret', 'Stark']));
+    expect(entry.targets.summary).toEqual(['Diskret']);
+  });
+  expect(new Set(result.map(entry => entry.version)).size).toBe(1);
 });

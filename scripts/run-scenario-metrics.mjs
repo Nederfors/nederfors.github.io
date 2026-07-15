@@ -199,7 +199,8 @@ function summarizeDetail(detail = {}) {
     renderMode: detail.renderMode || null,
     entry: detail.entry || null,
     trigger: detail.trigger || null,
-    source: detail.source || null
+    source: detail.source || null,
+    endStateHash: detail.endStateHash || null
   };
 }
 
@@ -247,6 +248,19 @@ function aggregateScenarioRuns(name, runs = []) {
     ));
     return [stageName, aggregateNumbers(totals)];
   }));
+  const checkpointNames = [...new Set(runs.flatMap((run) => (
+    Array.isArray(run?.detail?.profile?.checkpoints)
+      ? run.detail.profile.checkpoints.map((checkpoint) => checkpoint.name)
+      : []
+  )))].filter(Boolean);
+  const checkpoints = Object.fromEntries(checkpointNames.map((checkpointName) => {
+    const offsets = runs.flatMap((run) => (
+      (run?.detail?.profile?.checkpoints || [])
+        .filter((checkpoint) => checkpoint.name === checkpointName)
+        .map((checkpoint) => Number(checkpoint.offsetMs))
+    ));
+    return [checkpointName, aggregateNumbers(offsets)];
+  }));
 
   return {
     name,
@@ -254,9 +268,13 @@ function aggregateScenarioRuns(name, runs = []) {
     ...aggregateNumbers(durations),
     fullCatalogRenderCount: runs.filter(usesFullCatalogRender).length,
     stages,
+    checkpoints,
     samples: runs.map((run) => ({
       durationMs: Number(run?.duration || 0),
       fullCatalogRender: usesFullCatalogRender(run),
+      checkpoints: Object.fromEntries((run?.detail?.profile?.checkpoints || []).map((checkpoint) => (
+        [checkpoint.name, Number(checkpoint.offsetMs || 0)]
+      ))),
       detail: summarizeDetail(run?.detail || {})
     })),
     detail: summarizeDetail(runs[0]?.detail || {})
@@ -1851,6 +1869,154 @@ async function runInventoryRemove(browser, iterations, kind) {
   return aggregateScenarioRuns(scenarioName, runs);
 }
 
+async function runInventoryQuantity(browser, iterations, direction) {
+  const isAdd = direction === 'add';
+  const scenarioName = isAdd ? 'inventory-quantity-add' : 'inventory-quantity-subtract';
+  const initialQuantity = isAdd ? 1 : 2;
+  const expectedQuantity = isAdd ? 2 : 1;
+  const action = isAdd ? 'add' : 'sub';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/inventory',
+      readySelector: '#invList',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      await page.evaluate(async ({ initialQuantity, scenarioName }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entry = window.lookupEntry?.({ name: 'Bandage' });
+        const row = await window.invUtil?.buildInventoryRow?.({
+          entry,
+          list: window.storeHelper.getCurrentList(activeStore)
+        });
+        if (!row) throw new Error('Unable to build Bandage inventory row.');
+        row.qty = initialQuantity;
+        const current = window.storeHelper.getInventory(activeStore)
+          .filter((candidate) => String(candidate?.name || '') !== 'Bandage');
+        window.storeHelper.setInventory(activeStore, [row, ...current]);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${scenarioName}` });
+        window.invUtil?.renderInventory?.();
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        const perf = window.symbaroumPerf;
+        perf?.clearHistory?.();
+        const scenarioId = perf?.startScenario?.(scenarioName, {
+          scope: 'inventory',
+          entry: 'Bandage',
+          direction: initialQuantity === 1 ? 'add' : 'subtract'
+        });
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', {
+            action: initialQuantity === 1 ? 'quantity-add' : 'quantity-subtract'
+          });
+        }, { capture: true, once: true });
+        window.__inventoryQuantityScenarioId = scenarioId;
+      }, { initialQuantity, scenarioName });
+
+      const card = page.locator('#invList li.entry-card[data-name="Bandage"]').first();
+      await card.locator(`button[data-act="${action}"]`).click();
+      await page.waitForFunction((quantity) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const row = window.storeHelper.getInventory(activeStore)
+          .find((candidate) => String(candidate?.name || '') === 'Bandage');
+        return Number(row?.qty || 0) === quantity;
+      }, expectedQuantity);
+
+      return page.evaluate(async ({ expectedQuantity, scenarioName }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__inventoryQuantityScenarioId;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName });
+        await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'post-render-two-raf', { quantity: expectedQuantity });
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const row = window.storeHelper.getInventory(activeStore)
+          .find((candidate) => String(candidate?.name || '') === 'Bandage');
+        const endStateHash = JSON.stringify({
+          quantity: Number(row?.qty || 0),
+          version: window.storeHelper.getDerivedVersion?.(activeStore)
+        });
+        perf?.clearFlowContext?.('inventory-mutation', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'inventory',
+          entry: 'Bandage',
+          endStateHash
+        });
+      }, { expectedQuantity, scenarioName });
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runTraitMutation(browser, iterations, delta) {
+  const scenarioNames = {
+    1: 'trait-plus-one',
+    5: 'trait-plus-five',
+    '-1': 'trait-minus-one',
+    '-5': 'trait-minus-five'
+  };
+  const initialValues = { 1: 9, 5: 5, '-1': 10, '-5': 10 };
+  const scenarioName = scenarioNames[delta];
+  const initialValue = initialValues[delta];
+  const expectedValue = initialValue + delta;
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/traits',
+      readySelector: '#traits',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      await page.evaluate(async ({ delta, initialValue, scenarioName }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const traits = window.storeHelper.getTraits(activeStore);
+        window.storeHelper.setTraits(activeStore, { ...traits, Diskret: initialValue });
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${scenarioName}` });
+        await window.renderTraits?.();
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        const perf = window.symbaroumPerf;
+        perf?.clearHistory?.();
+        const scenarioId = perf?.startScenario?.(scenarioName, {
+          scope: 'traits',
+          entry: 'Diskret',
+          delta
+        });
+        perf?.setFlowContext?.('trait-mutation', scenarioId);
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', { key: 'Diskret', delta });
+        }, { capture: true, once: true });
+        window.__traitMutationScenarioId = scenarioId;
+      }, { delta, initialValue, scenarioName });
+
+      const trait = page.locator('.trait[data-key="Diskret"]');
+      await trait.locator(`button[data-d="${delta}"]`).click();
+      await page.waitForFunction((value) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        return Number(window.storeHelper.getTraits(activeStore)?.Diskret || 0) === value;
+      }, expectedValue);
+
+      return page.evaluate(async ({ delta, expectedValue, scenarioName }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__traitMutationScenarioId;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName });
+        await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'post-render-two-raf', { value: expectedValue });
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const endStateHash = JSON.stringify({
+          value: Number(window.storeHelper.getTraits(activeStore)?.Diskret || 0),
+          version: window.storeHelper.getDerivedVersion?.(activeStore)
+        });
+        perf?.clearFlowContext?.('trait-mutation', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'traits',
+          entry: 'Diskret',
+          delta,
+          endStateHash
+        });
+      }, { delta, expectedValue, scenarioName });
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
 export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_ITERATIONS } = {}) {
   const resolvedRunDir = runDir || await createRunDir('scenarios');
   const reportDir = path.join(resolvedRunDir, 'scenarios');
@@ -1908,7 +2074,13 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'inventoryContainerDeleteOnly', name: 'inventory-container-delete-only', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'container-delete-only') },
       { key: 'inventoryVehicleUnloadRemove', name: 'inventory-vehicle-unload-remove', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'vehicle-unload') },
       { key: 'inventoryVehicleMoneyRemove', name: 'inventory-vehicle-money-remove', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'vehicle-money-remove') },
-      { key: 'inventoryClear', name: 'inventory-clear', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'clear-inventory') }
+      { key: 'inventoryClear', name: 'inventory-clear', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'clear-inventory') },
+      { key: 'inventoryQuantityAdd', name: 'inventory-quantity-add', aliases: ['inventory quantity'], run: () => runInventoryQuantity(browser, iterations, 'add') },
+      { key: 'inventoryQuantitySubtract', name: 'inventory-quantity-subtract', aliases: ['inventory quantity'], run: () => runInventoryQuantity(browser, iterations, 'subtract') },
+      { key: 'traitPlusOne', name: 'trait-plus-one', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, 1) },
+      { key: 'traitPlusFive', name: 'trait-plus-five', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, 5) },
+      { key: 'traitMinusOne', name: 'trait-minus-one', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, -1) },
+      { key: 'traitMinusFive', name: 'trait-minus-five', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, -5) }
     ];
 
     const scenarios = {};

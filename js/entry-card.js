@@ -276,18 +276,19 @@
     if (!standardGroup || !(standardGroup instanceof HTMLElement)) return;
     const descriptors = getStandardActionDescriptors(config);
     const existing = [...standardGroup.querySelectorAll(':scope > button')];
-
-    while (existing.length > descriptors.length) {
-      existing.pop()?.remove();
-    }
+    const bySlot = new Map(existing.map(button => [button.dataset.standardSlot || '', button]));
+    const wantedSlots = new Set(descriptors.map(descriptor => descriptor.slot));
+    existing.forEach(button => {
+      if (!wantedSlots.has(button.dataset.standardSlot || '')) button.remove();
+    });
 
     descriptors.forEach((descriptor, index) => {
-      let button = existing[index];
+      let button = bySlot.get(descriptor.slot);
       if (!button) {
         button = document.createElement('button');
-        standardGroup.appendChild(button);
-        existing.push(button);
       }
+      const currentAtIndex = standardGroup.children[index] || null;
+      if (currentAtIndex !== button) standardGroup.insertBefore(button, currentAtIndex);
       button.type = 'button';
       button.className = buildStandardActionClassName(descriptor);
       button.dataset.act = descriptor.act;

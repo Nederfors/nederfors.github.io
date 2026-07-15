@@ -340,7 +340,7 @@
     const runForegroundCatalogMutation = callback => {
       const withPriority = window.symbaroumOffline?.withForegroundPriority;
       if (typeof withPriority === 'function') {
-        return withPriority(callback, { reason: 'catalog-add' });
+        return withPriority(callback, { reason: 'catalog-add', presentFeedback: true });
       }
       return callback();
     };
@@ -1436,6 +1436,7 @@
 
     async function renderSummary() {
       if (!summaryContent) return;
+      delete summaryContent.dataset.summaryDirty;
       const sequence = ++summaryRenderSequence;
       summaryContent.innerHTML = '<section class="summary-section"><ul class="summary-list summary-text"><li>Beräknar…</li></ul></section>';
       const list = storeHelper.getCurrentList(store);
@@ -1867,8 +1868,8 @@
 
     if (summaryBtn && summaryPanel) {
       summaryBtn.addEventListener('click', () => {
-        renderSummary();
         const isOpen = summaryPanel.classList.toggle('open');
+        if (isOpen) renderSummary();
         if (isOpen) summaryPanel.scrollTop = 0;
       }, { signal });
     }
@@ -2213,6 +2214,25 @@
       return addedEntries.every(entry => String(entry?.namn || '').trim() === wantedName);
     };
 
+    const patchCharacterSelectionRemoveMutation = (summary, cardEl, entryName, trait = null) => {
+      if (!summary || !cardEl) return false;
+      const addedEntries = Array.isArray(summary.addedEntries) ? summary.addedEntries : [];
+      const removedEntries = Array.isArray(summary.removedEntries) ? summary.removedEntries : [];
+      const wantedName = String(entryName || '').trim();
+      if (addedEntries.length || !removedEntries.length || summary.inventoryChanged) return false;
+      if (removedEntries.some(entry => String(entry?.namn || '').trim() !== wantedName)) return false;
+      const remaining = findCharacterSelectionEntry({ name: wantedName, trait });
+      if (remaining) return replaceCharacterSelectionCard(cardEl, remaining);
+      const list = cardEl.parentElement;
+      const category = cardEl.closest('.cat-group');
+      if (list && list.querySelectorAll(':scope > li.entry-card, :scope > li.card').length === 1 && category) {
+        category.remove();
+      } else {
+        cardEl.remove();
+      }
+      return true;
+    };
+
     const renderSkills = arr => {
       const sortMode = storeHelper.getEntrySort
         ? storeHelper.getEntrySort(store)
@@ -2494,7 +2514,14 @@
       updateSearchDatalist();
     };
     const refreshCharacterTraits = () => {
-      renderTraits();
+      return renderTraits();
+    };
+    const refreshCharacterSummary = () => {
+      if (!summaryPanel?.classList.contains('open')) {
+        if (summaryContent) summaryContent.dataset.summaryDirty = '1';
+        return { deferred: true };
+      }
+      return renderSummary();
     };
     const refreshCharacterName = () => {
       if (!dom?.cName) return;
@@ -2514,7 +2541,8 @@
       },
       refreshSelection: refreshCharacterSelection,
       refreshTraits: refreshCharacterTraits,
-      refreshSummary: renderSummary,
+      refreshTraitTargets: options => window.refreshTraitTargets?.(options),
+      refreshSummary: refreshCharacterSummary,
       refreshEffects: refreshEffectsPanel
     });
 
@@ -3031,18 +3059,28 @@
         storeHelper.removeRevealedArtifact(store, p.id);
       }
       if (isRemoveAction) {
-        timeActiveRemoveStage('selection-render', () => {
-          renderSkills(filtered());
-        }, {
+        const patchedInPlace = timeActiveRemoveStage('targeted-ui-refresh', () => (
+          patchCharacterSelectionRemoveMutation(mutationSummary, liEl, name, tr)
+        ), {
           surface: 'character',
           branch: 'list'
         });
-        timeActiveRemoveStage('derived-refresh', () => {
-          updateXP();
-          renderTraits();
-        }, {
-          surface: 'character',
-          branch: 'list'
+        if (!patchedInPlace) {
+          timeActiveRemoveStage('selection-render', () => {
+            renderSkills(filtered());
+          }, {
+            surface: 'character',
+            branch: 'list',
+            reason: 'target-postcondition'
+          });
+        }
+        scheduleCharacterMutationRefresh({
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source: 'character-list-remove',
+          afterPaint: true
         });
         updateSearchDatalist();
       } else {
@@ -3081,6 +3119,7 @@
           flashAdded(name, tr);
         });
       } else if (isRemoveAction) {
+        await waitForCharacterMutationRefresh();
         await finishRemoveScenario(removeScenarioId, {
           scope: 'character',
           entry: name,
