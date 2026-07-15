@@ -10584,6 +10584,33 @@
         .filter(Boolean)
     )];
   };
+
+  const normalizeMutationInvalidations = (invalidates) => {
+    const source = Array.isArray(invalidates)
+      ? invalidates
+      : (invalidates === undefined || invalidates === null ? [] : [invalidates]);
+    return [...new Set(source.map(value => String(value || '').trim()).filter(Boolean))];
+  };
+
+  const mergeMutationTargets = (targetMap, targets) => {
+    if (!targets || typeof targets !== 'object' || Array.isArray(targets)) return;
+    Object.entries(targets).forEach(([key, values]) => {
+      if (!targetMap.has(key)) targetMap.set(key, new Set());
+      const targetValues = Array.isArray(values) ? values : [values];
+      targetValues
+        .filter(value => value !== undefined && value !== null)
+        .forEach(value => targetMap.get(key).add(value));
+    });
+  };
+
+  const serializeMutationTargets = (targetMap) => Object.fromEntries(
+    [...targetMap.entries()].map(([key, values]) => [key, [...values]])
+  );
+
+  const collectAfterCommitCallbacks = (target, value) => {
+    const callbacks = Array.isArray(value) ? value : [value];
+    callbacks.filter(callback => typeof callback === 'function').forEach(callback => target.add(callback));
+  };
   const getCharacterFieldPatch = (store, charId, fields) => {
     const normalizedFields = normalizeMutationFields(fields);
     const data = store?.data?.[charId];
@@ -10673,13 +10700,35 @@
       } else {
         activeBatch.requiresFullPersist = true;
       }
+      normalizeMutationInvalidations(options.invalidates).forEach(domain => activeBatch.invalidates.add(domain));
+      mergeMutationTargets(activeBatch.targets, options.targets);
+      collectAfterCommitCallbacks(activeBatch.afterCommit, options.afterCommit);
       return charId;
     }
-    if (options.bumpDerived) bumpDerivedVersion(store, charId);
-    if (options.persist !== false) {
-      persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
-    }
-    return charId;
+    return timeCurrentListMutationStage('common-commit', () => {
+      const version = options.bumpDerived
+        ? bumpDerivedVersion(store, charId)
+        : getDerivedVersionMeta(store, charId);
+      if (options.persist !== false) {
+        persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
+      }
+      const commitSummary = {
+        charId,
+        version,
+        fields: normalizedFields,
+        invalidates: normalizeMutationInvalidations(options.invalidates),
+        targets: options.targets && typeof options.targets === 'object' ? options.targets : {},
+        persisted: options.persist !== false
+      };
+      const callbacks = new Set();
+      collectAfterCommitCallbacks(callbacks, options.afterCommit);
+      callbacks.forEach(callback => callback(commitSummary));
+      return charId;
+    }, {
+      charId,
+      fields: normalizedFields,
+      bumpDerived: Boolean(options.bumpDerived)
+    });
   }
 
   function normalizeRuleOverrideKeys(value) {
@@ -10744,6 +10793,9 @@
           charId,
           depth: 0,
           fields: new Set(),
+          invalidates: new Set(),
+          targets: new Map(),
+          afterCommit: new Set(),
           bumpDerived: false,
           shouldPersist: false,
           requiresFullPersist: false
@@ -10761,6 +10813,9 @@
     }
     if (options.bumpDerived) batch.bumpDerived = true;
     if (options.persist !== false) batch.shouldPersist = true;
+    normalizeMutationInvalidations(options.invalidates).forEach(domain => batch.invalidates.add(domain));
+    mergeMutationTargets(batch.targets, options.targets);
+    collectAfterCommitCallbacks(batch.afterCommit, options.afterCommit);
 
     const finalize = () => {
       batch.depth -= 1;
@@ -10768,12 +10823,27 @@
       if (currentCharacterMutationBatch === batch) {
         currentCharacterMutationBatch = null;
       }
-      if (batch.bumpDerived) {
-        bumpDerivedVersion(store, charId);
-      }
-      if (batch.shouldPersist) {
-        persistCharacter(store, charId, batch.requiresFullPersist ? {} : { fields: [...batch.fields] });
-      }
+      timeCurrentListMutationStage('common-commit', () => {
+        const version = batch.bumpDerived
+          ? bumpDerivedVersion(store, charId)
+          : getDerivedVersionMeta(store, charId);
+        if (batch.shouldPersist) {
+          persistCharacter(store, charId, batch.requiresFullPersist ? {} : { fields: [...batch.fields] });
+        }
+        const commitSummary = {
+          charId,
+          version,
+          fields: [...batch.fields],
+          invalidates: [...batch.invalidates],
+          targets: serializeMutationTargets(batch.targets),
+          persisted: batch.shouldPersist
+        };
+        batch.afterCommit.forEach(callback => callback(commitSummary));
+      }, {
+        charId,
+        fields: [...batch.fields],
+        bumpDerived: batch.bumpDerived
+      });
     };
 
     try {
@@ -13579,6 +13649,8 @@
     return perf.getFlowContext('add-item')
       || perf.getFlowContext('remove-item')
       || perf.getFlowContext('character-level-change')
+      || perf.getFlowContext('inventory-mutation')
+      || perf.getFlowContext('trait-mutation')
       || null;
   }
 
@@ -13791,10 +13863,27 @@
       : [];
   }
 
+  function ensureInventoryRowUids(inventory) {
+    const seen = new Set();
+    const visit = rows => {
+      if (!Array.isArray(rows)) return rows;
+      rows.forEach(row => {
+        if (!row || typeof row !== 'object') return;
+        let uid = String(row.__uid || '').trim();
+        if (!uid || seen.has(uid)) uid = `inv-${genId()}`;
+        row.__uid = uid;
+        seen.add(uid);
+        if (Array.isArray(row.contains)) visit(row.contains);
+      });
+      return rows;
+    };
+    return visit(inventory);
+  }
+
   function setInventory(store, inv) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].inventory = inv;
+    store.data[store.current].inventory = ensureInventoryRowUids(inv);
     commitCurrentCharacterMutation(store, {
       bumpDerived: true,
       fields: INVENTORY_MUTATION_FIELDS
@@ -14609,17 +14698,26 @@ function defaultTraits() {
     return { ...defaultTraits(), ...(data.traits || {}) };
   }
 
-  function setTraits(store, traits) {
-    if (!store.current) return;
+  function setTraits(store, traits, options = {}) {
+    if (!store.current) return null;
     store.data[store.current] = store.data[store.current] || {};
     const next = { ...defaultTraits(), ...traits };
     const prev = { ...defaultTraits(), ...(store.data[store.current].traits || {}) };
-    if (JSON.stringify(prev) === JSON.stringify(next)) return;
+    if (JSON.stringify(prev) === JSON.stringify(next)) return null;
+    const changedKeys = TRAIT_KEYS.filter(key => prev[key] !== next[key]);
     store.data[store.current].traits = next;
     commitCurrentCharacterMutation(store, {
       bumpDerived: true,
-      fields: ['traits']
+      fields: ['traits'],
+      invalidates: options.invalidates,
+      targets: options.targets || { traits: changedKeys },
+      afterCommit: options.afterCommit
     });
+    return {
+      charId: store.current,
+      version: getDerivedVersionMeta(store, store.current),
+      changedKeys
+    };
   }
 
   /* ---------- 6b. Anteckningar ---------- */
@@ -15529,6 +15627,7 @@ function defaultTraits() {
       const moneyRaw = row.money ?? row.m;
       if (typeRaw === 'currency' || moneyRaw) {
         const res = { t: 'currency' };
+        if (row.__uid) res.u = row.__uid;
         const src = (moneyRaw && typeof moneyRaw === 'object') ? moneyRaw : {};
         res.m = sanitizeMoneyStruct({
           daler: src.daler ?? src.d,
@@ -15547,6 +15646,7 @@ function defaultTraits() {
         return res;
       }
       const res = {};
+      if (row.__uid) res.u = row.__uid;
       if (row.id !== undefined) res.i = row.id;
       const canonical = row.id !== undefined && typeof global.lookupEntry === 'function'
         ? global.lookupEntry({ id: row.id })
@@ -15657,6 +15757,8 @@ function defaultTraits() {
             qty,
             money
           };
+          const rowUid = String(row.__uid ?? row.u ?? '').trim();
+          if (rowUid) expanded.__uid = rowUid;
           const weightRaw = row.vikt ?? row.w;
           if (weightRaw !== undefined) {
             const weightNum = Number(weightRaw);
@@ -15739,6 +15841,8 @@ function defaultTraits() {
           removedKval,
           artifactEffect
         };
+        const rowUid = String(row.__uid ?? row.u ?? '').trim();
+        if (rowUid) expanded.__uid = rowUid;
         if (snapshotSourceKey) expanded.snapshotSourceKey = snapshotSourceKey;
         if (equippedSlot) expanded.equippedSlot = equippedSlot;
         if (manualQualityOverride.length) {
@@ -15792,7 +15896,7 @@ function defaultTraits() {
         return expanded;
       });
     };
-    return expandRows(inv);
+    return ensureInventoryRowUids(expandRows(inv));
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
@@ -17456,6 +17560,8 @@ function defaultTraits() {
   const oToMoney = window.oToMoney;
   const INV_CAT_STATE_PREFIX = 'invCatState:';
   let cachedCatState = { key: '', state: {} };
+  let inventoryAggregateSnapshot = null;
+  let pendingInventoryAggregateDeltas = [];
   const WEAPON_BASE_TYPES = Array.isArray(window.WEAPON_BASE_TYPES)
     ? window.WEAPON_BASE_TYPES
     : ['Närstridsvapen', 'Avståndsvapen', 'Vapen'];
@@ -19423,7 +19529,21 @@ function defaultTraits() {
     return sortByType(entA, entB);
   }
 
-  const MUTATION_FLOW_CONTEXT_KEYS = Object.freeze(['remove-item', 'add-item']);
+  const MUTATION_FLOW_CONTEXT_KEYS = Object.freeze([
+    'remove-item',
+    'add-item',
+    'inventory-mutation'
+  ]);
+
+  function markActiveMutationCheckpoint(name, detail = {}) {
+    const scenarioId = getActiveMutationScenarioId();
+    const perf = window.symbaroumPerf;
+    if (!scenarioId || typeof perf?.markScenario !== 'function') return null;
+    return perf.markScenario(scenarioId, name, {
+      surface: 'inventory',
+      ...detail
+    });
+  }
 
   function getActiveMutationScenarioId() {
     const perf = window.symbaroumPerf;
@@ -23074,6 +23194,351 @@ function defaultTraits() {
     return { desc, rowLevel, freeCnt, qualityHtml, qualityInfoSections, infoBody, infoTagParts, priceMultTag };
   }
 
+  function getCapacityClass(used, max) {
+    if (!max || max <= 0) return '';
+    const ratio = used / max;
+    if (ratio > 1.0) return 'cap-neg';
+    if (ratio >= 0.95) return 'cap-crit';
+    if (ratio >= 0.80) return 'cap-warn';
+    return '';
+  }
+
+  function buildInventoryStandardActionConfig({
+    qty = 0,
+    isGear = false,
+    canStack = false
+  } = {}) {
+    const count = Math.max(0, Number(qty) || 0);
+    const config = {
+      remove: { act: 'del' }
+    };
+    if (isGear && !canStack) return config;
+    config.multi = { act: 'buyMulti' };
+    if (count > 1) config.minus = { act: 'sub' };
+    config.plus = { act: 'add' };
+    return config;
+  }
+
+  function computeInventoryAggregateSnapshot() {
+    const allInv = storeHelper.getInventory(store);
+    const flatInv = flattenInventory(allInv);
+    const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+    const list = storeHelper.getCurrentList(store);
+    const forgeLvl = Math.max(
+      LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Smideskonst')
+    );
+    const alcLevel = Math.max(
+      LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Alkemist')
+    );
+    const artLevel = Math.max(
+      LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Artefaktmakande')
+    );
+    const totalCostO = flatInv.reduce((sum, row) => (
+      sum + moneyToO(calcRowCost(row, forgeLvl, alcLevel, artLevel))
+    ), 0);
+    const diffO = moneyToO(cash) - totalCostO;
+    const unusedMoney = oToMoney(Math.max(0, diffO));
+    const moneyWeight = calcMoneyWeight(unusedMoney);
+    const usedWeight = allInv.reduce((sum, row) => {
+      const entry = getEntry(row.id || row.name);
+      return sum + ((entry.taggar?.typ || []).includes('Färdmedel') ? 0 : calcRowWeight(row, list));
+    }, 0) + moneyWeight;
+    const traits = storeHelper.getTraits(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
+    const stark = (traits.Stark || 0) + (bonus.Stark || 0) + (maskBonus.Stark || 0);
+    const maxCapacity = storeHelper.calcCarryCapacity(stark, list) + Number(manualAdjust.capacity || 0);
+    const foodCount = flatInv
+      .filter(row => (getEntry(row.id || row.name).taggar?.typ || []).some(type => type.toLowerCase() === 'mat'))
+      .reduce((sum, row) => sum + (Number(row.qty) || 0), 0);
+    inventoryAggregateSnapshot = {
+      charId: store.current || '',
+      allInv,
+      cash,
+      diffO,
+      foodCount,
+      forgeLvl,
+      alcLevel,
+      artLevel,
+      list,
+      listSource: store.data?.[store.current]?.list || null,
+      maxCapacity,
+      unusedMoney,
+      usedWeight,
+      moneyWeight
+    };
+    return inventoryAggregateSnapshot;
+  }
+
+  function getReusableInventoryAggregateSnapshot() {
+    if (!inventoryAggregateSnapshot || inventoryAggregateSnapshot.charId !== (store.current || '')) return null;
+    if (inventoryAggregateSnapshot.allInv !== storeHelper.getInventory(store)) return null;
+    if (inventoryAggregateSnapshot.listSource !== (store.data?.[store.current]?.list || null)) return null;
+    return inventoryAggregateSnapshot;
+  }
+
+  function refreshInventoryAggregateCapacity(snapshot) {
+    if (!snapshot) return null;
+    const traits = storeHelper.getTraits(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(snapshot.list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(snapshot.allInv) : {};
+    const stark = (traits.Stark || 0) + (bonus.Stark || 0) + (maskBonus.Stark || 0);
+    snapshot.maxCapacity = storeHelper.calcCarryCapacity(stark, snapshot.list)
+      + Number(manualAdjust.capacity || 0);
+    return snapshot;
+  }
+
+  function updateInventoryAggregateSnapshotForQuantity(row, entry, previousQty, nextQty) {
+    const snapshot = getReusableInventoryAggregateSnapshot();
+    if (!snapshot || !row || !entry) return null;
+    const normalizedPreviousQty = Math.max(1, Number(previousQty) || 1);
+    const normalizedNextQty = Math.max(1, Number(nextQty) || 1);
+    const delta = normalizedNextQty - normalizedPreviousQty;
+    if (![1, -1].includes(delta)) return null;
+    const previousRow = { ...row, qty: normalizedPreviousQty };
+    const nextRow = { ...row, qty: normalizedNextQty };
+    const previousCostO = moneyToO(calcRowCost(
+      previousRow,
+      snapshot.forgeLvl,
+      snapshot.alcLevel,
+      snapshot.artLevel
+    ));
+    const nextCostO = moneyToO(calcRowCost(
+      nextRow,
+      snapshot.forgeLvl,
+      snapshot.alcLevel,
+      snapshot.artLevel
+    ));
+    const previousWeight = calcRowWeight(previousRow, snapshot.list);
+    const nextWeight = calcRowWeight(nextRow, snapshot.list);
+    const nextDiffO = snapshot.diffO - (nextCostO - previousCostO);
+    const nextUnusedMoney = oToMoney(Math.max(0, nextDiffO));
+    const nextMoneyWeight = calcMoneyWeight(nextUnusedMoney);
+    const isFood = (entry.taggar?.typ || []).some(type => String(type || '').toLowerCase() === 'mat');
+    inventoryAggregateSnapshot = {
+      ...snapshot,
+      diffO: nextDiffO,
+      foodCount: snapshot.foodCount + (isFood ? delta : 0),
+      moneyWeight: nextMoneyWeight,
+      unusedMoney: nextUnusedMoney,
+      usedWeight: snapshot.usedWeight
+        + (nextWeight - previousWeight)
+        + (nextMoneyWeight - Number(snapshot.moneyWeight || 0))
+    };
+    return inventoryAggregateSnapshot;
+  }
+
+  function queueInventoryAggregateQuantityDelta(row, entry, previousQty, nextQty) {
+    pendingInventoryAggregateDeltas.push({
+      charId: store.current || '',
+      row,
+      entry,
+      previousQty,
+      nextQty
+    });
+  }
+
+  function applyPendingInventoryAggregateDeltas() {
+    const pending = pendingInventoryAggregateDeltas;
+    pendingInventoryAggregateDeltas = [];
+    pending.forEach(delta => {
+      if (delta.charId !== (store.current || '')) return;
+      updateInventoryAggregateSnapshotForQuantity(
+        delta.row,
+        delta.entry,
+        delta.previousQty,
+        delta.nextQty
+      );
+    });
+    return getReusableInventoryAggregateSnapshot();
+  }
+
+  function refreshInventoryTotals(options = {}) {
+    let snapshot = getReusableInventoryAggregateSnapshot();
+    if (snapshot) {
+      snapshot = applyPendingInventoryAggregateDeltas() || snapshot;
+    } else {
+      pendingInventoryAggregateDeltas = [];
+      snapshot = computeInventoryAggregateSnapshot();
+    }
+    if ((options.targets?.traits || []).includes('Stark')) {
+      refreshInventoryAggregateCapacity(snapshot);
+    }
+    const { diffO, foodCount, maxCapacity, unusedMoney, usedWeight } = snapshot;
+    if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
+    if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
+
+    const root = getToolbarRoot();
+    const unusedEl = root?.querySelector('.dash-unused-out');
+    if (unusedEl) {
+      const diff = oToMoney(Math.abs(diffO));
+      unusedEl.innerHTML = `${diffO < 0 ? '-' : ''}${diff.d} D <span aria-hidden="true">·</span> ${diff.s} S <span aria-hidden="true">·</span> ${diff.o} Ö`;
+    }
+    const capPct = maxCapacity > 0 ? Math.round((usedWeight / maxCapacity) * 100) : 0;
+    const remaining = maxCapacity - usedWeight;
+    const capClass = getCapacityClass(usedWeight, maxCapacity);
+    root?.querySelectorAll('.dash-kpi, .dash-hero-cap').forEach(card => {
+      card.classList.remove('cap-neg', 'cap-crit', 'cap-warn');
+      if (capClass) card.classList.add(capClass);
+    });
+    const capLabels = root?.querySelectorAll('.dash-cap-labels span');
+    if (capLabels?.[0]) capLabels[0].textContent = `${formatWeight(usedWeight)} / ${formatWeight(maxCapacity)}`;
+    if (capLabels?.[1]) capLabels[1].textContent = `${capPct}%`;
+    const progress = root?.querySelector('.dash-cap-meter .db-progress__bar');
+    if (progress) progress.style.setProperty('--db-progress', `${Math.min(capPct, 100)}%`);
+    const status = root?.querySelector('.dash-status-badge');
+    if (status) {
+      const tone = remaining < 0 ? 'crit' : capPct >= 90 ? 'warn' : 'ok';
+      status.className = `dash-status-badge dash-status-badge--${tone}`;
+      status.textContent = remaining < 0 ? 'Över max' : capPct >= 90 ? 'Nära max' : 'Stabil';
+    }
+    const food = root?.querySelector('.dash-food-badge');
+    if (food) {
+      food.classList.toggle('db-badge--warning', foodCount === 0);
+      food.innerHTML = `${icon('grain', { alt: '', width: 18, height: 18 })}${foodCount === 0 ? '0 proviant' : `${foodCount} proviant`}`;
+    }
+    dom.invList?.querySelectorAll('li.entry-card[data-name] .weight-badge').forEach(badge => {
+      const card = badge.closest('li.entry-card');
+      const entry = getEntry(card?.dataset.id || card?.dataset.name);
+      if ((entry.taggar?.typ || []).includes('Färdmedel')) return;
+      badge.classList.remove('cap-neg', 'cap-crit', 'cap-warn');
+      if (capClass) badge.classList.add(capClass);
+    });
+    document.querySelector('shared-toolbar')?.updateMoneyCounter?.(snapshot.cash);
+    return snapshot;
+  }
+
+  function canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta }) {
+    if (!row || !entry || parentArr !== inv || ![1, -1].includes(delta)) return false;
+    const currentQty = Math.max(0, Number(row.qty) || 0);
+    const nextQty = currentQty + delta;
+    if (currentQty < 1 || nextQty < 1) return false;
+    if (typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store)) return false;
+    if (isIndividualItem(entry) || isInventoryBundleEntry(entry) || needsArtifactListSync(entry)) return false;
+    if (entry.bound || row.trait || row.typ === 'currency' || row.money) return false;
+    if (Array.isArray(row.contains) && row.contains.length) return false;
+    if (row.perk || row.perkGratis || row.snapshotSourceKey || row.artifactEffect) return false;
+    const types = entry.taggar?.typ || [];
+    const structuralTypes = new Set([
+      'Artefakt', 'Lägre Artefakt', 'Hemmagjort', 'Färdmedel', 'Rustning', 'Sköld',
+      'Närstridsvapen', 'Avståndsvapen', 'Vapen'
+    ]);
+    return !types.some(type => structuralTypes.has(type));
+  }
+
+  function patchSimpleQuantityCard(card, row, entry) {
+    if (!card || !row || !entry) return false;
+    const quantity = Math.max(1, Number(row.qty) || 1);
+    const suffix = card.querySelector('.entry-title-suffix');
+    if (quantity > 1) {
+      const host = suffix || document.createElement('span');
+      if (!suffix) {
+        host.className = 'entry-title-suffix';
+        card.querySelector('.card-title')?.appendChild(host);
+      }
+      let badge = host.querySelector('.count-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'count-badge';
+        host.appendChild(badge);
+      }
+      badge.textContent = `×${quantity}`;
+    } else {
+      suffix?.remove();
+    }
+
+    const types = entry.taggar?.typ || [];
+    const isGear = [...WEAPON_AND_SHIELD_TYPES, 'Rustning', 'Lägre Artefakt', 'Artefakt', 'Färdmedel']
+      .some(type => types.includes(type));
+    const standardGroup = card.querySelector('.entry-action-group-standard');
+    window.entryCardFactory?.syncStandardActionButtons?.(
+      standardGroup,
+      buildInventoryStandardActionConfig({
+        qty: quantity,
+        isGear,
+        canStack: ['kraft', 'ritual'].includes(entry.bound)
+      }),
+      { buttonName: row.name, buttonId: row.id || row.name }
+    );
+    window.entryCardFactory?.syncActionRow?.(card);
+
+    const aggregate = getReusableInventoryAggregateSnapshot();
+    const list = aggregate?.list || storeHelper.getCurrentList(store);
+    const forgeLvl = aggregate?.forgeLvl ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Smideskonst')
+    );
+    const alcLevel = aggregate?.alcLevel ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Alkemist')
+    );
+    const artLevel = aggregate?.artLevel ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Artefaktmakande')
+    );
+    const price = formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
+    const priceLabel = types.includes('Anställning') ? 'Dagslön' : 'Pris';
+    const priceDisplay = `${priceLabel}: ${price}`;
+    const priceButton = card.querySelector('.price-click');
+    if (priceButton) {
+      priceButton.textContent = priceDisplay;
+      priceButton.title = priceLabel;
+      priceButton.setAttribute('aria-label', priceDisplay);
+    }
+    const weight = formatWeight(calcRowWeight(row, list));
+    const weightFact = [...card.querySelectorAll('.card-info-fact')]
+      .find(fact => fact.querySelector('.card-info-fact-label')?.textContent === 'Vikt');
+    const weightValue = weightFact?.querySelector('.card-info-fact-value');
+    if (weightValue) weightValue.textContent = weight;
+    const weightBadge = card.querySelector('.weight-badge');
+    if (weightBadge) {
+      weightBadge.textContent = `V: ${weight}`;
+    }
+    return true;
+  }
+
+  function commitSimpleQuantityMutation({ row, entry, inv, card, delta }) {
+    markActiveMutationCheckpoint('handler-entry', {
+      action: delta > 0 ? 'quantity-add' : 'quantity-subtract',
+      rowKey: row.__uid || row.id || row.name
+    });
+    const previousQty = Math.max(1, Number(row.qty) || 1);
+    const nextQty = previousQty + delta;
+    queueInventoryAggregateQuantityDelta(row, entry, previousQty, nextQty);
+    row.qty = Math.max(1, nextQty);
+    if (Number(row.gratis) > row.qty) row.gratis = row.qty;
+    const invalidates = ['inventory.row', 'inventory.totals', 'summary.economy'];
+    storeHelper.batchCurrentCharacterMutation(store, {
+      invalidates,
+      targets: { inventoryRows: [row.__uid || row.id || row.name] },
+      afterCommit: summary => {
+        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+          charId: summary.charId,
+          version: summary.version,
+          invalidates: summary.invalidates,
+          targets: summary.targets,
+          topology: 'row',
+          source: 'inventory-quantity',
+          afterPaint: true
+        });
+      }
+    }, () => {
+      storeHelper.setInventory(store, inv);
+    });
+    patchSimpleQuantityCard(card, row, entry);
+    markActiveMutationCheckpoint('first-feedback-dom', {
+      action: delta > 0 ? 'quantity-add' : 'quantity-subtract',
+      rowKey: row.__uid || row.id || row.name,
+      quantity: row.qty
+    });
+    return true;
+  }
+
   function renderInventory () {
     const listEl = dom.invList;
     const openKeys = new Set(
@@ -23147,14 +23612,7 @@ function defaultTraits() {
     const maxCapacity = baseCap + manualCapacity;
     const remainingCap = maxCapacity - usedWeight;
 
-    const capClassOf = (used, max) => {
-      if (!max || max <= 0) return '';
-      const ratio = used / max;
-      if (ratio > 1.0) return 'cap-neg';
-      if (ratio >= 0.95) return 'cap-crit';
-      if (ratio >= 0.80) return 'cap-warn';
-      return '';
-    };
+    const capClassOf = getCapacityClass;
     const charCapClass = capClassOf(usedWeight, maxCapacity);
 
     const vehicles = allInv
@@ -23233,6 +23691,24 @@ function defaultTraits() {
         return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
+
+    pendingInventoryAggregateDeltas = [];
+    inventoryAggregateSnapshot = {
+      charId: store.current || '',
+      allInv,
+      cash,
+      diffO,
+      foodCount,
+      forgeLvl,
+      alcLevel,
+      artLevel,
+      list,
+      listSource: store.data?.[store.current]?.list || null,
+      maxCapacity,
+      moneyWeight,
+      unusedMoney,
+      usedWeight
+    };
 
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
 
@@ -23439,22 +23915,6 @@ function defaultTraits() {
     // No inline dashboard in invFormal anymore — content lives in sidebar/drawer panels
     const formalHtml = '';
 
-    const buildInventoryStandardActionConfig = ({
-      qty = 0,
-      isGear = false,
-      canStack = false
-    } = {}) => {
-      const count = Math.max(0, Number(qty) || 0);
-      const config = {
-        remove: { act: 'del' }
-      };
-      if (isGear && !canStack) return config;
-      config.multi = { act: 'buyMulti' };
-      if (count > 1) config.minus = { act: 'sub' };
-      config.plus = { act: 'add' };
-      return config;
-    };
-
     const renderRowCard = (row, realIdx, entryOverride) => {
       const entry = entryOverride || getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ ?? [];
@@ -23468,6 +23928,7 @@ function defaultTraits() {
       const { desc, rowLevel, freeCnt, qualityHtml, qualityInfoSections, infoBody, infoTagParts, priceMultTag } = buildRowDesc(entry, row);
       const dataset = {
         idx: String(realIdx),
+        uid: row.__uid || '',
         id: row.id || row.name,
         name: row.name
       };
@@ -23732,6 +24193,7 @@ function defaultTraits() {
         const childDataset = {
           parent: String(realIdx),
           child: String(childIdx),
+          uid: childRow.__uid || '',
           id: childRow.id || childRow.name,
           name: childRow.name
         };
@@ -23984,6 +24446,21 @@ function defaultTraits() {
       });
     }
     const getRowInfo = (inv, li) => {
+      const uid = String(li?.dataset?.uid || '').trim();
+      if (uid) {
+        const findByUid = rows => {
+          if (!Array.isArray(rows)) return null;
+          for (let index = 0; index < rows.length; index += 1) {
+            const candidate = rows[index];
+            if (candidate?.__uid === uid) return { row: candidate, parentArr: rows, idx: index };
+            const nested = findByUid(candidate?.contains);
+            if (nested) return nested;
+          }
+          return null;
+        };
+        const matched = findByUid(inv);
+        if (matched) return matched;
+      }
       const idx = Number(li.dataset.idx);
       if (!Number.isNaN(idx)) return { row: inv[idx], parentArr: inv, idx };
       const p = Number(li.dataset.parent);
@@ -24230,7 +24707,11 @@ function defaultTraits() {
       }
 
         // "+" lägger till qty eller en ny instans
-        if (act === 'add') {
+      if (act === 'add') {
+          if (canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta: 1 })) {
+            commitSimpleQuantityMutation({ row, entry, inv, card: li, delta: 1 });
+            return;
+          }
           const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
           const livePairs = liveEnabled ? [] : null;
           let purchase = null;
@@ -24418,6 +24899,10 @@ function defaultTraits() {
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
         if (row) {
+          if (canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta: -1 })) {
+            commitSimpleQuantityMutation({ row, entry, inv, card: li, delta: -1 });
+            return;
+          }
           const pg = row.perkGratis || 0;
           const removingPerkItem = (row.qty - 1) < pg;
           if (removingPerkItem && !(await confirmGrantRemoval(row.perk))) {
@@ -24841,6 +25326,7 @@ function defaultTraits() {
     isIndividualItem,
     calcRowCost,
     calcRowWeight,
+    refreshInventoryTotals,
     calcEntryCost,
     makeNameMap,
     filter: F,
@@ -25811,6 +26297,267 @@ function defaultTraits() {
   }
 
   let traitRenderSequence = 0;
+  let latestCombatDerivedSnapshot = null;
+  let latestTraitBaseSnapshot = null;
+
+  function computeLocalTraitDerived(list, vals, artifactEffects, manualAdjust) {
+    const corruptionStats = storeHelper.calcCorruptionTrackStats(list, vals.Viljestark);
+    const effectsWithDark = {
+      xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+      corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0),
+      korruptionstroskel: corruptionStats.korruptionstroskel
+    };
+    return {
+      corruptionStats,
+      permanentCorruption: storeHelper.calcPermanentCorruption(list, effectsWithDark),
+      carryCapacity: storeHelper.calcCarryCapacity(vals.Stark, list)
+        + Number(artifactEffects?.capacity || 0)
+        + Number(manualAdjust?.capacity || 0),
+      toughness: storeHelper.calcToughness(vals.Stark, list)
+        + Number(artifactEffects?.toughness || 0)
+        + Number(manualAdjust?.toughness || 0),
+      painThreshold: storeHelper.calcPainThreshold(vals.Stark, list, effectsWithDark)
+        + Number(artifactEffects?.pain || 0)
+        + Number(manualAdjust?.pain || 0)
+    };
+  }
+
+  function buildCombatDerivedSnapshot(list, inv, vals) {
+    const storedSetup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : null;
+    const autoSetup = storedSetup?.enabled
+      ? null
+      : getAutoDefenseSetup({ list, inv, traitValues: vals });
+    const resolvedSetup = storedSetup?.enabled
+      ? storedSetup
+      : { ...(autoSetup || {}), enabled: true };
+    const defTrait = resolvedSetup.trait || getDefenseTraitName(list, vals, { setup: resolvedSetup, inv });
+    const defs = calcDefense(vals[defTrait], {
+      mode: 'standard',
+      list,
+      inv,
+      traitValues: vals,
+      setupOverride: resolvedSetup
+    });
+    const dancingTrait = resolvedSetup.dancingTrait || '';
+    const dancingDefs = dancingTrait
+      ? calcDefense(vals[dancingTrait], {
+          mode: 'dancing',
+          list,
+          inv,
+          traitValues: vals,
+          setupOverride: resolvedSetup
+        })
+      : [];
+    const separateDefs = calcSeparateDefense(defTrait, vals, {
+      list,
+      inv,
+      setupOverride: resolvedSetup
+    });
+    const accuracyEntries = calcAccuracy({
+      list,
+      inv,
+      traitValues: vals,
+      setupOverride: resolvedSetup
+    });
+    const accuracyByTrait = accuracyEntries.reduce((acc, entry) => {
+      const trait = typeof entry?.trait === 'string' ? entry.trait.trim() : '';
+      if (!trait) return acc;
+      if (!acc[trait]) acc[trait] = [];
+      acc[trait].push(entry);
+      return acc;
+    }, {});
+    const attackNotesByTrait = getAttackTraitRuleNotes(list).reduce((acc, note) => {
+      const trait = typeof note?.trait === 'string' ? note.trait.trim() : '';
+      const text = typeof note?.extraText === 'string' ? note.extraText.trim() : '';
+      if (!trait || !text) return acc;
+      if (!acc[trait]) acc[trait] = [];
+      acc[trait].push(text);
+      return acc;
+    }, {});
+    const dependencies = new Set([
+      ...getAutomaticDefenseTraitCandidates(list),
+      ...getAutomaticDancingDefenseTraitCandidates(list),
+      ...getAutomaticAttackTraitCandidates(list),
+      defTrait,
+      dancingTrait,
+      resolvedSetup.attackTrait || '',
+      ...separateDefs.map(entry => entry.trait),
+      ...Object.keys(accuracyByTrait),
+      ...Object.keys(attackNotesByTrait),
+      ...(window.rulesHelper?.getSeparateDefenseTraitRules?.(list) || []).map(rule => rule?.varde)
+    ].map(value => String(value || '').trim()).filter(Boolean));
+    return {
+      charId: store.current || '',
+      version: storeHelper.getDerivedVersion?.(store) || 0,
+      dependencies,
+      defTrait,
+      defs,
+      dancingTrait,
+      dancingDefs,
+      separateDefs,
+      accuracyByTrait,
+      attackNotesByTrait
+    };
+  }
+
+  function getReusableTraitBaseSnapshot() {
+    if (!latestTraitBaseSnapshot || latestTraitBaseSnapshot.charId !== (store.current || '')) return null;
+    if (latestTraitBaseSnapshot.listSource !== (store.data?.[store.current]?.list || null)) return null;
+    if (latestTraitBaseSnapshot.inv !== storeHelper.getInventory(store)) return null;
+    return latestTraitBaseSnapshot;
+  }
+
+  function updateTraitTotalStatus(data, list, inv, snapshot = null) {
+    const reusable = snapshot || getReusableTraitBaseSnapshot();
+    const bonus = reusable?.bonus || (window.exceptionSkill ? exceptionSkill.getBonuses(list) : {});
+    const maskBonus = reusable?.maskBonus || (window.maskSkill ? maskSkill.getBonuses(inv) : {});
+    const total = TRAIT_KEYS.reduce((sum, key) => sum + (data[key] || 0) + (bonus[key] || 0) + (maskBonus[key] || 0), 0);
+    const maxTotal = Number.isFinite(Number(reusable?.maxTotal))
+      ? Number(reusable.maxTotal)
+      : storeHelper.calcTraitTotalMax(list, inv);
+    if (dom.traitsTot) dom.traitsTot.textContent = total;
+    if (dom.traitsMax) dom.traitsMax.textContent = maxTotal;
+    const parent = dom.traitsTot?.closest('.traits-total');
+    if (parent) {
+      parent.classList.remove('good', 'under', 'over');
+      parent.classList.add(total === maxTotal ? 'good' : (total < maxTotal ? 'under' : 'over'));
+    }
+  }
+
+  function replaceTraitExtraDomain(traitKey, domain, entries) {
+    const card = dom.traits?.querySelector(`.trait[data-key="${CSS.escape(traitKey)}"]`);
+    const host = card?.querySelector('.trait-extras');
+    if (!host) return false;
+    host.querySelectorAll(`[data-extra-domain="${domain}"]`).forEach(node => node.remove());
+    const fragment = document.createDocumentFragment();
+    (Array.isArray(entries) ? entries : []).forEach(entry => {
+      const node = document.createElement('div');
+      node.className = 'trait-extra';
+      node.dataset.extraDomain = domain;
+      if (entry?.key) node.dataset.extraKey = entry.key;
+      node.textContent = entry?.text || '';
+      fragment.appendChild(node);
+    });
+    if (domain === 'derived') host.prepend(fragment);
+    else host.appendChild(fragment);
+    return true;
+  }
+
+  function getDerivedTraitExtras(key, derived) {
+    if (key === 'Stark') {
+      return [
+        { key: 'toughness', text: `Tålighet: ${Number(derived.toughness || 0)}` },
+        { key: 'pain', text: ` Smärtgräns: ${Number(derived.painThreshold || 0)}` },
+        { key: 'capacity', text: `Bärkapacitet: ${formatWeight(Number(derived.carryCapacity || 0))}` }
+      ];
+    }
+    if (key === 'Viljestark') {
+      const corruptionStats = derived.corruptionStats || {};
+      return [
+        { key: 'monster-threshold', text: `Styggelsetröskel: ${Number(corruptionStats.styggelsetroskel || 0)}` },
+        { key: 'corruption-threshold', text: `Korruptionströskel: ${Number(corruptionStats.korruptionstroskel || 0)}` },
+        { key: 'permanent-corruption', text: `Permanent korruption: ${Number(derived.permanentCorruption || 0)}` }
+      ];
+    }
+    return [];
+  }
+
+  function getCombatTraitExtras(key, snapshot) {
+    const extras = [];
+    (snapshot.attackNotesByTrait[key] || []).forEach(text => extras.push({ text }));
+    (snapshot.accuracyByTrait[key] || []).forEach(entry => {
+      const value = Number(entry?.value);
+      if (!Number.isFinite(value)) return;
+      extras.push({ text: `Träffsäkerhet${entry?.name ? ` (${entry.name})` : ''}: ${value}` });
+    });
+    if (key === snapshot.defTrait) {
+      snapshot.defs.forEach(entry => {
+        extras.push({ text: `Försvar${entry.name ? ` (${entry.name})` : ''}: ${entry.value}` });
+      });
+    }
+    if (key === snapshot.dancingTrait) {
+      snapshot.dancingDefs.forEach(entry => {
+        extras.push({ text: `${entry.name ? `Försvar (Dansande v. ${entry.name})` : 'Försvar (Dansande v.)'}: ${entry.value}` });
+      });
+    }
+    snapshot.separateDefs.filter(entry => entry.trait === key).forEach(entry => {
+      extras.push({ text: `${entry.name ? `Försvar (${entry.name})` : 'Försvar'}: ${entry.value}` });
+    });
+    return extras;
+  }
+
+  function patchTraitBaseFeedback(changedKeys) {
+    const keys = Array.isArray(changedKeys) ? changedKeys : [changedKeys];
+    const snapshot = getReusableTraitBaseSnapshot();
+    const list = snapshot?.list || storeHelper.getCurrentList(store);
+    const inv = snapshot?.inv || storeHelper.getInventory(store);
+    const data = storeHelper.getTraits(store);
+    const vals = snapshot
+      ? { ...snapshot.vals }
+      : getCurrentTraitValues(list, inv);
+    keys.forEach(key => {
+      if (snapshot) {
+        vals[key] = (data[key] || 0) + (snapshot.bonus[key] || 0) + (snapshot.maskBonus[key] || 0);
+      }
+      const label = dom.traits?.querySelector(`.trait[data-key="${CSS.escape(key)}"] .trait-label`);
+      if (label) label.textContent = `${key}: ${vals[key] || 0}`;
+    });
+    if (snapshot) snapshot.vals = vals;
+    updateTraitTotalStatus(data, list, inv, snapshot);
+  }
+
+  function getActiveTraitMutationScenarioId() {
+    return window.symbaroumPerf?.getFlowContext?.('trait-mutation') || null;
+  }
+
+  function markActiveTraitMutationCheckpoint(name, detail = {}) {
+    const perf = window.symbaroumPerf;
+    const scenarioId = getActiveTraitMutationScenarioId();
+    if (!scenarioId || typeof perf?.markScenario !== 'function') return null;
+    return perf.markScenario(scenarioId, name, {
+      surface: 'traits',
+      ...detail
+    });
+  }
+
+  function refreshTraitTargets(options = {}) {
+    const changedKeys = Array.isArray(options.targets?.traits)
+      ? options.targets.traits.filter(key => TRAIT_KEYS.includes(key))
+      : [];
+    if (!changedKeys.length || !dom.traits?.children.length) return renderTraits();
+    const baseSnapshot = getReusableTraitBaseSnapshot();
+    const list = baseSnapshot?.list || storeHelper.getCurrentList(store);
+    const inv = baseSnapshot?.inv || storeHelper.getInventory(store);
+    const vals = baseSnapshot?.vals || getCurrentTraitValues(list, inv);
+    const artifactEffects = storeHelper.getArtifactEffects(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store);
+    const derived = computeLocalTraitDerived(list, vals, artifactEffects, manualAdjust);
+    if (baseSnapshot) baseSnapshot.derived = derived;
+    changedKeys.forEach(key => {
+      if (key === 'Stark' || key === 'Viljestark') {
+        replaceTraitExtraDomain(key, 'derived', getDerivedTraitExtras(key, derived));
+      }
+    });
+    const requestedCombat = (options.invalidates || []).includes('combat');
+    const cachedDependencies = latestCombatDerivedSnapshot?.dependencies || new Set();
+    if (requestedCombat || changedKeys.some(key => cachedDependencies.has(key))) {
+      latestCombatDerivedSnapshot = buildCombatDerivedSnapshot(list, inv, vals);
+      TRAIT_KEYS.forEach(key => {
+        replaceTraitExtraDomain(key, 'combat', getCombatTraitExtras(key, latestCombatDerivedSnapshot));
+      });
+    }
+    return {
+      changedKeys,
+      combat: requestedCombat || changedKeys.some(key => cachedDependencies.has(key))
+    };
+  }
+
+  function traitCanAffectCombat(key) {
+    if (!latestCombatDerivedSnapshot) return true;
+    return latestCombatDerivedSnapshot.dependencies.has(key);
+  }
 
   async function renderTraits(){
     if(!dom.traits) return;
@@ -25845,27 +26592,6 @@ function defaultTraits() {
       }).length;
       vals[k] = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
     });
-    const computeLocalDerived = () => {
-      const corruptionStats = storeHelper.calcCorruptionTrackStats(list, vals['Viljestark']);
-      const effectsWithDark = {
-        xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
-        corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0),
-        korruptionstroskel: corruptionStats.korruptionstroskel
-      };
-      return {
-        corruptionStats,
-        permanentCorruption: storeHelper.calcPermanentCorruption(list, effectsWithDark),
-        carryCapacity: storeHelper.calcCarryCapacity(vals['Stark'], list)
-          + Number(artifactEffects?.capacity || 0)
-          + Number(manualAdjust?.capacity || 0),
-        toughness: storeHelper.calcToughness(vals['Stark'], list)
-          + Number(artifactEffects?.toughness || 0)
-          + Number(manualAdjust?.toughness || 0),
-        painThreshold: storeHelper.calcPainThreshold(vals['Stark'], list, effectsWithDark)
-          + Number(artifactEffects?.pain || 0)
-          + Number(manualAdjust?.pain || 0)
-      };
-    };
     let derived = null;
     try {
       derived = await window.symbaroumDerivedState?.requestCurrentCharacterDerived?.({
@@ -25879,7 +26605,7 @@ function defaultTraits() {
       });
     } catch {}
     if (!derived) {
-      derived = computeLocalDerived();
+      derived = computeLocalTraitDerived(list, vals, artifactEffects, manualAdjust);
     }
     if (sequence !== traitRenderSequence) return;
     const corruptionStats = derived.corruptionStats || { korruptionstroskel: 0, styggelsetroskel: 0 };
@@ -25887,32 +26613,20 @@ function defaultTraits() {
     const thresh = Number(corruptionStats.korruptionstroskel || 0);
     const permBase = Number(derived.permanentCorruption || 0);
 
-    const defTrait = getDefenseTraitName(list, vals);
-    const defs = calcDefense(vals[defTrait], { mode: 'standard' });
-    const dancingTrait = getDancingDefenseTraitName(list);
-    const dancingDefs = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
-    const separateDefs = calcSeparateDefense(defTrait, vals);
-    const accuracyPreview = getAccuracyPreview({
+    const inv = storeHelper.getInventory(store);
+    latestCombatDerivedSnapshot = buildCombatDerivedSnapshot(list, inv, vals);
+    latestTraitBaseSnapshot = {
+      charId: store.current || '',
+      listSource: store.data?.[store.current]?.list || null,
       list,
-      inv: storeHelper.getInventory(store),
-      traitValues: vals
-    });
-    const accuracyByTrait = (accuracyPreview?.entries || []).reduce((acc, entry) => {
-      const trait = typeof entry?.trait === 'string' ? entry.trait.trim() : '';
-      if (!trait) return acc;
-      if (!acc[trait]) acc[trait] = [];
-      acc[trait].push(entry);
-      return acc;
-    }, {});
-    const attackRuleNotes = getAttackTraitRuleNotes(list);
-    const attackNotesByTrait = attackRuleNotes.reduce((acc, note) => {
-      const trait = typeof note?.trait === 'string' ? note.trait.trim() : '';
-      const text = typeof note?.extraText === 'string' ? note.extraText.trim() : '';
-      if (!trait || !text) return acc;
-      if (!acc[trait]) acc[trait] = [];
-      acc[trait].push(text);
-      return acc;
-    }, {});
+      inv,
+      bonus,
+      maskBonus,
+      counts,
+      vals: { ...vals },
+      maxTotal: storeHelper.calcTraitTotalMax(list, inv),
+      derived
+    };
     if (dom.defenseCalcBtn) {
       const setup = typeof storeHelper.getDefenseSetup === 'function'
         ? storeHelper.getDefenseSetup(store)
@@ -25927,51 +26641,19 @@ function defaultTraits() {
       const countMarkup = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
 
       if (k === 'Stark') {
-        const capacity = Number(derived.carryCapacity || 0);
-        const tal = Number(derived.toughness || 0);
-        const pain = Number(derived.painThreshold || 0);
-
-
-        extras.push(`Tålighet: ${tal}`)
-        extras.push(` Smärtgräns: ${pain}`);
-        extras.push(`Bärkapacitet: ${formatWeight(capacity)}`);
+        extras.push(...getDerivedTraitExtras(k, derived).map(entry => ({ ...entry, domain: 'derived' })));
       } else if (k === 'Viljestark') {
-        const perm = permBase;
-        extras.push(`Styggelsetröskel: ${maxCor}`);
-        extras.push(`Korruptionströskel: ${thresh}`);
-        extras.push(`Permanent korruption: ${perm}`);
+        extras.push(...getDerivedTraitExtras(k, {
+          ...derived,
+          corruptionStats: { styggelsetroskel: maxCor, korruptionstroskel: thresh },
+          permanentCorruption: permBase
+        }).map(entry => ({ ...entry, domain: 'derived' })));
       }
+      extras.push(...getCombatTraitExtras(k, latestCombatDerivedSnapshot).map(entry => ({ ...entry, domain: 'combat' })));
 
-      (attackNotesByTrait[k] || []).forEach(text => extras.push(text));
-      (accuracyByTrait[k] || []).forEach(entry => {
-        const sourceLabel = entry?.name ? ` (${entry.name})` : '';
-        const value = Number(entry?.value);
-        if (!Number.isFinite(value)) return;
-        extras.push(`Tr\u00e4ffs\u00e4kerhet${sourceLabel}: ${value}`);
-      });
-
-      if (k === defTrait) {
-        defs.forEach(d => {
-          extras.push(`Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}`);
-        });
-      }
-
-      if (k === dancingTrait && dancingDefs.length) {
-        dancingDefs.forEach(d => {
-          const label = d.name ? `Försvar (Dansande v. ${d.name})` : 'Försvar (Dansande v.)';
-          extras.push(`${label}: ${d.value}`);
-        });
-      }
-
-      const traitSeparateDefs = separateDefs.filter(d => d.trait === k);
-      if (traitSeparateDefs.length) {
-        traitSeparateDefs.forEach(d => {
-          const label = d.name ? `Försvar (${d.name})` : 'Försvar';
-          extras.push(`${label}: ${d.value}`);
-        });
-      }
-
-      const extrasHtml = extras.map(text => `<div class="trait-extra">${text}</div>`).join('');
+      const extrasHtml = extras.map(entry => (
+        `<div class="trait-extra" data-extra-domain="${entry.domain}"${entry.key ? ` data-extra-key="${entry.key}"` : ''}>${entry.text}</div>`
+      )).join('');
 
       return `
       <div class="trait" data-key="${k}">
@@ -25987,27 +26669,10 @@ function defaultTraits() {
         <div class="trait-count-row">
           ${countMarkup}
         </div>
-        ${extrasHtml}
+        <div class="trait-extras">${extrasHtml}</div>
       </div>`;
     }).join('');
-
-    const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0)+(maskBonus[k]||0),0);
-
-    const inv = storeHelper.getInventory(store);
-    const maxTot = storeHelper.calcTraitTotalMax(list, inv);
-    if (dom.traitsTot) dom.traitsTot.textContent = total;
-    if (dom.traitsMax) dom.traitsMax.textContent = maxTot;
-    const parent = dom.traitsTot.closest('.traits-total');
-    if (parent) {
-      parent.classList.remove('good','under','over');
-      if (total === maxTot) {
-        parent.classList.add('good');
-      } else if (total < maxTot) {
-        parent.classList.add('under');
-      } else {
-        parent.classList.add('over');
-      }
-    }
+    updateTraitTotalStatus(data, list, inv, latestTraitBaseSnapshot);
 
     if (dom.traitStats) {
       dom.traitStats.textContent = "";
@@ -26037,15 +26702,27 @@ function defaultTraits() {
       if(!btn) return;
       const key = btn.closest('.trait').dataset.key;
       const d   = Number(btn.dataset.d);
+      markActiveTraitMutationCheckpoint('handler-entry', { key, delta: d });
 
       const t   = storeHelper.getTraits(store);
-      const bonusEx = window.exceptionSkill ? exceptionSkill.getBonus(key) : 0;
-      const bonusMask = window.maskSkill ? maskSkill.getBonus(key) : 0;
+      const baseSnapshot = getReusableTraitBaseSnapshot();
+      const bonusEx = baseSnapshot
+        ? Number(baseSnapshot.bonus?.[key] || 0)
+        : (window.exceptionSkill ? exceptionSkill.getBonus(key) : 0);
+      const bonusMask = baseSnapshot
+        ? Number(baseSnapshot.maskBonus?.[key] || 0)
+        : (window.maskSkill ? maskSkill.getBonus(key) : 0);
       const bonus = bonusEx + bonusMask;
       const min   = bonus;
       const currentVal = t[key] || 0;
       const next  = Math.max(0, currentVal + d);
       const proposed = Math.max(min - bonus, next);
+      markActiveTraitMutationCheckpoint(baseSnapshot ? 'trait-snapshot-hit' : 'trait-snapshot-miss', { key });
+      markActiveTraitMutationCheckpoint('surface-preparation-end', {
+        key,
+        delta: d,
+        snapshotHit: Boolean(baseSnapshot)
+      });
 
       const isIncrease = d > 0 && proposed > currentVal;
       if (isIncrease) {
@@ -26087,14 +26764,40 @@ function defaultTraits() {
         if (!ok) return;
       }
 
+      markActiveTraitMutationCheckpoint('validation-end', { key, delta: d });
+
       t[key] = proposed;
-      storeHelper.setTraits(store, t);
-      renderTraits();
-      window.symbaroumViewBridge?.refreshCurrent({ summary: true, effects: true });
+      const invalidates = ['traits.base', 'summary.traits'];
+      if (key === 'Stark') invalidates.push('traits.stark-derived', 'inventory.totals');
+      if (key === 'Viljestark') invalidates.push('traits.willpower-derived');
+      if (traitCanAffectCombat(key)) invalidates.push('combat', 'summary.combat');
+      const mutation = storeHelper.setTraits(store, t, {
+        invalidates,
+        targets: { traits: [key], summary: [key] },
+        afterCommit: summary => {
+          window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+            charId: summary.charId,
+            version: summary.version,
+            invalidates: summary.invalidates,
+            targets: summary.targets,
+            topology: 'row',
+            source: 'trait-base-value',
+            afterPaint: true
+          });
+        }
+      });
+      if (!mutation) return;
+      patchTraitBaseFeedback(mutation.changedKeys);
+      markActiveTraitMutationCheckpoint('first-feedback-dom', {
+        key,
+        delta: d,
+        value: proposed
+      });
     });
   }
 
   window.renderTraits = renderTraits;
+  window.refreshTraitTargets = refreshTraitTargets;
   window.bindTraits = bindTraits;
   window.calcDefense = calcDefense;
   window.calcAccuracy = calcAccuracy;
@@ -26103,6 +26806,15 @@ function defaultTraits() {
   window.getDefensePreview = getDefensePreview;
   window.getAccuracyPreview = getAccuracyPreview;
   window.getCombatExtraItemInfos = buildCombatExtraItemInfos;
+  window.getTraitMutationSnapshot = () => {
+    const snapshot = getReusableTraitBaseSnapshot();
+    if (!snapshot) return null;
+    return {
+      vals: { ...snapshot.vals },
+      derived: snapshot.derived ? { ...snapshot.derived } : null,
+      combat: latestCombatDerivedSnapshot
+    };
+  };
   window.getDefenseTraitName = getDefenseTraitName;
   window.getDancingDefenseTraitName = getDancingDefenseTraitName;
   window.getAttackTraitRuleNotes = getAttackTraitRuleNotes;
@@ -32290,18 +33002,19 @@ customElements.define('shared-toolbar', SharedToolbar);
     if (!standardGroup || !(standardGroup instanceof HTMLElement)) return;
     const descriptors = getStandardActionDescriptors(config);
     const existing = [...standardGroup.querySelectorAll(':scope > button')];
-
-    while (existing.length > descriptors.length) {
-      existing.pop()?.remove();
-    }
+    const bySlot = new Map(existing.map(button => [button.dataset.standardSlot || '', button]));
+    const wantedSlots = new Set(descriptors.map(descriptor => descriptor.slot));
+    existing.forEach(button => {
+      if (!wantedSlots.has(button.dataset.standardSlot || '')) button.remove();
+    });
 
     descriptors.forEach((descriptor, index) => {
-      let button = existing[index];
+      let button = bySlot.get(descriptor.slot);
       if (!button) {
         button = document.createElement('button');
-        standardGroup.appendChild(button);
-        existing.push(button);
       }
+      const currentAtIndex = standardGroup.children[index] || null;
+      if (currentAtIndex !== button) standardGroup.insertBefore(button, currentAtIndex);
       button.type = 'button';
       button.className = buildStandardActionClassName(descriptor);
       button.dataset.act = descriptor.act;

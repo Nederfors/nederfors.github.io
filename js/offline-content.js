@@ -221,7 +221,12 @@ function resumeRules(token) {
   return true;
 }
 
-async function withForegroundPriority(callback, { reason = 'foreground' } = {}) {
+function waitForPresentationOpportunity() {
+  if (typeof window.requestAnimationFrame !== 'function') return Promise.resolve();
+  return new Promise(resolve => window.requestAnimationFrame(() => resolve()));
+}
+
+async function withForegroundPriority(callback, { reason = 'foreground', presentFeedback = false } = {}) {
   if (typeof callback !== 'function') return undefined;
   const token = pauseRules(reason);
   try {
@@ -230,6 +235,7 @@ async function withForegroundPriority(callback, { reason = 'foreground' } = {}) 
     // Wait only for that already-started, 250 ms-bounded acknowledgement. A
     // first install without a controller still enters the callback at once.
     if (record?.pauseAcknowledgement || (rulesWarmActive && currentWorkerController())) {
+      if (presentFeedback) await waitForPresentationOpportunity();
       await yieldRules(token);
     }
     return await callback();

@@ -8,7 +8,19 @@
 
 const startPerfScenario = (name, detail = {}) => window.symbaroumPerf?.startScenario?.(name, detail) || null;
 const finishPerfScenario = (id, detail = {}) => window.symbaroumPerf?.scheduleScenarioEnd?.(id, detail);
-const getActiveAddPerfScenarioId = () => window.symbaroumPerf?.getFlowContext?.('add-item') || null;
+const MUTATION_PERF_FLOW_CONTEXT_KEYS = Object.freeze([
+  'add-item',
+  'remove-item',
+  'character-level-change',
+  'inventory-mutation',
+  'trait-mutation'
+]);
+const getActiveMutationPerfScenarioId = () => {
+  const perf = window.symbaroumPerf;
+  return MUTATION_PERF_FLOW_CONTEXT_KEYS
+    .map(key => perf?.getFlowContext?.(key))
+    .find(Boolean) || null;
+};
 const mainUiPrefsStorage = window.symbaroumUiPrefs || window.localStorage;
 const getMainUiPref = (key) => {
   try {
@@ -47,9 +59,13 @@ const CHARACTER_PANEL_PRESETS = Object.freeze({
 });
 const buildPanelRefreshOptions = (options = {}) => {
   const next = {};
-  ['filters', 'selection', 'inventory', 'notes', 'traits', 'summary', 'effects', 'name', 'full', 'refresh']
+  ['filters', 'selection', 'inventory', 'inventoryTotals', 'notes', 'traits', 'traitTargets', 'summary', 'effects', 'name', 'full', 'refresh']
     .forEach(key => {
       if (options[key]) next[key] = true;
+    });
+  ['invalidates', 'targets', 'topology', 'source', 'charId', 'version', 'generation']
+    .forEach(key => {
+      if (options[key] !== undefined) next[key] = options[key];
     });
   if (Object.keys(next).length && options.strict !== false) next.strict = true;
   return next;
@@ -8186,13 +8202,18 @@ function flushDerivedRequest(charId) {
   const key = getDerivedPromiseKey(pending.request);
   const existing = derivedPromisesByVersion.get(key);
   if (existing) {
-    existing.then(pending.resolve, pending.reject);
+    pending.subscribers.forEach(subscriber => {
+      existing.then(subscriber.resolve, subscriber.reject);
+    });
     return;
   }
 
   const promise = runDerivedRequest(pending);
   derivedPromisesByVersion.set(key, promise);
-  promise.then(pending.resolve, pending.reject).finally(() => {
+  pending.subscribers.forEach(subscriber => {
+    promise.then(subscriber.resolve, subscriber.reject);
+  });
+  promise.finally(() => {
     if (derivedPromisesByVersion.get(key) === promise) {
       derivedPromisesByVersion.delete(key);
     }
@@ -8264,13 +8285,14 @@ function requestCurrentCharacterDerived(options = {}) {
     rejectPending = reject;
   });
 
+  const subscribers = pending?.subscribers ? [...pending.subscribers] : [];
+  subscribers.push({ resolve: resolvePending, reject: rejectPending });
   derivedPendingByChar.set(request.charId, {
     request,
     promise,
-    resolve: resolvePending,
-    reject: rejectPending,
+    subscribers,
     afterPaint: options.afterPaint === true,
-    scenarioId: options.scenarioId || getActiveAddPerfScenarioId(),
+    scenarioId: options.scenarioId || getActiveMutationPerfScenarioId(),
     source: options.source || 'derived'
   });
   scheduleDerivedRequest(request.charId, options.afterPaint === true);
@@ -8292,6 +8314,31 @@ function mergeDeferredCharacterSyncOptions(current, next) {
       merged[key] = merged[key] !== false && next[key] !== false;
       return;
     }
+    if (key === 'invalidates') {
+      merged[key] = [...new Set([
+        ...(Array.isArray(merged[key]) ? merged[key] : []),
+        ...(Array.isArray(next[key]) ? next[key] : [next[key]])
+      ].map(value => String(value || '').trim()).filter(Boolean))];
+      return;
+    }
+    if (key === 'targets') {
+      const currentTargets = merged[key] && typeof merged[key] === 'object' ? merged[key] : {};
+      const nextTargets = next[key] && typeof next[key] === 'object' ? next[key] : {};
+      merged[key] = { ...currentTargets };
+      Object.entries(nextTargets).forEach(([targetKey, values]) => {
+        const currentValues = Array.isArray(merged[key][targetKey]) ? merged[key][targetKey] : [];
+        const nextValues = Array.isArray(values) ? values : [values];
+        merged[key][targetKey] = [...new Set([...currentValues, ...nextValues].filter(value => value !== undefined && value !== null))];
+      });
+      return;
+    }
+    if (key === 'topology') {
+      const ranks = { none: 0, row: 1, category: 2, full: 3 };
+      const currentRank = ranks[merged[key]] ?? -1;
+      const nextRank = ranks[next[key]] ?? -1;
+      if (nextRank >= currentRank) merged[key] = next[key];
+      return;
+    }
     if (typeof next[key] === 'boolean') {
       merged[key] = merged[key] || next[key];
       return;
@@ -8303,7 +8350,60 @@ function mergeDeferredCharacterSyncOptions(current, next) {
   return merged;
 }
 
-async function flushCharacterConsistencyRefresh() {
+let characterRefreshGeneration = 0;
+let queuedCharacterRefresh = null;
+let activeCharacterRefresh = null;
+const characterRefreshCompletions = new Map();
+
+function applyCharacterRefreshDomains(options = {}) {
+  const next = { ...options };
+  const domains = new Set(Array.isArray(next.invalidates) ? next.invalidates : []);
+  if (domains.has('xp')) next.xp = true;
+  if (domains.has('traits') || domains.has('traits.counts')) next.traits = true;
+  if ([...domains].some(domain => domain.startsWith('traits.') && domain !== 'traits.counts')) next.traitTargets = true;
+  if ([...domains].some(domain => domain === 'summary' || domain.startsWith('summary.'))) next.summary = true;
+  if (domains.has('effects')) next.effects = true;
+  if (domains.has('inventory.totals')) next.inventoryTotals = true;
+  if (domains.has('inventory.structure')) next.inventory = true;
+  if ([...domains].some(domain => domain === 'catalog.structure')) next.selection = true;
+  return next;
+}
+
+function makeCharacterRefreshTicket(options = {}) {
+  const generation = ++characterRefreshGeneration;
+  const perf = window.symbaroumPerf;
+  const scenarioId = options.scenarioId || getActiveMutationPerfScenarioId();
+  let resolveConsistency;
+  const consistencyReady = new Promise(resolve => {
+    resolveConsistency = resolve;
+  });
+  const afterPaint = options.afterPaint !== false;
+  const feedbackReady = afterPaint && typeof requestAnimationFrame === 'function'
+    ? new Promise(resolve => requestAnimationFrame(timestamp => {
+        perf?.markScenario?.(scenarioId, 'first-feedback-presented', { generation });
+        resolve({ generation, timestamp });
+      }))
+    : Promise.resolve().then(() => {
+        const timestamp = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        perf?.markScenario?.(scenarioId, 'first-feedback-presented', { generation });
+        return { generation, timestamp };
+      });
+  const ticket = {
+    generation,
+    charId: options.charId || store?.current || '',
+    version: Number(options.version ?? storeHelper.getDerivedVersion?.(store, options.charId || store?.current || '') ?? 0),
+    feedbackReady,
+    consistencyReady
+  };
+  Object.defineProperty(ticket, '_resolveConsistency', {
+    value: resolveConsistency,
+    enumerable: false
+  });
+  characterRefreshCompletions.set(generation, consistencyReady);
+  return ticket;
+}
+
+function clearCharacterRefreshHandle() {
   if (deferredCharacterSyncHandle) {
     if (deferredCharacterSyncHandle.type === 'raf') {
       cancelAnimationFrame(deferredCharacterSyncHandle.id);
@@ -8312,65 +8412,11 @@ async function flushCharacterConsistencyRefresh() {
     }
     deferredCharacterSyncHandle = null;
   }
-  const next = deferredCharacterSyncOptions;
-  deferredCharacterSyncOptions = null;
-  if (!next) {
-    if (resolveDeferredCharacterSync) {
-      resolveDeferredCharacterSync();
-      resolveDeferredCharacterSync = null;
-      deferredCharacterSyncPromise = null;
-    }
-    return;
-  }
-
-  let xpPromise = Promise.resolve();
-  if (next.xp && typeof window.updateXP === 'function') {
-    xpPromise = Promise.resolve(updateXP({
-      afterPaint: false,
-      source: next.source || 'deferred-consistency'
-    }));
-  }
-
-  if (next.refreshCurrent !== false) {
-    const refreshOptions = buildPanelRefreshOptions(next);
-    if (Object.keys(refreshOptions).length) {
-      const role = next.role || getCurrentRouteRole();
-      if (role !== getCurrentRouteRole()) {
-        refreshRoleView(role, refreshOptions);
-      } else {
-        refreshCurrentView(refreshOptions);
-      }
-    }
-  }
-
-  try {
-    await xpPromise;
-  } finally {
-    if (resolveDeferredCharacterSync) {
-      resolveDeferredCharacterSync();
-      resolveDeferredCharacterSync = null;
-      deferredCharacterSyncPromise = null;
-    }
-  }
 }
 
-function scheduleCharacterConsistencyRefresh(options = {}) {
-  deferredCharacterSyncOptions = mergeDeferredCharacterSyncOptions(deferredCharacterSyncOptions, {
-    afterPaint: true,
-    ...options
-  });
-  if (!deferredCharacterSyncPromise) {
-    deferredCharacterSyncPromise = new Promise(resolve => {
-      resolveDeferredCharacterSync = resolve;
-    });
-  }
-  const afterPaint = deferredCharacterSyncOptions.afterPaint !== false;
-  if (deferredCharacterSyncHandle) {
-    if (!afterPaint && deferredCharacterSyncHandle.afterPaint) {
-      void flushCharacterConsistencyRefresh();
-    }
-    return;
-  }
+function ensureCharacterRefreshScheduled() {
+  if (activeCharacterRefresh || deferredCharacterSyncHandle || !queuedCharacterRefresh) return;
+  const afterPaint = queuedCharacterRefresh.options.afterPaint !== false;
   const run = () => {
     deferredCharacterSyncHandle = null;
     void flushCharacterConsistencyRefresh();
@@ -8399,11 +8445,116 @@ function scheduleCharacterConsistencyRefresh(options = {}) {
   };
 }
 
+async function flushCharacterConsistencyRefresh() {
+  if (activeCharacterRefresh) {
+    await activeCharacterRefresh.promise;
+    if (queuedCharacterRefresh) return flushCharacterConsistencyRefresh();
+    return;
+  }
+  clearCharacterRefreshHandle();
+  const batch = queuedCharacterRefresh;
+  queuedCharacterRefresh = null;
+  deferredCharacterSyncOptions = null;
+  if (!batch) return;
+  activeCharacterRefresh = batch;
+  const next = applyCharacterRefreshDomains(batch.options);
+  const generation = Math.max(...batch.tickets.map(ticket => ticket.generation));
+  const perf = window.symbaroumPerf;
+  const scenarioId = next.scenarioId || getActiveMutationPerfScenarioId();
+  next.generation = generation;
+  const renderStage = perf?.startScenarioStage?.(scenarioId, 'surface-render', {
+    generation,
+    invalidates: next.invalidates || []
+  }) || null;
+
+  const pending = [];
+  if (next.xp && typeof window.updateXP === 'function') {
+    pending.push(Promise.resolve(updateXP({
+      afterPaint: false,
+      source: next.source || 'deferred-consistency'
+    })));
+  }
+
+  if (next.refreshCurrent !== false) {
+    const refreshOptions = buildPanelRefreshOptions(next);
+    if (Object.keys(refreshOptions).length) {
+      const role = next.role || getCurrentRouteRole();
+      if (role !== getCurrentRouteRole()) {
+        pending.push(Promise.resolve(refreshRoleView(role, refreshOptions)));
+      } else {
+        pending.push(Promise.resolve(refreshCurrentView(refreshOptions)));
+      }
+    }
+  }
+
+  batch.promise = Promise.allSettled(pending);
+  const results = await batch.promise;
+  perf?.finishScenarioStage?.(renderStage, { generation });
+  const refreshResult = {
+    generation,
+    generations: batch.tickets.map(ticket => ticket.generation),
+    charId: next.charId || batch.tickets.at(-1)?.charId || '',
+    version: Number(next.version ?? batch.tickets.at(-1)?.version ?? 0),
+    invalidates: next.invalidates || [],
+    results
+  };
+  batch.tickets.forEach(ticket => {
+    ticket._resolveConsistency(refreshResult);
+    characterRefreshCompletions.delete(ticket.generation);
+  });
+  perf?.markScenario?.(scenarioId, 'all-views-consistent', {
+    generation,
+    invalidates: next.invalidates || []
+  });
+  activeCharacterRefresh = null;
+  deferredCharacterSyncPromise = null;
+  resolveDeferredCharacterSync = null;
+  ensureCharacterRefreshScheduled();
+  return refreshResult;
+}
+
+function scheduleCharacterConsistencyRefresh(options = {}) {
+  const normalized = applyCharacterRefreshDomains({
+    afterPaint: true,
+    ...options
+  });
+  const ticket = makeCharacterRefreshTicket(normalized);
+  if (!queuedCharacterRefresh) {
+    queuedCharacterRefresh = {
+      options: normalized,
+      tickets: [ticket],
+      promise: null
+    };
+  } else {
+    queuedCharacterRefresh.options = mergeDeferredCharacterSyncOptions(queuedCharacterRefresh.options, normalized);
+    queuedCharacterRefresh.tickets.push(ticket);
+  }
+  deferredCharacterSyncOptions = queuedCharacterRefresh.options;
+  deferredCharacterSyncPromise = ticket.consistencyReady;
+  const afterPaint = queuedCharacterRefresh.options.afterPaint !== false;
+  if (deferredCharacterSyncHandle && !afterPaint && deferredCharacterSyncHandle.afterPaint) {
+    clearCharacterRefreshHandle();
+  }
+  ensureCharacterRefreshScheduled();
+  return ticket;
+}
+
+function waitForCharacterConsistencyRefresh(ticket = null) {
+  if (ticket?.consistencyReady && typeof ticket.consistencyReady.then === 'function') {
+    return ticket.consistencyReady;
+  }
+  const targetGeneration = Number(ticket?.generation ?? ticket ?? characterRefreshGeneration);
+  const pending = [...characterRefreshCompletions.entries()]
+    .filter(([generation]) => generation <= targetGeneration)
+    .map(([, promise]) => promise);
+  return pending.length ? Promise.all(pending).then(results => results.at(-1)) : Promise.resolve();
+}
+
 window.symbaroumDerivedState = {
   requestCurrentCharacterDerived,
   scheduleCharacterConsistencyRefresh,
   flushCharacterConsistencyRefresh,
-  waitForCharacterConsistencyRefresh: () => deferredCharacterSyncPromise || Promise.resolve()
+  waitForCharacterConsistencyRefresh
 };
 
 function scheduleCharacterMutationRefresh(options = {}) {
@@ -8414,8 +8565,7 @@ function scheduleCharacterMutationRefresh(options = {}) {
   };
 
   if (typeof window.symbaroumDerivedState?.scheduleCharacterConsistencyRefresh === 'function') {
-    window.symbaroumDerivedState.scheduleCharacterConsistencyRefresh(next);
-    return;
+    return window.symbaroumDerivedState.scheduleCharacterConsistencyRefresh(next);
   }
 
   if (next.xp && typeof window.updateXP === 'function') {
@@ -8440,11 +8590,12 @@ function scheduleCharacterMutationRefresh(options = {}) {
       }
     }
   }
+  return null;
 }
 
 window.symbaroumMutationPipeline = {
   scheduleCharacterRefresh: scheduleCharacterMutationRefresh,
-  waitForCharacterRefresh: () => window.symbaroumDerivedState?.waitForCharacterConsistencyRefresh?.() || Promise.resolve()
+  waitForCharacterRefresh: ticket => window.symbaroumDerivedState?.waitForCharacterConsistencyRefresh?.(ticket) || Promise.resolve()
 };
 
 function updateXP(options = {}) {
@@ -8464,7 +8615,7 @@ function updateXP(options = {}) {
     artifactEffects,
     manualAdjust,
     afterPaint: options.afterPaint === true,
-    scenarioId: options.scenarioId || getActiveAddPerfScenarioId(),
+    scenarioId: options.scenarioId || getActiveMutationPerfScenarioId(),
     source: options.source || 'updateXP'
   }).then(summary => {
     if (sequence !== xpUpdateSequence || !summary) return;

@@ -1338,7 +1338,7 @@
     const runForegroundCatalogMutation = callback => {
       const withPriority = window.symbaroumOffline?.withForegroundPriority;
       if (typeof withPriority === 'function') {
-        return withPriority(callback, { reason: 'catalog-add' });
+        return withPriority(callback, { reason: 'catalog-add', presentFeedback: true });
       }
       return callback();
     };
@@ -1384,7 +1384,11 @@
     const withBusyInteraction = async (control, callback) => {
       if (typeof callback !== 'function') return undefined;
       if (!control || typeof control !== 'object') return callback();
-      if (control.dataset?.mutationBusy === '1') return callback();
+      if (control.dataset?.mutationBusy === '1') {
+        const ownedByActiveScenario = [...scenarioBusyControls.values()]
+          .some(activeControl => activeControl === control);
+        return ownedByActiveScenario ? callback() : undefined;
+      }
       const card = typeof control.closest === 'function'
         ? control.closest('li.entry-card, li.db-card')
         : null;
@@ -4569,13 +4573,15 @@
             });
             skipImmediateDerivedRefresh = true;
           } else {
-            timeActiveAddStage('derived-refresh', () => {
-              if (window.updateXP) updateXP();
-              if (window.renderTraits) renderTraits();
-            }, {
-              surface: 'index',
-              branch: 'list'
+            scheduleCharacterMutationRefresh({
+              xp: true,
+              traits: true,
+              summary: true,
+              effects: true,
+              source: 'index-list-remove',
+              afterPaint: true
             });
+            skipImmediateDerivedRefresh = true;
           }
         }
       }

@@ -10,7 +10,13 @@ const LEGACY_CHAR_PREFIX = 'rpall-char-';
 const ENTRY_SORT_DEFAULT = 'alpha-asc';
 const WRITE_DEBOUNCE_MS = 150;
 const CHARACTER_FIELDS_STORE = 'characterFields';
-const MUTATION_FLOW_CONTEXT_KEYS = ['remove-item', 'add-item'];
+const MUTATION_FLOW_CONTEXT_KEYS = [
+  'remove-item',
+  'add-item',
+  'character-level-change',
+  'inventory-mutation',
+  'trait-mutation'
+];
 
 const UI_PREF_EXACT_KEYS = new Set([
   'indexViewState',
@@ -344,6 +350,10 @@ function scheduleFlush(delay = WRITE_DEBOUNCE_MS) {
     });
   }, Math.max(0, Number(delay) || 0));
   markActiveMutationCheckpoint('dexie-flush-scheduled', {
+    delayMs: Math.max(0, Number(delay) || 0)
+  });
+  markActiveMutationCheckpoint('persistence-scheduled', {
+    mode: 'dexie',
     delayMs: Math.max(0, Number(delay) || 0)
   });
 }
@@ -764,7 +774,7 @@ async function saveCharacterFields(charId, patch = {}) {
   queueCharacterFieldWrite(charId, patch);
 }
 
-async function flushPendingWrites() {
+async function flushPendingWrites(options = {}) {
   if (state.mode !== 'dexie' || !db) return;
 
   if (state.writeQueue.flushPromise) {
@@ -784,6 +794,10 @@ async function flushPendingWrites() {
   state.writeQueue.flushPromise = promise;
   try {
     await promise;
+    markActiveMutationCheckpoint('persistence-flush-complete', {
+      mode: 'dexie',
+      reason: options.reason || ''
+    });
   } finally {
     if (state.writeQueue.flushPromise === promise) {
       state.writeQueue.flushPromise = null;

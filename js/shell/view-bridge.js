@@ -35,24 +35,34 @@ function getViewHooks(role) {
 
 function refreshRole(role, options = {}) {
   const hooks = getViewHooks(role);
-  if (!hooks) return false;
+  if (!hooks) return Promise.resolve({ handled: false, results: [] });
   const specificHooks = [
     ['name', 'refreshName'],
     ['filters', 'refreshFilters'],
     ['selection', 'refreshSelection'],
     ['inventory', 'refreshInventory'],
+    ['inventoryTotals', 'refreshInventoryTotals'],
     ['notes', 'refreshNotes'],
     ['traits', 'refreshTraits'],
+    ['traitTargets', 'refreshTraitTargets'],
     ['summary', 'refreshSummary'],
     ['effects', 'refreshEffects']
   ];
   let specificRequested = false;
   let specificHandled = false;
+  const pending = [];
+  const invoke = (hook) => {
+    try {
+      pending.push(Promise.resolve(hook(options)));
+    } catch (error) {
+      pending.push(Promise.reject(error));
+    }
+  };
   specificHooks.forEach(([flag, hookName]) => {
     if (!options[flag]) return;
     specificRequested = true;
     if (typeof hooks[hookName] !== 'function') return;
-    hooks[hookName](options);
+    invoke(hooks[hookName]);
     specificHandled = true;
   });
   const shouldRunGeneric = Boolean(
@@ -62,10 +72,13 @@ function refreshRole(role, options = {}) {
     || (!specificHandled && options.strict !== true)
   );
   if (shouldRunGeneric && typeof hooks.refresh === 'function') {
-    hooks.refresh(options);
-    return true;
+    invoke(hooks.refresh);
+    specificHandled = true;
   }
-  return specificHandled;
+  return Promise.allSettled(pending).then(results => ({
+    handled: specificHandled,
+    results
+  }));
 }
 
 function refreshCurrent(options = {}) {

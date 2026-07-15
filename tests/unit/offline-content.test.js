@@ -18,7 +18,7 @@ class TestMessageChannel {
   }
 }
 
-function loadOfflineContent({ controller = null, ready } = {}) {
+function loadOfflineContent({ controller = null, ready, requestAnimationFrame } = {}) {
   const serviceWorker = {
     controller,
     ready: ready || Promise.resolve({ active: controller }),
@@ -27,7 +27,8 @@ function loadOfflineContent({ controller = null, ready } = {}) {
   const window = {
     addEventListener: vi.fn(),
     clearTimeout,
-    setTimeout
+    setTimeout,
+    requestAnimationFrame
   };
   const source = readFileSync('js/offline-content.js', 'utf8')
     .replace('export default offlineContent;', 'window.__offlineContentForTest = offlineContent;');
@@ -86,6 +87,42 @@ describe('offline foreground priority', () => {
 
     expect(events).toEqual(['callback']);
     await expect(operation).resolves.toBe('completed');
+  });
+
+  it('gives busy feedback a presentation opportunity before awaiting a controller', async () => {
+    const events = [];
+    let present = null;
+    let acknowledgePause = null;
+    const controller = {
+      postMessage(message, ports = []) {
+        if (message.type === 'PAUSE_RULES_CACHE') {
+          events.push('pause-posted');
+          acknowledgePause = () => ports[0].postMessage({ ok: true, status: 'paused' });
+        } else if (message.type === 'RESUME_RULES_CACHE') {
+          events.push('resume-posted');
+        }
+      }
+    };
+    const { offlineContent } = loadOfflineContent({
+      controller,
+      requestAnimationFrame: callback => {
+        present = () => callback(16);
+        return 1;
+      }
+    });
+
+    const operation = offlineContent.withForegroundPriority(() => {
+      events.push('callback');
+      return 'completed';
+    }, { reason: 'catalog-add', presentFeedback: true });
+
+    expect(events).toEqual(['pause-posted']);
+    acknowledgePause();
+    await Promise.resolve();
+    expect(events).toEqual(['pause-posted']);
+    present();
+    await expect(operation).resolves.toBe('completed');
+    expect(events).toEqual(['pause-posted', 'callback', 'resume-posted']);
   });
 
   it('continues after the bounded acknowledgement timeout', async () => {

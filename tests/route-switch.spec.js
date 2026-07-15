@@ -113,10 +113,145 @@ test('trait controls apply each increment once after traits view initialization'
 
   const trait = page.locator('.trait[data-key="Diskret"]');
   await expect(trait.locator('.trait-label')).toHaveText('Diskret: 5');
+  await page.evaluate(() => {
+    const card = document.querySelector('.trait[data-key="Diskret"]');
+    window.__traitFastPathProbe = {
+      card,
+      button: card?.querySelector('.trait-btn[data-d="1"]'),
+      fullRenders: 0,
+      effectsRenders: 0,
+      refreshes: []
+    };
+    window.symbaroumViewBridge.registerViewHooks('traits', {
+      refreshTraits: () => { window.__traitFastPathProbe.fullRenders += 1; },
+      refreshEffects: () => { window.__traitFastPathProbe.effectsRenders += 1; }
+    });
+    const pipeline = window.symbaroumMutationPipeline;
+    const originalSchedule = pipeline.scheduleCharacterRefresh;
+    pipeline.scheduleCharacterRefresh = options => {
+      window.__traitFastPathProbe.refreshes.push(options.invalidates || []);
+      return originalSchedule(options);
+    };
+  });
   await trait.locator('.trait-btn[data-d="1"]').click();
   await expect(trait.locator('.trait-label')).toHaveText('Diskret: 6');
+  const fastPath = await page.evaluate(async () => {
+    await window.symbaroumMutationPipeline.waitForCharacterRefresh();
+    const card = document.querySelector('.trait[data-key="Diskret"]');
+    return {
+      cardPreserved: card === window.__traitFastPathProbe.card,
+      buttonPreserved: card?.querySelector('.trait-btn[data-d="1"]') === window.__traitFastPathProbe.button,
+      fullRenders: window.__traitFastPathProbe.fullRenders,
+      effectsRenders: window.__traitFastPathProbe.effectsRenders,
+      refreshes: window.__traitFastPathProbe.refreshes
+    };
+  });
+  expect(fastPath.cardPreserved).toBe(true);
+  expect(fastPath.buttonPreserved).toBe(true);
+  expect(fastPath.fullRenders).toBe(0);
+  expect(fastPath.effectsRenders).toBe(0);
+  expect(fastPath.refreshes).toHaveLength(1);
+  expect(fastPath.refreshes[0]).toEqual(expect.arrayContaining(['traits.base', 'summary.traits']));
+  expect(fastPath.refreshes[0]).not.toContain('effects');
   await trait.locator('.trait-btn[data-d="5"]').click();
   await expect(trait.locator('.trait-label')).toHaveText('Diskret: 11');
+  await expect(page.locator('#summaryContent')).toHaveAttribute('data-summary-dirty', '1');
+  await page.locator('[data-traits-tab="summary"]').click();
+  const summaryTraitRow = page.locator('#summaryContent .summary-section').filter({ hasText: 'Karaktärsdrag' })
+    .locator('li').filter({ hasText: 'Diskret' });
+  await expect(summaryTraitRow.locator('.summary-value')).toHaveText('11');
+  await expect(page.locator('#summaryContent')).not.toHaveAttribute('data-summary-dirty', '1');
+});
+
+test('all eight trait controls preserve keyed nodes for plus and minus one and five', async ({ page }) => {
+  const metaState = {
+    current: 'trait-matrix-char',
+    characters: [{ id: 'trait-matrix-char', name: 'Trait Matrix Hero', folderId: 'fd-standard' }],
+    folders: [{ id: 'fd-standard', name: 'Standard', order: 0, system: true }],
+    activeFolder: 'ALL',
+    filterUnion: false,
+    compactEntries: true,
+    onlySelected: false,
+    recentSearches: [],
+    liveMode: false,
+    entrySort: 'alpha-asc'
+  };
+  const keys = ['Diskret', 'Kvick', 'Listig', 'Stark', 'Träffsäker', 'Vaksam', 'Viljestark', 'Övertygande'];
+  const characterState = {
+    list: [],
+    inventory: [],
+    custom: [],
+    traits: Object.fromEntries(keys.map(key => [key, 10])),
+    notes: {},
+    money: { daler: 0, skilling: 0, 'örtegar': 0 }
+  };
+
+  await page.addInitScript(({ metaState: meta, characterState: character }) => {
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem('rpall-meta', JSON.stringify(meta));
+    localStorage.setItem(`rpall-char-${meta.current}`, JSON.stringify(character));
+  }, { metaState, characterState });
+  await page.goto('/#/traits');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+
+  for (const key of keys) {
+    const trait = page.locator(`.trait[data-key="${key}"]`);
+    const originalHandle = await trait.evaluate(card => {
+      const id = Math.random().toString(36).slice(2);
+      card.dataset.identityProbe = id;
+      return id;
+    });
+    for (const [delta, expected] of [[1, 11], [-1, 10], [5, 15], [-5, 10]]) {
+      await trait.locator(`.trait-btn[data-d="${delta}"]`).click();
+      await expect(trait.locator('.trait-label')).toHaveText(`${key}: ${expected}`);
+      await expect(trait).toHaveAttribute('data-identity-probe', originalHandle);
+    }
+  }
+  await page.evaluate(() => window.symbaroumMutationPipeline.waitForCharacterRefresh());
+  expect(await page.evaluate(() => window.storeHelper.getTraits(
+    typeof store === 'object' && store ? store : window.storeHelper.load()
+  ))).toEqual(Object.fromEntries(keys.map(key => [key, 10])));
+});
+
+test('five rapid trait clicks coalesce to one secondary refresh while applying every increment', async ({ page }) => {
+  const metaState = {
+    current: 'trait-burst-char',
+    characters: [{ id: 'trait-burst-char', name: 'Trait Burst Hero', folderId: 'fd-standard' }],
+    folders: [{ id: 'fd-standard', name: 'Standard', order: 0, system: true }],
+    activeFolder: 'ALL', filterUnion: false, compactEntries: true, onlySelected: false,
+    recentSearches: [], liveMode: false, entrySort: 'alpha-asc'
+  };
+  const characterState = {
+    list: [], inventory: [], custom: [],
+    traits: { Diskret: 5, Kvick: 10, Listig: 10, Stark: 10, Träffsäker: 10, Vaksam: 10, Viljestark: 10, Övertygande: 10 },
+    notes: {}, money: { daler: 0, skilling: 0, 'örtegar': 0 }
+  };
+  await page.addInitScript(({ metaState: meta, characterState: character }) => {
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem('rpall-meta', JSON.stringify(meta));
+    localStorage.setItem(`rpall-char-${meta.current}`, JSON.stringify(character));
+  }, { metaState, characterState });
+  await page.goto('/#/traits');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.evaluate(() => {
+    const hooks = window.symbaroumViewBridge.getViewHooks('traits');
+    const original = hooks.refreshTraitTargets;
+    window.__rapidTraitRefreshes = 0;
+    window.symbaroumViewBridge.registerViewHooks('traits', {
+      refreshTraitTargets: options => {
+        window.__rapidTraitRefreshes += 1;
+        return original(options);
+      }
+    });
+  });
+
+  const plus = page.locator('.trait[data-key="Diskret"] .trait-btn[data-d="1"]');
+  await plus.click({ clickCount: 5, delay: 0 });
+  await expect(page.locator('.trait[data-key="Diskret"] .trait-label')).toHaveText('Diskret: 10');
+  await page.evaluate(() => window.symbaroumMutationPipeline.waitForCharacterRefresh());
+  expect(await page.evaluate(() => window.__rapidTraitRefreshes)).toBe(1);
 });
 
 test('rule override dialog cancels or continues and is remembered for the character', async ({ page }) => {
