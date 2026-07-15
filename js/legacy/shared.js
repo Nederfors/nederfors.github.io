@@ -3615,6 +3615,11 @@
     return '';
   }
 
+  function getRuleStableId(rule) {
+    if (!rule || typeof rule !== 'object') return '';
+    return String(rule.rule_id || rule.regel_id || rule.id || '').trim();
+  }
+
   function mergeRuleListsByHierarchy(lowPriority, highPriority, key) {
     const low = toRuleList(lowPriority);
     const high = toRuleList(highPriority);
@@ -7024,6 +7029,7 @@
 
     out.push({
       code: reasonCode,
+      ruleId: getRuleStableId(rule),
       mode: normalizeConflictMode(getRuleOp(rule) === 'set' ? 'ersatt' : rule?.satt),
       sourceEntryId: sourceEntry?.id || '',
       sourceEntryName: getEntryNameCompat(sourceEntry),
@@ -7415,6 +7421,7 @@
       const allAlternativeNames = failedReasons.flatMap(r => r.alternativeNames || []);
       return {
         code: getRequirementReasonCode(rule, candidate),
+        ruleId: getRuleStableId(rule),
         sourceEntryId: candidate?.id || '',
         sourceEntryName: getEntryNameCompat(candidate),
         sourceEntryLevel: getEntryLevelCompat(candidate),
@@ -7467,6 +7474,7 @@
 
     return {
       code: getRequirementReasonCode(rule, candidate),
+      ruleId: getRuleStableId(rule),
       sourceEntryId: candidate?.id || '',
       sourceEntryName: getEntryNameCompat(candidate),
       sourceEntryLevel: getEntryLevelCompat(candidate),
@@ -8586,6 +8594,7 @@
     if (!candidateEntry || typeof candidateEntry !== 'object') {
       return {
         requirementReasons: [],
+        conflictReasons: [],
         blockingConflicts: [],
         replaceTargetNames: [],
         grantedLevelStop: null,
@@ -8612,6 +8621,9 @@
     const conflictResolution = getConflictResolutionForCandidate(candidate, entries, { level: toLevel });
     const blockingConflicts = Array.isArray(conflictResolution?.blockingReasons)
       ? conflictResolution.blockingReasons
+      : [];
+    const conflictReasons = Array.isArray(conflictResolution?.reasons)
+      ? conflictResolution.reasons
       : [];
     const replaceTargetNames = Array.isArray(conflictResolution?.replaceTargetNames)
       ? conflictResolution.replaceTargetNames
@@ -8723,6 +8735,7 @@
 
     return {
       requirementReasons,
+      conflictReasons,
       blockingConflicts,
       replaceTargetNames,
       grantedLevelStop,
@@ -8734,6 +8747,47 @@
         || hardStops.length
       )
     };
+  }
+
+  function getEntryStopOverrideKeys(candidateEntry, stopResult = {}) {
+    const out = new Set();
+    const candidateId = String(candidateEntry?.id || '').trim();
+    const candidateName = String(candidateEntry?.namn || candidateEntry?.name || '').trim();
+    const candidateToken = candidateId
+      ? `id:${normalizeLevelName(candidateId)}`
+      : `name:${normalizeLevelName(candidateName || 'post')}`;
+    const addRuleOrFallback = (kind, reason) => {
+      const ruleId = String(reason?.ruleId || reason?.rule_id || reason?.regel_id || '').trim();
+      if (ruleId) {
+        out.add(`rule:${normalizeLevelName(ruleId)}`);
+        return;
+      }
+      const code = String(reason?.code || kind || 'regel').trim();
+      out.add(`entry:${candidateToken}:${kind}:${normalizeLevelName(code)}`);
+    };
+
+    toArray(stopResult?.requirementReasons).forEach(reason => addRuleOrFallback('requirement', reason));
+
+    const conflictReasons = toArray(stopResult?.conflictReasons).length
+      ? toArray(stopResult.conflictReasons)
+      : toArray(stopResult?.blockingConflicts);
+    conflictReasons.forEach(reason => addRuleOrFallback('conflict', reason));
+
+    toArray(stopResult?.hardStops).forEach(stop => addRuleOrFallback('limit', stop));
+
+    if (stopResult?.grantedLevelStop && !toArray(stopResult?.requirementReasons).length) {
+      addRuleOrFallback('granted-level', {
+        code: `granted_${stopResult.grantedLevelStop?.beviljadNiva || ''}`
+      });
+    }
+
+    if (!conflictReasons.length) {
+      toArray(stopResult?.replaceTargetNames).forEach(name => {
+        addRuleOrFallback('replace', { code: String(name || 'post') });
+      });
+    }
+
+    return [...out].filter(Boolean).sort();
   }
 
   function formatEntryStopMessages(entryName, stopResult = {}) {
@@ -10107,6 +10161,7 @@
     evaluateRequirementAssistState,
     getEntryMaxCount,
     evaluateEntryStops,
+    getEntryStopOverrideKeys,
     formatEntryStopMessages,
     getRequirementDependents,
     getEntryGrantTargets,
@@ -10195,6 +10250,7 @@
     derivedByCharacter: Object.create(null)
   };
   const SNAPSHOT_RULES_KEY = 'snapshotRules';
+  const RULE_OVERRIDES_KEY = 'ruleOverrides';
   const SNAPSHOT_SOURCE_TYPE_ENTRY = 'entry';
   const SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING = 'artifact_binding';
   const CURRENT_LIST_RECONCILIATION_VERSION_KEY = 'currentListReconciliationVersion';
@@ -10624,6 +10680,55 @@
       persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
     }
     return charId;
+  }
+
+  function normalizeRuleOverrideKeys(value) {
+    const source = Array.isArray(value) ? value : (value === undefined || value === null ? [] : [value]);
+    return [...new Set(
+      source
+        .map(key => String(key || '').trim())
+        .filter(Boolean)
+    )].sort();
+  }
+
+  function getRuleOverrides(store) {
+    if (!store?.current) return [];
+    return normalizeRuleOverrideKeys(store.data?.[store.current]?.[RULE_OVERRIDES_KEY]);
+  }
+
+  function hasRuleOverrides(store, keys) {
+    const wanted = normalizeRuleOverrideKeys(keys);
+    if (!wanted.length) return false;
+    const accepted = new Set(getRuleOverrides(store));
+    return wanted.every(key => accepted.has(key));
+  }
+
+  function acceptRuleOverrides(store, keys) {
+    if (!store?.current) return false;
+    const wanted = normalizeRuleOverrideKeys(keys);
+    if (!wanted.length) return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const current = getRuleOverrides(store);
+    const next = normalizeRuleOverrideKeys([...current, ...wanted]);
+    if (JSON.stringify(current) === JSON.stringify(next)) return false;
+    store.data[store.current][RULE_OVERRIDES_KEY] = next;
+    commitCurrentCharacterMutation(store, { fields: [RULE_OVERRIDES_KEY] });
+    return true;
+  }
+
+  async function confirmRuleOverride(store, keys, message, options = {}) {
+    const normalizedKeys = normalizeRuleOverrideKeys(keys);
+    if (normalizedKeys.length && hasRuleOverrides(store, normalizedKeys)) return true;
+    const confirmer = global.confirmPopup || global.confirm;
+    if (typeof confirmer !== 'function') return false;
+    const approved = await confirmer(message, {
+      cancelText: 'Avbryt',
+      okText: 'Fortsätt',
+      ...(options || {})
+    });
+    if (!approved) return false;
+    if (normalizedKeys.length) acceptRuleOverrides(store, normalizedKeys);
+    return true;
   }
 
   function batchCurrentCharacterMutation(store, options = {}, callback) {
@@ -11604,6 +11709,7 @@
       custom: [],
       artifactEffects: defaultArtifactEffects(),
       snapshotRules: [],
+      ruleOverrides: [],
       bonusMoney: defaultMoney(),
       savedUnusedMoney: defaultMoney(),
       privMoney: defaultMoney(),
@@ -11632,6 +11738,11 @@
       mutated = true;
     }
     data.snapshotRules = normalizedSnapshotRules;
+    const normalizedRuleOverrides = normalizeRuleOverrideKeys(data[RULE_OVERRIDES_KEY]);
+    if (JSON.stringify(normalizedRuleOverrides) !== JSON.stringify(data[RULE_OVERRIDES_KEY] || [])) {
+      mutated = true;
+    }
+    data[RULE_OVERRIDES_KEY] = normalizedRuleOverrides;
     if (!data.manualAdjustments) {
       data.manualAdjustments = defaultManualAdjustments();
       mutated = true;
@@ -15989,6 +16100,10 @@ function defaultTraits() {
     getRecentSearches,
     addRecentSearch,
     getCurrentList,
+    getRuleOverrides,
+    hasRuleOverrides,
+    acceptRuleOverrides,
+    confirmRuleOverride,
     needsCurrentListReconciliation,
     getCharacterRaces,
     setCurrentList,
@@ -16357,7 +16472,9 @@ function defaultTraits() {
     saveFreePopup: 'Bekrafta'
   });
   const REMOVE_BUTTON_IDS = Object.freeze({
-    choicePopup: ['choiceCancel'],
+    choicePopup: ['choiceCancel']
+  });
+  const PRESERVE_ACTION_BUTTON_IDS = Object.freeze({
     requirementPopup: ['requirementCancel']
   });
   const PROMOTE_BUTTON_IDS = Object.freeze({
@@ -16547,6 +16664,7 @@ function defaultTraits() {
   function isDismissButton(button, overlayId) {
     if (!(button instanceof HTMLButtonElement)) return false;
     const buttonId = String(button.id || '').trim();
+    if (buttonId && (PRESERVE_ACTION_BUTTON_IDS[overlayId] || []).includes(buttonId)) return false;
     if (buttonId && (REMOVE_BUTTON_IDS[overlayId] || []).includes(buttonId)) return true;
     if (buttonId && buttonId === PROMOTE_BUTTON_IDS[overlayId]) return true;
     if (buttonId && DISMISS_ID_RE.test(buttonId)) return true;
@@ -18953,6 +19071,8 @@ function defaultTraits() {
 
     const duplicate = await picker.enforceDuplicatePolicy({
       rule,
+      entry,
+      store,
       value: picked.value,
       usedValues,
       label: picked.value
@@ -23709,6 +23829,7 @@ function defaultTraits() {
       if (toolbar) {
         if (typeof toolbar.updateInvDash === 'function') toolbar.updateInvDash(dashPanelHtml);
         if (typeof toolbar.updateInvSpend === 'function') toolbar.updateInvSpend(spendPanelHtml);
+        if (typeof toolbar.updateMoneyCounter === 'function') toolbar.updateMoneyCounter(cash);
       }
 
       if (dom.invFormal) {
@@ -23813,20 +23934,6 @@ function defaultTraits() {
 
     const listEl = dom.invList;
     const searchEl = dom.sIn || getEl('searchField');
-    const manageItemsBtn = getEl('manageItemsBtn');
-    const manageEconomyBtn = getEl('manageEconomyBtn');
-    if (manageItemsBtn && manageItemsBtn.dataset.invBound !== '1') {
-      manageItemsBtn.dataset.invBound = '1';
-      manageItemsBtn.addEventListener('click', () => {
-        openInventoryItemsHub('custom-item');
-      });
-    }
-    if (manageEconomyBtn && manageEconomyBtn.dataset.invBound !== '1') {
-      manageEconomyBtn.dataset.invBound = '1';
-      manageEconomyBtn.addEventListener('click', () => {
-        openInventoryEconomyHub('money');
-      });
-    }
     const bindFilterSelect = (el, key) => {
       if (!el || el.dataset.invBound) return;
       el.dataset.invBound = '1';
@@ -24434,7 +24541,12 @@ function defaultTraits() {
             const lines = messages.length ? messages : ['Spärrad av regel'];
             const label = `“${String(entry?.namn || row?.name || 'föremålet').trim()}”`;
             const text = `Följande regler blockerar valet:\n- ${lines.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
-            const forceOverride = !!(await confirmPopup(text));
+            const overrideKeys = typeof window.rulesHelper?.getEntryStopOverrideKeys === 'function'
+              ? window.rulesHelper.getEntryStopOverrideKeys(entry, stopResult)
+              : blockedStops.map(stop => `quality:${String(stop?.qualityName || '').trim()}`).filter(Boolean);
+            const forceOverride = typeof window.storeHelper?.confirmRuleOverride === 'function'
+              ? await window.storeHelper.confirmRuleOverride(store, overrideKeys, text)
+              : !!(await confirmPopup(text, { cancelText: 'Avbryt', okText: 'Fortsätt' }));
             if (forceOverride) {
               row.manualQualityOverride = Array.isArray(row.manualQualityOverride) ? row.manualQualityOverride : [];
               blockedStops.forEach(({ qualityName: qn }) => {
@@ -24625,16 +24737,6 @@ function defaultTraits() {
             runQuickSpend();
           }
         };
-      });
-    }
-
-    // --- Floating button ---
-    const floatBtn = getEl('invDashFloatBtn');
-    if (floatBtn && floatBtn.dataset.dashBound !== '1') {
-      floatBtn.dataset.dashBound = '1';
-      floatBtn.addEventListener('click', () => {
-        const toolbar = document.querySelector('shared-toolbar');
-        if (toolbar) toolbar.toggle('invDashPanel');
       });
     }
   }
@@ -25955,22 +26057,34 @@ function defaultTraits() {
 
         if (simulatedBaseHigh > 1 && simulatedBaseHigh > currentBaseHigh) {
           const confirmMsg = 'Detta skulle göra att mer än ett karaktärsdrag får basvärde 15 eller mer. Vill du fortsätta?';
-          const confirmer = window.confirmPopup || window.confirm;
-          if (typeof confirmer === 'function') {
-            const ok = await confirmer(confirmMsg);
-            if (!ok) return;
-          }
+          const ok = typeof window.storeHelper?.confirmRuleOverride === 'function'
+            ? await window.storeHelper.confirmRuleOverride(
+              store,
+              ['trait:multiple-base-values-15'],
+              confirmMsg
+            )
+            : await (window.confirmPopup || window.confirm)?.(
+              confirmMsg,
+              { cancelText: 'Avbryt', okText: 'Fortsätt' }
+            );
+          if (!ok) return;
         }
       }
 
       const shouldConfirm = d < 0 && proposed < currentVal && proposed < 5;
       if (shouldConfirm) {
         const confirmMsg = 'Detta sänker karaktärsdraget under 5. Vill du fortsätta?';
-        const confirmer = window.confirmPopup || window.confirm;
-        if (typeof confirmer === 'function') {
-          const ok = await confirmer(confirmMsg);
-          if (!ok) return;
-        }
+        const ok = typeof window.storeHelper?.confirmRuleOverride === 'function'
+          ? await window.storeHelper.confirmRuleOverride(
+            store,
+            ['trait:base-value-below-5'],
+            confirmMsg
+          )
+          : await (window.confirmPopup || window.confirm)?.(
+            confirmMsg,
+            { cancelText: 'Avbryt', okText: 'Fortsätt' }
+          );
+        if (!ok) return;
       }
 
       t[key] = proposed;
@@ -26893,6 +27007,30 @@ const getShadowStylesheetHref = () => (
 );
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+const normalizeToolbarMoney = (money = {}) => ({
+  daler: Math.max(0, Math.floor(Number(money.daler ?? money.d) || 0)),
+  skilling: Math.max(0, Math.floor(Number(money.skilling ?? money.s) || 0)),
+  ortegar: Math.max(0, Math.floor(Number(money['örtegar'] ?? money.ortegar ?? money.o) || 0))
+});
+const formatToolbarMoney = money => {
+  const normalized = normalizeToolbarMoney(money);
+  const parts = [];
+  if (normalized.daler) parts.push(`${normalized.daler}D`);
+  if (normalized.skilling) parts.push(`${normalized.skilling}S`);
+  if (normalized.ortegar) parts.push(`${normalized.ortegar}Ö`);
+  return parts.join(' ') || '0';
+};
+const describeToolbarMoney = money => {
+  const normalized = normalizeToolbarMoney(money);
+  if (!normalized.daler && !normalized.skilling && !normalized.ortegar) return '0';
+  const parts = [];
+  if (normalized.daler) parts.push(`${normalized.daler} daler`);
+  if (normalized.skilling) parts.push(`${normalized.skilling} skilling`);
+  if (normalized.ortegar) {
+    parts.push(`${normalized.ortegar} ${normalized.ortegar === 1 ? 'örteg' : 'örtegar'}`);
+  }
+  return parts.join(', ');
+};
 const LEVEL_OPTION_SPECS = Object.freeze([
   { value: '', label: 'Ingen', hint: 'Stäng av bonusen från partyt.' },
   { value: 'Novis', label: 'Novis', hint: 'Grundnivå för hantverket.' },
@@ -27472,7 +27610,7 @@ class SharedToolbar extends HTMLElement {
 
     window.openDialog = (msg, opts) => this.openDialog(msg, opts);
     window.alertPopup = msg => this.openDialog(msg);
-    window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
+    window.confirmPopup = (msg, opts = {}) => this.openDialog(msg, { ...(opts || {}), cancel: true });
     window.toast = msg => {
       if (typeof DAUB !== 'undefined' && DAUB.toast) {
         DAUB.toast({ message: String(msg), duration: 3000 });
@@ -28170,25 +28308,24 @@ class SharedToolbar extends HTMLElement {
         .button-row .nav-link.active:hover {
           opacity: 1;
         }
-        .toolbar .exp-counter {
-          display: inline-flex;
+        .toolbar .overview-action {
+          display: grid;
+          grid-template-columns: auto minmax(0, auto) auto;
           align-items: center;
           justify-content: center;
-          gap: .42rem;
+          gap: .4rem;
           height: var(--toolbar-control-height);
           background:
             linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .01)),
             rgba(49, 43, 39, .72);
           color: #fff;
-          padding: 0 .95rem;
+          padding: .25rem .62rem;
           border: 1.5px solid rgba(194, 163, 106, .24);
           border-radius: .6rem;
           box-shadow:
             0 4px 10px rgba(0, 0, 0, .22),
             inset 0 1px 0 rgba(255, 255, 255, .08);
           font-weight: 700;
-          font-size: .95rem;
-          letter-spacing: .02em;
           text-shadow:
             0 0 1px rgba(0, 0, 0, .9),
             0 1px 0 rgba(0, 0, 0, .45);
@@ -28197,7 +28334,7 @@ class SharedToolbar extends HTMLElement {
           cursor: pointer;
           transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
         }
-        .toolbar .exp-counter:hover {
+        .toolbar .overview-action:hover {
           border-color: rgba(194, 163, 106, .4);
           box-shadow:
             0 6px 13px rgba(0, 0, 0, .26),
@@ -28206,21 +28343,62 @@ class SharedToolbar extends HTMLElement {
             linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .02)),
             rgba(56, 49, 44, .8);
         }
-        .toolbar .exp-counter:focus-visible {
+        .toolbar .overview-action:focus-visible {
           outline: 2px solid rgba(194, 163, 106, .6);
           outline-offset: 2px;
         }
-        .toolbar .exp-counter:active {
+        .toolbar .overview-action:active {
           transform: translateY(1px) scale(.992);
         }
-        .toolbar .exp-counter span {
+        .toolbar .overview-action-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 1.28rem;
+          height: 1.28rem;
+          opacity: .92;
+        }
+        .toolbar .overview-action-icon .btn-icon {
+          width: 1.18rem;
+          height: 1.18rem;
+        }
+        .toolbar .overview-action-copy {
+          display: flex;
+          min-width: 0;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: center;
+          gap: .02rem;
+          line-height: 1;
+        }
+        .toolbar .overview-action-label {
+          color: rgba(255, 255, 255, .68);
+          font-size: .62rem;
+          font-weight: 700;
+          letter-spacing: .035em;
+        }
+        .toolbar .overview-action-value {
           min-width: 1.8ch;
           color: rgba(255, 255, 255, .95);
-          text-align: center;
+          font-size: clamp(.76rem, 2.6vw, .88rem);
+          font-weight: 800;
+          line-height: 1.1;
+          text-align: left;
           text-shadow:
             0 0 1px rgba(0, 0, 0, .9),
             0 1px 0 rgba(0, 0, 0, .45);
           font-variant-numeric: tabular-nums;
+        }
+        .toolbar .overview-action-chevron {
+          width: .42rem;
+          height: .42rem;
+          border-top: 1.5px solid currentColor;
+          border-right: 1.5px solid currentColor;
+          opacity: .62;
+          transform: rotate(45deg);
+        }
+        .toolbar .overview-action [hidden] {
+          display: none !important;
         }
         #entrySortPopup .popup-inner {
           align-items: stretch;
@@ -28360,7 +28538,18 @@ class SharedToolbar extends HTMLElement {
             <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest">
             <div id="searchSuggest" class="suggestions" role="listbox" aria-label="Sökförslag" hidden></div>
           </div>
-          <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
+          <button type="button" class="overview-action" id="overviewToggle" data-context="summary"
+                  aria-haspopup="dialog" aria-expanded="false" aria-controls="summarySlidePanel"
+                  aria-label="Öppna Översikt, 0 ERF" title="Öppna Översikt">
+            <span class="overview-action-icon overview-action-icon--summary" aria-hidden="true">${icon('overview', { alt: '', width: 20, height: 20 })}</span>
+            <span class="overview-action-icon overview-action-icon--inventory" aria-hidden="true" hidden>${icon('money-bag', { alt: '', width: 20, height: 20 })}</span>
+            <span class="overview-action-copy">
+              <span class="overview-action-label">Översikt</span>
+              <span class="overview-action-value overview-action-value--xp"><span id="xpOut">0</span> ERF</span>
+              <span class="overview-action-value overview-action-value--money" id="moneyOut" hidden>0</span>
+            </span>
+            <span class="overview-action-chevron" aria-hidden="true"></span>
+          </button>
         </div>
         <div class="button-row toolbar-nav-items" role="list" aria-label="Vyer och filter">
           <a id="traitsLink" class="db-bottom-nav__item nav-link" title="Egenskaper" href="#/traits">
@@ -29139,7 +29328,7 @@ class SharedToolbar extends HTMLElement {
   async openSummarySlide() {
     const panel = this.panels.summarySlidePanel;
     const inner = this.shadowRoot.getElementById('summarySlideInner');
-    const toggleBtn = this.shadowRoot.getElementById('xpToggle');
+    const toggleBtn = this.shadowRoot.getElementById('overviewToggle');
     if (!panel) return;
 
     if (panel.classList.contains('open')) {
@@ -29216,8 +29405,12 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'filterToggle') return this.toggle('filterPanel', btn);
     if (btn.id === 'infoToggle') return this.toggle('infoPanel', btn);
     if (btn.id === 'invDashToggle') return this.toggle('invDashPanel', btn);
-    if (btn.id === 'xpToggle') {
-      void this.openSummarySlide();
+    if (btn.id === 'overviewToggle') {
+      if (document.body.dataset.role === 'inventory') {
+        this.toggle('invDashPanel', btn);
+      } else {
+        void this.openSummarySlide();
+      }
       return;
     }
     /* stäng */
@@ -29463,7 +29656,7 @@ class SharedToolbar extends HTMLElement {
       });
     };
 
-    const toggleButtons = ['filterToggle', 'infoToggle', 'xpToggle']
+    const toggleButtons = ['filterToggle', 'infoToggle', 'overviewToggle']
       .map(id => this.shadowRoot.getElementById(id))
       .filter(Boolean);
     const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
@@ -29503,6 +29696,7 @@ class SharedToolbar extends HTMLElement {
     if (isOpen) {
       panel.removeAttribute('inert');
       panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
+      panel._restoreFocus?.setAttribute?.('aria-expanded', 'true');
       window.registerOverlayCleanup?.(panel, () => this.setPanelState(panel, false));
       surface.scrollTop = 0;
       requestAnimationFrame(() => {
@@ -29518,6 +29712,9 @@ class SharedToolbar extends HTMLElement {
     window.registerOverlayCleanup?.(panel, null);
     const restoreFocus = panel._restoreFocus;
     panel._restoreFocus = null;
+    this.shadowRoot.querySelectorAll(`[aria-controls="${panel.id}"]`).forEach(control => {
+      control.setAttribute('aria-expanded', 'false');
+    });
     if (wasOpen && restoreFocus?.isConnected) {
       requestAnimationFrame(() => {
         try { restoreFocus.focus?.({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
@@ -29648,6 +29845,9 @@ class SharedToolbar extends HTMLElement {
 
       // Build footer buttons
       let footerHtml = '';
+      if (cancel) {
+        footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="cancel">${cancelText}</button>`;
+      }
       if (extraText) {
         footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="extra">${extraText}</button>`;
       }
@@ -29727,6 +29927,7 @@ class SharedToolbar extends HTMLElement {
         if (!btn) return;
         const action = btn.dataset.dialogAction;
         if (action === 'ok') finish(true);
+        else if (action === 'cancel') finish(false);
         else if (action === 'extra') finish('extra');
       };
       footerEl.addEventListener('click', onClick);
@@ -29827,10 +30028,49 @@ class SharedToolbar extends HTMLElement {
     if (searchCard) searchCard.hidden = role === 'inventory';
     if (spendCard) spendCard.hidden = role !== 'inventory';
 
-    // Close inventory panels when leaving inventory view
-    if (role !== 'inventory') {
+    if (role === 'inventory') {
+      this.close('summarySlidePanel');
+    } else {
       this.close('invDashPanel');
     }
+    this.syncOverviewAction();
+  }
+
+  syncOverviewAction() {
+    const isInventory = document.body.dataset.role === 'inventory';
+    const toggle = this.shadowRoot.getElementById('overviewToggle');
+    const summaryIcon = this.shadowRoot.querySelector('.overview-action-icon--summary');
+    const inventoryIcon = this.shadowRoot.querySelector('.overview-action-icon--inventory');
+    const xpValue = this.shadowRoot.querySelector('.overview-action-value--xp');
+    const moneyValue = this.shadowRoot.querySelector('.overview-action-value--money');
+    if (!toggle) return;
+
+    toggle.dataset.context = isInventory ? 'inventory' : 'summary';
+    toggle.setAttribute('aria-controls', isInventory ? 'invDashPanel' : 'summarySlidePanel');
+    const controlledPanel = isInventory ? this.panels?.invDashPanel : this.panels?.summarySlidePanel;
+    const isExpanded = Boolean(controlledPanel?.classList.contains('open'));
+    toggle.setAttribute('aria-expanded', String(isExpanded));
+    toggle.title = isInventory ? 'Öppna Inventarium' : 'Öppna Översikt';
+    if (summaryIcon) summaryIcon.hidden = isInventory;
+    if (inventoryIcon) inventoryIcon.hidden = !isInventory;
+    if (xpValue) xpValue.hidden = isInventory;
+    if (moneyValue) moneyValue.hidden = !isInventory;
+
+    if (isInventory) {
+      toggle.classList.remove('under');
+      toggle.setAttribute('aria-label', `Öppna Inventarium, saldo ${describeToolbarMoney(this._toolbarMoney)}`);
+    } else {
+      const xp = this.shadowRoot.getElementById('xpOut')?.textContent?.trim() || '0';
+      toggle.classList.toggle('under', Number(xp) < 0);
+      toggle.setAttribute('aria-label', `Öppna Översikt, ${xp} ERF`);
+    }
+  }
+
+  updateMoneyCounter(money) {
+    this._toolbarMoney = normalizeToolbarMoney(money);
+    const out = this.shadowRoot.getElementById('moneyOut');
+    if (out) out.textContent = formatToolbarMoney(this._toolbarMoney);
+    if (document.body.dataset.role === 'inventory') this.syncOverviewAction();
   }
 
   updateInvDash(html) {
@@ -31933,6 +32173,119 @@ customElements.define('shared-toolbar', SharedToolbar);
 
   const syncLevelControl = () => {};
 
+  const MIN_TITLE_FONT_SIZE = 12;
+  const pendingTitleFits = new Set();
+  const observedTitleWidths = new WeakMap();
+  let titleFitFrame = 0;
+
+  const resolveEntryTitle = (target) => {
+    if (!target || !(target instanceof HTMLElement)) return null;
+    if (target.matches('.entry-title-main')) return target;
+    return target.querySelector('.entry-title-main');
+  };
+
+  const fitEntryTitle = (target) => {
+    const title = resolveEntryTitle(target);
+    if (!title?.isConnected) return false;
+
+    title.style.removeProperty('font-size');
+    title.style.setProperty('--entry-title-scale', '1');
+    delete title.dataset.fitReady;
+    delete title.dataset.fitScale;
+
+    const availableWidth = title.clientWidth;
+    if (availableWidth <= 0) return false;
+
+    const naturalWidth = title.scrollWidth;
+    const baseFontSize = parseFloat(window.getComputedStyle(title).fontSize) || 16;
+    if (naturalWidth > availableWidth + 0.5) {
+      const fittedFontSize = Math.max(
+        MIN_TITLE_FONT_SIZE,
+        baseFontSize * (availableWidth / naturalWidth)
+      );
+      title.style.fontSize = `${fittedFontSize.toFixed(2)}px`;
+    }
+
+    const fittedWidth = Math.max(title.scrollWidth, 1);
+    const scale = Math.min(1, availableWidth / fittedWidth);
+    title.style.setProperty('--entry-title-scale', scale.toFixed(4));
+    title.dataset.fitScale = scale.toFixed(4);
+    title.dataset.fitReady = 'true';
+    return fittedWidth * scale <= availableWidth + 1;
+  };
+
+  const flushTitleFits = () => {
+    titleFitFrame = 0;
+    const titles = [...pendingTitleFits];
+    pendingTitleFits.clear();
+    titles.forEach(fitEntryTitle);
+  };
+
+  const scheduleEntryTitleFit = (target) => {
+    const title = resolveEntryTitle(target);
+    if (!title) return;
+    pendingTitleFits.add(title);
+    if (!titleFitFrame) titleFitFrame = window.requestAnimationFrame(flushTitleFits);
+  };
+
+  const titleResizeObserver = typeof window.ResizeObserver === 'function'
+    ? new ResizeObserver((entries) => {
+        entries.forEach(({ target, contentRect }) => {
+          const previousWidth = observedTitleWidths.get(target);
+          const nextWidth = contentRect.width;
+          observedTitleWidths.set(target, nextWidth);
+          if (previousWidth === undefined || Math.abs(previousWidth - nextWidth) > 0.5) {
+            scheduleEntryTitleFit(target);
+          }
+        });
+      })
+    : null;
+
+  const observeEntryTitle = (target) => {
+    const title = resolveEntryTitle(target);
+    if (!title || title.dataset.fitObserved === 'true') return;
+    title.dataset.fitObserved = 'true';
+    titleResizeObserver?.observe(title);
+    scheduleEntryTitleFit(title);
+  };
+
+  const observeEntryTitlesIn = (root) => {
+    if (!root) return;
+    if (root instanceof HTMLElement && root.matches('.entry-title-main')) {
+      observeEntryTitle(root);
+    }
+    if (typeof root.querySelectorAll === 'function') {
+      root.querySelectorAll('.entry-title-main').forEach(observeEntryTitle);
+    }
+  };
+
+  if (typeof window.MutationObserver === 'function' && document.documentElement) {
+    const titleTreeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'characterData') {
+          scheduleEntryTitleFit(mutation.target.parentElement?.closest('.entry-title-main'));
+          return;
+        }
+        mutation.addedNodes.forEach(observeEntryTitlesIn);
+        scheduleEntryTitleFit(mutation.target instanceof HTMLElement
+          ? mutation.target.closest('.entry-title-main')
+          : null);
+      });
+    });
+    titleTreeObserver.observe(document.documentElement, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+    observeEntryTitlesIn(document.documentElement);
+  }
+
+  if (!titleResizeObserver) {
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('.entry-title-main').forEach(scheduleEntryTitleFit);
+    }, { passive: true });
+  }
+
   const syncStandardActionButtons = (standardGroup, config = {}, options = {}) => {
     if (!standardGroup || !(standardGroup instanceof HTMLElement)) return;
     const descriptors = getStandardActionDescriptors(config);
@@ -31994,6 +32347,7 @@ customElements.define('shared-toolbar', SharedToolbar);
 
     card.classList.toggle('compact', shouldCompact);
     syncCollapseButton(card);
+    scheduleEntryTitleFit(card);
 
     card.dispatchEvent(new CustomEvent('entry-card-toggle', {
       bubbles: true,
@@ -32163,6 +32517,7 @@ customElements.define('shared-toolbar', SharedToolbar);
 
     li.innerHTML = `${summaryHtml}${bodyHtml}${detailHtml}`;
     syncActionRowState(li);
+    observeEntryTitle(li);
 
     if (collapsible) {
       syncCollapseButton(li);
@@ -32184,6 +32539,7 @@ customElements.define('shared-toolbar', SharedToolbar);
     syncActionRow: syncActionRowState,
     syncStandardActionButtons,
     syncCollapse: syncCollapseButton,
+    syncTitleFit: scheduleEntryTitleFit,
     syncLevelControl,
     toggle: toggleEntryCard
   });
@@ -33056,11 +33412,24 @@ customElements.define('shared-toolbar', SharedToolbar);
 
     const label = String(payload.label || payload.value || 'det valet').trim();
     const message = String(rule.duplicate_message || `Samma val finns redan (${label}). Lägga till ändå?`);
+    const ruleToken = normalizeText(
+      rule.rule_id
+      || rule.regel_id
+      || rule.id
+      || payload.entry?.id
+      || payload.entry?.namn
+      || payload.entry?.name
+      || 'choice'
+    );
+    const fieldToken = normalizeText(rule.field || 'value');
+    const overrideKeys = [`choice:${ruleToken}:${fieldToken}:duplicate`];
     let approved = false;
     if (typeof payload.confirmFn === 'function') {
       approved = await payload.confirmFn(message);
+    } else if (payload.store && typeof window.storeHelper?.confirmRuleOverride === 'function') {
+      approved = await window.storeHelper.confirmRuleOverride(payload.store, overrideKeys, message);
     } else if (typeof window.confirmPopup === 'function') {
-      approved = await window.confirmPopup(message);
+      approved = await window.confirmPopup(message, { cancelText: 'Avbryt', okText: 'Fortsätt' });
     } else {
       approved = window.confirm(message);
     }
@@ -33136,8 +33505,9 @@ customElements.define('shared-toolbar', SharedToolbar);
           <p id="requirementEmpty" class="requirement-popup-empty" hidden>Inga krav matchar sökningen.</p>
         </div>
         <div class="db-modal__footer requirement-popup-actions">
+          <button id="requirementCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
           <button id="requirementApply" class="db-btn" type="button">Lägg till valda krav</button>
-          <button id="requirementOverride" class="db-btn db-btn--danger" type="button">Lägg till ändå</button>
+          <button id="requirementOverride" class="db-btn db-btn--primary" type="button">Fortsätt</button>
         </div>
       </div>
     `;
@@ -33295,11 +33665,12 @@ customElements.define('shared-toolbar', SharedToolbar);
     const emptyEl = pop.querySelector('#requirementEmpty');
     const applyBtn = pop.querySelector('#requirementApply');
     const overrideBtn = pop.querySelector('#requirementOverride');
+    const cancelBtn = pop.querySelector('#requirementCancel');
     const closeBtn = pop.querySelector('#requirementClose');
 
     const title = String(config?.title || `Lås upp ${candidate?.namn || 'krav'}`).trim();
     const subtitle = String(config?.subtitle || 'Välj krav som ska läggas till eller uppgraderas för att låsa upp posten utan override.').trim();
-    const overrideLabel = String(config?.overrideLabel || (assistOptions.action === 'level-change' ? 'Ändra ändå' : 'Lägg till ändå')).trim();
+    const overrideLabel = String(config?.overrideLabel || 'Fortsätt').trim();
 
     let searchTerm = '';
     let done = false;
@@ -33353,6 +33724,7 @@ customElements.define('shared-toolbar', SharedToolbar);
       box.removeEventListener('click', onOptionClick);
       applyBtn.removeEventListener('click', onApply);
       overrideBtn.removeEventListener('click', onOverride);
+      cancelBtn.removeEventListener('click', onCancel);
       closeBtn?.removeEventListener('click', onCancel);
       searchInput.removeEventListener('input', onSearch);
       if (!usingManager) {
@@ -33466,6 +33838,7 @@ customElements.define('shared-toolbar', SharedToolbar);
       box.addEventListener('click', onOptionClick);
       applyBtn.addEventListener('click', onApply);
       overrideBtn.addEventListener('click', onOverride);
+      cancelBtn.addEventListener('click', onCancel);
       closeBtn?.addEventListener('click', onCancel);
       searchInput.addEventListener('input', onSearch);
       if (!usingManager) {

@@ -3153,6 +3153,18 @@
     return true;
   }
 
+  function eliteOverrideKey(entry, suffix) {
+    const token = normalizeKey(entry?.id || entry?.namn || 'elityrke');
+    return `elite:${token}:${suffix}`;
+  }
+
+  async function confirmEliteRuleOverride(activeStore, keys, message) {
+    if (typeof window.storeHelper?.confirmRuleOverride === 'function') {
+      return window.storeHelper.confirmRuleOverride(activeStore, keys, message);
+    }
+    return !!(await confirmPopup(message, { cancelText: 'Avbryt', okText: 'Fortsätt' }));
+  }
+
   async function addElite(entry, opts = {}){
     const activeStore = await ensureActiveStore();
     if(!activeStore) return false;
@@ -3160,7 +3172,11 @@
     if(list.some(item => item.namn === entry.namn)) return false;
     const skipDup = !!opts.skipDuplicateConfirm;
     if(list.some(isElityrke) && !skipDup){
-      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return false;
+      if(!(await confirmEliteRuleOverride(
+        activeStore,
+        ['entry-limit:single-elite-profession'],
+        'Du kan bara välja ett elityrke. Lägga till ändå?'
+      ))) return false;
     }
     const res = eliteReq.check(entry, list);
     if(!res.ok){
@@ -3168,7 +3184,11 @@
         (res.missing.length ? `Saknar: ${res.missing.join(', ')}\n` : '') +
         (res.primary ? '' : 'Primärförmågekravet uppfylls inte.\n') +
         'Lägga till ändå?';
-      if(!(await confirmPopup(msg))) return false;
+      if(!(await confirmEliteRuleOverride(
+        activeStore,
+        [eliteOverrideKey(entry, 'requirements')],
+        msg
+      ))) return false;
     }
     list.push({ ...entry });
     storeHelper.setCurrentList(activeStore, list);
@@ -3185,7 +3205,11 @@
     const listPre = storeHelper.getCurrentList(activeStore);
     if(listPre.some(item => item.namn === entry.namn)) return;
     if(listPre.some(isElityrke)){
-      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
+      if(!(await confirmEliteRuleOverride(
+        activeStore,
+        ['entry-limit:single-elite-profession'],
+        'Du kan bara välja ett elityrke. Lägga till ändå?'
+      ))) return;
     }
 
     const groups = parseGroupRequirements(getEliteRequirementSource(entry));

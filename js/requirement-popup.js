@@ -55,8 +55,9 @@
           <p id="requirementEmpty" class="requirement-popup-empty" hidden>Inga krav matchar sökningen.</p>
         </div>
         <div class="db-modal__footer requirement-popup-actions">
+          <button id="requirementCancel" class="db-btn db-btn--secondary" type="button">Avbryt</button>
           <button id="requirementApply" class="db-btn" type="button">Lägg till valda krav</button>
-          <button id="requirementOverride" class="db-btn db-btn--danger" type="button">Lägg till ändå</button>
+          <button id="requirementOverride" class="db-btn db-btn--primary" type="button">Fortsätt</button>
         </div>
       </div>
     `;
@@ -214,11 +215,12 @@
     const emptyEl = pop.querySelector('#requirementEmpty');
     const applyBtn = pop.querySelector('#requirementApply');
     const overrideBtn = pop.querySelector('#requirementOverride');
+    const cancelBtn = pop.querySelector('#requirementCancel');
     const closeBtn = pop.querySelector('#requirementClose');
 
     const title = String(config?.title || `Lås upp ${candidate?.namn || 'krav'}`).trim();
     const subtitle = String(config?.subtitle || 'Välj krav som ska läggas till eller uppgraderas för att låsa upp posten utan override.').trim();
-    const overrideLabel = String(config?.overrideLabel || (assistOptions.action === 'level-change' ? 'Ändra ändå' : 'Lägg till ändå')).trim();
+    const overrideLabel = String(config?.overrideLabel || 'Fortsätt').trim();
 
     let searchTerm = '';
     let done = false;
@@ -272,6 +274,7 @@
       box.removeEventListener('click', onOptionClick);
       applyBtn.removeEventListener('click', onApply);
       overrideBtn.removeEventListener('click', onOverride);
+      cancelBtn.removeEventListener('click', onCancel);
       closeBtn?.removeEventListener('click', onCancel);
       searchInput.removeEventListener('input', onSearch);
       if (!usingManager) {
@@ -385,6 +388,7 @@
       box.addEventListener('click', onOptionClick);
       applyBtn.addEventListener('click', onApply);
       overrideBtn.addEventListener('click', onOverride);
+      cancelBtn.addEventListener('click', onCancel);
       closeBtn?.addEventListener('click', onCancel);
       searchInput.addEventListener('input', onSearch);
       if (!usingManager) {

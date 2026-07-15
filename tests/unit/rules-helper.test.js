@@ -800,6 +800,34 @@ describe('rules-helper unit coverage', () => {
     expect(rulesHelper.getMissingRequirementReasonsForCandidate(candidate, [])).toHaveLength(1);
   });
 
+  it('builds stable override keys from rule IDs and scoped built-in limits', () => {
+    const rulesHelper = loadRulesHelper();
+    const candidate = {
+      id: 'override-key-entry',
+      name: 'Override Key Entry',
+      namn: 'Override Key Entry',
+      tags: { types: ['Förmåga'] },
+      taggar: { typ: ['Förmåga'] },
+      rules: {
+        require: [{
+          rule_id: 'override-key-requirement',
+          when: { field: 'selected.names', op: 'includes', value: 'Nyckel' },
+          message: 'Kräver Nyckel.'
+        }]
+      }
+    };
+
+    const requirementStop = rulesHelper.evaluateEntryStops(candidate, [], { action: 'add' });
+    expect(rulesHelper.getEntryStopOverrideKeys(candidate, requirementStop)).toContain(
+      'rule:override-key-requirement'
+    );
+
+    const duplicateStop = rulesHelper.evaluateEntryStops(candidate, [candidate], { action: 'add' });
+    expect(rulesHelper.getEntryStopOverrideKeys(candidate, duplicateStop)).toContain(
+      'entry:id:override-key-entry:limit:duplicate_entry'
+    );
+  });
+
   it('applies canonical target-type corruption guards without breaking list filtering', () => {
     const rulesHelper = loadRulesHelper();
 

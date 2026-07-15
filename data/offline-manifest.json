@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "4b4b69b0aec66c76b1eeb1d19699085887f4423cbd30c2f80851ab6b1e156149",
+  "revision": "b7d4fdcd05ddc874427532286626dda9135bf5224aa76f17f1333d4d967d73ca",
   "resources": [
     {
       "url": "data/diverse.json",
@@ -34,8 +34,8 @@
     },
     {
       "url": "data/basformagor.json",
-      "revision": "sha256-e1cf357717daef60d1488d53380ce0ec98ed3c4ef044f5091158ed9dd862defb",
-      "bytes": 16529
+      "revision": "sha256-f364a8441cc9d04b8d2b8b57d06b1ec609e33fc7d54c10918e650f9148af2e47",
+      "bytes": 16642
     },
     {
       "url": "data/kvalitet.json",
@@ -188,5 +188,5 @@
       "bytes": 56874
     }
   ],
-  "totalBytes": 1780046
+  "totalBytes": 1780159
 }

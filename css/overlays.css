@@ -72,8 +72,10 @@
   transform: translate3d(0, 0, 0);
 }
 
-#invDashPanel.db-drawer--structured.inv-dash-drawer > .db-drawer__panel {
-  width: min(32.5rem, 90vw);
+@media (min-width: 641px) {
+  #invDashPanel.db-drawer--structured.inv-dash-drawer > .db-drawer__panel {
+    width: min(32.5rem, 90vw);
+  }
 }
 
 :is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__overlay {
@@ -109,6 +111,10 @@
     max-width: none;
     max-height: none;
     padding: calc(1rem + var(--app-safe-top)) 1rem calc(1rem + var(--app-safe-bottom));
+  }
+
+  #invDashPanel.db-drawer--structured.inv-dash-drawer > .db-drawer__panel {
+    width: 100%;
   }
 
   :is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header {

@@ -159,6 +159,119 @@
 
   const syncLevelControl = () => {};
 
+  const MIN_TITLE_FONT_SIZE = 12;
+  const pendingTitleFits = new Set();
+  const observedTitleWidths = new WeakMap();
+  let titleFitFrame = 0;
+
+  const resolveEntryTitle = (target) => {
+    if (!target || !(target instanceof HTMLElement)) return null;
+    if (target.matches('.entry-title-main')) return target;
+    return target.querySelector('.entry-title-main');
+  };
+
+  const fitEntryTitle = (target) => {
+    const title = resolveEntryTitle(target);
+    if (!title?.isConnected) return false;
+
+    title.style.removeProperty('font-size');
+    title.style.setProperty('--entry-title-scale', '1');
+    delete title.dataset.fitReady;
+    delete title.dataset.fitScale;
+
+    const availableWidth = title.clientWidth;
+    if (availableWidth <= 0) return false;
+
+    const naturalWidth = title.scrollWidth;
+    const baseFontSize = parseFloat(window.getComputedStyle(title).fontSize) || 16;
+    if (naturalWidth > availableWidth + 0.5) {
+      const fittedFontSize = Math.max(
+        MIN_TITLE_FONT_SIZE,
+        baseFontSize * (availableWidth / naturalWidth)
+      );
+      title.style.fontSize = `${fittedFontSize.toFixed(2)}px`;
+    }
+
+    const fittedWidth = Math.max(title.scrollWidth, 1);
+    const scale = Math.min(1, availableWidth / fittedWidth);
+    title.style.setProperty('--entry-title-scale', scale.toFixed(4));
+    title.dataset.fitScale = scale.toFixed(4);
+    title.dataset.fitReady = 'true';
+    return fittedWidth * scale <= availableWidth + 1;
+  };
+
+  const flushTitleFits = () => {
+    titleFitFrame = 0;
+    const titles = [...pendingTitleFits];
+    pendingTitleFits.clear();
+    titles.forEach(fitEntryTitle);
+  };
+
+  const scheduleEntryTitleFit = (target) => {
+    const title = resolveEntryTitle(target);
+    if (!title) return;
+    pendingTitleFits.add(title);
+    if (!titleFitFrame) titleFitFrame = window.requestAnimationFrame(flushTitleFits);
+  };
+
+  const titleResizeObserver = typeof window.ResizeObserver === 'function'
+    ? new ResizeObserver((entries) => {
+        entries.forEach(({ target, contentRect }) => {
+          const previousWidth = observedTitleWidths.get(target);
+          const nextWidth = contentRect.width;
+          observedTitleWidths.set(target, nextWidth);
+          if (previousWidth === undefined || Math.abs(previousWidth - nextWidth) > 0.5) {
+            scheduleEntryTitleFit(target);
+          }
+        });
+      })
+    : null;
+
+  const observeEntryTitle = (target) => {
+    const title = resolveEntryTitle(target);
+    if (!title || title.dataset.fitObserved === 'true') return;
+    title.dataset.fitObserved = 'true';
+    titleResizeObserver?.observe(title);
+    scheduleEntryTitleFit(title);
+  };
+
+  const observeEntryTitlesIn = (root) => {
+    if (!root) return;
+    if (root instanceof HTMLElement && root.matches('.entry-title-main')) {
+      observeEntryTitle(root);
+    }
+    if (typeof root.querySelectorAll === 'function') {
+      root.querySelectorAll('.entry-title-main').forEach(observeEntryTitle);
+    }
+  };
+
+  if (typeof window.MutationObserver === 'function' && document.documentElement) {
+    const titleTreeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'characterData') {
+          scheduleEntryTitleFit(mutation.target.parentElement?.closest('.entry-title-main'));
+          return;
+        }
+        mutation.addedNodes.forEach(observeEntryTitlesIn);
+        scheduleEntryTitleFit(mutation.target instanceof HTMLElement
+          ? mutation.target.closest('.entry-title-main')
+          : null);
+      });
+    });
+    titleTreeObserver.observe(document.documentElement, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+    observeEntryTitlesIn(document.documentElement);
+  }
+
+  if (!titleResizeObserver) {
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('.entry-title-main').forEach(scheduleEntryTitleFit);
+    }, { passive: true });
+  }
+
   const syncStandardActionButtons = (standardGroup, config = {}, options = {}) => {
     if (!standardGroup || !(standardGroup instanceof HTMLElement)) return;
     const descriptors = getStandardActionDescriptors(config);
@@ -220,6 +333,7 @@
 
     card.classList.toggle('compact', shouldCompact);
     syncCollapseButton(card);
+    scheduleEntryTitleFit(card);
 
     card.dispatchEvent(new CustomEvent('entry-card-toggle', {
       bubbles: true,
@@ -389,6 +503,7 @@
 
     li.innerHTML = `${summaryHtml}${bodyHtml}${detailHtml}`;
     syncActionRowState(li);
+    observeEntryTitle(li);
 
     if (collapsible) {
       syncCollapseButton(li);
@@ -410,6 +525,7 @@
     syncActionRow: syncActionRowState,
     syncStandardActionButtons,
     syncCollapse: syncCollapseButton,
+    syncTitleFit: scheduleEntryTitleFit,
     syncLevelControl,
     toggle: toggleEntryCard
   });

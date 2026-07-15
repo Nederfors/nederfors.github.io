@@ -157,7 +157,7 @@ test('a lone document dialog inerts and restores the application background', as
   await page.evaluate(() => {
     document.querySelector('.skip-links')?.setAttribute('inert', '');
   });
-  const opener = page.locator('#manageEconomyBtn');
+  const opener = page.locator('#overviewToggle');
   await opener.focus();
   await page.evaluate(() => { void window.alertPopup?.('Tillgänglighetstest'); });
 
@@ -177,7 +177,7 @@ test('a lone document dialog inerts and restores the application background', as
   await page.keyboard.press('Escape');
   await expect(popup).toBeHidden();
   await expect(page.locator('#view-root')).not.toHaveAttribute('inert', '');
-  await expect.poll(() => deepActiveId(page)).toBe('manageEconomyBtn');
+  await expect.poll(() => deepActiveId(page)).toBe('overviewToggle');
   await expect(page.locator('.skip-links')).toHaveAttribute('inert', '');
 
   const toolbarBackgroundRestored = await page.locator('shared-toolbar').evaluate(element => (
@@ -193,7 +193,7 @@ test('drawer and nested dialogs keep only the top layer interactive and restore 
     document.querySelector('.skip-links')?.setAttribute('inert', '');
   });
 
-  const dashboardOpener = page.locator('#invDashFloatBtn');
+  const dashboardOpener = page.locator('#overviewToggle');
   await dashboardOpener.click();
   const drawer = page.locator('#invDashPanel');
   await expect(drawer).toBeVisible();
@@ -302,6 +302,6 @@ test('drawer and nested dialogs keep only the top layer interactive and restore 
   await page.keyboard.press('Escape');
   await expect(drawer).toBeHidden();
   await expect(page.locator('#view-root')).not.toHaveAttribute('inert', '');
-  await expect.poll(() => deepActiveId(page)).toBe('invDashFloatBtn');
+  await expect.poll(() => deepActiveId(page)).toBe('overviewToggle');
   await expect(page.locator('.skip-links')).toHaveAttribute('inert', '');
 });

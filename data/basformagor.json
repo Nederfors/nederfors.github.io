@@ -313,7 +313,7 @@
     {
       "id": "bas14",
       "name": "Retorisk trollbindning",
-      "description": "Handling: Speciell. Ord kan fängsla lika effektivt som kedjor. Genom retorik och gester kan karaktären fånga en publiks uppmärksamhet utanför strid. Med ett lyckat test mot [Övertygande ← Vaksam] blir åhörarna så distraherade att de får -3 på alla slag mot [Vaksam] för att upptäcka vad som händer i periferin.",
+      "description": "Handling: Speciell. Ord kan fängsla lika effektivt som kedjor. Genom retorik och gester kan karaktären fånga vakters eller en folksamlings uppmärksamhet utanför strid. Med ett lyckat slag mot [Övertygande ← Vaksam] blir åhörarna så distraherade att närbelägna allierade får använda talarens [Övertygande] istället för sitt egna [Diskret] för att undvika att bli upptäckta.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -333,7 +333,7 @@
     {
       "id": "bas15",
       "name": "Terrängkamouflage",
-      "description": "Handling: Speciell. I vildmarken är synlighet dödlighet. Karaktären spenderar en timme på att dölja sig själv eller ett föremål med lokala material. En maskerad varelse får två chanser att lyckas på [Diskret] i den miljön. Ett maskerat föremål ger de som letar -3 på [Vaksam] samt två chanser att misslyckas. Kamouflaget håller en scen eller tills vädret förstör det.",
+      "description": "Handling: Speciell. I vildmarken är synlighet dödlighet. Karaktären spenderar en timme på att dölja sig själv eller ett föremål med lokala material. En maskerad varelse får två chanser att lyckas på [Diskret] i den aktuella miljön. Ett maskerat föremål ger de som letar -3 på [Vaksam] samt en andra chans att misslyckas med sina försök att upptäcka det. Kamouflaget håller en scen eller tills vädret förstör det.",
       "tags": {
         "types": [
           "Basförmåga"

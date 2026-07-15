@@ -21,6 +21,7 @@
     derivedByCharacter: Object.create(null)
   };
   const SNAPSHOT_RULES_KEY = 'snapshotRules';
+  const RULE_OVERRIDES_KEY = 'ruleOverrides';
   const SNAPSHOT_SOURCE_TYPE_ENTRY = 'entry';
   const SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING = 'artifact_binding';
   const CURRENT_LIST_RECONCILIATION_VERSION_KEY = 'currentListReconciliationVersion';
@@ -450,6 +451,55 @@
       persistCharacter(store, charId, normalizedFields.length ? { fields: normalizedFields } : {});
     }
     return charId;
+  }
+
+  function normalizeRuleOverrideKeys(value) {
+    const source = Array.isArray(value) ? value : (value === undefined || value === null ? [] : [value]);
+    return [...new Set(
+      source
+        .map(key => String(key || '').trim())
+        .filter(Boolean)
+    )].sort();
+  }
+
+  function getRuleOverrides(store) {
+    if (!store?.current) return [];
+    return normalizeRuleOverrideKeys(store.data?.[store.current]?.[RULE_OVERRIDES_KEY]);
+  }
+
+  function hasRuleOverrides(store, keys) {
+    const wanted = normalizeRuleOverrideKeys(keys);
+    if (!wanted.length) return false;
+    const accepted = new Set(getRuleOverrides(store));
+    return wanted.every(key => accepted.has(key));
+  }
+
+  function acceptRuleOverrides(store, keys) {
+    if (!store?.current) return false;
+    const wanted = normalizeRuleOverrideKeys(keys);
+    if (!wanted.length) return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const current = getRuleOverrides(store);
+    const next = normalizeRuleOverrideKeys([...current, ...wanted]);
+    if (JSON.stringify(current) === JSON.stringify(next)) return false;
+    store.data[store.current][RULE_OVERRIDES_KEY] = next;
+    commitCurrentCharacterMutation(store, { fields: [RULE_OVERRIDES_KEY] });
+    return true;
+  }
+
+  async function confirmRuleOverride(store, keys, message, options = {}) {
+    const normalizedKeys = normalizeRuleOverrideKeys(keys);
+    if (normalizedKeys.length && hasRuleOverrides(store, normalizedKeys)) return true;
+    const confirmer = global.confirmPopup || global.confirm;
+    if (typeof confirmer !== 'function') return false;
+    const approved = await confirmer(message, {
+      cancelText: 'Avbryt',
+      okText: 'Fortsätt',
+      ...(options || {})
+    });
+    if (!approved) return false;
+    if (normalizedKeys.length) acceptRuleOverrides(store, normalizedKeys);
+    return true;
   }
 
   function batchCurrentCharacterMutation(store, options = {}, callback) {
@@ -1430,6 +1480,7 @@
       custom: [],
       artifactEffects: defaultArtifactEffects(),
       snapshotRules: [],
+      ruleOverrides: [],
       bonusMoney: defaultMoney(),
       savedUnusedMoney: defaultMoney(),
       privMoney: defaultMoney(),
@@ -1458,6 +1509,11 @@
       mutated = true;
     }
     data.snapshotRules = normalizedSnapshotRules;
+    const normalizedRuleOverrides = normalizeRuleOverrideKeys(data[RULE_OVERRIDES_KEY]);
+    if (JSON.stringify(normalizedRuleOverrides) !== JSON.stringify(data[RULE_OVERRIDES_KEY] || [])) {
+      mutated = true;
+    }
+    data[RULE_OVERRIDES_KEY] = normalizedRuleOverrides;
     if (!data.manualAdjustments) {
       data.manualAdjustments = defaultManualAdjustments();
       mutated = true;
@@ -5815,6 +5871,10 @@ function defaultTraits() {
     getRecentSearches,
     addRecentSearch,
     getCurrentList,
+    getRuleOverrides,
+    hasRuleOverrides,
+    acceptRuleOverrides,
+    confirmRuleOverride,
     needsCurrentListReconciliation,
     getCharacterRaces,
     setCurrentList,

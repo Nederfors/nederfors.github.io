@@ -157,7 +157,7 @@
     return 1;
   }
 
-  async function confirmRuleStopOverride(entryName, stopResult, action = 'add') {
+  async function confirmRuleStopOverride(entryName, stopResult, action = 'add', overrideKeys = []) {
     const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
       ? window.rulesHelper.formatEntryStopMessages(entryName, stopResult || {})
       : [];
@@ -167,10 +167,25 @@
       ? `Vill du ändra nivån för ${label} ändå?`
       : `Vill du lägga till ${label} ändå?`;
     const text = `Karaktären möter inte följande krav:\n- ${messages.join('\n- ')}\n\n${actionLine}`;
-    return !!(await confirmPopup(text));
+    if (typeof window.storeHelper?.confirmRuleOverride === 'function') {
+      return window.storeHelper.confirmRuleOverride(store, overrideKeys, text);
+    }
+    return !!(await confirmPopup(text, { cancelText: 'Avbryt', okText: 'Fortsätt' }));
   }
 
   async function resolveRuleStopDecision(entryName, candidateEntry, list, stopResult, action = 'add', options = {}) {
+    const overrideKeys = typeof window.rulesHelper?.getEntryStopOverrideKeys === 'function'
+      ? window.rulesHelper.getEntryStopOverrideKeys(candidateEntry, stopResult)
+      : [];
+    if (typeof window.storeHelper?.hasRuleOverrides === 'function'
+      && window.storeHelper.hasRuleOverrides(store, overrideKeys)) {
+      return {
+        action: 'override',
+        selectedKeys: [],
+        state: null,
+        remembered: true
+      };
+    }
     const popup = window.requirementPopup;
     const popupLevel = options?.toLevel || options?.level || candidateEntry?.nivå || '';
     const skipRequirementPopup = typeof window.rulesHelper?.shouldSkipRequirementPopup === 'function'
@@ -198,14 +213,17 @@
         fromLevel: options?.fromLevel || '',
         toLevel: options?.toLevel || candidateEntry?.nivå || '',
         replaceTargetUid: options?.replaceTargetUid || '',
-        overrideLabel: action === 'level-change' ? 'Ändra ändå' : 'Lägg till ändå'
+        overrideLabel: 'Fortsätt'
       });
       if (result && typeof result === 'object' && typeof result.action === 'string') {
+        if (result.action === 'override') {
+          window.storeHelper?.acceptRuleOverrides?.(store, overrideKeys);
+        }
         return result;
       }
     }
 
-    const approved = await confirmRuleStopOverride(entryName, stopResult, action);
+    const approved = await confirmRuleStopOverride(entryName, stopResult, action, overrideKeys);
     return {
       action: approved ? 'override' : 'cancel',
       selectedKeys: [],
@@ -1196,6 +1214,8 @@
 
       const duplicate = await picker.enforceDuplicatePolicy({
         rule,
+        entry: candidate,
+        store,
         value: picked.value,
         usedValues,
         label: picked.value
