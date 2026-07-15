@@ -527,12 +527,59 @@
     let fixedRandomEntries = null;
 
     const STATE_KEY = 'indexViewState';
-    // Desktop categories expand in chunks; phones show the complete category immediately.
-    const CATEGORY_BATCH_SIZE = 12;
-    const MOBILE_INDEX_QUERY = '(max-width: 640px)';
-    const isMobileIndexViewport = () => window.matchMedia?.(MOBILE_INDEX_QUERY)?.matches === true;
-    const catRenderLimits = {};
     let catState = {};
+    let pendingCategoryScrollAnchor = null;
+    let clearPendingCategoryScrollAnchor = () => {};
+    const getDetailsSummary = (detailsEl) => {
+      const firstChild = detailsEl?.firstElementChild;
+      if (firstChild?.tagName === 'SUMMARY') return firstChild;
+      return detailsEl?.querySelector('summary') || null;
+    };
+    const captureCategoryScrollAnchor = (detailsEl) => {
+      const summary = getDetailsSummary(detailsEl);
+      const cat = detailsEl?.dataset?.cat || '';
+      if (!summary || !cat) return null;
+      return { cat, viewportTop: summary.getBoundingClientRect().top };
+    };
+    const lockCategoryScrollAnchor = (detailsEl) => {
+      clearPendingCategoryScrollAnchor();
+      pendingCategoryScrollAnchor = captureCategoryScrollAnchor(detailsEl);
+      if (!pendingCategoryScrollAnchor) return;
+      const cancelEvents = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+      let timeoutId = 0;
+      const clear = () => {
+        pendingCategoryScrollAnchor = null;
+        cancelEvents.forEach(type => window.removeEventListener(type, clear));
+        if (timeoutId) window.clearTimeout(timeoutId);
+        if (clearPendingCategoryScrollAnchor === clear) {
+          clearPendingCategoryScrollAnchor = () => {};
+        }
+      };
+      cancelEvents.forEach(type => window.addEventListener(type, clear, { once: true, passive: true }));
+      timeoutId = window.setTimeout(clear, 4000);
+      clearPendingCategoryScrollAnchor = clear;
+    };
+    const restoreCategoryScrollAnchor = (anchor) => {
+      if (!anchor || !dom.lista?.isConnected || document.body?.dataset?.role !== 'index') return;
+      const adjust = () => {
+        if (!dom.lista?.isConnected || document.body?.dataset?.role !== 'index') return;
+        const detailsEl = [...dom.lista.querySelectorAll('.cat-group > details')]
+          .find(item => item.dataset.cat === anchor.cat);
+        const summary = getDetailsSummary(detailsEl);
+        if (!summary) return;
+        const delta = summary.getBoundingClientRect().top - anchor.viewportTop;
+        if (Math.abs(delta) > 0.5) window.scrollBy(0, delta);
+      };
+      let remainingFrames = 45;
+      const keepAnchored = () => {
+        adjust();
+        remainingFrames -= 1;
+        if (remainingFrames > 0 && pendingCategoryScrollAnchor === anchor) {
+          window.requestAnimationFrame(keepAnchored);
+        }
+      };
+      keepAnchored();
+    };
     const loadState = () => {
       try { return JSON.parse(getUiPref(STATE_KEY)) || {}; }
       catch { return {}; }
@@ -2511,10 +2558,8 @@
           return;
         }
         cats[cat].sort(entrySorter);
-        const limit = Math.max(CATEGORY_BATCH_SIZE, Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE);
-        const visible = isMobileIndexViewport() ? cats[cat] : cats[cat].slice(0, limit);
-        visibleEntriesByCat.set(cat, visible);
-        hydrationQueue.push(...visible);
+        visibleEntriesByCat.set(cat, cats[cat]);
+        hydrationQueue.push(...cats[cat]);
       });
       if (hydrationQueue.length && typeof window.catalogLoader?.ensureEntriesData === 'function') {
         const hydratedEntries = await window.catalogLoader.ensureEntriesData(hydrationQueue);
@@ -2542,7 +2587,7 @@
         detailsEl.addEventListener('toggle', (ev) => {
           updateCatToggle();
           if (detailsEl.open && !listEl.children.length) {
-            catRenderLimits[cat] = Math.max(CATEGORY_BATCH_SIZE, Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE);
+            lockCategoryScrollAnchor(detailsEl);
             scheduleRenderList();
           }
           if (!ev.isTrusted) return;
@@ -2824,24 +2869,6 @@
             if (descEl) highlightInElement(descEl, terms);
           }
         });
-        if (!isMobileIndexViewport() && shouldOpen && entriesToRender.length < cats[cat].length) {
-          const remaining = cats[cat].length - entriesToRender.length;
-          const moreLi = document.createElement('li');
-          moreLi.className = 'db-card entry-card index-load-more-card compact';
-          moreLi.dataset.name = `Visa fler ${cat}`;
-          moreLi.innerHTML = `
-            <div class="db-card__header entry-card-summary card-header">
-              <div class="entry-row entry-row-header">
-                <div class="entry-header-main">
-                  <div class="card-title"><span class="entry-title-main">${remaining} fler i ${catName(cat)}</span></div>
-                </div>
-                <div class="entry-header-actions">
-                  <button class="db-btn" type="button" data-load-more-cat="${cat}">Visa fler</button>
-                </div>
-              </div>
-            </div>`;
-          listEl.appendChild(moreLi);
-        }
         fragment.appendChild(catLi);
           if (renderSequence !== renderListSequence) return;
           if (entriesToRender.length >= 12) {
@@ -2885,7 +2912,11 @@
           catState['Hoppsan'] = true;
           fragment.appendChild(hopLi);
         }
+        const scrollAnchor = pendingCategoryScrollAnchor;
         dom.lista.replaceChildren(fragment);
+        if (scrollAnchor) {
+          restoreCategoryScrollAnchor(scrollAnchor);
+        }
         bindIndexMotionTargets();
         updateCatToggle();
         // Only auto-open once per triggering action
@@ -3303,13 +3334,18 @@
     dom.catToggle.addEventListener('click', () => {
       const details = document.querySelectorAll('.cat-group > details');
       if (catsMinimized) {
-        details.forEach(d => { d.open = true; });
+        details.forEach(d => {
+          d.open = true;
+          if (d.dataset.cat) catState[d.dataset.cat] = true;
+        });
       } else {
         details.forEach(d => {
           if (d.dataset.cat === 'Hoppsan') return;
           d.open = false;
+          if (d.dataset.cat) catState[d.dataset.cat] = false;
         });
       }
+      saveState();
       updateCatToggle();
     });
     // Dropdown handlers are bound via ensureDropdownChangeHandlers().
@@ -3381,22 +3417,6 @@
         return;
       }
       if (e.target.closest('.filter-tag')) return;
-      const loadMoreBtn = e.target.closest('button[data-load-more-cat]');
-      if (loadMoreBtn) {
-        const cat = loadMoreBtn.dataset.loadMoreCat || '';
-        if (cat) {
-          catRenderLimits[cat] = Math.max(
-            CATEGORY_BATCH_SIZE,
-            (Number(catRenderLimits[cat]) || CATEGORY_BATCH_SIZE) + CATEGORY_BATCH_SIZE
-          );
-          catState[cat] = true;
-          saveState();
-          scheduleRenderList();
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
       // Special clear-filters action inside the Hoppsan category
       const clearBtn = e.target.closest('button[data-clear-filters]');
       if (clearBtn) {

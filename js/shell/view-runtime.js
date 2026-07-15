@@ -11,12 +11,124 @@ const VIEW_MODULE_LOADERS = Object.freeze({
   traits: () => import('../views/traits.js')
 });
 
+const VIEW_SCROLL_STORAGE_KEY = 'symbaroumViewScrollPositions';
+
+function loadViewScrollPositions() {
+  try {
+    const saved = JSON.parse(window.sessionStorage?.getItem(VIEW_SCROLL_STORAGE_KEY) || '{}');
+    return saved && typeof saved === 'object' ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
 export function createViewRuntime() {
   const shell = createAppShell();
+  const viewScrollPositions = loadViewScrollPositions();
+  const observedScrollPositions = {};
   let currentRole = '';
   let activeView = null;
   let routeUnsubscribe = null;
   let routeSequence = 0;
+  let navigationScrollCapture = null;
+  let scrollObservationFrame = 0;
+
+  function rememberScrollPosition(role = currentRole) {
+    const normalizedRole = normalizeRole(role);
+    if (!normalizedRole) return;
+    viewScrollPositions[normalizedRole] = Math.max(0, Math.round(window.scrollY || window.pageYOffset || 0));
+    try {
+      window.sessionStorage?.setItem(VIEW_SCROLL_STORAGE_KEY, JSON.stringify(viewScrollPositions));
+    } catch {}
+  }
+
+  function observeCurrentScroll() {
+    if (!currentRole || normalizeRole(router.parseHash().role) !== currentRole) return;
+    const top = Math.max(0, Math.round(window.scrollY || window.pageYOffset || 0));
+    if (observedScrollPositions[currentRole] === top) return;
+    observedScrollPositions[currentRole] = top;
+    viewScrollPositions[currentRole] = top;
+  }
+
+  window.addEventListener('scroll', observeCurrentScroll, { passive: true });
+  const observeScrollFrame = () => {
+    observeCurrentScroll();
+    scrollObservationFrame = window.requestAnimationFrame(observeScrollFrame);
+  };
+  scrollObservationFrame = window.requestAnimationFrame(observeScrollFrame);
+
+  function captureRouteLinkScroll(event) {
+    const routeLink = event.composedPath?.().find(node => (
+      node?.tagName === 'A'
+      && String(node.getAttribute?.('href') || '').startsWith('#/')
+    ));
+    if (!routeLink || !currentRole) return;
+    const top = Math.max(0, Math.round(window.scrollY || window.pageYOffset || 0));
+    navigationScrollCapture = { role: currentRole, top };
+    viewScrollPositions[currentRole] = top;
+    try {
+      window.sessionStorage?.setItem(VIEW_SCROLL_STORAGE_KEY, JSON.stringify(viewScrollPositions));
+    } catch {}
+  }
+
+  const routeCaptureEvents = ['pointerdown', 'touchstart', 'click'];
+  routeCaptureEvents.forEach(type => window.addEventListener(type, captureRouteLinkScroll, true));
+  const captureRouterScroll = () => {
+    observeCurrentScroll();
+    if (currentRole) rememberScrollPosition(currentRole);
+  };
+  window.addEventListener('symbaroum-before-route-change', captureRouterScroll);
+
+  function afterLayout() {
+    return new Promise(resolve => {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(resolve));
+    });
+  }
+
+  async function waitForRoleLayout(role) {
+    if (role === 'index') {
+      const firstRender = window.__symbaroumIndexFirstRender;
+      if (firstRender && typeof firstRender.then === 'function') {
+        let timeoutId = 0;
+        try {
+          await Promise.race([
+            firstRender,
+            new Promise(resolve => {
+              timeoutId = window.setTimeout(resolve, 4000);
+            })
+          ]);
+        } finally {
+          if (timeoutId) window.clearTimeout(timeoutId);
+        }
+      }
+    }
+    await afterLayout();
+  }
+
+  async function restoreScrollPosition(role, savedPosition = viewScrollPositions[role]) {
+    const saved = Number(savedPosition);
+    const top = Number.isFinite(saved) && saved > 0 ? saved : 0;
+    await waitForRoleLayout(role);
+    const cancelEvents = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+    let cancelled = false;
+    let remainingFrames = 45;
+    const cancel = () => {
+      cancelled = true;
+      cancelEvents.forEach(type => window.removeEventListener(type, cancel));
+    };
+    const keepPosition = () => {
+      if (cancelled) return;
+      window.scrollTo(0, top);
+      remainingFrames -= 1;
+      if (remainingFrames > 0) {
+        window.requestAnimationFrame(keepPosition);
+      } else {
+        cancel();
+      }
+    };
+    cancelEvents.forEach(type => window.addEventListener(type, cancel, { once: true, passive: true }));
+    keepPosition();
+  }
 
   function getViewRoot() {
     return document.getElementById('view-root') || document.body;
@@ -84,6 +196,7 @@ export function createViewRuntime() {
 
   async function mountRole(role, tab) {
     const normalizedRole = normalizeRole(role);
+    const targetScrollPosition = viewScrollPositions[normalizedRole];
     const sameRole = currentRole === normalizedRole;
 
     // Tab-only change within same role (e.g. traits ↔ summary ↔ effects)
@@ -100,11 +213,26 @@ export function createViewRuntime() {
 
     const sequence = ++routeSequence;
     const prev = currentRole;
+    if (prev) {
+      if (Object.prototype.hasOwnProperty.call(observedScrollPositions, prev)) {
+        viewScrollPositions[prev] = observedScrollPositions[prev];
+        try {
+          window.sessionStorage?.setItem(VIEW_SCROLL_STORAGE_KEY, JSON.stringify(viewScrollPositions));
+        } catch {}
+        navigationScrollCapture = null;
+      } else if (navigationScrollCapture?.role === prev) {
+        viewScrollPositions[prev] = navigationScrollCapture.top;
+        navigationScrollCapture = null;
+      } else {
+        rememberScrollPosition(prev);
+      }
+    }
     setViewBusy(true);
     let nextView;
     try {
       nextView = await loadView(normalizedRole);
     } catch (error) {
+      if (sequence !== routeSequence) return;
       setViewBusy(false);
       window.__symbaroumShowLoadError?.('Den valda vyn kunde inte laddas. Kontrollera anslutningen och försök igen.');
       throw error;
@@ -145,6 +273,7 @@ export function createViewRuntime() {
         tab
       });
     } catch (error) {
+      if (sequence !== routeSequence) return;
       setViewBusy(false);
       window.__symbaroumShowLoadError?.('Vyns data kunde inte laddas. Kontrollera anslutningen och försök igen.');
       throw error;
@@ -156,9 +285,11 @@ export function createViewRuntime() {
       window.summaryEffects.activateTraitsTab(tab);
     }
 
-    // 7. Scroll to top on cross-view navigation
+    // 7. Restore each view's last position after its layout is ready
     if (prev && prev !== normalizedRole) {
-      window.scrollTo(0, 0);
+      focusViewRoot();
+      await restoreScrollPosition(normalizedRole, targetScrollPosition);
+      if (sequence !== routeSequence) return;
     }
 
     // 8. Update toolbar active link
@@ -177,7 +308,6 @@ export function createViewRuntime() {
 
     resolveNavigationPerf(normalizedRole);
     setViewBusy(false);
-    if (prev && prev !== normalizedRole) focusViewRoot();
   }
 
   return {
@@ -194,6 +324,7 @@ export function createViewRuntime() {
       shell.mount(root, currentRole);
       syncDocumentTitle(currentRole, router.currentTab);
       syncPerfContext(currentRole);
+      void restoreScrollPosition(currentRole);
     },
 
     mountRoute(role, tab) {
@@ -201,6 +332,11 @@ export function createViewRuntime() {
     },
 
     destroyCurrentView() {
+      rememberScrollPosition();
+      window.removeEventListener('scroll', observeCurrentScroll);
+      if (scrollObservationFrame) window.cancelAnimationFrame(scrollObservationFrame);
+      routeCaptureEvents.forEach(type => window.removeEventListener(type, captureRouteLinkScroll, true));
+      window.removeEventListener('symbaroum-before-route-change', captureRouterScroll);
       currentRole = '';
       activeView?.destroy?.();
       activeView = null;
