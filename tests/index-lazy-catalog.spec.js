@@ -71,7 +71,7 @@ test('index initial load uses the lightweight catalog without all.json', async (
   expect([...new Set(requests)]).not.toContain('data/all.json');
 });
 
-test('opening an index category hydrates only that source chunk and renders one batch', async ({ page }) => {
+test('opening an index category hydrates its source chunk and renders every entry', async ({ page }) => {
   const requests = trackDataRequests(page);
   await waitForIndex(page);
 
@@ -81,17 +81,86 @@ test('opening an index category hydrates only that source chunk and renders one 
   const state = await page.evaluate(() => ({
     mode: window.__symbaroumDatabaseMode,
     cards: document.querySelectorAll('#lista li.entry-card').length,
-    hasAkrobatik: Boolean(document.querySelector('#lista li.entry-card[data-name="Akrobatik"] button[data-act="add"]'))
+    categoryEntries: document.querySelectorAll('details[data-cat="Förmåga"] li.entry-card').length,
+    hasAkrobatik: Boolean(document.querySelector('#lista li.entry-card[data-name="Akrobatik"] button[data-act="add"]')),
+    hasLoadMore: Boolean(document.querySelector('button[data-load-more-cat="Förmåga"]'))
   }));
 
   expect(state.mode).toBe('partial');
-  expect(state.cards).toBeLessThanOrEqual(55);
+  expect(state.categoryEntries).toBeGreaterThan(12);
   expect(state.hasAkrobatik).toBe(true);
+  expect(state.hasLoadMore).toBe(false);
   expect([...new Set(requests)]).toEqual(expect.arrayContaining([
     'data/index-catalog.json',
     'data/formaga.json'
   ]));
   expect([...new Set(requests)]).not.toContain('data/all.json');
+});
+
+test('opening a category keeps its heading anchored in the viewport', async ({ page }, testInfo) => {
+  await waitForIndex(page);
+
+  const category = testInfo.project.name.startsWith('Mobile') ? 'Förmåga' : 'Diverse';
+  const summary = page.locator(`details[data-cat="${category}"] > summary`);
+  if (!testInfo.project.name.startsWith('Mobile')) {
+    await summary.evaluate(element => {
+      const absoluteTop = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.max(0, absoluteTop - (window.innerHeight / 2)));
+    });
+  }
+  await expect(summary).toBeInViewport();
+  const before = await summary.evaluate(element => element.getBoundingClientRect().top);
+
+  await summary.click();
+  await page.waitForFunction(cat => (
+    document.querySelectorAll(`details[data-cat="${cat}"] li.entry-card`).length > 12
+  ), category);
+
+  await expect.poll(() => page.locator(`details[data-cat="${category}"] > summary`)
+    .evaluate((element, expected) => (
+      Math.abs(element.getBoundingClientRect().top - expected)
+    ), before)).toBeLessThan(8);
+});
+
+test('index category and scroll position survive navigation to another view', async ({ page }, testInfo) => {
+  test.slow();
+  const mobileProject = testInfo.project.name.startsWith('Mobile');
+  await waitForIndex(page);
+
+  const summary = page.locator('details[data-cat="Förmåga"] > summary');
+  await summary.click();
+  const card = page.locator('details[data-cat="Förmåga"] li.entry-card').nth(20);
+  await card.waitFor({ state: 'visible' });
+  await card.click();
+  await page.evaluate(() => window.dispatchEvent(new window.WheelEvent('wheel')));
+  await page.evaluate(() => window.scrollTo(0, 2400));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+  const before = await page.evaluate(() => window.scrollY);
+
+  if (mobileProject) {
+    await page.evaluate(() => window.appRouter.navigateTo('character'));
+  } else {
+    await page.locator('shared-toolbar #characterLink').click();
+  }
+  await page.waitForFunction(() => document.body.dataset.role === 'character');
+  await expect.poll(() => page.evaluate(() => {
+    const saved = JSON.parse(sessionStorage.getItem('symbaroumViewScrollPositions') || '{}');
+    return Number(saved.index) || 0;
+  })).toBe(before);
+  if (mobileProject) {
+    await page.evaluate(() => window.appRouter.navigateTo('index'));
+  } else {
+    await page.locator('shared-toolbar #indexLink').click();
+  }
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'index'
+      && document.querySelector('details[data-cat="Förmåga"]')?.open === true
+      && document.querySelectorAll('details[data-cat="Förmåga"] li.entry-card').length > 12
+  ));
+
+  await expect.poll(() => page.evaluate(expected => (
+    Math.abs(window.scrollY - expected)
+  ), before)).toBeLessThan(48);
 });
 
 test('searching the catalog hydrates matching info without loading all.json', async ({ page }) => {

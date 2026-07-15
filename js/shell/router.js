@@ -52,6 +52,11 @@ function applyRoute() {
 function navigateTo(role, opts = {}) {
   const { tab = null, replace = false } = opts;
   const hash = roleToHash(role, tab);
+  try {
+    window.dispatchEvent(new CustomEvent('symbaroum-before-route-change', {
+      detail: { role: currentRole, nextRole: role, hash }
+    }));
+  } catch {}
   if (replace) {
     history.replaceState(null, '', hash);
   } else {

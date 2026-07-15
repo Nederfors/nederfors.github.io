@@ -146,7 +146,7 @@
   }
   #view-root .entry-card.compact .entry-row-actions .control-buttons .entry-standard-action,
   #view-root .entry-card.compact .entry-row-actions .control-buttons .char-btn,
-  #view-root .entry-card.compact .entry-row-actions .control-buttons .db-btn {
+  #view-root .entry-card.compact .entry-row-actions .control-buttons .db-btn:not([data-clear-filters]) {
     width: var(--app-touch-target);
     min-width: var(--app-touch-target);
     height: var(--app-touch-target);

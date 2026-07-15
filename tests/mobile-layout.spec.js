@@ -241,26 +241,25 @@ for (const viewport of COARSE_TABLET_VIEWPORTS) {
     await loadRoute(page, '/#/index');
     await page.locator('details[data-cat="Förmåga"] > summary').click();
     const loadMore = page.locator('button[data-load-more-cat="Förmåga"]');
-    await expect(loadMore).toBeVisible();
+    await expect(loadMore).toHaveCount(0);
+    await expect.poll(() => (
+      page.locator('details[data-cat="Förmåga"] li.entry-card').count()
+    )).toBeGreaterThan(12);
     const indexTargets = await page.evaluate(() => {
       const root = document.querySelector('shared-toolbar')?.shadowRoot;
       const search = root?.getElementById('searchField');
-      const more = document.querySelector('button[data-load-more-cat="Förmåga"]');
       const measure = element => {
         const rect = element?.getBoundingClientRect() || null;
         return rect ? { width: rect.width, height: rect.height } : null;
       };
       return {
         pointerCoarse: window.matchMedia('(pointer: coarse)').matches,
-        search: measure(search),
-        loadMore: measure(more)
+        search: measure(search)
       };
     });
     expect(indexTargets.pointerCoarse).toBe(true);
     expect(indexTargets.search?.width).toBeGreaterThanOrEqual(44);
     expect(indexTargets.search?.height).toBeGreaterThanOrEqual(44);
-    expect(indexTargets.loadMore?.width).toBeGreaterThanOrEqual(44);
-    expect(indexTargets.loadMore?.height).toBeGreaterThanOrEqual(44);
   });
 }
 

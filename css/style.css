@@ -7,6 +7,25 @@
 @import url('./mobile.css');
 @import url('./motion.css');
 
+/* Hoppsan's reset action has a text label and must size to its content rather
+   than inherit the square icon-button dimensions used by entry-card actions. */
+#view-root .entry-card.compact.hoppsan-card
+  .entry-row-actions .control-buttons .db-btn[data-clear-filters] {
+  width: fit-content;
+  min-width: max-content;
+  height: auto;
+  padding: .55rem 1.1rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+  #view-root .entry-card.compact.hoppsan-card
+    .entry-row-actions .control-buttons .db-btn[data-clear-filters] {
+    min-height: var(--app-touch-target, 44px);
+    padding: .45rem .9rem;
+  }
+}
+
 /* Capability-based sizing must also cover touch tablets wider than the
    phone breakpoint. Keep this after the component imports so the compact
    Traits card rules cannot shrink the controls back below a touch target. */
@@ -16,6 +35,14 @@
   .index-load-more-card .db-btn {
     min-width: 44px;
     min-height: 44px;
+  }
+
+  /* The close button is part of the search chip, not a standalone control.
+     Keep it at the desktop size so the generic touch target rule imported
+     from components.css cannot stretch active search chips on phones. */
+  .db-chip.tag-search-chip .db-chip__close {
+    min-width: 18px;
+    min-height: 18px;
   }
 }
 
