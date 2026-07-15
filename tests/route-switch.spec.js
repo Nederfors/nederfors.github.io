@@ -119,6 +119,87 @@ test('trait controls apply each increment once after traits view initialization'
   await expect(trait.locator('.trait-label')).toHaveText('Diskret: 11');
 });
 
+test('rule override dialog cancels or continues and is remembered for the character', async ({ page }) => {
+  const metaState = {
+    current: 'trait-override-char',
+    characters: [
+      { id: 'trait-override-char', name: 'Trait Override Hero', folderId: 'fd-standard' }
+    ],
+    folders: [
+      { id: 'fd-standard', name: 'Standard', order: 0, system: true }
+    ],
+    activeFolder: 'ALL',
+    filterUnion: false,
+    compactEntries: true,
+    onlySelected: false,
+    recentSearches: [],
+    liveMode: false,
+    entrySort: 'alpha-asc'
+  };
+  const characterState = {
+    list: [],
+    inventory: [],
+    custom: [],
+    traits: {
+      Diskret: 15,
+      Kvick: 14,
+      Listig: 14,
+      Stark: 10,
+      Träffsäker: 10,
+      Vaksam: 10,
+      Viljestark: 10,
+      Övertygande: 10
+    },
+    notes: {},
+    money: { daler: 0, skilling: 0, 'örtegar': 0 }
+  };
+
+  await page.addInitScript(({ metaState, characterState }) => {
+    if (sessionStorage.getItem('__ruleOverrideSeeded')) return;
+    localStorage.clear();
+    localStorage.setItem('rpall-meta', JSON.stringify(metaState));
+    localStorage.setItem(`rpall-char-${metaState.current}`, JSON.stringify(characterState));
+    sessionStorage.setItem('__ruleOverrideSeeded', '1');
+  }, { metaState, characterState });
+
+  await page.goto('/#/traits');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+
+  const kvick = page.locator('.trait[data-key="Kvick"]');
+  await kvick.locator('.trait-btn[data-d="1"]').click();
+
+  const dialog = page.locator('#daub-dialog-modal');
+  const cancel = dialog.locator('[data-dialog-action="cancel"]');
+  const proceed = dialog.locator('[data-dialog-action="ok"]');
+  await expect(dialog).toBeVisible();
+  await expect(cancel).toHaveText('Avbryt');
+  await expect(proceed).toHaveText('Fortsätt');
+  const cancelBox = await cancel.boundingBox();
+  const proceedBox = await proceed.boundingBox();
+  expect(cancelBox?.x).toBeLessThan(proceedBox?.x ?? 0);
+
+  await cancel.click();
+  await expect(dialog).toBeHidden();
+  await expect(kvick.locator('.trait-label')).toHaveText('Kvick: 14');
+
+  await kvick.locator('.trait-btn[data-d="1"]').click();
+  await proceed.click();
+  await expect(dialog).toBeHidden();
+  await expect(kvick.locator('.trait-label')).toHaveText('Kvick: 15');
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-rule-override' }));
+  await expect.poll(() => page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    return window.storeHelper.getRuleOverrides(activeStore);
+  })).toContain('trait:multiple-base-values-15');
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  const listig = page.locator('.trait[data-key="Listig"]');
+  await listig.locator('.trait-btn[data-d="1"]').click();
+  await expect(listig.locator('.trait-label')).toHaveText('Listig: 15');
+  await expect(dialog).toBeHidden();
+});
+
 test('trait count opens index with only-selected and trait filters', async ({ page }) => {
   const metaState = {
     current: 'trait-filter-char',

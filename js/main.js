@@ -7986,8 +7986,13 @@ function applyXpSummary(summary, baseXp) {
   const freeXp = Number(summary?.freeXp ?? (totalXp - usedXp));
   if (dom.xpOut) {
     dom.xpOut.textContent = freeXp;
-    const xpContainer = dom.xpOut.closest('.exp-counter');
-    if (xpContainer) xpContainer.classList.toggle('under', freeXp < 0);
+    const xpContainer = dom.xpOut.closest('.overview-action');
+    if (xpContainer) {
+      if (xpContainer.dataset.context !== 'inventory') {
+        xpContainer.classList.toggle('under', freeXp < 0);
+        xpContainer.setAttribute('aria-label', `Öppna Översikt, ${freeXp} ERF`);
+      }
+    }
   }
   if (dom.xpIn) dom.xpIn.value = baseXp;
   if (dom.xpTotal) dom.xpTotal.textContent = totalXp;

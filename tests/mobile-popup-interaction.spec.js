@@ -16,6 +16,71 @@ async function waitForApp(page) {
   ));
 }
 
+async function seedInventoryPopupProfile(page) {
+  await page.addInitScript(() => {
+    const id = 'mobile-inventory-popup';
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem('rpall-meta', JSON.stringify({
+      current: id,
+      characters: [{ id, name: 'Popup Scroll', folderId: 'fd-standard' }],
+      folders: [{ id: 'fd-standard', name: 'Standard', order: 0, system: true }],
+      activeFolder: 'ALL',
+      filterUnion: false,
+      compactEntries: true,
+      onlySelected: false,
+      recentSearches: [],
+      liveMode: false,
+      entrySort: 'alpha-asc'
+    }));
+    localStorage.setItem(`rpall-char-${id}`, JSON.stringify({
+      list: [],
+      inventory: [],
+      custom: [],
+      traits: {},
+      notes: {},
+      money: { daler: 50, skilling: 0, 'örtegar': 0 }
+    }));
+  });
+}
+
+async function expectInventoryPopupEndReachable(page, tabId, actionSelector) {
+  const popup = page.locator('#inventoryItemsPopup');
+  const body = popup.locator('.popup-modal-body');
+  await expect(popup.locator(`.tools-tab[data-tab="${tabId}"]`)).toHaveAttribute('aria-selected', 'true');
+
+  const initial = await popup.evaluate((root, selector) => {
+    const scrollBody = root.querySelector('.popup-modal-body');
+    const swipeHost = root.querySelector('.inventory-hub-panels[data-swipe-tabs="1"]');
+    const action = root.querySelector(selector);
+    const bodyRect = scrollBody?.getBoundingClientRect();
+    const actionRect = action?.getBoundingClientRect();
+    return {
+      bodyScrollable: Boolean(scrollBody && scrollBody.scrollHeight > scrollBody.clientHeight + 1),
+      bodyTouchAction: scrollBody ? window.getComputedStyle(scrollBody).touchAction : '',
+      swipeHostShrinks: Boolean(
+        swipeHost && swipeHost.scrollHeight > swipeHost.clientHeight + 1
+      ),
+      actionStartsBelowBody: Boolean(
+        bodyRect && actionRect && actionRect.bottom > bodyRect.bottom + 1
+      )
+    };
+  }, actionSelector);
+
+  expect(initial.bodyScrollable, `${tabId} does not expose popup overflow`).toBe(true);
+  expect(initial.bodyTouchAction).toBe('pan-y');
+  expect(initial.swipeHostShrinks, `${tabId} swipe host clips its active panel`).toBe(false);
+  expect(initial.actionStartsBelowBody, `${tabId} fixture is not dense enough`).toBe(true);
+
+  await body.evaluate(element => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(popup.locator(actionSelector)).toBeInViewport();
+  await body.evaluate(element => {
+    element.scrollTop = 0;
+  });
+}
+
 async function openPopupFixture(page) {
   await page.evaluate(() => {
     document.getElementById('mobilePopupFixture')?.remove();
@@ -263,6 +328,72 @@ test('phone popups use one fullscreen visual-viewport shell', async ({ page }, t
   });
   expect(inheritedViewport.rootHeight).toBeTruthy();
   expect(inheritedViewport.shadowPopupHeight).toBe(inheritedViewport.rootHeight);
+});
+
+test('dense inventory swipe tabs scroll to every quantity and vehicle action', async ({ page }, testInfo) => {
+  test.skip(!MOBILE_PROJECTS.has(testInfo.project.name), 'Mobile browser projects own the inventory popup touch contract.');
+
+  await seedInventoryPopupProfile(page);
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.goto('/#/inventory');
+  await page.waitForFunction(() => (
+    Boolean(window.__symbaroumBootCompleted)
+    && Boolean(window.symbaroumPersistence?.ready)
+    && Array.isArray(window.DB)
+    && window.DB.length > 36
+    && Boolean(document.querySelector('shared-toolbar')?.shadowRoot)
+  ));
+  await page.evaluate(() => {
+    const vehicle = window.DB.find(entry => entry?.taggar?.typ?.includes('Färdmedel'));
+    const items = window.DB
+      .filter(entry => window.isInv?.(entry) && !entry?.taggar?.typ?.includes('Färdmedel'))
+      .slice(0, 36);
+    if (!vehicle || items.length < 36) throw new Error('Inventory popup fixture data is incomplete.');
+
+    const rows = items.map((entry, index) => ({
+      id: entry.id,
+      name: entry.namn,
+      qty: (index % 3) + 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    }));
+    window.invUtil.saveInventory([
+      ...rows.slice(12),
+      {
+        id: vehicle.id,
+        name: vehicle.namn,
+        qty: 1,
+        gratis: 0,
+        gratisKval: [],
+        removedKval: [],
+        contains: rows.slice(0, 12)
+      }
+    ]);
+    window.invUtil.renderInventory();
+  });
+
+  await page.locator('#overviewToggle').click();
+  await expect(page.locator('#invDashPanel')).toBeVisible();
+  await page.locator('#invDashPanel button[data-dash-trigger="manageItemsBtn"]').click();
+  const popup = page.locator('#inventoryItemsPopup');
+  await expect(popup).toBeVisible();
+
+  await popup.locator('.tools-tab[data-tab="bulk-qty"]').click();
+  await expect.poll(() => popup.locator('#qtyItemList input[data-path]').count()).toBeGreaterThan(30);
+  await expectInventoryPopupEndReachable(page, 'bulk-qty', '#qtyPopup .confirm-row');
+
+  await popup.locator('.tools-tab[data-tab="vehicle-load"]').click();
+  await expect.poll(() => popup.locator('#vehicleItemList input[data-path]').count()).toBeGreaterThan(20);
+  await expectInventoryPopupEndReachable(page, 'vehicle-load', '#vehiclePopup .confirm-row');
+
+  await popup.locator('.tools-tab[data-tab="vehicle-unload"]').click();
+  await expect.poll(() => popup.locator('#vehicleRemoveItemList input[data-path]').count()).toBeGreaterThan(10);
+  await expectInventoryPopupEndReachable(page, 'vehicle-unload', '#vehicleRemovePopup .confirm-row');
+
+  await popup.locator('#vehicleRemoveCancel').scrollIntoViewIfNeeded();
+  await popup.locator('#vehicleRemoveCancel').click();
+  await expect(popup).toBeHidden();
 });
 
 test('legacy master popup normalizes to a compact single-scroller phone shell without changing tablet sizing', async ({ page }, testInfo) => {

@@ -444,11 +444,24 @@
 
     const label = String(payload.label || payload.value || 'det valet').trim();
     const message = String(rule.duplicate_message || `Samma val finns redan (${label}). Lägga till ändå?`);
+    const ruleToken = normalizeText(
+      rule.rule_id
+      || rule.regel_id
+      || rule.id
+      || payload.entry?.id
+      || payload.entry?.namn
+      || payload.entry?.name
+      || 'choice'
+    );
+    const fieldToken = normalizeText(rule.field || 'value');
+    const overrideKeys = [`choice:${ruleToken}:${fieldToken}:duplicate`];
     let approved = false;
     if (typeof payload.confirmFn === 'function') {
       approved = await payload.confirmFn(message);
+    } else if (payload.store && typeof window.storeHelper?.confirmRuleOverride === 'function') {
+      approved = await window.storeHelper.confirmRuleOverride(payload.store, overrideKeys, message);
     } else if (typeof window.confirmPopup === 'function') {
-      approved = await window.confirmPopup(message);
+      approved = await window.confirmPopup(message, { cancelText: 'Avbryt', okText: 'Fortsätt' });
     } else {
       approved = window.confirm(message);
     }

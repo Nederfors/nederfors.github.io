@@ -34,6 +34,30 @@ const getShadowStylesheetHref = () => (
 );
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+const normalizeToolbarMoney = (money = {}) => ({
+  daler: Math.max(0, Math.floor(Number(money.daler ?? money.d) || 0)),
+  skilling: Math.max(0, Math.floor(Number(money.skilling ?? money.s) || 0)),
+  ortegar: Math.max(0, Math.floor(Number(money['örtegar'] ?? money.ortegar ?? money.o) || 0))
+});
+const formatToolbarMoney = money => {
+  const normalized = normalizeToolbarMoney(money);
+  const parts = [];
+  if (normalized.daler) parts.push(`${normalized.daler}D`);
+  if (normalized.skilling) parts.push(`${normalized.skilling}S`);
+  if (normalized.ortegar) parts.push(`${normalized.ortegar}Ö`);
+  return parts.join(' ') || '0';
+};
+const describeToolbarMoney = money => {
+  const normalized = normalizeToolbarMoney(money);
+  if (!normalized.daler && !normalized.skilling && !normalized.ortegar) return '0';
+  const parts = [];
+  if (normalized.daler) parts.push(`${normalized.daler} daler`);
+  if (normalized.skilling) parts.push(`${normalized.skilling} skilling`);
+  if (normalized.ortegar) {
+    parts.push(`${normalized.ortegar} ${normalized.ortegar === 1 ? 'örteg' : 'örtegar'}`);
+  }
+  return parts.join(', ');
+};
 const LEVEL_OPTION_SPECS = Object.freeze([
   { value: '', label: 'Ingen', hint: 'Stäng av bonusen från partyt.' },
   { value: 'Novis', label: 'Novis', hint: 'Grundnivå för hantverket.' },
@@ -613,7 +637,7 @@ class SharedToolbar extends HTMLElement {
 
     window.openDialog = (msg, opts) => this.openDialog(msg, opts);
     window.alertPopup = msg => this.openDialog(msg);
-    window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
+    window.confirmPopup = (msg, opts = {}) => this.openDialog(msg, { ...(opts || {}), cancel: true });
     window.toast = msg => {
       if (typeof DAUB !== 'undefined' && DAUB.toast) {
         DAUB.toast({ message: String(msg), duration: 3000 });
@@ -1311,25 +1335,24 @@ class SharedToolbar extends HTMLElement {
         .button-row .nav-link.active:hover {
           opacity: 1;
         }
-        .toolbar .exp-counter {
-          display: inline-flex;
+        .toolbar .overview-action {
+          display: grid;
+          grid-template-columns: auto minmax(0, auto) auto;
           align-items: center;
           justify-content: center;
-          gap: .42rem;
+          gap: .4rem;
           height: var(--toolbar-control-height);
           background:
             linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .01)),
             rgba(49, 43, 39, .72);
           color: #fff;
-          padding: 0 .95rem;
+          padding: .25rem .62rem;
           border: 1.5px solid rgba(194, 163, 106, .24);
           border-radius: .6rem;
           box-shadow:
             0 4px 10px rgba(0, 0, 0, .22),
             inset 0 1px 0 rgba(255, 255, 255, .08);
           font-weight: 700;
-          font-size: .95rem;
-          letter-spacing: .02em;
           text-shadow:
             0 0 1px rgba(0, 0, 0, .9),
             0 1px 0 rgba(0, 0, 0, .45);
@@ -1338,7 +1361,7 @@ class SharedToolbar extends HTMLElement {
           cursor: pointer;
           transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
         }
-        .toolbar .exp-counter:hover {
+        .toolbar .overview-action:hover {
           border-color: rgba(194, 163, 106, .4);
           box-shadow:
             0 6px 13px rgba(0, 0, 0, .26),
@@ -1347,21 +1370,62 @@ class SharedToolbar extends HTMLElement {
             linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .02)),
             rgba(56, 49, 44, .8);
         }
-        .toolbar .exp-counter:focus-visible {
+        .toolbar .overview-action:focus-visible {
           outline: 2px solid rgba(194, 163, 106, .6);
           outline-offset: 2px;
         }
-        .toolbar .exp-counter:active {
+        .toolbar .overview-action:active {
           transform: translateY(1px) scale(.992);
         }
-        .toolbar .exp-counter span {
+        .toolbar .overview-action-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 1.28rem;
+          height: 1.28rem;
+          opacity: .92;
+        }
+        .toolbar .overview-action-icon .btn-icon {
+          width: 1.18rem;
+          height: 1.18rem;
+        }
+        .toolbar .overview-action-copy {
+          display: flex;
+          min-width: 0;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: center;
+          gap: .02rem;
+          line-height: 1;
+        }
+        .toolbar .overview-action-label {
+          color: rgba(255, 255, 255, .68);
+          font-size: .62rem;
+          font-weight: 700;
+          letter-spacing: .035em;
+        }
+        .toolbar .overview-action-value {
           min-width: 1.8ch;
           color: rgba(255, 255, 255, .95);
-          text-align: center;
+          font-size: clamp(.76rem, 2.6vw, .88rem);
+          font-weight: 800;
+          line-height: 1.1;
+          text-align: left;
           text-shadow:
             0 0 1px rgba(0, 0, 0, .9),
             0 1px 0 rgba(0, 0, 0, .45);
           font-variant-numeric: tabular-nums;
+        }
+        .toolbar .overview-action-chevron {
+          width: .42rem;
+          height: .42rem;
+          border-top: 1.5px solid currentColor;
+          border-right: 1.5px solid currentColor;
+          opacity: .62;
+          transform: rotate(45deg);
+        }
+        .toolbar .overview-action [hidden] {
+          display: none !important;
         }
         #entrySortPopup .popup-inner {
           align-items: stretch;
@@ -1501,7 +1565,18 @@ class SharedToolbar extends HTMLElement {
             <input id="searchField" class="db-input" type="search" placeholder="T.ex 'Pajkastare'" aria-label="Sök" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest">
             <div id="searchSuggest" class="suggestions" role="listbox" aria-label="Sökförslag" hidden></div>
           </div>
-          <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
+          <button type="button" class="overview-action" id="overviewToggle" data-context="summary"
+                  aria-haspopup="dialog" aria-expanded="false" aria-controls="summarySlidePanel"
+                  aria-label="Öppna Översikt, 0 ERF" title="Öppna Översikt">
+            <span class="overview-action-icon overview-action-icon--summary" aria-hidden="true">${icon('overview', { alt: '', width: 20, height: 20 })}</span>
+            <span class="overview-action-icon overview-action-icon--inventory" aria-hidden="true" hidden>${icon('money-bag', { alt: '', width: 20, height: 20 })}</span>
+            <span class="overview-action-copy">
+              <span class="overview-action-label">Översikt</span>
+              <span class="overview-action-value overview-action-value--xp"><span id="xpOut">0</span> ERF</span>
+              <span class="overview-action-value overview-action-value--money" id="moneyOut" hidden>0</span>
+            </span>
+            <span class="overview-action-chevron" aria-hidden="true"></span>
+          </button>
         </div>
         <div class="button-row toolbar-nav-items" role="list" aria-label="Vyer och filter">
           <a id="traitsLink" class="db-bottom-nav__item nav-link" title="Egenskaper" href="#/traits">
@@ -2280,7 +2355,7 @@ class SharedToolbar extends HTMLElement {
   async openSummarySlide() {
     const panel = this.panels.summarySlidePanel;
     const inner = this.shadowRoot.getElementById('summarySlideInner');
-    const toggleBtn = this.shadowRoot.getElementById('xpToggle');
+    const toggleBtn = this.shadowRoot.getElementById('overviewToggle');
     if (!panel) return;
 
     if (panel.classList.contains('open')) {
@@ -2357,8 +2432,12 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'filterToggle') return this.toggle('filterPanel', btn);
     if (btn.id === 'infoToggle') return this.toggle('infoPanel', btn);
     if (btn.id === 'invDashToggle') return this.toggle('invDashPanel', btn);
-    if (btn.id === 'xpToggle') {
-      void this.openSummarySlide();
+    if (btn.id === 'overviewToggle') {
+      if (document.body.dataset.role === 'inventory') {
+        this.toggle('invDashPanel', btn);
+      } else {
+        void this.openSummarySlide();
+      }
       return;
     }
     /* stäng */
@@ -2604,7 +2683,7 @@ class SharedToolbar extends HTMLElement {
       });
     };
 
-    const toggleButtons = ['filterToggle', 'infoToggle', 'xpToggle']
+    const toggleButtons = ['filterToggle', 'infoToggle', 'overviewToggle']
       .map(id => this.shadowRoot.getElementById(id))
       .filter(Boolean);
     const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
@@ -2644,6 +2723,7 @@ class SharedToolbar extends HTMLElement {
     if (isOpen) {
       panel.removeAttribute('inert');
       panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
+      panel._restoreFocus?.setAttribute?.('aria-expanded', 'true');
       window.registerOverlayCleanup?.(panel, () => this.setPanelState(panel, false));
       surface.scrollTop = 0;
       requestAnimationFrame(() => {
@@ -2659,6 +2739,9 @@ class SharedToolbar extends HTMLElement {
     window.registerOverlayCleanup?.(panel, null);
     const restoreFocus = panel._restoreFocus;
     panel._restoreFocus = null;
+    this.shadowRoot.querySelectorAll(`[aria-controls="${panel.id}"]`).forEach(control => {
+      control.setAttribute('aria-expanded', 'false');
+    });
     if (wasOpen && restoreFocus?.isConnected) {
       requestAnimationFrame(() => {
         try { restoreFocus.focus?.({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
@@ -2789,6 +2872,9 @@ class SharedToolbar extends HTMLElement {
 
       // Build footer buttons
       let footerHtml = '';
+      if (cancel) {
+        footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="cancel">${cancelText}</button>`;
+      }
       if (extraText) {
         footerHtml += `<button class="db-btn db-btn--secondary" data-dialog-action="extra">${extraText}</button>`;
       }
@@ -2868,6 +2954,7 @@ class SharedToolbar extends HTMLElement {
         if (!btn) return;
         const action = btn.dataset.dialogAction;
         if (action === 'ok') finish(true);
+        else if (action === 'cancel') finish(false);
         else if (action === 'extra') finish('extra');
       };
       footerEl.addEventListener('click', onClick);
@@ -2968,10 +3055,49 @@ class SharedToolbar extends HTMLElement {
     if (searchCard) searchCard.hidden = role === 'inventory';
     if (spendCard) spendCard.hidden = role !== 'inventory';
 
-    // Close inventory panels when leaving inventory view
-    if (role !== 'inventory') {
+    if (role === 'inventory') {
+      this.close('summarySlidePanel');
+    } else {
       this.close('invDashPanel');
     }
+    this.syncOverviewAction();
+  }
+
+  syncOverviewAction() {
+    const isInventory = document.body.dataset.role === 'inventory';
+    const toggle = this.shadowRoot.getElementById('overviewToggle');
+    const summaryIcon = this.shadowRoot.querySelector('.overview-action-icon--summary');
+    const inventoryIcon = this.shadowRoot.querySelector('.overview-action-icon--inventory');
+    const xpValue = this.shadowRoot.querySelector('.overview-action-value--xp');
+    const moneyValue = this.shadowRoot.querySelector('.overview-action-value--money');
+    if (!toggle) return;
+
+    toggle.dataset.context = isInventory ? 'inventory' : 'summary';
+    toggle.setAttribute('aria-controls', isInventory ? 'invDashPanel' : 'summarySlidePanel');
+    const controlledPanel = isInventory ? this.panels?.invDashPanel : this.panels?.summarySlidePanel;
+    const isExpanded = Boolean(controlledPanel?.classList.contains('open'));
+    toggle.setAttribute('aria-expanded', String(isExpanded));
+    toggle.title = isInventory ? 'Öppna Inventarium' : 'Öppna Översikt';
+    if (summaryIcon) summaryIcon.hidden = isInventory;
+    if (inventoryIcon) inventoryIcon.hidden = !isInventory;
+    if (xpValue) xpValue.hidden = isInventory;
+    if (moneyValue) moneyValue.hidden = !isInventory;
+
+    if (isInventory) {
+      toggle.classList.remove('under');
+      toggle.setAttribute('aria-label', `Öppna Inventarium, saldo ${describeToolbarMoney(this._toolbarMoney)}`);
+    } else {
+      const xp = this.shadowRoot.getElementById('xpOut')?.textContent?.trim() || '0';
+      toggle.classList.toggle('under', Number(xp) < 0);
+      toggle.setAttribute('aria-label', `Öppna Översikt, ${xp} ERF`);
+    }
+  }
+
+  updateMoneyCounter(money) {
+    this._toolbarMoney = normalizeToolbarMoney(money);
+    const out = this.shadowRoot.getElementById('moneyOut');
+    if (out) out.textContent = formatToolbarMoney(this._toolbarMoney);
+    if (document.body.dataset.role === 'inventory') this.syncOverviewAction();
   }
 
   updateInvDash(html) {

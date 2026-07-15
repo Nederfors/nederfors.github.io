@@ -1640,6 +1640,8 @@
 
     const duplicate = await picker.enforceDuplicatePolicy({
       rule,
+      entry,
+      store,
       value: picked.value,
       usedValues,
       label: picked.value
@@ -6396,6 +6398,7 @@
       if (toolbar) {
         if (typeof toolbar.updateInvDash === 'function') toolbar.updateInvDash(dashPanelHtml);
         if (typeof toolbar.updateInvSpend === 'function') toolbar.updateInvSpend(spendPanelHtml);
+        if (typeof toolbar.updateMoneyCounter === 'function') toolbar.updateMoneyCounter(cash);
       }
 
       if (dom.invFormal) {
@@ -6500,20 +6503,6 @@
 
     const listEl = dom.invList;
     const searchEl = dom.sIn || getEl('searchField');
-    const manageItemsBtn = getEl('manageItemsBtn');
-    const manageEconomyBtn = getEl('manageEconomyBtn');
-    if (manageItemsBtn && manageItemsBtn.dataset.invBound !== '1') {
-      manageItemsBtn.dataset.invBound = '1';
-      manageItemsBtn.addEventListener('click', () => {
-        openInventoryItemsHub('custom-item');
-      });
-    }
-    if (manageEconomyBtn && manageEconomyBtn.dataset.invBound !== '1') {
-      manageEconomyBtn.dataset.invBound = '1';
-      manageEconomyBtn.addEventListener('click', () => {
-        openInventoryEconomyHub('money');
-      });
-    }
     const bindFilterSelect = (el, key) => {
       if (!el || el.dataset.invBound) return;
       el.dataset.invBound = '1';
@@ -7121,7 +7110,12 @@
             const lines = messages.length ? messages : ['Spärrad av regel'];
             const label = `“${String(entry?.namn || row?.name || 'föremålet').trim()}”`;
             const text = `Följande regler blockerar valet:\n- ${lines.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
-            const forceOverride = !!(await confirmPopup(text));
+            const overrideKeys = typeof window.rulesHelper?.getEntryStopOverrideKeys === 'function'
+              ? window.rulesHelper.getEntryStopOverrideKeys(entry, stopResult)
+              : blockedStops.map(stop => `quality:${String(stop?.qualityName || '').trim()}`).filter(Boolean);
+            const forceOverride = typeof window.storeHelper?.confirmRuleOverride === 'function'
+              ? await window.storeHelper.confirmRuleOverride(store, overrideKeys, text)
+              : !!(await confirmPopup(text, { cancelText: 'Avbryt', okText: 'Fortsätt' }));
             if (forceOverride) {
               row.manualQualityOverride = Array.isArray(row.manualQualityOverride) ? row.manualQualityOverride : [];
               blockedStops.forEach(({ qualityName: qn }) => {
@@ -7312,16 +7306,6 @@
             runQuickSpend();
           }
         };
-      });
-    }
-
-    // --- Floating button ---
-    const floatBtn = getEl('invDashFloatBtn');
-    if (floatBtn && floatBtn.dataset.dashBound !== '1') {
-      floatBtn.dataset.dashBound = '1';
-      floatBtn.addEventListener('click', () => {
-        const toolbar = document.querySelector('shared-toolbar');
-        if (toolbar) toolbar.toggle('invDashPanel');
       });
     }
   }

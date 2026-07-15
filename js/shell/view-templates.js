@@ -102,17 +102,6 @@ export const VIEW_TEMPLATES = Object.freeze({
   <div class="db-card panel inventory-panel">
     <div class="db-card__header panel-header">
       <h2 id="charName" class="db-card__title" style="margin:0;"></h2>
-      <div class="header-actions">
-        <button id="manageItemsBtn" class="db-btn" type="button" title="Hantera föremål">
-          Hantera föremål
-        </button>
-        <button id="manageEconomyBtn" class="db-btn" type="button" title="Hantera ekonomi">
-          Hantera ekonomi
-        </button>
-        <button id="invDashFloatBtn" class="db-btn inv-dash-float-btn" type="button" title="Visa inventarieöversikt" aria-label="Visa inventarieöversikt">
-          <svg class="inv-dash-float-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
-        </button>
-      </div>
     </div>
 
     <div class="db-card__body inventory-content">

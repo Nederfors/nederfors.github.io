@@ -168,6 +168,42 @@ function oldWeaponIdValues(value) {
 }
 
 describe('legacy character import map', () => {
+  it('remembers rule overrides per character and labels the confirmation actions', async () => {
+    const sandbox = createSandbox();
+    const storeHelper = sandbox.window.storeHelper;
+    const prompts = [];
+    sandbox.confirmPopup = async (message, options) => {
+      prompts.push({ message, options });
+      return true;
+    };
+    const store = {
+      current: 'char-a',
+      characters: [
+        { id: 'char-a', name: 'A' },
+        { id: 'char-b', name: 'B' }
+      ],
+      folders: [],
+      data: {
+        'char-a': {},
+        'char-b': {}
+      }
+    };
+
+    await expect(storeHelper.confirmRuleOverride(store, ['rule:test'], 'Bryt regel?')).resolves.toBe(true);
+    await expect(storeHelper.confirmRuleOverride(store, ['rule:test'], 'Bryt regel igen?')).resolves.toBe(true);
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0].options).toMatchObject({
+      cancelText: 'Avbryt',
+      okText: 'Fortsätt'
+    });
+    expect(storeHelper.getRuleOverrides(store)).toEqual(['rule:test']);
+
+    store.current = 'char-b';
+    expect(storeHelper.hasRuleOverrides(store, ['rule:test'])).toBe(false);
+    await expect(storeHelper.confirmRuleOverride(store, ['rule:test'], 'Bryt regel för B?')).resolves.toBe(true);
+    expect(prompts).toHaveLength(2);
+  });
+
   it('maps formerly ambiguous elixir names to the lowest tier deterministically', () => {
     const sandbox = createSandbox();
     const storeHelper = sandbox.window.storeHelper;

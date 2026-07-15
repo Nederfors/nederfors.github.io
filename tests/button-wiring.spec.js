@@ -115,7 +115,7 @@ async function collectUnhandledVisibleButtons(page) {
   return page.evaluate(() => {
     const delegatedIds = new Set([
       'catToggle',
-      'xpToggle',
+      'overviewToggle',
       'filterToggle',
       'collapseAllFilters',
       'newCharBtn',
@@ -127,9 +127,6 @@ async function collectUnhandledVisibleButtons(page) {
       'infoToggle',
       'clearNonInv',
       'resetTraits',
-      'manageItemsBtn',
-      'manageEconomyBtn',
-      'invDashFloatBtn',
       'editBtn',
       'clearBtn',
       'conflictClose'

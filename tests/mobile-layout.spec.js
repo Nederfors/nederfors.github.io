@@ -77,7 +77,7 @@ function measureShell() {
   const traitsPanels = [...document.querySelectorAll('.traits-tab-panel')];
   const controls = [
     ...document.querySelectorAll('.traits-tab, #xpMinus, #xpInput, #xpPlus, .trait-btn, .trait-count, .summary-chip-more'),
-    ...(toolbarRoot ? toolbarRoot.querySelectorAll('.db-bottom-nav__item, #searchField, #xpToggle') : [])
+    ...(toolbarRoot ? toolbarRoot.querySelectorAll('.db-bottom-nav__item, #searchField, #overviewToggle') : [])
   ];
   const measureTarget = element => {
     const box = element?.getBoundingClientRect() || null;
@@ -264,82 +264,82 @@ for (const viewport of COARSE_TABLET_VIEWPORTS) {
   });
 }
 
-for (const width of [320, 340, 360, 390]) {
-  test(`${width}px Inventory keeps the desktop action row without clipping or overlap`, async ({ page }) => {
+for (const width of [320, 390, 640]) {
+  test(`${width}px Inventory uses the toolbar overview and a full-screen drawer`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await loadRoute(page, '/#/inventory');
 
-    const metrics = await page.evaluate(() => {
+    const toolbar = page.locator('shared-toolbar');
+    const overview = toolbar.locator('#overviewToggle');
+    await expect(overview).toHaveAttribute('data-context', 'inventory');
+    await expect(overview).toHaveAttribute('aria-controls', 'invDashPanel');
+    await expect(overview.locator('.overview-action-label')).toHaveText('Översikt');
+    await expect(page.locator('#manageItemsBtn')).toHaveCount(0);
+    await expect(page.locator('#manageEconomyBtn')).toHaveCount(0);
+    await expect(page.locator('#invDashFloatBtn')).toHaveCount(0);
+
+    const shellMetrics = await page.evaluate(() => {
       const title = document.querySelector('.inventory-panel .panel-header > .db-card__title');
       const actions = document.querySelector('.inventory-panel .panel-header .header-actions');
-      const fab = document.querySelector('#invDashFloatBtn');
-      const titleRect = title?.getBoundingClientRect() || null;
-      const actionsRect = actions?.getBoundingClientRect() || null;
-      const fabRect = fab?.getBoundingClientRect() || null;
-      const intersects = (left, right) => Boolean(left && right
-        && left.left < right.right
-        && left.right > right.left
-        && left.top < right.bottom
-        && left.bottom > right.top);
-      const overlaps = titleRect && actionsRect
-        ? intersects(titleRect, actionsRect)
-        : false;
-      const actionControls = [...(actions?.querySelectorAll(':scope > button, :scope > .db-btn') || [])];
-      const controls = actionControls.map(control => {
-        const rect = control.getBoundingClientRect();
-        return {
-          id: control.id,
-          left: rect.left,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-          textClipped: control.scrollWidth > control.clientWidth + 1
-        };
-      });
-      const controlOverlaps = controls.some((control, index) => (
-        controls.slice(index + 1).some(other => intersects(control, other))
-      ));
+      const toolbarRoot = document.querySelector('shared-toolbar')?.shadowRoot;
+      const overviewButton = toolbarRoot?.getElementById('overviewToggle');
+      const overviewRect = overviewButton?.getBoundingClientRect() || null;
       return {
-        viewportWidth: window.innerWidth,
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
-        actionsLeft: actionsRect?.left ?? -1,
-        actionsRight: actionsRect?.right ?? -1,
-        actionsDisplay: actions ? window.getComputedStyle(actions).display : '',
-        fabPosition: fab ? window.getComputedStyle(fab).position : '',
-        overlaps,
-        controlOverlaps,
-        fabTitleOverlap: intersects(fabRect, titleRect),
-        fabLeft: fabRect?.left ?? -1,
-        fabRight: fabRect?.right ?? -1,
-        controls
+        hasTitle: Boolean(title),
+        hasHeaderActions: Boolean(actions),
+        overviewWidth: overviewRect?.width || 0,
+        overviewHeight: overviewRect?.height || 0
       };
     });
 
-    expect(metrics.scrollWidth).toBe(metrics.clientWidth);
-    expect(metrics.actionsLeft).toBeGreaterThanOrEqual(0);
-    expect(metrics.actionsRight).toBeLessThanOrEqual(metrics.viewportWidth + 0.5);
-    expect(metrics.actionsDisplay).toBe('flex');
-    expect(metrics.fabPosition).toBe('fixed');
-    expect(metrics.overlaps).toBe(false);
-    expect(metrics.controlOverlaps).toBe(false);
-    expect(metrics.fabTitleOverlap).toBe(false);
-    expect(metrics.fabLeft).toBeGreaterThanOrEqual(0);
-    expect(metrics.fabRight).toBeLessThanOrEqual(metrics.viewportWidth + 0.5);
-    expect(metrics.controls.map(control => control.id)).toEqual([
-      'manageItemsBtn',
-      'manageEconomyBtn',
-      'invDashFloatBtn'
-    ]);
-    expect(metrics.controls.every(control => (
-      control.left >= 0
-      && control.right <= metrics.viewportWidth + 0.5
-      && control.width >= 44
-      && control.height >= 44
-      && !control.textClipped
-    ))).toBe(true);
+    expect(shellMetrics.scrollWidth).toBe(shellMetrics.clientWidth);
+    expect(shellMetrics.hasTitle).toBe(true);
+    expect(shellMetrics.hasHeaderActions).toBe(false);
+    expect(shellMetrics.overviewWidth).toBeGreaterThanOrEqual(44);
+    expect(shellMetrics.overviewHeight).toBeGreaterThanOrEqual(44);
+
+    await overview.click();
+    const drawer = toolbar.locator('#invDashPanel');
+    await expect(drawer).toBeVisible();
+    await expect(overview).toHaveAttribute('aria-expanded', 'true');
+    await expect.poll(async () => drawer.locator('.db-drawer__panel').evaluate(panel => (
+      Math.abs(panel.getBoundingClientRect().left)
+    ))).toBeLessThan(0.5);
+
+    const drawerMetrics = await drawer.evaluate(root => {
+      const panel = root.querySelector('.db-drawer__panel');
+      const rootRect = root.getBoundingClientRect();
+      const panelRect = panel?.getBoundingClientRect() || null;
+      const panelStyle = panel ? window.getComputedStyle(panel) : null;
+      return {
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        root: { left: rootRect.left, top: rootRect.top, width: rootRect.width, height: rootRect.height },
+        panel: panelRect ? { left: panelRect.left, top: panelRect.top, width: panelRect.width, height: panelRect.height } : null,
+        overflowY: panelStyle?.overflowY || '',
+        paddingTop: Number.parseFloat(panelStyle?.paddingTop || '0'),
+        paddingBottom: Number.parseFloat(panelStyle?.paddingBottom || '0')
+      };
+    });
+
+    expect(drawerMetrics.root.left).toBeCloseTo(0, 1);
+    expect(drawerMetrics.root.top).toBeCloseTo(0, 1);
+    expect(drawerMetrics.root.width).toBeCloseTo(drawerMetrics.viewportWidth, 1);
+    expect(drawerMetrics.root.height).toBeCloseTo(drawerMetrics.viewportHeight, 1);
+    expect(drawerMetrics.panel?.left).toBeCloseTo(0, 1);
+    expect(drawerMetrics.panel?.top).toBeCloseTo(0, 1);
+    expect(drawerMetrics.panel?.width).toBeCloseTo(drawerMetrics.viewportWidth, 1);
+    expect(drawerMetrics.panel?.height).toBeCloseTo(drawerMetrics.viewportHeight, 1);
+    expect(['auto', 'scroll']).toContain(drawerMetrics.overflowY);
+    expect(drawerMetrics.paddingTop).toBeGreaterThanOrEqual(16);
+    expect(drawerMetrics.paddingBottom).toBeGreaterThanOrEqual(16);
+
+    await drawer.locator('button[data-close="invDashPanel"]').click();
+    await expect(drawer).toBeHidden();
+    await expect(overview).toHaveAttribute('aria-expanded', 'false');
+    await expect(overview).toBeFocused();
   });
 }
 
@@ -351,41 +351,76 @@ test('360px index cards and the functions drawer retain touch targets and access
   await expect(raser).toHaveCount(1);
   await raser.click();
   await page.waitForFunction(() => Boolean(document.querySelector('.entry-card.compact .entry-standard-action')));
+  await page.waitForFunction(() => {
+    const visibleTitles = [...document.querySelectorAll('.entry-card.compact .entry-title-main')]
+      .filter((title) => {
+        const box = title.getBoundingClientRect();
+        return box.bottom >= 0 && box.top <= window.innerHeight;
+      });
+    return visibleTitles.length > 0
+      && visibleTitles.every(title => title.dataset.fitReady === 'true');
+  });
 
   const cardMetrics = await page.evaluate(() => {
     const card = document.querySelector('.entry-card.compact');
     const summary = card?.querySelector('.entry-card-summary');
     const header = summary?.querySelector('.entry-row-header');
+    const headerMain = summary?.querySelector('.entry-header-main');
+    const xp = summary?.querySelector('.entry-header-xp');
+    const info = summary?.querySelector('.entry-header-actions .info-btn');
     const actions = summary?.querySelector('.entry-row-actions');
-    const headerRect = header?.getBoundingClientRect() || null;
+    const headerRowRect = header?.getBoundingClientRect() || null;
+    const headerRect = headerMain?.getBoundingClientRect() || null;
+    const xpRect = xp?.getBoundingClientRect() || null;
+    const infoRect = info?.getBoundingClientRect() || null;
     const actionsRect = actions?.getBoundingClientRect() || null;
     const controls = card
       ? [...card.querySelectorAll('.entry-collapse-btn, .info-btn, .entry-standard-action, .add-btn')]
       : [];
     const titles = card
       ? [...document.querySelectorAll('.entry-card.compact .entry-title-main')]
+        .filter((element) => {
+          const box = element.getBoundingClientRect();
+          return box.bottom >= 0 && box.top <= window.innerHeight;
+        })
       : [];
     return {
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
       summaryDisplay: summary ? window.getComputedStyle(summary).display : '',
+      headerDisplay: header ? window.getComputedStyle(header).display : '',
       rowOrder: [...(summary?.children || [])].map(element => (
         element.classList.contains('entry-row-header')
           ? 'header'
           : (element.classList.contains('entry-row-actions') ? 'actions' : 'other')
       )),
       actionsFollowHeader: Boolean(
-        headerRect && actionsRect && actionsRect.top >= headerRect.bottom - 1
+        headerRowRect && actionsRect && actionsRect.top >= headerRowRect.bottom - 1
       ),
+      headerControlsStayOnRow: Boolean(
+        headerRect && xpRect && infoRect
+        && Math.abs((headerRect.top + headerRect.bottom) / 2 - (xpRect.top + xpRect.bottom) / 2) <= 1
+        && Math.abs((headerRect.top + headerRect.bottom) / 2 - (infoRect.top + infoRect.bottom) / 2) <= 1
+      ),
+      titleClearsControls: Boolean(headerRect && xpRect && headerRect.right <= xpRect.left + 1),
+      infoSize: infoRect ? { width: infoRect.width, height: infoRect.height } : null,
       controls: controls.map(element => {
         const box = element.getBoundingClientRect();
-        return { width: box.width, height: box.height };
+        return {
+          isInfo: element.classList.contains('info-btn'),
+          width: box.width,
+          height: box.height
+        };
       }),
       titles: titles.map(element => ({
+        text: element.textContent.trim(),
         clientWidth: element.clientWidth,
         clientHeight: element.clientHeight,
         scrollWidth: element.scrollWidth,
         scrollHeight: element.scrollHeight,
+        fitReady: element.dataset.fitReady,
+        fitScale: Number.parseFloat(element.dataset.fitScale || '1'),
+        fontSize: Number.parseFloat(window.getComputedStyle(element).fontSize),
         whiteSpace: window.getComputedStyle(element).whiteSpace,
         overflow: window.getComputedStyle(element).overflow,
         overflowWrap: window.getComputedStyle(element).overflowWrap,
@@ -395,20 +430,65 @@ test('360px index cards and the functions drawer retain touch targets and access
   });
   expect(cardMetrics.scrollWidth).toBe(cardMetrics.clientWidth);
   expect(cardMetrics.summaryDisplay).toBe('flex');
+  expect(cardMetrics.headerDisplay).toBe('grid');
   expect(cardMetrics.rowOrder).toEqual(['header', 'actions']);
   expect(cardMetrics.actionsFollowHeader).toBe(true);
+  expect(cardMetrics.headerControlsStayOnRow).toBe(true);
+  expect(cardMetrics.titleClearsControls).toBe(true);
+  expect(cardMetrics.infoSize).toEqual({ width: 32, height: 32 });
   expect(cardMetrics.controls.length).toBeGreaterThan(0);
-  expect(cardMetrics.controls.every(control => control.width >= 44 && control.height >= 44)).toBe(true);
+  expect(cardMetrics.controls.every(control => (
+    control.isInfo
+      ? control.width === 32 && control.height === 32
+      : control.width >= 44 && control.height >= 44
+  ))).toBe(true);
   expect(cardMetrics.titles.length).toBeGreaterThan(0);
   expect(cardMetrics.titles.every(title => (
-    title.whiteSpace === 'normal'
+    title.fitReady === 'true'
+    && title.whiteSpace === 'nowrap'
     && title.overflow === 'visible'
-    && title.overflowWrap === 'break-word'
+    && title.overflowWrap === 'normal'
     && title.textOverflow === 'clip'
-    && title.scrollWidth <= title.clientWidth + 1
+    && title.fontSize >= 12
+    && title.scrollWidth * title.fitScale <= title.clientWidth + 1
   ))).toBe(true);
+  expect(cardMetrics.titles.find(title => title.text === 'Alvtagen människa')).toBeTruthy();
 
   const toolbar = page.locator('shared-toolbar');
+  const longName = 'Kopparbricka som alltid vilar med samma sida upp';
+  const searchField = toolbar.locator('#searchField');
+  await searchField.fill(longName);
+  await searchField.press('Enter');
+  const longTitle = page.locator(`#lista li.entry-card[data-name="${longName}"] .entry-title-main`);
+  await expect(longTitle).toBeVisible();
+  await expect.poll(() => longTitle.getAttribute('data-fit-ready')).toBe('true');
+  const longTitleMetrics = await longTitle.evaluate(element => {
+    const style = window.getComputedStyle(element);
+    const scale = Number.parseFloat(element.dataset.fitScale || '1');
+    const card = element.closest('.entry-card');
+    const nextControl = card?.querySelector('.entry-header-xp, .entry-header-actions .info-btn');
+    const titleBox = element.getBoundingClientRect();
+    const nextControlBox = nextControl?.getBoundingClientRect();
+    const visibleTextRight = titleBox.left + element.scrollWidth * scale;
+    return {
+      text: element.textContent.trim(),
+      clientWidth: element.clientWidth,
+      visibleTextWidth: element.scrollWidth * scale,
+      clearsNextControl: Boolean(nextControlBox && visibleTextRight <= nextControlBox.left + 1),
+      whiteSpace: style.whiteSpace,
+      textOverflow: style.textOverflow,
+      fontSize: Number.parseFloat(style.fontSize),
+      scale
+    };
+  });
+  expect(longTitleMetrics.text).toBe(longName);
+  expect(longTitleMetrics.whiteSpace).toBe('nowrap');
+  expect(longTitleMetrics.textOverflow).toBe('clip');
+  expect(longTitleMetrics.clearsNextControl).toBe(true);
+  expect(longTitleMetrics.fontSize).toBeGreaterThanOrEqual(12);
+  expect(longTitleMetrics.scale).toBeGreaterThan(0);
+  expect(longTitleMetrics.visibleTextWidth).toBeLessThanOrEqual(longTitleMetrics.clientWidth + 1);
+
   const filterToggle = toolbar.locator('#filterToggle');
   await expect(filterToggle).toHaveCount(1);
   await filterToggle.click();

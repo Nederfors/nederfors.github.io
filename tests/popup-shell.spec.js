@@ -10,6 +10,16 @@ async function waitForApp(page, route = '/#/index') {
 async function seedInventoryFixtures(page) {
   await page.waitForFunction(() => Array.isArray(window.DB) && window.DB.length > 0);
   await page.evaluate(() => {
+    if (!store.current) {
+      const fixtureId = 'popup-fixture-character';
+      store.current = fixtureId;
+      store.characters = Array.isArray(store.characters) ? store.characters : [];
+      if (!store.characters.some(character => character?.id === fixtureId)) {
+        store.characters.push({ id: fixtureId, name: 'Popup Fixture', folderId: '' });
+      }
+      store.data = store.data || {};
+      store.data[fixtureId] = store.data[fixtureId] || {};
+    }
     const vehicle = window.DB.find(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Färdmedel'));
     const items = window.DB.filter(entry => Array.isArray(entry?.taggar?.typ) && !entry.taggar.typ.includes('Färdmedel'));
     const firstItem = items[0];
@@ -351,7 +361,11 @@ test('inventory managers use the Rollpersonshantering shell and shared tools str
   await waitForApp(page, '/#/inventory');
   await seedInventoryFixtures(page);
 
-  await page.locator('#manageItemsBtn').click();
+  const overview = page.locator('#overviewToggle');
+  await overview.click();
+  const drawer = page.locator('#invDashPanel');
+  await expect(drawer).toBeVisible();
+  await drawer.locator('button[data-dash-trigger="manageItemsBtn"]').click();
   await expect(page.locator('#inventoryItemsPopup')).toBeVisible();
 
   const itemsState = await page.evaluate(() => {
@@ -371,7 +385,8 @@ test('inventory managers use the Rollpersonshantering shell and shared tools str
   await page.locator('#inventoryItemsPopup .db-modal__close').click();
   await expect(page.locator('#inventoryItemsPopup')).toBeHidden();
 
-  await page.locator('#manageEconomyBtn').click();
+  await expect(drawer).toBeVisible();
+  await drawer.locator('button[data-dash-trigger="manageEconomyBtn"]').click();
   await expect(page.locator('#inventoryEconomyPopup')).toBeVisible();
 
   const economyState = await page.evaluate(() => {
@@ -408,8 +423,10 @@ test('inventory managers use the Rollpersonshantering shell and shared tools str
     };
   });
 
-  await expect(page.locator('#manageItemsBtn')).toBeVisible();
-  await expect(page.locator('#manageEconomyBtn')).toBeVisible();
+  await expect(page.locator('#manageItemsBtn')).toHaveCount(0);
+  await expect(page.locator('#manageEconomyBtn')).toHaveCount(0);
+  await expect(page.locator('#invDashFloatBtn')).toHaveCount(0);
+  await expect(overview).toBeVisible();
   expect(itemsState.layout).toBe('tools-popup-lg');
   expect(itemsState.hasTabs).toBe(true);
   expect(itemsState.hasPanels).toBe(true);
@@ -429,11 +446,59 @@ test('inventory managers use the Rollpersonshantering shell and shared tools str
   expect(characterState.hasToolsCard).toBe(true);
 });
 
+test('toolbar overview switches destination and live counter with the active route', async ({ page }) => {
+  await waitForApp(page, '/#/index');
+
+  const overview = page.locator('#overviewToggle');
+  await expect(overview).toHaveAttribute('data-context', 'summary');
+  await expect(overview).toHaveAttribute('aria-controls', 'summarySlidePanel');
+  await expect(overview.locator('.overview-action-label')).toHaveText('Översikt');
+  await expect(overview.locator('.overview-action-icon--summary')).toBeVisible();
+  await expect(overview.locator('.overview-action-icon--inventory')).toBeHidden();
+  await expect(overview.locator('.overview-action-value--xp')).toContainText('ERF');
+
+  await overview.click();
+  const summary = page.locator('#summarySlidePanel');
+  await expect(summary).toBeVisible();
+  await expect(overview).toHaveAttribute('aria-expanded', 'true');
+  await summary.locator('button[data-close="summarySlidePanel"]').click();
+  await expect(summary).toBeHidden();
+  await expect(overview).toHaveAttribute('aria-expanded', 'false');
+
+  await page.locator('#inventoryLink').click();
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'inventory'
+    && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+  ));
+  await seedInventoryFixtures(page);
+
+  await expect(overview).toHaveAttribute('data-context', 'inventory');
+  await expect(overview).toHaveAttribute('aria-controls', 'invDashPanel');
+  await expect(overview).toHaveAttribute('aria-label', 'Öppna Inventarium, saldo 12 daler, 3 skilling, 4 örtegar');
+  await expect(overview.locator('.overview-action-icon--summary')).toBeHidden();
+  await expect(overview.locator('.overview-action-icon--inventory')).toBeVisible();
+  await expect(overview.locator('#moneyOut')).toHaveText('12D 3S 4Ö');
+  await expect(overview.locator('.overview-action-value--xp')).toBeHidden();
+
+  await overview.click();
+  const inventoryDrawer = page.locator('#invDashPanel');
+  await expect(inventoryDrawer).toBeVisible();
+  await expect(summary).toBeHidden();
+  await inventoryDrawer.locator('button[data-act="moneyPlus"]').click();
+  await expect(overview.locator('#moneyOut')).toHaveText('13D 3S 4Ö');
+  await expect(overview).toHaveAttribute('aria-expanded', 'true');
+
+  await inventoryDrawer.locator('button[data-close="invDashPanel"]').click();
+  await expect(inventoryDrawer).toBeHidden();
+  await expect(overview).toHaveAttribute('aria-expanded', 'false');
+  await expect(overview).toBeFocused();
+});
+
 test('inventory dashboard manager buttons keep their popups open', async ({ page }) => {
   await waitForApp(page, '/#/inventory');
   await seedInventoryFixtures(page);
 
-  await page.locator('#invDashFloatBtn').click();
+  await page.locator('#overviewToggle').click();
   await expect(page.locator('#invDashPanel')).toBeVisible();
 
   await page.locator('#invDashPanel button[data-dash-trigger="manageEconomyBtn"]').click();
@@ -555,7 +620,9 @@ test('inventory manager shells and representative dialogs stay visually aligned'
   await page.locator('#characterToolsPopup .db-modal__close').click();
   await expect(page.locator('#characterToolsPopup')).toBeHidden();
 
-  await page.locator('#manageItemsBtn').click();
+  await page.locator('#overviewToggle').click();
+  await expect(page.locator('#invDashPanel')).toBeVisible();
+  await page.locator('#invDashPanel button[data-dash-trigger="manageItemsBtn"]').click();
   await expect(page.locator('#inventoryItemsPopup')).toBeVisible();
   await expectPortablePopupScreenshot(
     page.locator('#inventoryItemsPopup .db-modal'),
@@ -576,7 +643,8 @@ test('inventory manager shells and representative dialogs stay visually aligned'
   await page.locator('#inventoryItemsPopup .db-modal__close').click();
   await expect(page.locator('#inventoryItemsPopup')).toBeHidden();
 
-  await page.locator('#manageEconomyBtn').click();
+  await expect(page.locator('#invDashPanel')).toBeVisible();
+  await page.locator('#invDashPanel button[data-dash-trigger="manageEconomyBtn"]').click();
   await expect(page.locator('#inventoryEconomyPopup')).toBeVisible();
   await expectEconomyPanelReady(page, 'money', '#moneyStatus');
   await expectPortablePopupScreenshot(

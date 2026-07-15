@@ -482,6 +482,11 @@
     return '';
   }
 
+  function getRuleStableId(rule) {
+    if (!rule || typeof rule !== 'object') return '';
+    return String(rule.rule_id || rule.regel_id || rule.id || '').trim();
+  }
+
   function mergeRuleListsByHierarchy(lowPriority, highPriority, key) {
     const low = toRuleList(lowPriority);
     const high = toRuleList(highPriority);
@@ -3891,6 +3896,7 @@
 
     out.push({
       code: reasonCode,
+      ruleId: getRuleStableId(rule),
       mode: normalizeConflictMode(getRuleOp(rule) === 'set' ? 'ersatt' : rule?.satt),
       sourceEntryId: sourceEntry?.id || '',
       sourceEntryName: getEntryNameCompat(sourceEntry),
@@ -4282,6 +4288,7 @@
       const allAlternativeNames = failedReasons.flatMap(r => r.alternativeNames || []);
       return {
         code: getRequirementReasonCode(rule, candidate),
+        ruleId: getRuleStableId(rule),
         sourceEntryId: candidate?.id || '',
         sourceEntryName: getEntryNameCompat(candidate),
         sourceEntryLevel: getEntryLevelCompat(candidate),
@@ -4334,6 +4341,7 @@
 
     return {
       code: getRequirementReasonCode(rule, candidate),
+      ruleId: getRuleStableId(rule),
       sourceEntryId: candidate?.id || '',
       sourceEntryName: getEntryNameCompat(candidate),
       sourceEntryLevel: getEntryLevelCompat(candidate),
@@ -5453,6 +5461,7 @@
     if (!candidateEntry || typeof candidateEntry !== 'object') {
       return {
         requirementReasons: [],
+        conflictReasons: [],
         blockingConflicts: [],
         replaceTargetNames: [],
         grantedLevelStop: null,
@@ -5479,6 +5488,9 @@
     const conflictResolution = getConflictResolutionForCandidate(candidate, entries, { level: toLevel });
     const blockingConflicts = Array.isArray(conflictResolution?.blockingReasons)
       ? conflictResolution.blockingReasons
+      : [];
+    const conflictReasons = Array.isArray(conflictResolution?.reasons)
+      ? conflictResolution.reasons
       : [];
     const replaceTargetNames = Array.isArray(conflictResolution?.replaceTargetNames)
       ? conflictResolution.replaceTargetNames
@@ -5590,6 +5602,7 @@
 
     return {
       requirementReasons,
+      conflictReasons,
       blockingConflicts,
       replaceTargetNames,
       grantedLevelStop,
@@ -5601,6 +5614,47 @@
         || hardStops.length
       )
     };
+  }
+
+  function getEntryStopOverrideKeys(candidateEntry, stopResult = {}) {
+    const out = new Set();
+    const candidateId = String(candidateEntry?.id || '').trim();
+    const candidateName = String(candidateEntry?.namn || candidateEntry?.name || '').trim();
+    const candidateToken = candidateId
+      ? `id:${normalizeLevelName(candidateId)}`
+      : `name:${normalizeLevelName(candidateName || 'post')}`;
+    const addRuleOrFallback = (kind, reason) => {
+      const ruleId = String(reason?.ruleId || reason?.rule_id || reason?.regel_id || '').trim();
+      if (ruleId) {
+        out.add(`rule:${normalizeLevelName(ruleId)}`);
+        return;
+      }
+      const code = String(reason?.code || kind || 'regel').trim();
+      out.add(`entry:${candidateToken}:${kind}:${normalizeLevelName(code)}`);
+    };
+
+    toArray(stopResult?.requirementReasons).forEach(reason => addRuleOrFallback('requirement', reason));
+
+    const conflictReasons = toArray(stopResult?.conflictReasons).length
+      ? toArray(stopResult.conflictReasons)
+      : toArray(stopResult?.blockingConflicts);
+    conflictReasons.forEach(reason => addRuleOrFallback('conflict', reason));
+
+    toArray(stopResult?.hardStops).forEach(stop => addRuleOrFallback('limit', stop));
+
+    if (stopResult?.grantedLevelStop && !toArray(stopResult?.requirementReasons).length) {
+      addRuleOrFallback('granted-level', {
+        code: `granted_${stopResult.grantedLevelStop?.beviljadNiva || ''}`
+      });
+    }
+
+    if (!conflictReasons.length) {
+      toArray(stopResult?.replaceTargetNames).forEach(name => {
+        addRuleOrFallback('replace', { code: String(name || 'post') });
+      });
+    }
+
+    return [...out].filter(Boolean).sort();
   }
 
   function formatEntryStopMessages(entryName, stopResult = {}) {
@@ -6974,6 +7028,7 @@
     evaluateRequirementAssistState,
     getEntryMaxCount,
     evaluateEntryStops,
+    getEntryStopOverrideKeys,
     formatEntryStopMessages,
     getRequirementDependents,
     getEntryGrantTargets,

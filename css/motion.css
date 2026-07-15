@@ -3,15 +3,15 @@ body.app-shell {
   --daub-gesture-y: 0px;
 }
 
-body.app-shell .offcanvas[data-touch-profile="panel-right"] {
+.offcanvas[data-touch-profile="panel-right"] {
   touch-action: pan-y;
 }
 
-body.app-shell .popup[data-popup-unified="true"] .popup-modal-header {
+.popup[data-popup-unified="true"] .popup-modal-header {
   touch-action: pan-x;
 }
 
-body.app-shell .popup[data-popup-unified="true"] .popup-modal-body {
+.popup[data-popup-unified="true"] .popup-modal-body {
   touch-action: pan-y;
 }
 
@@ -57,6 +57,9 @@ body.app-shell .popup[data-popup-unified="true"] .popup-modal-body {
 .inventory-hub-panels[data-swipe-tabs="1"] {
   overflow: hidden;
   display: block;
+  /* The popup body owns vertical scrolling. Prevent the swipe viewport from
+     shrinking to the remaining body height and clipping its active slide. */
+  flex: none;
 }
 
 .inventory-hub-panels[data-swipe-tabs="1"] > .swiper-wrapper {

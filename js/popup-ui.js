@@ -12,7 +12,9 @@
     saveFreePopup: 'Bekrafta'
   });
   const REMOVE_BUTTON_IDS = Object.freeze({
-    choicePopup: ['choiceCancel'],
+    choicePopup: ['choiceCancel']
+  });
+  const PRESERVE_ACTION_BUTTON_IDS = Object.freeze({
     requirementPopup: ['requirementCancel']
   });
   const PROMOTE_BUTTON_IDS = Object.freeze({
@@ -202,6 +204,7 @@
   function isDismissButton(button, overlayId) {
     if (!(button instanceof HTMLButtonElement)) return false;
     const buttonId = String(button.id || '').trim();
+    if (buttonId && (PRESERVE_ACTION_BUTTON_IDS[overlayId] || []).includes(buttonId)) return false;
     if (buttonId && (REMOVE_BUTTON_IDS[overlayId] || []).includes(buttonId)) return true;
     if (buttonId && buttonId === PROMOTE_BUTTON_IDS[overlayId]) return true;
     if (buttonId && DISMISS_ID_RE.test(buttonId)) return true;
