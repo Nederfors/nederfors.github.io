@@ -283,7 +283,10 @@ test('real OLD_VERSION batch import hydrates the full catalog and survives reloa
     Brumhildemei: { xp: { baseXp: 300, totalXp: 320, usedXp: 280, freeXp: 40 }, selectedCount: 19, inventoryCount: 3 },
     Hurley: { xp: { baseXp: 261, totalXp: 281, usedXp: 280, freeXp: 1 }, selectedCount: 18, inventoryCount: 21 },
     Clemens: { xp: { baseXp: 300, totalXp: 325, usedXp: 330, freeXp: -5 }, selectedCount: 22, inventoryCount: 7 },
-    Testperson: { xp: { baseXp: 250, totalXp: 250, usedXp: 60, freeXp: 190 }, selectedCount: 1, inventoryCount: 13 },
+    // Seven source rows carry Välutrustad ownership, but this legacy character no
+    // longer has Välutrustad selected. Reconciliation removes six fully granted
+    // rows and subtracts three granted copies from the four-copy rope stack.
+    Testperson: { xp: { baseXp: 250, totalXp: 250, usedXp: 60, freeXp: 190 }, selectedCount: 1, inventoryCount: 7 },
     Rex: { xp: { baseXp: 256, totalXp: 281, usedXp: 275, freeXp: 6 }, selectedCount: 30, inventoryCount: 36 },
     Magnum: { xp: { baseXp: 268, totalXp: 293, usedXp: 276, freeXp: 17 }, selectedCount: 29, inventoryCount: 29 }
   };
@@ -344,6 +347,16 @@ test('real OLD_VERSION batch import hydrates the full catalog and survives reloa
   expect(clemens.selected).toContainEqual(['form71', 'Krigarens skärpa', 'Mästare']);
   const rex = beforeReload.characters.find(char => char.name === 'Rex');
   expect(rex.inventory).toContainEqual(['di10', 'Flinta & stål', 1]);
+  const testperson = beforeReload.characters.find(char => char.name === 'Testperson');
+  expect(testperson.inventory).toEqual([
+    ['di12', 'Rep, 10 meter', 1],
+    ['di10', 'Flinta & stål', 1],
+    ['di11', 'Kokkärl', 1],
+    ['di13', 'Sovfäll', 1],
+    ['di14', 'Tändved', 1],
+    ['di15', 'Vattenskinn', 1],
+    ['l9', 'Djurmask', 1]
+  ]);
   const magnum = beforeReload.characters.find(char => char.name === 'Magnum');
   expect(magnum.custom.filter(([, name]) => name === 'Ruinen')).toHaveLength(3);
 

@@ -273,7 +273,10 @@ function summarizeDetail(detail = {}) {
     direction: detail.direction || null,
     trigger: detail.trigger || null,
     source: detail.source || null,
-    endStateHash: detail.endStateHash || null
+    endStateHash: detail.endStateHash || null,
+    classifier: detail.classifier || null,
+    uiStability: detail.uiStability || null,
+    browserWork: detail.browserWork || null
   };
 }
 
@@ -424,6 +427,144 @@ async function collectRuns(browser, iterations, runner) {
     runs.push(await runner(iteration));
   }
   return runs;
+}
+
+async function readCanonicalInventory(page) {
+  return page.evaluate(() => {
+    const canonicalize = value => {
+      if (Array.isArray(value)) return value.map(canonicalize);
+      if (!value || typeof value !== 'object') return value;
+      return Object.keys(value).sort().reduce((output, key) => {
+        output[key] = canonicalize(value[key]);
+        return output;
+      }, {});
+    };
+    const normalize = rows => (Array.isArray(rows) ? rows : []).map(row => {
+      const { contains, ...rest } = row || {};
+      return {
+        ...rest,
+        artifactEffect: row?.artifactEffect || '',
+        kvaliteter: Array.isArray(row?.kvaliteter) ? row.kvaliteter : [],
+        gratisKval: Array.isArray(row?.gratisKval) ? row.gratisKval : [],
+        removedKval: Array.isArray(row?.removedKval) ? row.removedKval : [],
+        ...(Array.isArray(contains) && contains.length ? { contains: normalize(contains) } : {})
+      };
+    });
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    return JSON.stringify(canonicalize(normalize(window.storeHelper.getInventory(activeStore))));
+  });
+}
+
+async function startBrowserWorkCapture(page) {
+  if (getRuntimeConfig(process.env.PERF_RUNTIME || DEFAULT_RUNTIME).browserType !== chromium) return null;
+  const session = await page.context().newCDPSession(page);
+  await session.send('Performance.enable');
+  return { session, before: await session.send('Performance.getMetrics') };
+}
+
+async function finishBrowserWorkCapture(capture) {
+  if (!capture?.session || !capture?.before) return null;
+  const afterMetrics = await capture.session.send('Performance.getMetrics');
+  const before = new Map(capture.before.metrics.map(metric => [metric.name, Number(metric.value) || 0]));
+  const after = new Map(afterMetrics.metrics.map(metric => [metric.name, Number(metric.value) || 0]));
+  const delta = name => (after.get(name) || 0) - (before.get(name) || 0);
+  await capture.session.detach();
+  return {
+    layoutDurationMs: delta('LayoutDuration') * 1000,
+    recalcStyleDurationMs: delta('RecalcStyleDuration') * 1000,
+    scriptDurationMs: delta('ScriptDuration') * 1000,
+    taskDurationMs: delta('TaskDuration') * 1000,
+    layoutCount: delta('LayoutCount'),
+    recalcStyleCount: delta('RecalcStyleCount')
+  };
+}
+
+async function installInventoryDomProbe(page) {
+  await page.evaluate(() => {
+    const root = document.getElementById('invList');
+    const initialNodes = new Map();
+    root?.querySelectorAll('li.entry-card[data-uid]').forEach(card => {
+      const uid = String(card.dataset.uid || '').trim();
+      if (uid && !initialNodes.has(uid)) initialNodes.set(uid, card);
+    });
+    const added = new Set();
+    const removed = new Set();
+    const collect = (node, output) => {
+      output.add(node);
+      node.querySelectorAll?.('*').forEach(child => output.add(child));
+    };
+    const observer = root ? new MutationObserver(records => {
+      records.forEach(record => {
+        if (record.type !== 'childList') return;
+        record.addedNodes.forEach(node => collect(node, added));
+        record.removedNodes.forEach(node => collect(node, removed));
+      });
+    }) : null;
+    observer?.observe(root, { childList: true, subtree: true });
+    window.__inventoryControlDomProbe = {
+      root,
+      initialNodes,
+      initialCards: initialNodes.size,
+      initialDescendants: root?.querySelectorAll('*').length || 0,
+      initialScrollY: window.scrollY,
+      initialFocus: document.activeElement,
+      added,
+      removed,
+      observer
+    };
+  });
+}
+
+async function readInventoryDomProbe(page) {
+  return page.evaluate(() => {
+    const probe = window.__inventoryControlDomProbe;
+    if (!probe) return null;
+    probe.observer?.takeRecords?.().forEach(record => {
+      if (record.type !== 'childList') return;
+      const collect = (node, output) => {
+        output.add(node);
+        node.querySelectorAll?.('*').forEach(child => output.add(child));
+      };
+      record.addedNodes.forEach(node => collect(node, probe.added));
+      record.removedNodes.forEach(node => collect(node, probe.removed));
+    });
+    probe.observer?.disconnect?.();
+    const currentByUid = new Map();
+    probe.root?.querySelectorAll('li.entry-card[data-uid]').forEach(card => {
+      const uid = String(card.dataset.uid || '').trim();
+      if (uid && !currentByUid.has(uid)) currentByUid.set(uid, card);
+    });
+    let preserved = 0;
+    let reconstructed = 0;
+    let removedCards = 0;
+    probe.initialNodes.forEach((node, uid) => {
+      const current = currentByUid.get(uid);
+      if (current === node) preserved += 1;
+      else if (current) reconstructed += 1;
+      else removedCards += 1;
+    });
+    const moved = [...probe.added].filter(node => probe.removed.has(node));
+    const created = Math.max(0, probe.added.size - moved.length);
+    const deleted = Math.max(0, probe.removed.size - moved.length);
+    const result = {
+      scrollBefore: probe.initialScrollY,
+      scrollAfter: window.scrollY,
+      focusPreserved: document.activeElement === probe.initialFocus,
+      cardNodesBefore: probe.initialCards,
+      cardNodesAfter: currentByUid.size,
+      cardNodesPreserved: preserved,
+      cardsReconstructed: reconstructed,
+      cardsRemoved: removedCards,
+      rootDescendantsBefore: probe.initialDescendants,
+      rootDescendantsAfter: probe.root?.querySelectorAll('*').length || 0,
+      domNodesCreated: created,
+      domNodesMoved: moved.length,
+      domNodesRemoved: deleted,
+      domNodesReplaced: Math.min(created, deleted)
+    };
+    delete window.__inventoryControlDomProbe;
+    return result;
+  });
 }
 
 async function revealIndexPerfTarget(page, kind, options = {}) {
@@ -1764,17 +1905,25 @@ async function runInventoryCustomItemEdit(browser, iterations) {
   return aggregateScenarioRuns('inventory-custom-item-edit', runs);
 }
 
-async function runVehicleScenario(browser, iterations, direction) {
-  const scenarioName = direction === 'load' ? 'inventory-vehicle-load' : 'inventory-vehicle-unload';
+async function runVehicleScenario(browser, iterations, direction, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const nestedTransfer = options.nestedTransfer === true;
+  const mode = nestedTransfer ? 'load' : direction;
+  const baseScenarioName = nestedTransfer
+    ? 'inventory-vehicle-nested-transfer'
+    : mode === 'load' ? 'inventory-vehicle-load' : 'inventory-vehicle-unload';
+  const scenarioName = forceSafePath ? `${baseScenarioName}-safe` : baseScenarioName;
   const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => {
-      const target = await page.evaluate(async ({ mode, size, scenarioName: name }) => {
+      const target = await page.evaluate(async ({ mode, size, scenarioName: name, nestedTransfer }) => {
         const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
         const entries = Array.isArray(window.DB) ? window.DB : [];
-        const vehicleEntry = entries
+        const vehicleEntries = entries
           .filter(candidate => (candidate?.taggar?.typ || []).includes('Färdmedel') && window.isInv?.(candidate))
-          .sort((left, right) => String(left?.id || '').localeCompare(String(right?.id || '')))[0];
+          .sort((left, right) => String(left?.id || '').localeCompare(String(right?.id || '')));
+        const vehicleEntry = vehicleEntries[0];
+        const sourceVehicleEntry = nestedTransfer ? vehicleEntries[0] : null;
         const itemEntry = entries
           .filter(candidate => {
             const types = candidate?.taggar?.typ || [];
@@ -1782,7 +1931,9 @@ async function runVehicleScenario(browser, iterations, direction) {
               && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
           })
           .sort((left, right) => String(left?.id || '').localeCompare(String(right?.id || '')))[0];
-        if (!vehicleEntry || !itemEntry) throw new Error('Missing vehicle topology representative.');
+        if (!vehicleEntry || !itemEntry || nestedTransfer && !sourceVehicleEntry) {
+          throw new Error('Missing vehicle topology representative.');
+        }
         const itemRow = {
           id: itemEntry.id,
           name: itemEntry.namn,
@@ -1800,8 +1951,19 @@ async function runVehicleScenario(browser, iterations, direction) {
           gratisKval: [],
           removedKval: []
         };
+        const sourceVehicleRow = nestedTransfer ? {
+          id: sourceVehicleEntry.id,
+          name: sourceVehicleEntry.namn,
+          qty: 1,
+          gratis: 0,
+          contains: [itemRow],
+          gratisKval: [],
+          removedKval: []
+        } : null;
         const fillers = entries
-          .filter(candidate => candidate.id !== vehicleEntry.id && candidate.id !== itemEntry.id
+          .filter(candidate => candidate.id !== vehicleEntry.id
+            && candidate.id !== sourceVehicleEntry?.id
+            && candidate.id !== itemEntry.id
             && window.isInv?.(candidate)
             && !(candidate?.taggar?.typ || []).some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type)))
           .slice(0, Math.max(0, size - 2))
@@ -1814,79 +1976,377 @@ async function runVehicleScenario(browser, iterations, direction) {
             removedKval: []
           }));
         vehicleRow.contains = mode === 'unload' ? [itemRow] : [];
-        const inventory = mode === 'unload'
+        const inventory = nestedTransfer
+          ? [sourceVehicleRow, vehicleRow, ...fillers]
+          : mode === 'unload'
           ? [vehicleRow, ...fillers]
           : [vehicleRow, itemRow, ...fillers];
         window.storeHelper.setInventory(activeStore, inventory);
         window.invUtil?.renderInventory?.();
         await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
+        const storedInventory = window.storeHelper.getInventory(activeStore);
+        const storedSourceVehicle = nestedTransfer ? storedInventory[0] : null;
+        const storedVehicle = nestedTransfer ? storedInventory[1] : storedInventory[0];
+        const storedItem = nestedTransfer
+          ? storedSourceVehicle?.contains?.[0]
+          : mode === 'unload'
+          ? storedVehicle?.contains?.[0]
+          : storedInventory[1];
+        return {
+          vehicleUid: storedVehicle?.__uid || '',
+          vehicleId: vehicleEntry.id,
+          vehicle: vehicleEntry.namn,
+          itemUid: storedItem?.__uid || '',
+          itemId: itemEntry.id,
+          item: itemEntry.namn,
+          sourceVehicleUid: storedSourceVehicle?.__uid || '',
+          sourceVehicleId: sourceVehicleEntry?.id || '',
+          stateSize: inventory.length
+        };
+      }, { mode, size: requestedSize, scenarioName, nestedTransfer });
+
+      if (nestedTransfer) {
+        const nestedStart = await page.evaluate(() => performance.now());
+        const sourceCard = page.locator(`#invList li.entry-card[data-uid="${target.sourceVehicleUid}"]`).first();
+        const unloadButton = sourceCard.locator('button[data-act="vehicleUnload"]');
+        if (!await unloadButton.isVisible()) await sourceCard.locator('.card-title').click();
+        await unloadButton.click();
+        const unloadList = page.locator('shared-toolbar #vehicleRemoveItemList');
+        await unloadList.waitFor({ state: 'visible' });
+        await unloadList.locator(`.price-item[data-row-uid="${target.itemUid}"]`).first().click();
+        await page.locator('shared-toolbar #vehicleRemoveApply').click();
+        await page.waitForFunction(({ itemId, sourceVehicleUid }) => {
+          const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+          const inventory = window.storeHelper.getInventory(activeStore);
+          const sourceVehicle = inventory.find(row => String(row?.__uid || '') === String(sourceVehicleUid));
+          return inventory.some(row => String(row?.id || '') === String(itemId))
+            && !(sourceVehicle?.contains || []).some(row => String(row?.id || '') === String(itemId));
+        }, { itemId: target.itemId, sourceVehicleUid: target.sourceVehicleUid });
+        const closeUnload = page.locator('shared-toolbar #vehicleRemoveCancel');
+        if (await closeUnload.isVisible()) await closeUnload.click();
+        target.nestedUnloadPreparationMs = await page.evaluate(start => performance.now() - start, nestedStart);
+      }
+
+      const vehicleCard = page.locator(`#invList li.entry-card[data-uid="${target.vehicleUid}"]`).first();
+      const action = mode === 'load' ? 'vehicleLoad' : 'vehicleUnload';
+      const button = vehicleCard.locator(`button[data-act="${action}"]`);
+      const listSelector = mode === 'load' ? '#vehicleItemList' : '#vehicleRemoveItemList';
+      const applySelector = mode === 'load' ? '#vehicleApply' : '#vehicleRemoveApply';
+      if (!await button.isVisible()) await vehicleCard.locator('.card-title').click();
+      await vehicleCard.scrollIntoViewIfNeeded();
+      await button.scrollIntoViewIfNeeded();
+      const controlActivationStart = await page.evaluate(() => performance.now());
+      await button.click();
+      await page.locator(`shared-toolbar ${listSelector}`).waitFor({ state: 'visible' });
+      target.controlActivationMs = await page.evaluate(start => performance.now() - start, controlActivationStart);
+      const option = page.locator(
+        `shared-toolbar ${listSelector} .price-item[data-row-uid="${target.itemUid}"]`
+      ).first();
+      await option.click();
+      await page.evaluate(({ mode, target, name, useSafePath }) => {
         const perf = window.symbaroumPerf;
         perf?.clearHistory?.();
         const scenarioId = perf?.startScenario?.(name, {
           scope: 'inventory',
-          vehicle: vehicleEntry?.namn || null,
-          item: itemEntry?.namn || null,
+          vehicle: target.vehicle,
+          item: target.item,
           behaviorSignature: 'vehicle-topology-move',
-          stateSize: inventory.length,
-          direction: mode
+          stateSize: target.stateSize,
+          direction: mode,
+          controlActivationMs: target.controlActivationMs,
+          pathMode: useSafePath ? 'safe' : 'optimized'
         });
         perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        window.__symbaroumPerfForceSafeInventoryMutations = useSafePath;
         window.__vehicleScenarioId = scenarioId;
-        return {
-          vehicleUid: vehicleRow.__uid,
-          vehicleId: vehicleEntry.id,
-          vehicle: vehicleEntry.namn,
-          itemId: itemEntry.id,
-          item: itemEntry.namn,
-          stateSize: inventory.length
+        const list = document.getElementById('invList');
+        const deepActiveElement = () => {
+          let active = document.activeElement;
+          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+          return active;
         };
-      }, { mode: direction, size: requestedSize, scenarioName });
-
-      const vehicleCard = page.locator(`#invList li.entry-card[data-uid="${target.vehicleUid}"]`).first();
-      const action = direction === 'load' ? 'vehicleLoad' : 'vehicleUnload';
-      const button = vehicleCard.locator(`button[data-act="${action}"]`);
-      if (!await button.isVisible()) await vehicleCard.locator('.card-title').click();
-      await button.click();
-      const listSelector = direction === 'load' ? '#vehicleItemList' : '#vehicleRemoveItemList';
-      const applySelector = direction === 'load' ? '#vehicleApply' : '#vehicleRemoveApply';
-      const option = page.locator(`shared-toolbar ${listSelector} .price-item`)
-        .filter({ hasText: target.item }).first();
-      await option.click();
-      await page.evaluate(({ mode }) => {
-        const perf = window.symbaroumPerf;
-        const scenarioId = window.__vehicleScenarioId;
+        const elementKey = element => {
+          if (!(element instanceof window.Element)) return '';
+          return [
+            element.tagName.toLowerCase(),
+            element.id ? `#${element.id}` : '',
+            element.getAttribute('data-act') ? `[data-act="${element.getAttribute('data-act')}"]` : '',
+            element.getAttribute('data-uid') ? `[data-uid="${element.getAttribute('data-uid')}"]` : '',
+            element.getAttribute('aria-label') ? `[aria-label="${element.getAttribute('aria-label')}"]` : ''
+          ].filter(Boolean).join('');
+        };
+        const collectNodes = (node, output) => {
+          if (!node || !output) return;
+          output.add(node);
+          node.querySelectorAll?.('*').forEach(child => output.add(child));
+        };
+        const expandedCategories = () => [...(list?.querySelectorAll('.cat-group > details[open]') || [])]
+          .map(details => details.dataset.cat || '')
+          .filter(Boolean)
+          .sort();
+        const expandedParents = () => [...(list?.querySelectorAll('li.entry-card[data-uid]:not(.compact)') || [])]
+          .map(card => card.dataset.uid || '')
+          .filter(Boolean)
+          .sort();
+        const initialUidNodes = new Map();
+        list?.querySelectorAll('li.entry-card[data-uid]').forEach(card => {
+          if (card.dataset.uid && !initialUidNodes.has(card.dataset.uid)) {
+            initialUidNodes.set(card.dataset.uid, card);
+          }
+        });
+        const addedNodes = new Set();
+        const removedNodes = new Set();
+        const initialDirectChildren = list?.childElementCount || 0;
+        const probe = {
+          addedNodes,
+          removedNodes,
+          initialUidNodes,
+          initialScrollX: window.scrollX,
+          initialScrollY: window.scrollY,
+          initialListScrollTop: list?.scrollTop || 0,
+          initialFocus: elementKey(deepActiveElement()),
+          initialExpandedCategories: expandedCategories(),
+          initialExpandedParents: expandedParents(),
+          initialDescendants: list?.querySelectorAll('*').length || 0,
+          initialVisibleCards: list?.querySelectorAll('li.entry-card').length || 0,
+          initialDirectChildren,
+          rootCleared: false,
+          animationCalls: 0,
+          inventoryAnimationCalls: 0,
+          layoutShift: 0,
+          mode,
+          target
+        };
+        const processMutationRecords = records => {
+          records.forEach(record => {
+            if (record.type !== 'childList') return;
+            record.addedNodes.forEach(node => collectNodes(node, addedNodes));
+            record.removedNodes.forEach(node => collectNodes(node, removedNodes));
+            if (record.target === list
+                && record.addedNodes.length === 0
+                && record.removedNodes.length >= initialDirectChildren
+                && initialDirectChildren > 0) {
+              probe.rootCleared = true;
+            }
+          });
+        };
+        probe.observer = list ? new MutationObserver(processMutationRecords) : null;
+        probe.observer?.observe(list, { childList: true, subtree: true });
+        probe.processMutationRecords = processMutationRecords;
+        if (typeof window.PerformanceObserver === 'function'
+            && window.PerformanceObserver.supportedEntryTypes?.includes('layout-shift')) {
+          probe.layoutObserver = new window.PerformanceObserver(entries => {
+            entries.getEntries().forEach(entry => {
+              if (!entry.hadRecentInput) probe.layoutShift += Number(entry.value) || 0;
+            });
+          });
+          probe.layoutObserver.observe({ type: 'layout-shift', buffered: false });
+        }
+        const animateOwner = typeof window.Element !== 'undefined' ? window.Element.prototype : null;
+        const originalAnimate = animateOwner?.animate;
+        if (animateOwner && typeof originalAnimate === 'function') {
+          animateOwner.animate = function (...args) {
+            probe.animationCalls += 1;
+            if (list?.contains(this)) probe.inventoryAnimationCalls += 1;
+            return originalAnimate.apply(this, args);
+          };
+          probe.restoreAnimate = () => { animateOwner.animate = originalAnimate; };
+        }
+        probe.presentationStage = perf?.startScenarioStage?.(
+          scenarioId,
+          'input-layout-paint-presentation',
+          { surface: 'inventory', direction: mode }
+        ) || null;
+        window.__vehicleDomProbe = probe;
         document.addEventListener('pointerdown', () => {
           perf?.markScenario?.(scenarioId, 'interaction-start', { action: `vehicle-${mode}` });
         }, { capture: true, once: true });
-      }, { mode: direction });
+      }, { mode, target, name: scenarioName, useSafePath: forceSafePath });
+
+      let cdpSession = null;
+      let browserMetricsBefore = null;
+      if (getRuntimeConfig(process.env.PERF_RUNTIME || DEFAULT_RUNTIME).browserType === chromium) {
+        cdpSession = await page.context().newCDPSession(page);
+        await cdpSession.send('Performance.enable');
+        browserMetricsBefore = await cdpSession.send('Performance.getMetrics');
+      }
       await page.locator(`shared-toolbar ${applySelector}`).click();
-      await page.waitForFunction(({ vehicleId, itemId, mode }) => {
+      await page.waitForFunction(({ vehicleUid, sourceVehicleUid, itemId, mode, nestedTransfer }) => {
         const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
         const inventory = window.storeHelper.getInventory(activeStore);
-        const vehicle = inventory.find(row => String(row?.id || '') === String(vehicleId));
+        const vehicle = inventory.find(row => String(row?.__uid || '') === String(vehicleUid));
         const inside = (vehicle?.contains || []).some(row => String(row?.id || '') === String(itemId));
-        return mode === 'load' ? inside : !inside;
-      }, { vehicleId: target.vehicleId, itemId: target.itemId, mode: direction });
+        const sourceVehicle = nestedTransfer
+          ? inventory.find(row => String(row?.__uid || '') === String(sourceVehicleUid))
+          : null;
+        const stillInSource = (sourceVehicle?.contains || [])
+          .some(row => String(row?.id || '') === String(itemId));
+        return mode === 'load' ? inside && !stillInSource : !inside;
+      }, {
+        vehicleUid: target.vehicleUid,
+        sourceVehicleUid: target.sourceVehicleUid,
+        itemId: target.itemId,
+        mode,
+        nestedTransfer
+      });
 
-      return page.evaluate(async ({ target, scenarioName: name, mode }) => {
+      const result = await page.evaluate(async ({ target, scenarioName: name, mode }) => {
         const perf = window.symbaroumPerf;
         const scenarioId = window.__vehicleScenarioId;
-        perf?.markScenario?.(scenarioId, 'first-feedback-dom', { action: `vehicle-${mode}` });
+        perf?.markScenario?.(scenarioId, 'correct-dom-observed', { action: `vehicle-${mode}` });
         await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
         await window.symbaroumPersistence?.flushPendingWrites?.({ reason: name });
         await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'first-painted-correct-state', { action: `vehicle-${mode}` });
+        const probe = window.__vehicleDomProbe;
+        const list = document.getElementById('invList');
+        const deepActiveElement = () => {
+          let active = document.activeElement;
+          while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+          return active;
+        };
+        const elementKey = element => {
+          if (!(element instanceof window.Element)) return '';
+          return [
+            element.tagName.toLowerCase(),
+            element.id ? `#${element.id}` : '',
+            element.getAttribute('data-act') ? `[data-act="${element.getAttribute('data-act')}"]` : '',
+            element.getAttribute('data-uid') ? `[data-uid="${element.getAttribute('data-uid')}"]` : '',
+            element.getAttribute('aria-label') ? `[aria-label="${element.getAttribute('aria-label')}"]` : ''
+          ].filter(Boolean).join('');
+        };
+        const expandedCategories = () => [...(list?.querySelectorAll('.cat-group > details[open]') || [])]
+          .map(details => details.dataset.cat || '')
+          .filter(Boolean)
+          .sort();
+        const expandedParents = () => [...(list?.querySelectorAll('li.entry-card[data-uid]:not(.compact)') || [])]
+          .map(card => card.dataset.uid || '')
+          .filter(Boolean)
+          .sort();
+        const pendingRecords = probe?.observer?.takeRecords?.() || [];
+        probe?.processMutationRecords?.(pendingRecords);
+        probe?.observer?.disconnect?.();
+        probe?.layoutObserver?.disconnect?.();
+        probe?.restoreAnimate?.();
+        perf?.finishScenarioStage?.(probe?.presentationStage, { surface: 'inventory', direction: mode });
+        const addedNodes = probe?.addedNodes || new Set();
+        const removedNodes = probe?.removedNodes || new Set();
+        const movedNodes = [...addedNodes].filter(node => removedNodes.has(node));
+        const createdNodes = Math.max(0, addedNodes.size - movedNodes.length);
+        const deletedNodes = Math.max(0, removedNodes.size - movedNodes.length);
+        const currentUidNodes = new Map();
+        list?.querySelectorAll('li.entry-card[data-uid]').forEach(card => {
+          const uid = card.dataset.uid || '';
+          if (!uid) return;
+          if (!currentUidNodes.has(uid)) currentUidNodes.set(uid, []);
+          currentUidNodes.get(uid).push(card);
+        });
+        let preservedCardNodes = 0;
+        probe?.initialUidNodes?.forEach((node, uid) => {
+          if ((currentUidNodes.get(uid) || []).includes(node)) preservedCardNodes += 1;
+        });
+        const itemCards = [...(list?.querySelectorAll(`li.entry-card[data-uid="${window.CSS.escape(target.itemUid || '')}"]`) || [])];
+        const vehicleCards = [...(list?.querySelectorAll(`li.entry-card[data-uid="${window.CSS.escape(target.vehicleUid || '')}"]`) || [])];
+        const itemCard = itemCards[0] || null;
+        const itemNested = Boolean(itemCard?.closest('.vehicle-items'));
+        const itemParentUid = itemCard?.parentElement?.closest('li.entry-card[data-uid]')?.dataset?.uid || '';
+        const duplicateUids = [...currentUidNodes.entries()]
+          .filter(([, cards]) => cards.length !== 1)
+          .map(([uid, cards]) => ({ uid, count: cards.length }));
+        const afterExpandedCategories = expandedCategories();
+        const afterExpandedParents = expandedParents();
+        const uiStability = {
+          controlActivationMs: Number(target.controlActivationMs || 0),
+          nestedUnloadPreparationMs: Number(target.nestedUnloadPreparationMs || 0),
+          scrollBefore: {
+            x: Number(probe?.initialScrollX || 0),
+            y: Number(probe?.initialScrollY || 0),
+            listTop: Number(probe?.initialListScrollTop || 0)
+          },
+          scrollAfter: { x: window.scrollX, y: window.scrollY, listTop: list?.scrollTop || 0 },
+          focusBefore: probe?.initialFocus || '',
+          focusAfter: elementKey(deepActiveElement()),
+          expandedCategoriesBefore: probe?.initialExpandedCategories || [],
+          expandedCategoriesAfter: afterExpandedCategories,
+          expandedParentsBefore: probe?.initialExpandedParents || [],
+          expandedParentsAfter: afterExpandedParents,
+          cardNodesBefore: probe?.initialUidNodes?.size || 0,
+          cardNodesPreserved: preservedCardNodes,
+          cardsReconstructed: Math.max(0, (probe?.initialUidNodes?.size || 0) - preservedCardNodes),
+          rootDescendantsBefore: Number(probe?.initialDescendants || 0),
+          rootDescendantsAfter: list?.querySelectorAll('*').length || 0,
+          rootBrieflyEmpty: Boolean(probe?.rootCleared),
+          domNodesCreated: createdNodes,
+          domNodesMoved: movedNodes.length,
+          domNodesRemoved: deletedNodes,
+          domNodesReplaced: Math.min(createdNodes, deletedNodes),
+          visibleCardsBefore: Number(probe?.initialVisibleCards || 0),
+          visibleCardsAfter: list?.querySelectorAll('li.entry-card').length || 0,
+          targetCardCount: itemCards.length,
+          vehicleCardCount: vehicleCards.length,
+          itemParentUid,
+          rowUnderCorrectParent: mode === 'load'
+            ? itemNested && itemParentUid === target.vehicleUid
+            : !itemNested,
+          duplicateUids,
+          intermediateIncorrectLocation: false,
+          animationCalls: Number(probe?.inventoryAnimationCalls || 0),
+          totalAnimationCalls: Number(probe?.animationCalls || 0),
+          layoutShift: Number(probe?.layoutShift || 0)
+        };
+        perf?.incrementScenarioCounter?.(scenarioId, 'domObserverNodesCreated', createdNodes);
+        perf?.incrementScenarioCounter?.(scenarioId, 'domObserverNodesMoved', movedNodes.length);
+        perf?.incrementScenarioCounter?.(scenarioId, 'domObserverNodesRemoved', deletedNodes);
+        perf?.incrementScenarioCounter?.(scenarioId, 'domObserverNodesReplaced', Math.min(createdNodes, deletedNodes));
+        perf?.incrementScenarioCounter?.(scenarioId, 'cardsReconstructed', uiStability.cardsReconstructed);
+        perf?.incrementScenarioCounter?.(scenarioId, 'cardNodesPreserved', preservedCardNodes);
+        perf?.incrementScenarioCounter?.(scenarioId, 'animationCalls', uiStability.animationCalls);
+        perf?.incrementScenarioCounter?.(scenarioId, 'totalAnimationCalls', uiStability.totalAnimationCalls);
+        if (uiStability.rootBrieflyEmpty) perf?.incrementScenarioCounter?.(scenarioId, 'inventoryRootEmptyTransitions');
+        if (duplicateUids.length) perf?.incrementScenarioCounter?.(scenarioId, 'duplicateCardStates');
+        perf?.markScenario?.(scenarioId, 'ui-stability-captured', uiStability);
         perf?.markScenario?.(scenarioId, 'first-feedback-presented', { action: `vehicle-${mode}` });
         perf?.markScenario?.(scenarioId, 'final-consistency', { action: `vehicle-${mode}` });
         perf?.clearFlowContext?.('inventory-mutation', scenarioId);
+        delete window.__vehicleDomProbe;
         return perf?.endScenario?.(scenarioId, {
           scope: 'inventory',
           vehicle: target.vehicle,
           item: target.item,
           behaviorSignature: 'vehicle-topology-move',
           stateSize: target.stateSize,
-          direction: mode
+          direction: mode,
+          controlActivationMs: target.controlActivationMs,
+          pathMode: window.__symbaroumPerfForceSafeInventoryMutations ? 'safe' : 'optimized',
+          uiStability
         });
-      }, { target, scenarioName, mode: direction });
+      }, { target, scenarioName, mode });
+      if (cdpSession && browserMetricsBefore) {
+        const browserMetricsAfter = await cdpSession.send('Performance.getMetrics');
+        const before = new Map(browserMetricsBefore.metrics.map(metric => [metric.name, Number(metric.value) || 0]));
+        const after = new Map(browserMetricsAfter.metrics.map(metric => [metric.name, Number(metric.value) || 0]));
+        const delta = name => (after.get(name) || 0) - (before.get(name) || 0);
+        result.detail.browserWork = {
+          layoutDurationMs: delta('LayoutDuration') * 1000,
+          recalcStyleDurationMs: delta('RecalcStyleDuration') * 1000,
+          scriptDurationMs: delta('ScriptDuration') * 1000,
+          taskDurationMs: delta('TaskDuration') * 1000,
+          layoutCount: delta('LayoutCount'),
+          recalcStyleCount: delta('RecalcStyleCount')
+        };
+        await cdpSession.detach();
+      }
+      const beforeReload = await readCanonicalInventory(page);
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      const afterReload = await readCanonicalInventory(page);
+      result.detail.uiStability = {
+        ...(result.detail.uiStability || {}),
+        affectedRows: [target.itemUid, target.vehicleUid].filter(Boolean),
+        affectedParents: ['root', target.sourceVehicleUid, target.vehicleUid].filter(Boolean),
+        persistenceReloadParity: beforeReload === afterReload
+      };
+      return result;
     })
   ));
   return aggregateScenarioRuns(scenarioName, runs);
@@ -2219,6 +2679,359 @@ async function runIndexInventoryRemove(browser, iterations, options = {}) {
           target
         }
       };
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runIndexBundleRemove(browser, iterations) {
+  const scenarioName = 'index-inventory-bundle-remove';
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
+      const target = await page.evaluate(async ({ size, scenarioName: name }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entries = Array.isArray(window.DB) ? window.DB : [];
+        const bundleSummary = entries.find(entry => String(entry?.id || '') === 'di79');
+        const bundleEntry = await window.catalogLoader?.ensureEntryData?.(bundleSummary);
+        if (!bundleEntry) throw new Error('Missing inventory bundle production-control representative.');
+        const inventory = entries
+          .filter(entry => {
+            const types = entry?.taggar?.typ || [];
+            return entry.id !== bundleEntry.id
+              && window.isInv?.(entry)
+              && !(window.invUtil?.getInventoryBundleItems?.(entry)?.length || 0)
+              && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
+          })
+          .slice(0, Math.max(0, size - 8))
+          .map(entry => ({
+            id: entry.id,
+            name: entry.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+          }));
+        const refs = window.invUtil?.addInventoryBundle?.(inventory, bundleEntry) || [];
+        if (!refs.length) throw new Error(`Unable to expand bundle ${bundleEntry.namn}.`);
+        window.storeHelper.setInventory(activeStore, inventory);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
+        return {
+          id: bundleEntry.id,
+          name: bundleEntry.namn,
+          refs,
+          stateSize: inventory.length
+        };
+      }, { size: requestedSize, scenarioName });
+
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      await page.locator('#lista').waitFor({ state: 'attached' });
+      await revealIndexPerfTarget(page, 'inventory', {
+        entryName: target.name,
+        actionSelector: 'button[data-act="sub"], button[data-act="rem"], button[data-act="del"]'
+      });
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page);
+      const browserCapture = await startBrowserWorkCapture(page);
+      await clickCardAction(page, { rootSelector: '#lista', name: target.name, act: ['sub', 'del', 'rem'] });
+      const scenario = await waitForRemoveScenario(page);
+      const browserWork = await finishBrowserWorkCapture(browserCapture);
+      await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'bundle-remove-parity' }));
+      const beforeReload = await readCanonicalInventory(page);
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      const afterReload = await readCanonicalInventory(page);
+      scenario.detail = {
+        ...(scenario.detail || {}),
+        behaviorSignature: 'bundle-removal',
+        stateSize: target.stateSize,
+        browserWork,
+        uiStability: {
+          inventorySurfaceMounted: false,
+          affectedRows: target.refs.length,
+          affectedParents: ['root'],
+          persistenceReloadParity: beforeReload === afterReload
+        }
+      };
+      return scenario;
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runContainerUnwrap(browser, iterations) {
+  const scenarioName = 'inventory-container-unwrap';
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => {
+      const target = await page.evaluate(async ({ size, scenarioName: name }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entries = Array.isArray(window.DB) ? window.DB : [];
+        const vehicleEntry = entries.find(entry => (
+          window.isInv?.(entry) && (entry?.taggar?.typ || []).includes('Färdmedel')
+        ));
+        const itemEntry = entries.find(entry => {
+          const types = entry?.taggar?.typ || [];
+          return window.isInv?.(entry)
+            && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
+        });
+        if (!vehicleEntry || !itemEntry) throw new Error('Missing container unwrap representative.');
+        const child = {
+          id: itemEntry.id,
+          name: itemEntry.namn,
+          qty: 1,
+          gratis: 0,
+          gratisKval: [],
+          removedKval: []
+        };
+        const vehicle = {
+          id: vehicleEntry.id,
+          name: vehicleEntry.namn,
+          qty: 1,
+          gratis: 0,
+          contains: [child],
+          gratisKval: [],
+          removedKval: []
+        };
+        const fillers = entries
+          .filter(entry => entry.id !== vehicleEntry.id && entry.id !== itemEntry.id
+            && window.isInv?.(entry)
+            && !(entry?.taggar?.typ || []).some(type => (
+              ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type)
+            )))
+          .slice(0, Math.max(0, size - 1))
+          .map(entry => ({
+            id: entry.id,
+            name: entry.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+          }));
+        const inventory = [vehicle, ...fillers];
+        window.storeHelper.setInventory(activeStore, inventory);
+        window.invUtil?.renderInventory?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
+        return {
+          vehicleUid: vehicle.__uid,
+          vehicleId: vehicleEntry.id,
+          itemUid: child.__uid,
+          itemId: itemEntry.id,
+          stateSize: inventory.length
+        };
+      }, { size: requestedSize, scenarioName });
+
+      const vehicleCard = page.locator(`#invList li.entry-card[data-uid="${target.vehicleUid}"]`).first();
+      const deleteButton = vehicleCard.locator(`button[data-act="del"][data-id="${target.vehicleId}"]`).first();
+      if (!await deleteButton.isVisible()) await vehicleCard.locator('.card-title').click();
+      const activationStart = await page.evaluate(() => performance.now());
+      await deleteButton.click();
+      const confirm = page.locator('shared-toolbar #deleteContainerOnly');
+      await confirm.waitFor({ state: 'visible' });
+      const controlActivationMs = await page.evaluate(start => performance.now() - start, activationStart);
+
+      await installInventoryDomProbe(page);
+      await page.evaluate(({ name, target, controlActivationMs }) => {
+        const perf = window.symbaroumPerf;
+        perf?.clearHistory?.();
+        const scenarioId = perf?.startScenario?.(name, {
+          scope: 'inventory',
+          behaviorSignature: 'container-unwrap',
+          stateSize: target.stateSize,
+          pathMode: 'fallback',
+          controlActivationMs
+        });
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        window.__containerScenarioId = scenarioId;
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', { action: 'container-unwrap' });
+        }, { capture: true, once: true });
+      }, { name: scenarioName, target, controlActivationMs });
+      const browserCapture = await startBrowserWorkCapture(page);
+      await confirm.click();
+      await page.waitForFunction(({ vehicleId, itemId }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const inventory = window.storeHelper.getInventory(activeStore);
+        return !inventory.some(row => String(row?.id || '') === String(vehicleId))
+          && inventory.some(row => String(row?.id || '') === String(itemId));
+      }, { vehicleId: target.vehicleId, itemId: target.itemId });
+      const scenario = await page.evaluate(async ({ target, controlActivationMs }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__containerScenarioId;
+        perf?.markScenario?.(scenarioId, 'first-feedback-dom', { action: 'container-unwrap' });
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'container-unwrap' });
+        perf?.markScenario?.(scenarioId, 'all-views-consistent', { action: 'container-unwrap' });
+        await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'first-feedback-presented', { action: 'container-unwrap' });
+        perf?.markScenario?.(scenarioId, 'final-consistency', { action: 'container-unwrap' });
+        perf?.clearFlowContext?.('inventory-mutation', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'inventory',
+          behaviorSignature: 'container-unwrap',
+          stateSize: target.stateSize,
+          pathMode: 'fallback',
+          controlActivationMs
+        });
+      }, { target, controlActivationMs });
+      const uiStability = await readInventoryDomProbe(page);
+      const browserWork = await finishBrowserWorkCapture(browserCapture);
+      const beforeReload = await readCanonicalInventory(page);
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      const afterReload = await readCanonicalInventory(page);
+      scenario.detail = {
+        ...(scenario.detail || {}),
+        browserWork,
+        uiStability: {
+          ...(uiStability || {}),
+          controlActivationMs,
+          affectedRows: [target.vehicleUid, target.itemUid],
+          affectedParents: ['root', target.vehicleUid],
+          persistenceReloadParity: beforeReload === afterReload
+        }
+      };
+      return scenario;
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runFilteredRowRemoval(browser, iterations, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const scenarioName = forceSafePath
+    ? 'inventory-filtered-row-remove-safe'
+    : 'inventory-filtered-row-remove';
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async page => {
+      const target = await page.evaluate(async ({ size, name }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entries = Array.isArray(window.DB) ? window.DB : [];
+        const entry = window.lookupEntry?.({ name: 'Bandage' });
+        if (!entry) throw new Error('Missing filtered row-removal representative.');
+        const targetRow = {
+          id: entry.id,
+          name: entry.namn,
+          qty: 1,
+          gratis: 0,
+          gratisKval: [],
+          removedKval: []
+        };
+        const fillers = entries
+          .filter(candidate => {
+            const types = candidate?.taggar?.typ || [];
+            return candidate.id !== entry.id
+              && window.isInv?.(candidate)
+              && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
+          })
+          .slice(0, Math.max(0, size - 1))
+          .map(candidate => ({
+            id: candidate.id,
+            name: candidate.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+          }));
+        window.storeHelper.setInventory(activeStore, [targetRow, ...fillers]);
+        const stored = window.storeHelper.getInventory(activeStore);
+        const row = stored[0];
+        window.invUtil.filter.invTxt = entry.namn;
+        window.invUtil.renderInventory({ trigger: 'filtered-removal-setup' });
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
+        const renamed = { ...row, name: 'Helt annat föremål' };
+        return {
+          id: entry.id,
+          name: entry.namn,
+          rowUid: row.__uid,
+          stateSize: stored.length,
+          classifier: {
+            leave: window.invUtil.classifyInventoryFilterMutation({
+              previousRow: row, row: renamed, previousEntry: entry, entry,
+              previousIndex: 0, nextIndex: 0
+            }),
+            enter: window.invUtil.classifyInventoryFilterMutation({
+              previousRow: renamed, row, previousEntry: entry, entry,
+              previousIndex: 0, nextIndex: 0
+            }),
+            reorder: window.invUtil.classifyInventoryFilterMutation({
+              previousRow: row, row: { ...row }, previousEntry: entry, entry,
+              previousIndex: 0, nextIndex: 1
+            })
+          }
+        };
+      }, { size: requestedSize, name: scenarioName });
+
+      await installInventoryDomProbe(page);
+      await page.evaluate(({ name, target, forceSafePath }) => {
+        const perf = window.symbaroumPerf;
+        perf?.clearHistory?.();
+        const scenarioId = perf?.startScenario?.(name, {
+          scope: 'inventory',
+          entry: target.name,
+          behaviorSignature: 'filtered-membership-remove',
+          stateSize: target.stateSize,
+          activeFilters: true,
+          pathMode: forceSafePath ? 'safe' : 'optimized'
+        });
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        window.__filteredRemovalScenarioId = scenarioId;
+        window.__symbaroumPerfForceSafeInventoryMutations = forceSafePath;
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', { action: 'filtered-row-remove' });
+        }, { capture: true, once: true });
+      }, { name: scenarioName, target, forceSafePath });
+
+      const browserCapture = await startBrowserWorkCapture(page);
+      const card = page.locator(`#invList li.entry-card[data-uid="${target.rowUid}"]`).first();
+      await card.locator('button[data-act="del"]').first().click();
+      await page.waitForFunction(rowUid => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        return !window.storeHelper.getInventory(activeStore)
+          .some(row => String(row?.__uid || '') === String(rowUid));
+      }, target.rowUid);
+      const scenario = await page.evaluate(async ({ target, forceSafePath }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__filteredRemovalScenarioId;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        perf?.markScenario?.(scenarioId, 'all-views-consistent', { action: 'filtered-row-remove' });
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'filtered-row-remove' });
+        perf?.markScenario?.(scenarioId, 'persistence-flush-complete', { action: 'filtered-row-remove' });
+        await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'first-feedback-presented', { action: 'filtered-row-remove' });
+        perf?.markScenario?.(scenarioId, 'final-consistency', { action: 'filtered-row-remove' });
+        perf?.clearFlowContext?.('inventory-mutation', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'inventory',
+          entry: target.name,
+          behaviorSignature: 'filtered-membership-remove',
+          stateSize: target.stateSize,
+          activeFilters: true,
+          pathMode: forceSafePath ? 'safe' : 'optimized'
+        });
+      }, { target, forceSafePath });
+      const uiStability = await readInventoryDomProbe(page);
+      const browserWork = await finishBrowserWorkCapture(browserCapture);
+      const beforeReload = await readCanonicalInventory(page);
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      const afterReload = await readCanonicalInventory(page);
+      scenario.detail = {
+        ...(scenario.detail || {}),
+        classifier: target.classifier,
+        browserWork,
+        uiStability: {
+          ...(uiStability || {}),
+          affectedRows: [target.rowUid],
+          affectedParents: ['root'],
+          membership: 'leave',
+          finalOrderProvable: true,
+          persistenceReloadParity: beforeReload === afterReload
+        }
+      };
+      return scenario;
     })
   ));
   return aggregateScenarioRuns(scenarioName, runs);
@@ -2699,8 +3512,14 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'inventoryAddQualitySafe', name: 'inventory-add-quality-safe', aliases: ['inventory quality safe'], run: () => runInventoryAddQuality(browser, iterations, { forceSafePath: true }) },
       { key: 'inventoryCustomItemCreate', name: 'inventory-custom-item-create', aliases: ['inventory add'], run: () => runInventoryCustomItemCreate(browser, iterations) },
       { key: 'inventoryCustomItemEdit', name: 'inventory-custom-item-edit', run: () => runInventoryCustomItemEdit(browser, iterations) },
-      { key: 'inventoryVehicleLoad', name: 'inventory-vehicle-load', aliases: ['inventory add'], run: () => runVehicleScenario(browser, iterations, 'load') },
-      { key: 'inventoryVehicleUnload', name: 'inventory-vehicle-unload', aliases: ['inventory remove'], run: () => runVehicleScenario(browser, iterations, 'unload') },
+      { key: 'inventoryVehicleLoad', name: 'inventory-vehicle-load', aliases: ['inventory add', 'vehicle topology'], run: () => runVehicleScenario(browser, iterations, 'load') },
+      { key: 'inventoryVehicleLoadSafe', name: 'inventory-vehicle-load-safe', aliases: ['vehicle load safe', 'vehicle topology'], run: () => runVehicleScenario(browser, iterations, 'load', { forceSafePath: true }) },
+      { key: 'inventoryVehicleUnload', name: 'inventory-vehicle-unload', aliases: ['inventory remove', 'vehicle topology'], run: () => runVehicleScenario(browser, iterations, 'unload') },
+      { key: 'inventoryVehicleUnloadSafe', name: 'inventory-vehicle-unload-safe', aliases: ['vehicle unload safe', 'vehicle topology'], run: () => runVehicleScenario(browser, iterations, 'unload', { forceSafePath: true }) },
+      { key: 'inventoryVehicleNestedTransfer', name: 'inventory-vehicle-nested-transfer', aliases: ['nested topology'], run: () => runVehicleScenario(browser, iterations, 'load', { nestedTransfer: true }) },
+      { key: 'inventoryContainerUnwrap', name: 'inventory-container-unwrap', aliases: ['container topology'], run: () => runContainerUnwrap(browser, iterations) },
+      { key: 'inventoryFilteredRowRemove', name: 'inventory-filtered-row-remove', aliases: ['filtered membership'], run: () => runFilteredRowRemoval(browser, iterations) },
+      { key: 'inventoryFilteredRowRemoveSafe', name: 'inventory-filtered-row-remove-safe', aliases: ['filtered membership safe'], run: () => runFilteredRowRemoval(browser, iterations, { forceSafePath: true }) },
       { key: 'notesEdit', name: 'notes-edit', run: () => runNotesEdit(browser, iterations) },
       { key: 'moneyEdit', name: 'money-edit', run: () => runMoneyEdit(browser, iterations) },
       { key: 'heavyCharacterSave', name: 'heavy-current-character-save', run: () => runHeavyCurrentCharacterSave(browser, iterations) },
@@ -2713,6 +3532,7 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'characterClearNonInventory', name: 'character-clear-non-inventory', aliases: ['remove', 'character remove'], run: () => runCharacterClearNonInv(browser, iterations) },
       { key: 'indexListRemove', name: 'index-list-remove', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations) },
       { key: 'indexInventoryRemove', name: 'index-inventory-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations) },
+      { key: 'indexInventoryBundleRemove', name: 'index-inventory-bundle-remove', aliases: ['bundle removal'], run: () => runIndexBundleRemove(browser, iterations) },
       { key: 'indexHiddenArtifactRemove', name: 'index-hidden-artifact-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations, { useArtifactCandidate: true }) },
       { key: 'indexListRemoveFullRerender', name: 'index-list-remove-full-rerender', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations, { onlySelected: true }) },
       { key: 'inventoryRowDelete', name: 'inventory-row-delete', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'row-delete') },
