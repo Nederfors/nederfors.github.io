@@ -42,7 +42,7 @@
         "data/avstandsvapen.json",
         "data/narstridsvapen.json"
       ],
-      "genererad": "2026-07-10T13:37:08.062850+00:00"
+      "genererad": "2026-07-16T15:56:55.340092+00:00"
     },
     "Allmän kvalitet": {
       "antal": 2,
@@ -219,7 +219,7 @@
       ]
     },
     "Artefakt": {
-      "antal": 119,
+      "antal": 120,
       "källfiler": [
         "data/artefakter.json",
         "data/lagre-artefakter.json"
@@ -2747,7 +2747,7 @@
       ]
     },
     "Lägre Artefakt": {
-      "antal": 52,
+      "antal": 53,
       "källfiler": [
         "data/lagre-artefakter.json"
       ],
