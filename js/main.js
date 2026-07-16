@@ -11,6 +11,7 @@ const finishPerfScenario = (id, detail = {}) => window.symbaroumPerf?.scheduleSc
 const MUTATION_PERF_FLOW_CONTEXT_KEYS = Object.freeze([
   'add-item',
   'remove-item',
+  'level-change',
   'character-level-change',
   'inventory-mutation',
   'trait-mutation'
@@ -8112,6 +8113,7 @@ function runDerivedRequest(pending) {
     version: request.version,
     charId: request.charId
   };
+  perf?.incrementScenarioCounter?.(pending.scenarioId || null, 'workerRequests');
   const derivedStageToken = perf?.startScenarioStage?.(
     pending.scenarioId || null,
     'derived-totals-recompute',
@@ -8256,6 +8258,10 @@ function scheduleDerivedRequest(charId, afterPaint = false) {
 
 function requestCurrentCharacterDerived(options = {}) {
   const request = buildDerivedRequest(options);
+  window.symbaroumPerf?.incrementScenarioCounter?.(
+    options.scenarioId || getActiveMutationPerfScenarioId(),
+    'derivedRequests'
+  );
   if (!request.charId) {
     return Promise.resolve(computeLocalDerivedCharacter(request));
   }
@@ -8373,6 +8379,7 @@ function makeCharacterRefreshTicket(options = {}) {
   const generation = ++characterRefreshGeneration;
   const perf = window.symbaroumPerf;
   const scenarioId = options.scenarioId || getActiveMutationPerfScenarioId();
+  perf?.incrementScenarioCounter?.(scenarioId, 'refreshGenerations');
   let resolveConsistency;
   const consistencyReady = new Promise(resolve => {
     resolveConsistency = resolve;
@@ -8461,6 +8468,7 @@ async function flushCharacterConsistencyRefresh() {
   const generation = Math.max(...batch.tickets.map(ticket => ticket.generation));
   const perf = window.symbaroumPerf;
   const scenarioId = next.scenarioId || getActiveMutationPerfScenarioId();
+  perf?.incrementScenarioCounter?.(scenarioId, 'refreshFlushes');
   next.generation = generation;
   const renderStage = perf?.startScenarioStage?.(scenarioId, 'surface-render', {
     generation,

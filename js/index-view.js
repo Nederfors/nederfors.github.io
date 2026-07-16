@@ -96,6 +96,23 @@
         remembered: true
       };
     }
+    const replacementPlan = window.rulesHelper?.buildConflictReplacementPlan?.(list, stopResult) || null;
+    if (replacementPlan) {
+      const targets = replacementPlan.replacementNames.map(name => quoteName(name)).join(', ');
+      const approved = await confirmPopup(
+        `${quoteName(entryName) || 'Posten'} ersätter ${targets}. Vill du fortsätta?`,
+        { cancelText: 'Avbryt', okText: 'Ersätt' }
+      );
+      return {
+        action: approved ? 'apply' : 'cancel',
+        selectedKeys: [],
+        state: {
+          projectedList: replacementPlan.projectedList,
+          projectedRequirementList: replacementPlan.projectedList,
+          affectedEntries: replacementPlan.removedEntries
+        }
+      };
+    }
     const popup = window.requirementPopup;
     const popupLevel = options?.toLevel || options?.level || candidateEntry?.nivå || '';
     const skipRequirementPopup = typeof window.rulesHelper?.shouldSkipRequirementPopup === 'function'
@@ -1418,10 +1435,15 @@
       const duplicate = await picker.enforceDuplicatePolicy({
         rule,
         entry: candidate,
-        store,
         value: picked.value,
         usedValues,
-        label: picked.value
+        label: picked.value,
+        confirmFn: message => {
+          if (typeof window.confirmPopup === 'function') {
+            return window.confirmPopup(message, { cancelText: 'Avbryt', okText: 'Fortsätt' });
+          }
+          return window.confirm(message);
+        }
       });
       if (!duplicate.ok) {
         return {
@@ -3046,7 +3068,16 @@
       const cards = timeActiveAddStage('card-query', () => findEntryCards(entry), {
         surface: 'index'
       });
-      if (!cards.length) return false;
+      if (!cards.length) {
+        const stableId = entry?.id === undefined || entry?.id === null ? '' : String(entry.id).trim();
+        const knownCatalogEntry = stableId && getEntries().some(candidate => (
+          String(candidate?.id ?? '').trim() === stableId
+        ));
+        // Lazy catalog sections do not necessarily have a mounted card. Their
+        // membership is unchanged by a selected-state replacement, so there is
+        // no DOM postcondition to patch until the card is mounted.
+        return Boolean(knownCatalogEntry);
+      }
       const charList = storeHelper.getCurrentList(store);
       const invList = storeHelper.getInventory(store);
       const entryTypes = entry?.taggar?.typ || [];
@@ -3242,7 +3273,8 @@
         fillDropdowns();
         updateSearchDatalist();
       },
-      refreshSelection: refreshIndexSelection
+      refreshSelection: refreshIndexSelection,
+      refreshInventoryTotals: options => window.invUtil?.refreshInventoryTotals?.(options)
     });
 
     /* -------- events -------- */
@@ -3813,76 +3845,102 @@
             };
             const addRow = trait => withBusyInteraction(btn, () => (
               runForegroundCatalogMutation(() => {
-                let flashIdx;
-                const qtyToAdd = desiredQty;
-                if (indiv) {
-                  for (let i = 0; i < qtyToAdd; i++) {
-                    const instance = cloneInvRow(rowTemplate);
-                    instance.qty = 1;
-                    if (trait) instance.trait = trait;
-                    assignPrice(instance);
-                    inv.push(instance);
-                    flashIdx = inv.length - 1;
-                    if (livePairs) livePairs.push({ prev: null, next: instance });
-                  }
-                } else {
-                  const match = inv.find(x => x.id === p.id && (!trait || x.trait === trait));
-                  if (match) {
-                    const prevState = livePairs ? cloneInvRow(match) : null;
-                    match.qty = (Number(match.qty) || 0) + qtyToAdd;
-                    if (trait) match.trait = trait;
-                    assignPrice(match);
-                    flashIdx = inv.indexOf(match);
-                    if (livePairs) livePairs.push({ prev: prevState, next: match });
-                  } else {
-                    const instance = cloneInvRow(rowTemplate);
-                    instance.qty = qtyToAdd;
-                    if (trait) instance.trait = trait;
-                    assignPrice(instance);
-                    inv.push(instance);
-                    flashIdx = inv.length - 1;
-                    if (livePairs) livePairs.push({ prev: null, next: instance });
-                  }
-                }
-                finalizeLivePayment();
-                invUtil.saveInventory(inv);
-                invUtil.renderInventory();
-                const hidden = isHidden(p);
-                const artifactTagged = hasArtifactTag(p);
-                let addedToList = false;
-                skipImmediateDerivedRefresh = true;
-                if (hidden || artifactTagged) {
-                  const list = [...storeHelper.getCurrentList(store)];
-                  if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
-                    list.push({ ...p, noInv: true });
-                    const mutationSummary = storeHelper.setCurrentList(store, list);
-                    addReconciliationMode = mutationSummary?.reconciliationMode || addReconciliationMode;
-                    addReconciliationReason = mutationSummary?.reconciliationReason || addReconciliationReason;
-                    addedToList = true;
-                  }
-                  if (addedToList || hidden) {
-                    scheduleCharacterMutationRefresh({
-                      xp: true,
-                      traits: true,
-                      summary: true,
-                      effects: true,
-                      source: 'index-inventory-add'
+                return runCurrentCharacterMutationBatch(() => {
+                  const qtyToAdd = desiredQty;
+                  const candidate = cloneInvRow(rowTemplate);
+                  candidate.qty = qtyToAdd;
+                  if (trait) candidate.trait = trait;
+                  assignPrice(candidate);
+                  const inventoryMutation = invUtil.addInventoryVariant(inv, candidate, {
+                    entry: p,
+                    quantity: qtyToAdd,
+                    individual: indiv
+                  });
+                  if (!inventoryMutation) return;
+                  if (livePairs) {
+                    inventoryMutation.changes.forEach(change => {
+                      livePairs.push({ prev: change.prev, next: change.next });
                     });
                   }
-                  if (hidden && p.id) {
-                    storeHelper.addRevealedArtifact(store, p.id);
+                  finalizeLivePayment();
+
+                  const impact = invUtil.classifyInventoryMutation(
+                    p,
+                    inventoryMutation.row,
+                    inventoryMutation
+                  );
+                  const hidden = isHidden(p);
+                  const artifactTagged = hasArtifactTag(p);
+                  if (hidden) impact.fallbackReasons.push('hidden-or-revealed-state');
+                  if (artifactTagged && !impact.fallbackReasons.includes('artifact-list-or-snapshot-coupling')) {
+                    impact.fallbackReasons.push('artifact-list-or-snapshot-coupling');
                   }
-                }
-                if (!hidden && !addedToList) {
-                  skipIndexRerender = true;
-                }
-                queueUpdate(p);
-                if (hidden || addedToList) needsFullRefresh = true;
-                const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
-                if (li) {
-                  li.classList.add('inv-flash');
-                  setTimeout(() => li.classList.remove('inv-flash'), 1000);
-                }
+                  impact.fastPath = impact.fallbackReasons.length === 0;
+
+                  if (impact.fastPath) {
+                    invUtil.saveInventory(inv, {
+                      skipCharacterRefresh: true,
+                      recalculateArtifactEffects: impact.recalculateArtifactEffects,
+                      bumpDerived: impact.bumpDerived,
+                      fields: liveEnabled ? ['inventory', 'money'] : ['inventory'],
+                      invalidates: impact.invalidates,
+                      targets: impact.targets,
+                      afterCommit: summary => {
+                        scheduleCharacterMutationRefresh({
+                          charId: summary.charId,
+                          version: summary.version,
+                          invalidates: summary.invalidates,
+                          targets: summary.targets,
+                          topology: impact.topology,
+                          source: 'index-inventory-variant-add',
+                          afterPaint: true
+                        });
+                      }
+                    });
+                    skipIndexRerender = true;
+                    skipImmediateDerivedRefresh = true;
+                  } else {
+                    invUtil.saveInventory(inv);
+                    invUtil.renderInventory({
+                      trigger: 'index-inventory-add',
+                      fallbackReasons: impact.fallbackReasons,
+                      entryId: p.id || ''
+                    });
+                  }
+
+                  let addedToList = false;
+                  if (hidden || artifactTagged) {
+                    const list = [...storeHelper.getCurrentList(store)];
+                    if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
+                      list.push({ ...p, noInv: true });
+                      const mutationSummary = storeHelper.setCurrentList(store, list);
+                      addReconciliationMode = mutationSummary?.reconciliationMode || addReconciliationMode;
+                      addReconciliationReason = mutationSummary?.reconciliationReason || addReconciliationReason;
+                      addedToList = true;
+                    }
+                    if (addedToList || hidden) {
+                      scheduleCharacterMutationRefresh({
+                        xp: true,
+                        traits: true,
+                        summary: true,
+                        effects: true,
+                        source: 'index-inventory-add'
+                      });
+                    }
+                    if (hidden && p.id) {
+                      storeHelper.addRevealedArtifact(store, p.id);
+                    }
+                  }
+                  if (!hidden && !addedToList) skipIndexRerender = true;
+                  queueUpdate(p);
+                  if (hidden || addedToList) needsFullRefresh = true;
+                  const flashIdx = inventoryMutation.index;
+                  const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
+                  if (li && !impact.fastPath) {
+                    li.classList.add('inv-flash');
+                    setTimeout(() => li.classList.remove('inv-flash'), 1000);
+                  }
+                });
               })
             ));
             const inventoryChoice = await pickListEntryChoice(
@@ -3891,8 +3949,7 @@
               '',
               null,
               {
-                field: 'trait',
-                usedValues: isStackableInventoryEntry(p) ? [] : undefined
+                field: 'trait'
               }
             );
             if (inventoryChoice.hasChoice) {
@@ -4018,7 +4075,11 @@
                 : [];
             }
           }
-          requiresFullRefresh = requiresFullRefresh || forceRuleOverride || hasReplaceTargets;
+          // A conflict replacement changes selected-state metadata on known
+          // catalog cards, but does not change catalog membership. Let the
+          // mutation summary patch the added and removed cards; keep override
+          // cases on the conservative path.
+          requiresFullRefresh = requiresFullRefresh || forceRuleOverride;
           if (stopResult.hasStops && !forceRuleOverride && conflictBaseList === beforeList) {
             cancelAddScenario(addScenarioId, {
               scope: 'index',

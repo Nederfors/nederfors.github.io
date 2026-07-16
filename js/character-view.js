@@ -66,6 +66,23 @@
         remembered: true
       };
     }
+    const replacementPlan = window.rulesHelper?.buildConflictReplacementPlan?.(list, stopResult) || null;
+    if (replacementPlan) {
+      const targets = replacementPlan.replacementNames.map(name => quoteName(name)).join(', ');
+      const approved = await confirmPopup(
+        `${quoteName(entryName) || 'Posten'} ersätter ${targets}. Vill du fortsätta?`,
+        { cancelText: 'Avbryt', okText: 'Ersätt' }
+      );
+      return {
+        action: approved ? 'apply' : 'cancel',
+        selectedKeys: [],
+        state: {
+          projectedList: replacementPlan.projectedList,
+          projectedRequirementList: replacementPlan.projectedList,
+          affectedEntries: replacementPlan.removedEntries
+        }
+      };
+    }
     const popup = window.requirementPopup;
     const popupLevel = options?.toLevel || options?.level || candidateEntry?.nivå || '';
     const skipRequirementPopup = typeof window.rulesHelper?.shouldSkipRequirementPopup === 'function'
@@ -239,6 +256,18 @@
       const perf = window.symbaroumPerf;
       perf?.setFlowContext?.(LEVEL_CHANGE_FLOW_CONTEXT_KEY, scenarioId);
       perf?.markScenario?.(scenarioId, 'click-handler-start', detail);
+      perf?.markScenario?.(scenarioId, 'first-feedback-dom', {
+        ...detail,
+        feedback: 'level-control'
+      });
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(() => {
+          perf?.markScenario?.(scenarioId, 'immediate-feedback-presented', {
+            ...detail,
+            feedback: 'level-control'
+          });
+        });
+      }
       return scenarioId;
     };
     const cancelRemoveScenario = (scenarioId, detail = {}) => {
@@ -1276,6 +1305,13 @@
     }
 
     function getActiveHandlingKeys(p) {
+      const hasLevelDefinitions = Object.keys(p?.nivåer || {}).length > 0;
+      const hasInlineHandling = Boolean(
+        p?.taggar?.nivå_data && Object.keys(p.taggar.nivå_data).length
+      ) || Boolean(
+        p?.taggar?.handling && Object.keys(p.taggar.handling).length
+      );
+      if (!hasLevelDefinitions && !hasInlineHandling) return [];
       const isActiveHandling = (value) => {
         const values = Array.isArray(value) ? value : [value];
         return values.some(item => {
@@ -2233,6 +2269,199 @@
       return true;
     };
 
+    const hasActiveCharacterSelectionFilters = () => (
+      Boolean(sTemp)
+      || Boolean(storeHelper.getOnlySelected(store))
+      || ['search', 'typ', 'ark', 'test'].some(key => (
+        Array.isArray(F[key]) && F[key].some(value => String(value || '').trim())
+      ))
+    );
+
+    const findCharacterCardForEntry = entry => {
+      if (!entry) return null;
+      const wantedId = String(entry.id || '').trim();
+      const wantedName = String(entry.namn || '').trim();
+      const wantedTrait = String(entry.trait || '').trim();
+      return [...dom.valda.querySelectorAll('li.entry-card, li.card')].find(card => {
+        const cardId = String(card.dataset.id || '').trim();
+        const cardName = String(card.dataset.name || '').trim();
+        const cardTrait = String(card.dataset.trait || '').trim();
+        if (wantedId && cardId && wantedId !== cardId) return false;
+        if ((!wantedId || !cardId) && wantedName !== cardName) return false;
+        return wantedTrait === cardTrait;
+      }) || null;
+    };
+
+    const getCharacterEntryForCard = card => {
+      if (!card) return null;
+      const id = String(card.dataset.id || '').trim();
+      const name = String(card.dataset.name || '').trim();
+      const trait = String(card.dataset.trait || '').trim();
+      return storeHelper.getCurrentList(store).find(entry => {
+        if (id && entry?.id && String(entry.id) !== id) return false;
+        if ((!id || !entry?.id) && String(entry?.namn || '').trim() !== name) return false;
+        return String(entry?.trait || '').trim() === trait;
+      }) || null;
+    };
+
+    const ensureCharacterCategoryList = category => {
+      const existing = [...dom.valda.querySelectorAll('.cat-group > details[data-cat]')]
+        .find(details => details.dataset.cat === category);
+      if (existing) return existing.querySelector(':scope > ul');
+      const categoryItem = document.createElement('li');
+      categoryItem.className = 'cat-group';
+      categoryItem.dataset.aaKey = `cat:${category}`;
+      const details = document.createElement('details');
+      details.className = 'db-accordion__item';
+      details.dataset.cat = category;
+      details.open = catState[category] !== false;
+      const summary = document.createElement('summary');
+      summary.className = 'db-accordion__trigger';
+      summary.textContent = catName(category);
+      const list = document.createElement('ul');
+      list.className = 'db-accordion__content card-list entry-card-list';
+      details.append(summary, list);
+      categoryItem.appendChild(details);
+      details.addEventListener('toggle', () => {
+        updateCatToggle();
+        catState[category] = details.open;
+        saveState();
+      }, { signal });
+      const nextCategory = [...dom.valda.querySelectorAll(':scope > .cat-group')]
+        .find(item => catComparator(category, item.querySelector('details')?.dataset.cat || '') < 0);
+      dom.valda.insertBefore(categoryItem, nextCategory || null);
+      return list;
+    };
+
+    const insertCharacterSelectionCards = entries => {
+      const candidates = (Array.isArray(entries) ? entries : [entries]).filter(Boolean);
+      if (!candidates.length) return true;
+      const currentList = storeHelper.getCurrentList(store);
+      const sortMode = storeHelper.getEntrySort
+        ? storeHelper.getEntrySort(store)
+        : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+      const comparator = typeof entrySortComparator === 'function'
+        ? entrySortComparator(sortMode, { extract: group => group.entry })
+        : ((left, right) => String(left?.entry?.namn || '').localeCompare(String(right?.entry?.namn || ''), 'sv'));
+
+      const newByCategory = new Map();
+      for (const entry of candidates) {
+        const existing = findCharacterCardForEntry(entry);
+        if (existing) {
+          if (!replaceCharacterSelectionCard(existing, entry)) return false;
+          continue;
+        }
+        const count = getEntryMaxCount(entry) > 1 && !entry.trait
+          ? currentList.filter(item => item?.namn === entry.namn && !item?.trait).length
+          : 1;
+        const card = buildCharacterSelectionCard({ entry, count });
+        const category = charCategory(entry, { allowFallback: false });
+        if (!card || !category) return false;
+        if (!newByCategory.has(category)) newByCategory.set(category, []);
+        newByCategory.get(category).push({ entry, card });
+      }
+
+      for (const [category, additions] of newByCategory) {
+        const list = ensureCharacterCategoryList(category);
+        if (!list) return false;
+        const merged = [
+          ...[...list.querySelectorAll(':scope > li.entry-card, :scope > li.card')].map(card => ({
+            card,
+            entry: getCharacterEntryForCard(card)
+          })),
+          ...additions
+        ];
+        if (merged.some(item => !item.entry || !item.card)) return false;
+        merged.sort((left, right) => comparator({ entry: left.entry }, { entry: right.entry }));
+        const fragment = document.createDocumentFragment();
+        merged.forEach(item => fragment.appendChild(item.card));
+        list.replaceChildren(fragment);
+        window.daubMotion?.bindAutoAnimate?.(list, { duration: 100 });
+      }
+      return true;
+    };
+
+    const patchCharacterSelectionStructuralMutation = (summaries, currentCard, currentEntry) => {
+      if (hasActiveCharacterSelectionFilters()) return false;
+      const validSummaries = (Array.isArray(summaries) ? summaries : [summaries]).filter(Boolean);
+      if (!validSummaries.length) return false;
+      const added = validSummaries.flatMap(summary => Array.isArray(summary.addedEntries) ? summary.addedEntries : []);
+      const removed = validSummaries.flatMap(summary => Array.isArray(summary.removedEntries) ? summary.removedEntries : []);
+      const changed = [currentEntry, ...added, ...removed].filter(Boolean);
+      if (changed.some(entry => (
+        !entry.__uid
+        || (!entry.id && !entry.namn)
+        || (entry.taggar?.typ || []).includes('Hemmagjort')
+        || !charCategory(entry, { allowFallback: false })
+      ))) return false;
+
+      const liveList = storeHelper.getCurrentList(store);
+      const findLiveEntry = reference => {
+        if (!reference) return null;
+        const uid = String(reference.__uid || '').trim();
+        if (uid) {
+          const exact = liveList.find(entry => String(entry?.__uid || '').trim() === uid);
+          if (exact) return exact;
+        }
+        const id = String(reference.id || '').trim();
+        const name = String(reference.namn || '').trim();
+        const trait = String(reference.trait || '').trim();
+        return liveList.find(entry => {
+          const entryId = String(entry?.id || '').trim();
+          if (id && entryId) {
+            if (id !== entryId) return false;
+          } else if (String(entry?.namn || '').trim() !== name) {
+            return false;
+          }
+          return String(entry?.trait || '').trim() === trait;
+        }) || null;
+      };
+
+      const empty = dom.valda.querySelector(':scope > li.entry-card:not([data-name]), :scope > li.card:not([data-name])');
+      empty?.remove();
+      removed.forEach(entry => {
+        const card = findCharacterCardForEntry(entry);
+        if (!card) return;
+        const remaining = findLiveEntry(entry);
+        if (remaining) {
+          replaceCharacterSelectionCard(card, remaining);
+          return;
+        }
+        const category = card.closest('.cat-group');
+        const list = card.parentElement;
+        card.remove();
+        if (list && !list.querySelector(':scope > li.entry-card, :scope > li.card')) category?.remove();
+      });
+
+      if (currentCard && currentEntry && currentCard.isConnected) {
+        if (!replaceCharacterSelectionCard(currentCard, currentEntry)) return false;
+      }
+      const uniqueAdded = new Map();
+      added.forEach(entry => {
+        const key = `${entry.id || entry.namn}|${entry.trait || ''}`;
+        uniqueAdded.set(key, entry);
+      });
+      const liveAdded = [...uniqueAdded.values()].map(entry => (
+        findLiveEntry(entry) || entry
+      ));
+      if (!insertCharacterSelectionCards(liveAdded)) return false;
+
+      const expectedCards = [currentEntry, ...liveAdded]
+        .filter(Boolean)
+        .every(entry => Boolean(findCharacterCardForEntry(entry)));
+      const removalsMatch = removed.every(entry => {
+        const remaining = findLiveEntry(entry);
+        return remaining
+          ? Boolean(findCharacterCardForEntry(remaining))
+          : !findCharacterCardForEntry(entry);
+      });
+      const categoriesValid = [...dom.valda.querySelectorAll(':scope > .cat-group')].every(category => (
+        Boolean(category.querySelector(':scope > details[data-cat] > ul'))
+        && Boolean(category.querySelector(':scope > details[data-cat] > ul > li.entry-card, :scope > details[data-cat] > ul > li.card'))
+      ));
+      return expectedCards && removalsMatch && categoriesValid;
+    };
+
     const renderSkills = arr => {
       const sortMode = storeHelper.getEntrySort
         ? storeHelper.getEntrySort(store)
@@ -2810,6 +3039,7 @@
       let mutationSummary = null;
       let choiceResolution = null;
       let requirementAffectedEntries = [];
+      let removeRenderMode = 'targeted';
       if (act === 'add') {
         if (!multi) return;
         const lvlSel = liEl.querySelector('select.level');
@@ -3059,13 +3289,18 @@
         storeHelper.removeRevealedArtifact(store, p.id);
       }
       if (isRemoveAction) {
-        const patchedInPlace = timeActiveRemoveStage('targeted-ui-refresh', () => (
-          patchCharacterSelectionRemoveMutation(mutationSummary, liEl, name, tr)
-        ), {
+        const patchedInPlace = timeActiveRemoveStage('targeted-ui-refresh', () => {
+          if (mutationSummary?.topologyChanged) {
+            return patchCharacterSelectionStructuralMutation([mutationSummary], null, null);
+          }
+          return patchCharacterSelectionRemoveMutation(mutationSummary, liEl, name, tr);
+        }, {
           surface: 'character',
           branch: 'list'
         });
         if (!patchedInPlace) {
+          removeRenderMode = 'full';
+          window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'fallbackActivations');
           timeActiveRemoveStage('selection-render', () => {
             renderSkills(filtered());
           }, {
@@ -3073,6 +3308,8 @@
             branch: 'list',
             reason: 'target-postcondition'
           });
+        } else {
+          window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'targetedRenders');
         }
         scheduleCharacterMutationRefresh({
           xp: true,
@@ -3092,18 +3329,16 @@
           source: act === 'add' ? 'character-list-add' : 'character-list-mutate',
           afterPaint: true
         });
-        let needsSelectionRefresh = !canTargetCharacterSelectionAddMutation(mutationSummary, name);
-        (choiceResolution?.summaries || []).forEach(summary => {
-          if (!canTargetCharacterSelectionAddMutation(summary, name)) {
-            needsSelectionRefresh = true;
-          }
-        });
-        let patchedInPlace = false;
-        if (!needsSelectionRefresh) {
-          const liveEntry = findCharacterSelectionEntry({ name, trait: tr });
-          patchedInPlace = replaceCharacterSelectionCard(liEl, liveEntry);
-        }
-        if (needsSelectionRefresh || !patchedInPlace) {
+        const mutationSummaries = [mutationSummary, ...(choiceResolution?.summaries || [])].filter(Boolean);
+        const needsStructuralPatch = mutationSummaries.some(summary => summary?.topologyChanged);
+        const liveEntry = findCharacterSelectionEntry({ name, trait: tr });
+        const patchedInPlace = needsStructuralPatch
+          ? patchCharacterSelectionStructuralMutation(mutationSummaries, liEl, liveEntry)
+          : (
+              mutationSummaries.every(summary => canTargetCharacterSelectionAddMutation(summary, name))
+              && replaceCharacterSelectionCard(liEl, liveEntry)
+            );
+        if (!patchedInPlace) {
           refreshCharacterSelection();
         }
         refreshCharacterFilters();
@@ -3123,7 +3358,8 @@
         await finishRemoveScenario(removeScenarioId, {
           scope: 'character',
           entry: name,
-          branch: 'list'
+          branch: 'list',
+          renderMode: removeRenderMode
         });
       }
 
@@ -3165,6 +3401,9 @@
             fromLevel: old || '',
             toLevel: nextLevel || ''
           });
+        }
+        if (typeof window.requestAnimationFrame === 'function') {
+          await new Promise(resolve => window.requestAnimationFrame(resolve));
         }
         const previousChoiceRule = (() => {
           const picker = window.choicePopup;
@@ -3348,31 +3587,34 @@
           source: 'character-level-change',
           afterPaint: true
         });
-        let needsSelectionRefresh = Boolean(mutationSummary?.topologyChanged);
-        (choiceResolution?.summaries || []).forEach(summary => {
-          if (summary?.topologyChanged) needsSelectionRefresh = true;
-        });
+        const mutationSummaries = [mutationSummary, ...(choiceResolution?.summaries || [])].filter(Boolean);
+        const hasStructuralMutation = mutationSummaries.some(summary => summary?.topologyChanged);
         let renderMode = 'targeted';
         const patchedInPlace = timeActiveLevelStage('targeted-ui-refresh', () => {
-          if (needsSelectionRefresh) return false;
           const liveEntry = findMatchingCharacterListEntry(
             storeHelper.getCurrentList(store),
             finalEntry,
             buildChoiceEntryMatchOptions(finalEntry)
           ) || finalEntry;
+          if (hasStructuralMutation) {
+            return patchCharacterSelectionStructuralMutation(mutationSummaries, cardEl, liveEntry);
+          }
           return replaceCharacterSelectionCard(cardEl, liveEntry);
         }, {
           surface: 'character',
           branch: 'list'
         });
-        if (needsSelectionRefresh || !patchedInPlace) {
+        if (!patchedInPlace) {
           renderMode = 'full';
+          window.symbaroumPerf?.incrementScenarioCounter?.(levelScenarioId, 'fallbackActivations');
           timeActiveLevelStage('selection-render', () => {
             refreshCharacterSelection();
           }, {
             surface: 'character',
             branch: 'list'
           });
+        } else {
+          window.symbaroumPerf?.incrementScenarioCounter?.(levelScenarioId, 'targetedRenders');
         }
         refreshCharacterFilters();
         await waitForCharacterMutationRefresh();
@@ -3382,7 +3624,7 @@
           entry: name,
           branch: 'list',
           renderMode,
-          structural: needsSelectionRefresh
+          structural: hasStructuralMutation
         });
         return;
       }

@@ -3133,6 +3133,18 @@
 ;/* js/rules-helper.js */
 (function(window){
   const RULE_KEYS = Object.freeze(['andrar', 'kraver', 'krockar', 'ger', 'val']);
+  const MUTATION_PERF_FLOW_KEYS = Object.freeze([
+    'add-item', 'remove-item', 'level-change', 'character-level-change', 'inventory-mutation', 'trait-mutation'
+  ]);
+
+  function incrementMutationPerfCounter(name, delta = 1) {
+    const perf = window.symbaroumPerf;
+    const scenarioId = MUTATION_PERF_FLOW_KEYS
+      .map(key => perf?.getFlowContext?.(key))
+      .find(Boolean);
+    if (!scenarioId) return 0;
+    return perf.incrementScenarioCounter?.(scenarioId, name, delta) || 0;
+  }
   const ENTRY_RULES_CACHE = new WeakMap();
   const DEFAULT_LEVEL_ORDER = Object.freeze(['novis', 'gesall', 'mastare']);
   const LEVEL_VALUE_MAP = Object.freeze({
@@ -4023,6 +4035,7 @@
 
   function getRuleList(entry, key, options = {}) {
     if (!RULE_KEYS.includes(key)) return [];
+    incrementMutationPerfCounter('ruleHelperCalls');
     return toRuleList(getEntryRules(entry, options)[key]);
   }
 
@@ -7069,7 +7082,12 @@
     };
 
     collectForSource(candidate, entries, candidateLevel);
-    entries.forEach(entry => {
+    const knownConflictSources = Array.isArray(options?.conflictSources)
+      ? options.conflictSources
+      : entries;
+    const entrySet = knownConflictSources === entries ? null : new Set(entries);
+    knownConflictSources.forEach(entry => {
+      if (entrySet && !entrySet.has(entry)) return;
       collectForSource(
         entry,
         [candidate],
@@ -8749,6 +8767,33 @@
     };
   }
 
+  function buildConflictReplacementPlan(list, stopResult = {}) {
+    const replacementNames = [...new Set(
+      toArray(stopResult?.replaceTargetNames)
+        .map(value => String(value || '').trim())
+        .filter(Boolean)
+    )];
+    if (!replacementNames.length) return null;
+    if (toArray(stopResult?.requirementReasons).length
+      || toArray(stopResult?.hardStops).length
+      || stopResult?.grantedLevelStop) {
+      return null;
+    }
+    const replacementSet = new Set(replacementNames);
+    const entries = Array.isArray(list) ? list : [];
+    const removedEntries = entries.filter(entry => (
+      replacementSet.has(String(entry?.namn || '').trim())
+      && !entry?.manualRuleOverride
+    ));
+    if (!removedEntries.length) return null;
+    const projectedList = entries.filter(entry => !removedEntries.includes(entry));
+    return {
+      replacementNames,
+      removedEntries,
+      projectedList
+    };
+  }
+
   function getEntryStopOverrideKeys(candidateEntry, stopResult = {}) {
     const out = new Set();
     const candidateId = String(candidateEntry?.id || '').trim();
@@ -10161,6 +10206,7 @@
     evaluateRequirementAssistState,
     getEntryMaxCount,
     evaluateEntryStops,
+    buildConflictReplacementPlan,
     getEntryStopOverrideKeys,
     formatEntryStopMessages,
     getRequirementDependents,
@@ -10284,6 +10330,7 @@
     const key = getDerivedVersionKey(store, charId);
     if (!key) return 0;
     runtimeVersions.derivedByCharacter[key] = (runtimeVersions.derivedByCharacter[key] || 0) + 1;
+    incrementCurrentListMutationCounter('derivedVersions');
     return runtimeVersions.derivedByCharacter[key];
   };
   const getDerivedVersionMeta = (store, charId) => {
@@ -10690,6 +10737,7 @@
   function commitCurrentCharacterMutation(store, options = {}) {
     const charId = getDerivedVersionKey(store);
     if (!charId) return null;
+    incrementCurrentListMutationCounter('storeMutations');
     const normalizedFields = normalizeMutationFields(options.fields);
     const activeBatch = currentCharacterMutationBatch;
     if (activeBatch && activeBatch.store === store && activeBatch.charId === charId) {
@@ -10706,6 +10754,7 @@
       return charId;
     }
     return timeCurrentListMutationStage('common-commit', () => {
+      incrementCurrentListMutationCounter('commonCommits');
       const version = options.bumpDerived
         ? bumpDerivedVersion(store, charId)
         : getDerivedVersionMeta(store, charId);
@@ -10802,6 +10851,7 @@
         };
     if (!parentBatch || parentBatch !== batch) {
       currentCharacterMutationBatch = batch;
+      incrementCurrentListMutationCounter('rootBatches');
     }
     batch.depth += 1;
 
@@ -10824,6 +10874,7 @@
         currentCharacterMutationBatch = null;
       }
       timeCurrentListMutationStage('common-commit', () => {
+        incrementCurrentListMutationCounter('commonCommits');
         const version = batch.bumpDerived
           ? bumpDerivedVersion(store, charId)
           : getDerivedVersionMeta(store, charId);
@@ -12819,6 +12870,11 @@
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+    const conflictSources = typeof global.rulesHelper?.getRuleList === 'function'
+      ? list.filter(entry => global.rulesHelper.getRuleList(entry, 'krockar', {
+        level: typeof entry?.nivå === 'string' ? entry.nivå : ''
+      }).length > 0)
+      : null;
 
     const kept = [];
     list.forEach(entry => {
@@ -12829,7 +12885,10 @@
       }
       const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
       const resolution = hasResolutionHelper
-        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, {
+          level,
+          ...(conflictSources ? { conflictSources } : {})
+        })
         : {
           reasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
           blockingReasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
@@ -12867,6 +12926,11 @@
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+    const conflictSources = typeof global.rulesHelper?.getRuleList === 'function'
+      ? list.filter(entry => global.rulesHelper.getRuleList(entry, 'krockar', {
+        level: typeof entry?.nivå === 'string' ? entry.nivå : ''
+      }).length > 0)
+      : null;
     const kept = list.slice(0, retainedPrefixLength);
     const appended = list.slice(retainedPrefixLength);
 
@@ -12878,7 +12942,10 @@
       }
       const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
       const resolution = hasResolutionHelper
-        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, {
+          level,
+          ...(conflictSources ? { conflictSources } : {})
+        })
         : {
           blockingReasons: hasReasonHelper
             ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level })
@@ -13648,10 +13715,18 @@
     if (typeof perf?.getFlowContext !== 'function') return null;
     return perf.getFlowContext('add-item')
       || perf.getFlowContext('remove-item')
+      || perf.getFlowContext('level-change')
       || perf.getFlowContext('character-level-change')
       || perf.getFlowContext('inventory-mutation')
       || perf.getFlowContext('trait-mutation')
       || null;
+  }
+
+  function incrementCurrentListMutationCounter(name, delta = 1) {
+    const perf = global.symbaroumPerf;
+    const scenarioId = getCurrentListMutationScenarioId();
+    if (!scenarioId || typeof perf?.incrementScenarioCounter !== 'function') return 0;
+    return perf.incrementScenarioCounter(scenarioId, name, delta);
   }
 
   function timeCurrentListMutationStage(name, callback, detail = {}) {
@@ -13880,13 +13955,17 @@
     return visit(inventory);
   }
 
-  function setInventory(store, inv) {
+  function setInventory(store, inv, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].inventory = ensureInventoryRowUids(inv);
     commitCurrentCharacterMutation(store, {
-      bumpDerived: true,
-      fields: INVENTORY_MUTATION_FIELDS
+      bumpDerived: options.bumpDerived !== false,
+      persist: options.persist,
+      fields: options.fields || INVENTORY_MUTATION_FIELDS,
+      invalidates: options.invalidates,
+      targets: options.targets,
+      afterCommit: options.afterCommit
     });
   }
 
@@ -19532,6 +19611,7 @@ function defaultTraits() {
   const MUTATION_FLOW_CONTEXT_KEYS = Object.freeze([
     'remove-item',
     'add-item',
+    'level-change',
     'inventory-mutation'
   ]);
 
@@ -19552,6 +19632,13 @@ function defaultTraits() {
       .find(Boolean) || null;
   }
 
+  function incrementActiveMutationCounter(name, delta = 1) {
+    const scenarioId = getActiveMutationScenarioId();
+    const perf = window.symbaroumPerf;
+    if (!scenarioId || typeof perf?.incrementScenarioCounter !== 'function') return 0;
+    return perf.incrementScenarioCounter(scenarioId, name, delta);
+  }
+
   function timeActiveMutationStage(name, callback, detail = {}) {
     const scenarioId = getActiveMutationScenarioId();
     const perf = window.symbaroumPerf;
@@ -19570,7 +19657,7 @@ function defaultTraits() {
   }
 
   function renderInventoryWithPerf(detail = {}) {
-    return timeActiveMutationStage('inventory-render', () => renderInventory(), {
+    return timeActiveMutationStage('inventory-render', () => renderInventory(detail), {
       surface: 'inventory',
       ...detail
     });
@@ -19578,6 +19665,8 @@ function defaultTraits() {
 
   function saveInventory(inv, options = {}) {
     timeActiveMutationStage('store-mutation', () => {
+      incrementActiveMutationCounter('inventoryNormalizations');
+      incrementActiveMutationCounter('inventoryScans');
       normalizeInventoryQualities(inv);
       const nonVeh = [];
       const veh = [];
@@ -19588,12 +19677,20 @@ function defaultTraits() {
       });
       inv.splice(0, inv.length, ...nonVeh, ...veh);
       runCurrentCharacterMutationBatch(() => {
-        storeHelper.setInventory(store, inv);
-        timeActiveMutationStage('artifact-effects-recalc', () => {
-          recalcArtifactEffects();
-        }, {
-          surface: 'inventory'
+        storeHelper.setInventory(store, inv, {
+          bumpDerived: options.bumpDerived,
+          fields: options.fields,
+          invalidates: options.invalidates,
+          targets: options.targets,
+          afterCommit: options.afterCommit
         });
+        if (options.recalculateArtifactEffects !== false) {
+          timeActiveMutationStage('artifact-effects-recalc', () => {
+            recalcArtifactEffects();
+          }, {
+            surface: 'inventory'
+          });
+        }
       });
     }, {
       surface: 'inventory'
@@ -19829,37 +19926,186 @@ function defaultTraits() {
     if (Number(target.perkGratis) > Number(target.qty)) target.perkGratis = Number(target.qty) || 0;
   }
 
+  const INVENTORY_VARIANT_RUNTIME_FIELDS = new Set([
+    'id', 'name', 'qty', 'gratis', 'perkGratis', '__uid', 'posQualCnt',
+    'snapshotSourceKey', 'contains'
+  ]);
+  const INVENTORY_VARIANT_SET_FIELDS = new Set([
+    'kvaliteter', 'gratisKval', 'removedKval', 'manualQualityOverride'
+  ]);
+
+  function normalizeInventoryVariantValue(value, key = '') {
+    if (value === undefined || value === null || value === '') return undefined;
+    if (Array.isArray(value)) {
+      const normalized = value
+        .map(item => normalizeInventoryVariantValue(item))
+        .filter(item => item !== undefined);
+      if (!normalized.length) return undefined;
+      if (INVENTORY_VARIANT_SET_FIELDS.has(key)) {
+        normalized.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b), 'sv'));
+      }
+      return normalized;
+    }
+    if (value && typeof value === 'object') {
+      const normalized = {};
+      Object.keys(value).sort((a, b) => a.localeCompare(b, 'sv')).forEach(childKey => {
+        const childValue = normalizeInventoryVariantValue(value[childKey], childKey);
+        if (childValue !== undefined) normalized[childKey] = childValue;
+      });
+      return Object.keys(normalized).length ? normalized : undefined;
+    }
+    if (typeof value === 'number' && !Number.isFinite(value)) return String(value);
+    return value;
+  }
+
+  function getInventoryBaseIdentity(row, entry = null) {
+    const resolved = entry || getEntry(row?.id || row?.name);
+    const id = String(row?.id ?? resolved?.id ?? '').trim();
+    if (id) return `id:${id}`;
+    const name = String(resolved?.namn || row?.name || '').trim();
+    if (!name) return '';
+    // Imported legacy stacks sometimes stored a count suffix in the name.
+    return `name:${name.replace(/\s+\d+$/, '').toLocaleLowerCase('sv-SE')}`;
+  }
+
+  function getInventoryVariantIdentity(row, entry = null) {
+    const baseIdentity = getInventoryBaseIdentity(row, entry);
+    if (!baseIdentity || !row || typeof row !== 'object') return '';
+    const metadata = {};
+    Object.keys(row).sort((a, b) => a.localeCompare(b, 'sv')).forEach(key => {
+      if (INVENTORY_VARIANT_RUNTIME_FIELDS.has(key)) return;
+      const value = normalizeInventoryVariantValue(row[key], key);
+      if (value !== undefined) metadata[key] = value;
+    });
+    return `${baseIdentity}|${JSON.stringify(metadata)}`;
+  }
+
+  function getInventoryInstanceIdentity(row, entry = null) {
+    const variantIdentity = getInventoryVariantIdentity(row, entry);
+    if (!variantIdentity) return '';
+    const uid = String(row?.__uid || row?.snapshotSourceKey || '').trim();
+    return uid ? `${variantIdentity}|instance:${uid}` : variantIdentity;
+  }
+
   function canStackRows(target, source, entry) {
     if (!target || !source) return false;
     if (Array.isArray(target.contains)) return false;
     if (Array.isArray(source.contains)) return false;
+    const sourceIdentity = getInventoryVariantIdentity(source, entry);
+    const targetIdentity = getInventoryVariantIdentity(target);
+    return Boolean(sourceIdentity && targetIdentity && sourceIdentity === targetIdentity);
+  }
 
-    const entryName = entry?.namn || '';
-    const targetEntry = getEntry(target.id || target.name);
-    const targetEntryName = targetEntry?.namn || '';
-    if (source.id) {
-      if (target.id !== source.id) return false;
-    } else if (target.id) {
-      return false;
-    } else {
-      const sourceName = entryName || source.name || '';
-      const targetName = targetEntryName || target.name || '';
-      if (sourceName !== targetName) {
-        if (!entryName && !targetEntryName) return false;
-        const normalize = val => String(val || '').replace(/\s+\d+$/, '');
-        if (normalize(sourceName) !== normalize(targetName)) return false;
+  function addInventoryVariant(inv, row, options = {}) {
+    incrementActiveMutationCounter('variantPlans');
+    if (!row || !Array.isArray(inv)) return null;
+    const entry = options.entry || getEntry(row.id || row.name);
+    const quantity = Math.max(1, Math.floor(Number(options.quantity ?? row.qty) || 1));
+    const individual = options.individual ?? isIndividualItem(entry);
+    if (individual) {
+      const changes = [];
+      for (let index = 0; index < quantity; index++) {
+        const instance = JSON.parse(JSON.stringify(row));
+        instance.qty = 1;
+        inv.push(instance);
+        changes.push({ prev: null, next: instance, index: inv.length - 1, created: true });
       }
+      return {
+        entry,
+        row: changes.at(-1)?.next || null,
+        index: changes.at(-1)?.index ?? -1,
+        created: true,
+        createdCount: changes.length,
+        quantityDelta: quantity,
+        topology: 'row',
+        changes,
+        baseIdentity: getInventoryBaseIdentity(row, entry),
+        variantIdentity: getInventoryVariantIdentity(row, entry)
+      };
     }
 
-    const targetTrait = target.trait || '';
-    const sourceTrait = source.trait || '';
-    if (targetTrait !== sourceTrait) return false;
+    const source = JSON.parse(JSON.stringify(row));
+    source.qty = quantity;
+    const target = inv.find(existing => canStackRows(existing, source, entry));
+    if (target) {
+      const prev = JSON.parse(JSON.stringify(target));
+      mergeStackRows(target, source);
+      return {
+        entry,
+        row: target,
+        index: inv.indexOf(target),
+        created: false,
+        createdCount: 0,
+        quantityDelta: quantity,
+        topology: 'none',
+        changes: [{ prev, next: target, index: inv.indexOf(target), created: false }],
+        baseIdentity: getInventoryBaseIdentity(target, entry),
+        variantIdentity: getInventoryVariantIdentity(target, entry)
+      };
+    }
 
-    const targetEffect = target.artifactEffect || '';
-    const sourceEffect = source.artifactEffect || '';
-    if (targetEffect !== sourceEffect) return false;
+    source.qty = quantity;
+    if (!Array.isArray(source.gratisKval)) source.gratisKval = source.gratisKval ? [source.gratisKval] : [];
+    if (!Array.isArray(source.removedKval)) source.removedKval = source.removedKval ? [source.removedKval] : [];
+    if (!Array.isArray(source.manualQualityOverride)) {
+      source.manualQualityOverride = source.manualQualityOverride ? [source.manualQualityOverride] : [];
+    }
+    inv.push(source);
+    return {
+      entry,
+      row: source,
+      index: inv.length - 1,
+      created: true,
+      createdCount: 1,
+      quantityDelta: quantity,
+      topology: 'row',
+      changes: [{ prev: null, next: source, index: inv.length - 1, created: true }],
+      baseIdentity: getInventoryBaseIdentity(source, entry),
+      variantIdentity: getInventoryVariantIdentity(source, entry)
+    };
+  }
 
-    return true;
+  function classifyInventoryMutation(entry, row, mutation = {}) {
+    const types = entry?.taggar?.typ || [];
+    const fallbackReasons = [];
+    const catalogEntry = entry?.id
+      ? (Array.isArray(window.DB) && window.DB.some(candidate => String(candidate?.id || '') === String(entry.id)))
+      : false;
+    if (!entry || !catalogEntry) fallbackReasons.push('unknown-or-custom-entry');
+    if (!getInventoryBaseIdentity(row, entry) || !getInventoryVariantIdentity(row, entry)) {
+      fallbackReasons.push('unstable-variant-identity');
+    }
+    if (Array.isArray(row?.contains) || types.includes('Förvaring') || types.includes('Färdmedel')) {
+      fallbackReasons.push('complex-inventory-topology');
+    }
+    if (isInventoryBundleEntry(entry)) fallbackReasons.push('inventory-bundle');
+    if (types.includes('Artefakt')) fallbackReasons.push('artifact-list-or-snapshot-coupling');
+    const grants = getEntryRuleListWithFallback(entry, 'ger', { level: entry?.nivå || '' });
+    const conflicts = getEntryRuleListWithFallback(entry, 'krockar', { level: entry?.nivå || '' });
+    if (grants.length || conflicts.length) fallbackReasons.push('rule-reconciliation-required');
+
+    const modifies = getEntryRuleListWithFallback(entry, 'andrar', { level: entry?.nivå || '' });
+    const created = mutation.created === true;
+    const invalidates = new Set([
+      created ? 'inventory.structure' : 'inventory.row',
+      'inventory.totals',
+      'summary.economy',
+      'persistence'
+    ]);
+    if (modifies.length) {
+      ['traits', 'combat', 'effects', 'summary'].forEach(domain => invalidates.add(domain));
+    }
+    return {
+      fastPath: fallbackReasons.length === 0,
+      fallbackReasons,
+      invalidates: [...invalidates],
+      topology: created ? 'row' : 'none',
+      bumpDerived: modifies.length > 0,
+      recalculateArtifactEffects: types.includes('Artefakt'),
+      targets: {
+        inventoryRows: [row?.__uid || mutation.variantIdentity || row?.id || row?.name].filter(Boolean)
+      }
+    };
   }
 
   function addToInventory(inv, row) {
@@ -19868,26 +20114,7 @@ function defaultTraits() {
     if ((entry.taggar?.typ || []).includes('Artefakt')) {
       ensureArtifactSnapshotSourceKey(entry, row);
     }
-    if (isIndividualItem(entry)) {
-      inv.push(row);
-      return;
-    }
-    const target = inv.find(existing => canStackRows(existing, row, entry));
-    if (target) {
-      mergeStackRows(target, row);
-    } else {
-      if (!Number.isFinite(Number(row.qty)) || Number(row.qty) <= 0) {
-        row.qty = 1;
-      }
-      if (!Array.isArray(row.gratisKval)) row.gratisKval = row.gratisKval ? [row.gratisKval] : [];
-      if (!Array.isArray(row.removedKval)) row.removedKval = row.removedKval ? [row.removedKval] : [];
-      if (!Array.isArray(row.manualQualityOverride)) {
-        row.manualQualityOverride = row.manualQualityOverride ? [row.manualQualityOverride] : [];
-      }
-      if (Number(row.gratis) > Number(row.qty)) row.gratis = Number(row.qty) || 0;
-      if (Number(row.perkGratis) > Number(row.qty)) row.perkGratis = Number(row.qty) || 0;
-      inv.push(row);
-    }
+    addInventoryVariant(inv, row, { entry });
   }
 
   function parsePathStr(str) {
@@ -19911,6 +20138,7 @@ function defaultTraits() {
   }
 
   function recalcArtifactEffects() {
+    incrementActiveMutationCounter('artifactEffectScans');
     const rawInventory = storeHelper.getInventory(store);
     const list = storeHelper.getCurrentList(store);
     const flatInventory = flattenInventory(rawInventory);
@@ -21278,15 +21506,40 @@ function defaultTraits() {
       if (!checks.length) return;
       const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
       const livePairs = liveEnabled ? [] : null;
-      checks.forEach(path => {
+      const selected = checks.map(path => {
         let parentArr = inv;
         let row = null;
         path.forEach((pIdx, i) => {
           row = parentArr[pIdx];
           if (i < path.length - 1) parentArr = row.contains || [];
         });
-        if (!row) return;
+        if (!row) return null;
         const entry = getEntry(row.id || row.name);
+        return { path, parentArr, row, entry };
+      }).filter(Boolean);
+      const fastOperations = !liveEnabled && selected.length === checks.length
+        ? selected.map(({ path, parentArr, row, entry }) => ({
+            row,
+            entry,
+            delta: qty,
+            card: path.length === 1
+              ? dom.invList?.querySelector(`li[data-idx="${path[0]}"]`)
+              : null,
+            eligible: canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta: qty })
+          }))
+        : [];
+      if (fastOperations.length && fastOperations.every(operation => operation.eligible && operation.card)) {
+        commitSimpleQuantityBatch({
+          operations: fastOperations,
+          inv,
+          source: 'inventory-bulk-quantity'
+        });
+        cleanup();
+        openQtyPopup();
+        return;
+      }
+
+      selected.forEach(({ parentArr, row, entry }) => {
         const indiv = isIndividualItem(entry);
 
         if (indiv) {
@@ -21534,6 +21787,27 @@ function defaultTraits() {
         target.basePrice = { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] };
         target.basePriceSource = 'live';
       };
+
+      const quantityDelta = remove ? -qty : qty;
+      if (
+        !purchase
+        && !indiv
+        && !isNewRow
+        && canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta: quantityDelta })
+      ) {
+        commitSimpleQuantityMutation({
+          row,
+          entry,
+          inv,
+          card: li,
+          delta: quantityDelta,
+          source: 'inventory-multi-quantity'
+        });
+        if (typeof confirmCb === 'function') confirmCb(result);
+        li?.classList.add('inv-flash');
+        if (li) setTimeout(() => li.classList.remove('inv-flash'), 600);
+        return;
+      }
 
       if (remove) {
         if (indiv && parentArr) {
@@ -23296,26 +23570,20 @@ function defaultTraits() {
   function updateInventoryAggregateSnapshotForQuantity(row, entry, previousQty, nextQty) {
     const snapshot = getReusableInventoryAggregateSnapshot();
     if (!snapshot || !row || !entry) return null;
-    const normalizedPreviousQty = Math.max(1, Number(previousQty) || 1);
-    const normalizedNextQty = Math.max(1, Number(nextQty) || 1);
+    const normalizedPreviousQty = Math.max(0, Number(previousQty) || 0);
+    const normalizedNextQty = Math.max(0, Number(nextQty) || 0);
     const delta = normalizedNextQty - normalizedPreviousQty;
-    if (![1, -1].includes(delta)) return null;
+    if (!Number.isInteger(delta) || delta === 0) return null;
     const previousRow = { ...row, qty: normalizedPreviousQty };
     const nextRow = { ...row, qty: normalizedNextQty };
-    const previousCostO = moneyToO(calcRowCost(
-      previousRow,
-      snapshot.forgeLvl,
-      snapshot.alcLevel,
-      snapshot.artLevel
-    ));
-    const nextCostO = moneyToO(calcRowCost(
-      nextRow,
-      snapshot.forgeLvl,
-      snapshot.alcLevel,
-      snapshot.artLevel
-    ));
-    const previousWeight = calcRowWeight(previousRow, snapshot.list);
-    const nextWeight = calcRowWeight(nextRow, snapshot.list);
+    const previousCostO = normalizedPreviousQty > 0
+      ? moneyToO(calcRowCost(previousRow, snapshot.forgeLvl, snapshot.alcLevel, snapshot.artLevel))
+      : 0;
+    const nextCostO = normalizedNextQty > 0
+      ? moneyToO(calcRowCost(nextRow, snapshot.forgeLvl, snapshot.alcLevel, snapshot.artLevel))
+      : 0;
+    const previousWeight = normalizedPreviousQty > 0 ? calcRowWeight(previousRow, snapshot.list) : 0;
+    const nextWeight = normalizedNextQty > 0 ? calcRowWeight(nextRow, snapshot.list) : 0;
     const nextDiffO = snapshot.diffO - (nextCostO - previousCostO);
     const nextUnusedMoney = oToMoney(Math.max(0, nextDiffO));
     const nextMoneyWeight = calcMoneyWeight(nextUnusedMoney);
@@ -23359,6 +23627,7 @@ function defaultTraits() {
   }
 
   function refreshInventoryTotals(options = {}) {
+    incrementActiveMutationCounter('targetedRenders');
     let snapshot = getReusableInventoryAggregateSnapshot();
     if (snapshot) {
       snapshot = applyPendingInventoryAggregateDeltas() || snapshot;
@@ -23409,12 +23678,12 @@ function defaultTraits() {
       badge.classList.remove('cap-neg', 'cap-crit', 'cap-warn');
       if (capClass) badge.classList.add(capClass);
     });
-    document.querySelector('shared-toolbar')?.updateMoneyCounter?.(snapshot.cash);
+    document.querySelector('shared-toolbar')?.updateMoneyCounter?.(unusedMoney);
     return snapshot;
   }
 
   function canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta }) {
-    if (!row || !entry || parentArr !== inv || ![1, -1].includes(delta)) return false;
+    if (!row || !entry || parentArr !== inv || !Number.isInteger(delta) || delta === 0) return false;
     const currentQty = Math.max(0, Number(row.qty) || 0);
     const nextQty = currentQty + delta;
     if (currentQty < 1 || nextQty < 1) return false;
@@ -23502,20 +23771,44 @@ function defaultTraits() {
     return true;
   }
 
-  function commitSimpleQuantityMutation({ row, entry, inv, card, delta }) {
+  function commitSimpleQuantityBatch({ operations, inv, source = 'inventory-quantity' }) {
+    const planned = (Array.isArray(operations) ? operations : [])
+      .filter(operation => operation?.row && operation?.entry && Number.isInteger(operation?.delta) && operation.delta !== 0)
+      .map(operation => {
+        const previousQty = Math.max(1, Number(operation.row.qty) || 1);
+        return {
+          ...operation,
+          previousQty,
+          nextQty: previousQty + operation.delta
+        };
+      });
+    if (!planned.length || planned.some(operation => operation.nextQty < 1)) return false;
+    const action = planned.length > 1
+      ? 'quantity-batch'
+      : (planned[0].delta > 0 ? 'quantity-add' : 'quantity-subtract');
     markActiveMutationCheckpoint('handler-entry', {
-      action: delta > 0 ? 'quantity-add' : 'quantity-subtract',
-      rowKey: row.__uid || row.id || row.name
+      action,
+      operationCount: planned.length,
+      quantityDelta: planned.reduce((sum, operation) => sum + operation.delta, 0)
     });
-    const previousQty = Math.max(1, Number(row.qty) || 1);
-    const nextQty = previousQty + delta;
-    queueInventoryAggregateQuantityDelta(row, entry, previousQty, nextQty);
-    row.qty = Math.max(1, nextQty);
-    if (Number(row.gratis) > row.qty) row.gratis = row.qty;
+    planned.forEach(operation => {
+      queueInventoryAggregateQuantityDelta(
+        operation.row,
+        operation.entry,
+        operation.previousQty,
+        operation.nextQty
+      );
+      operation.row.qty = operation.nextQty;
+      if (Number(operation.row.gratis) > operation.row.qty) operation.row.gratis = operation.row.qty;
+    });
     const invalidates = ['inventory.row', 'inventory.totals', 'summary.economy'];
     storeHelper.batchCurrentCharacterMutation(store, {
       invalidates,
-      targets: { inventoryRows: [row.__uid || row.id || row.name] },
+      targets: {
+        inventoryRows: planned
+          .map(operation => operation.row.__uid || operation.row.id || operation.row.name)
+          .filter(Boolean)
+      },
       afterCommit: summary => {
         window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
           charId: summary.charId,
@@ -23523,23 +23816,137 @@ function defaultTraits() {
           invalidates: summary.invalidates,
           targets: summary.targets,
           topology: 'row',
-          source: 'inventory-quantity',
+          source,
           afterPaint: true
         });
       }
     }, () => {
-      storeHelper.setInventory(store, inv);
+      storeHelper.setInventory(store, inv, {
+        bumpDerived: false,
+        fields: ['inventory'],
+        invalidates
+      });
     });
-    patchSimpleQuantityCard(card, row, entry);
+    planned.forEach(operation => {
+      patchSimpleQuantityCard(operation.card, operation.row, operation.entry);
+    });
     markActiveMutationCheckpoint('first-feedback-dom', {
-      action: delta > 0 ? 'quantity-add' : 'quantity-subtract',
-      rowKey: row.__uid || row.id || row.name,
-      quantity: row.qty
+      action,
+      operationCount: planned.length,
+      quantities: planned.map(operation => operation.row.qty)
     });
     return true;
   }
 
-  function renderInventory () {
+  function commitSimpleQuantityMutation({ row, entry, inv, card, delta, source = 'inventory-quantity' }) {
+    return commitSimpleQuantityBatch({
+      operations: [{ row, entry, card, delta }],
+      inv,
+      source
+    });
+  }
+
+  function hasActiveInventoryFilters() {
+    const hasValues = value => Array.isArray(value) ? value.length > 0 : Number(value?.size || 0) > 0;
+    return Boolean(
+      String(F.invTxt || '').trim()
+      || hasValues(F.typ)
+      || hasValues(F.ark)
+      || hasValues(F.test)
+    );
+  }
+
+  function getTargetedInventoryRowRemovalImpact({ row, entry, inv, parentArr }) {
+    if (!row || !entry || parentArr !== inv || !row.__uid || hasActiveInventoryFilters()) return null;
+    if (Array.isArray(row.contains) && row.contains.length) return null;
+    if (row.typ === 'currency' || row.money || row.perk || row.perkGratis) return null;
+    if (needsArtifactListSync(entry) || isInventoryBundleEntry(entry)) return null;
+    const impact = classifyInventoryMutation(entry, row, { created: false, removed: true });
+    if (!impact.fastPath) return null;
+    return {
+      ...impact,
+      invalidates: [...new Set([
+        ...impact.invalidates.filter(domain => domain !== 'inventory.row'),
+        'inventory.structure',
+        'inventory.totals',
+        'summary.economy',
+        'persistence'
+      ])],
+      topology: 'row'
+    };
+  }
+
+  function patchRemovedInventoryCard(card) {
+    if (!card?.isConnected || !dom.invList) return false;
+    incrementActiveMutationCounter('targetedRenders');
+    incrementActiveMutationCounter('domNodesReplaced', card.querySelectorAll('*').length + 1);
+    const category = card.closest('li.cat-group');
+    card.remove();
+    if (category && !category.querySelector('ul[data-cat] > li.entry-card, ul[data-cat] > li.card')) {
+      category.remove();
+    }
+    if (!dom.invList.querySelector('li.cat-group')) {
+      const emptyCard = createEntryCard({
+        classes: ['empty'],
+        nameHtml: 'Inga föremål.',
+        collapsible: false
+      });
+      dom.invList.appendChild(emptyCard);
+      incrementActiveMutationCounter('domNodesCreated');
+    }
+    syncInventoryMotionTargets();
+    if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+    return true;
+  }
+
+  function commitTargetedInventoryRowRemoval({ row, entry, inv, parentArr, card, impact, source = 'inventory-row-remove' }) {
+    const index = parentArr.indexOf(row);
+    if (index < 0 || !impact) return false;
+    const previousQty = Math.max(1, Number(row.qty) || 1);
+    queueInventoryAggregateQuantityDelta(row, entry, previousQty, 0);
+    parentArr.splice(index, 1);
+    storeHelper.batchCurrentCharacterMutation(store, {
+      bumpDerived: impact.bumpDerived,
+      invalidates: impact.invalidates,
+      targets: impact.targets,
+      afterCommit: summary => {
+        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+          charId: summary.charId,
+          version: summary.version,
+          invalidates: summary.invalidates,
+          targets: summary.targets,
+          topology: impact.topology,
+          source,
+          afterPaint: true
+        });
+      }
+    }, () => {
+      storeHelper.setInventory(store, inv, {
+        bumpDerived: impact.bumpDerived,
+        fields: ['inventory'],
+        invalidates: impact.invalidates,
+        targets: impact.targets
+      });
+    });
+    patchRemovedInventoryCard(card);
+    markActiveMutationCheckpoint('first-feedback-dom', {
+      action: 'inventory-row-remove',
+      rowKey: row.__uid || row.id || row.name
+    });
+    return true;
+  }
+
+  function renderInventory (renderDetail = {}) {
+    incrementActiveMutationCounter('fullInventoryRenders');
+    incrementActiveMutationCounter('fallbackActivations');
+    markActiveMutationCheckpoint('targeted-fallback', {
+      reasons: Array.isArray(renderDetail.fallbackReasons) && renderDetail.fallbackReasons.length
+        ? renderDetail.fallbackReasons
+        : [`full-inventory-render:${renderDetail.trigger || 'legacy-or-unclassified-mutation'}`],
+      trigger: renderDetail.trigger || 'legacy-or-unclassified-mutation',
+      entryId: renderDetail.entryId || ''
+    });
+    incrementActiveMutationCounter('inventoryScans');
     const listEl = dom.invList;
     const openKeys = new Set(
       listEl
@@ -24291,7 +24698,7 @@ function defaultTraits() {
       if (toolbar) {
         if (typeof toolbar.updateInvDash === 'function') toolbar.updateInvDash(dashPanelHtml);
         if (typeof toolbar.updateInvSpend === 'function') toolbar.updateInvSpend(spendPanelHtml);
-        if (typeof toolbar.updateMoneyCounter === 'function') toolbar.updateMoneyCounter(cash);
+        if (typeof toolbar.updateMoneyCounter === 'function') toolbar.updateMoneyCounter(unusedMoney);
       }
 
       if (dom.invFormal) {
@@ -24299,8 +24706,10 @@ function defaultTraits() {
       }
 
       if (listEl) {
+        incrementActiveMutationCounter('domNodesReplaced', listEl.querySelectorAll('*').length);
         listEl.innerHTML = '';
         if (filteredRows.length && categories) {
+          incrementActiveMutationCounter('domNodesCreated', filteredRows.length + catKeys.length * 4);
           const catState = loadInvCatState();
           const fragment = document.createDocumentFragment();
           catKeys.forEach(cat => {
@@ -24665,6 +25074,22 @@ function defaultTraits() {
             );
           } else {
             if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
+            const targetedImpact = getTargetedInventoryRowRemovalImpact({
+              row,
+              entry,
+              inv,
+              parentArr
+            });
+            if (targetedImpact && commitTargetedInventoryRowRemoval({
+              row,
+              entry,
+              inv,
+              parentArr,
+              card: li,
+              impact: targetedImpact
+            })) {
+              return;
+            }
             let requiresDerivedRefresh = false;
             runCurrentCharacterMutationBatch(() => {
               parentArr.splice(idx, 1);
@@ -25324,6 +25749,12 @@ function defaultTraits() {
     addInventoryBundle,
     removeInventoryBundle,
     isIndividualItem,
+    getInventoryBaseIdentity,
+    getInventoryVariantIdentity,
+    getInventoryInstanceIdentity,
+    canStackRows,
+    addInventoryVariant,
+    classifyInventoryMutation,
     calcRowCost,
     calcRowWeight,
     refreshInventoryTotals,
@@ -30753,6 +31184,7 @@ class SharedToolbar extends HTMLElement {
     const toggle = this.shadowRoot.getElementById('overviewToggle');
     const summaryIcon = this.shadowRoot.querySelector('.overview-action-icon--summary');
     const inventoryIcon = this.shadowRoot.querySelector('.overview-action-icon--inventory');
+    const label = this.shadowRoot.querySelector('.overview-action-label');
     const xpValue = this.shadowRoot.querySelector('.overview-action-value--xp');
     const moneyValue = this.shadowRoot.querySelector('.overview-action-value--money');
     if (!toggle) return;
@@ -30765,12 +31197,13 @@ class SharedToolbar extends HTMLElement {
     toggle.title = isInventory ? 'Öppna Inventarium' : 'Öppna Översikt';
     if (summaryIcon) summaryIcon.hidden = isInventory;
     if (inventoryIcon) inventoryIcon.hidden = !isInventory;
+    if (label) label.textContent = isInventory ? 'Tillgängligt' : 'Översikt';
     if (xpValue) xpValue.hidden = isInventory;
     if (moneyValue) moneyValue.hidden = !isInventory;
 
     if (isInventory) {
       toggle.classList.remove('under');
-      toggle.setAttribute('aria-label', `Öppna Inventarium, saldo ${describeToolbarMoney(this._toolbarMoney)}`);
+      toggle.setAttribute('aria-label', `Öppna Inventarium, tillgängligt ${describeToolbarMoney(this._toolbarMoney)}`);
     } else {
       const xp = this.shadowRoot.getElementById('xpOut')?.textContent?.trim() || '0';
       toggle.classList.toggle('under', Number(xp) < 0);

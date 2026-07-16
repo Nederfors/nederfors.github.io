@@ -13,6 +13,7 @@ const CHARACTER_FIELDS_STORE = 'characterFields';
 const MUTATION_FLOW_CONTEXT_KEYS = [
   'remove-item',
   'add-item',
+  'level-change',
   'character-level-change',
   'inventory-mutation',
   'trait-mutation'
@@ -99,6 +100,19 @@ function markActiveMutationCheckpoint(name, detail = {}) {
     if (!scenarioId) return;
     perf.markScenario?.(scenarioId, name, detail);
   } catch {}
+}
+
+function incrementActiveMutationCounter(name, delta = 1) {
+  try {
+    const perf = window.symbaroumPerf;
+    const scenarioId = MUTATION_FLOW_CONTEXT_KEYS
+      .map((key) => perf?.getFlowContext?.(key))
+      .find(Boolean);
+    if (!scenarioId) return 0;
+    return perf.incrementScenarioCounter?.(scenarioId, name, delta) || 0;
+  } catch {
+    return 0;
+  }
 }
 
 function cloneValue(value) {
@@ -342,6 +356,7 @@ function hasPendingWrites() {
 
 function scheduleFlush(delay = WRITE_DEBOUNCE_MS) {
   if (state.mode !== 'dexie' || !db) return;
+  incrementActiveMutationCounter('persistenceSchedules');
   clearScheduledFlush();
   state.writeQueue.timerId = window.setTimeout(() => {
     state.writeQueue.timerId = 0;

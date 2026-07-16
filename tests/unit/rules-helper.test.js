@@ -828,6 +828,28 @@ describe('rules-helper unit coverage', () => {
     );
   });
 
+  it('builds a pure conflict replacement plan without mutating the source list', () => {
+    const rulesHelper = loadRulesHelper();
+    const retained = { id: 'retained', namn: 'Behåll' };
+    const replaced = { id: 'replaced', namn: 'Ersätt mig' };
+    const overridden = { id: 'override', namn: 'Ersätt mig', manualRuleOverride: true };
+    const source = [retained, replaced, overridden];
+    const plan = rulesHelper.buildConflictReplacementPlan(source, {
+      replaceTargetNames: ['Ersätt mig'],
+      requirementReasons: [],
+      hardStops: [],
+      grantedLevelStop: null
+    });
+
+    expect(plan?.removedEntries).toEqual([replaced]);
+    expect(plan?.projectedList).toEqual([retained, overridden]);
+    expect(source).toEqual([retained, replaced, overridden]);
+    expect(rulesHelper.buildConflictReplacementPlan(source, {
+      replaceTargetNames: ['Ersätt mig'],
+      requirementReasons: ['Kräver något']
+    })).toBeNull();
+  });
+
   it('applies canonical target-type corruption guards without breaking list filtering', () => {
     const rulesHelper = loadRulesHelper();
 

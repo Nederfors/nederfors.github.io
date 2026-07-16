@@ -1,5 +1,17 @@
 (function(window){
   const RULE_KEYS = Object.freeze(['andrar', 'kraver', 'krockar', 'ger', 'val']);
+  const MUTATION_PERF_FLOW_KEYS = Object.freeze([
+    'add-item', 'remove-item', 'level-change', 'character-level-change', 'inventory-mutation', 'trait-mutation'
+  ]);
+
+  function incrementMutationPerfCounter(name, delta = 1) {
+    const perf = window.symbaroumPerf;
+    const scenarioId = MUTATION_PERF_FLOW_KEYS
+      .map(key => perf?.getFlowContext?.(key))
+      .find(Boolean);
+    if (!scenarioId) return 0;
+    return perf.incrementScenarioCounter?.(scenarioId, name, delta) || 0;
+  }
   const ENTRY_RULES_CACHE = new WeakMap();
   const DEFAULT_LEVEL_ORDER = Object.freeze(['novis', 'gesall', 'mastare']);
   const LEVEL_VALUE_MAP = Object.freeze({
@@ -890,6 +902,7 @@
 
   function getRuleList(entry, key, options = {}) {
     if (!RULE_KEYS.includes(key)) return [];
+    incrementMutationPerfCounter('ruleHelperCalls');
     return toRuleList(getEntryRules(entry, options)[key]);
   }
 
@@ -3936,7 +3949,12 @@
     };
 
     collectForSource(candidate, entries, candidateLevel);
-    entries.forEach(entry => {
+    const knownConflictSources = Array.isArray(options?.conflictSources)
+      ? options.conflictSources
+      : entries;
+    const entrySet = knownConflictSources === entries ? null : new Set(entries);
+    knownConflictSources.forEach(entry => {
+      if (entrySet && !entrySet.has(entry)) return;
       collectForSource(
         entry,
         [candidate],
@@ -5616,6 +5634,33 @@
     };
   }
 
+  function buildConflictReplacementPlan(list, stopResult = {}) {
+    const replacementNames = [...new Set(
+      toArray(stopResult?.replaceTargetNames)
+        .map(value => String(value || '').trim())
+        .filter(Boolean)
+    )];
+    if (!replacementNames.length) return null;
+    if (toArray(stopResult?.requirementReasons).length
+      || toArray(stopResult?.hardStops).length
+      || stopResult?.grantedLevelStop) {
+      return null;
+    }
+    const replacementSet = new Set(replacementNames);
+    const entries = Array.isArray(list) ? list : [];
+    const removedEntries = entries.filter(entry => (
+      replacementSet.has(String(entry?.namn || '').trim())
+      && !entry?.manualRuleOverride
+    ));
+    if (!removedEntries.length) return null;
+    const projectedList = entries.filter(entry => !removedEntries.includes(entry));
+    return {
+      replacementNames,
+      removedEntries,
+      projectedList
+    };
+  }
+
   function getEntryStopOverrideKeys(candidateEntry, stopResult = {}) {
     const out = new Set();
     const candidateId = String(candidateEntry?.id || '').trim();
@@ -7028,6 +7073,7 @@
     evaluateRequirementAssistState,
     getEntryMaxCount,
     evaluateEntryStops,
+    buildConflictReplacementPlan,
     getEntryStopOverrideKeys,
     formatEntryStopMessages,
     getRequirementDependents,
