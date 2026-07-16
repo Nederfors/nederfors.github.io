@@ -471,11 +471,14 @@ test('add-item profiling records staged breakdown for inventory adds', async ({ 
   expect(stageNames).toEqual(expect.arrayContaining([
     'form-serialization',
     'store-mutation',
-    'worker-round-trip',
-    'derived-totals-recompute',
+    'common-commit',
+    'inventory-aggregate-work',
     'sort-group-rebuild',
     'dom-patch'
   ]));
+  expect(stageNames).not.toContain('worker-round-trip');
+  expect(stageNames).not.toContain('derived-totals-recompute');
+  expect(stageNames).not.toContain('full-list-render');
 
   const stages = scenario?.detail?.profile?.stages || [];
   const indexDomPatches = stages.filter((entry) => entry.name === 'dom-patch' && entry.detail?.surface === 'index');

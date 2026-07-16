@@ -245,6 +245,151 @@ test('metadata quantity fast path matches the conservative save/render path and 
   expect(removalReload).toEqual(fastRemovalState.inventory);
 });
 
+test('filtered final-row removal matches the forced safe path and reload', async ({ page }) => {
+  await seedStore(page);
+  await page.goto('/#/inventory');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.locator('#invList').waitFor({ state: 'visible' });
+
+  const target = await page.evaluate(async () => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entry = window.lookupEntry?.({ name: 'Bandage' });
+    const filler = window.lookupEntry?.({ name: 'Fackla' }) || window.lookupEntry?.({ name: 'Dryckesbälte' });
+    if (!entry || !filler) throw new Error('Missing filtered removal representative.');
+    const initial = [{
+      id: entry.id,
+      name: entry.namn,
+      qty: 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    }, {
+      id: filler.id,
+      name: filler.namn,
+      qty: 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    }];
+    window.storeHelper.setInventory(activeStore, initial, { bumpDerived: false });
+    const stored = window.storeHelper.getInventory(activeStore);
+    window.invUtil.filter.invTxt = entry.namn;
+    window.invUtil.renderInventory({ trigger: 'filtered-removal-setup' });
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'filtered-removal-setup' });
+    const row = stored[0];
+    const renamed = { ...row, name: 'Helt annat föremål' };
+    return {
+      name: entry.namn,
+      rowUid: row.__uid,
+      initial: JSON.parse(JSON.stringify(stored)),
+      classifier: {
+        leave: window.invUtil.classifyInventoryFilterMutation({
+          previousRow: row, row: renamed, previousEntry: entry, entry,
+          previousIndex: 0, nextIndex: 0
+        }),
+        enter: window.invUtil.classifyInventoryFilterMutation({
+          previousRow: renamed, row, previousEntry: entry, entry,
+          previousIndex: 0, nextIndex: 0
+        }),
+        reorder: window.invUtil.classifyInventoryFilterMutation({
+          previousRow: row, row: { ...row }, previousEntry: entry, entry,
+          previousIndex: 0, nextIndex: 1
+        })
+      }
+    };
+  });
+
+  expect(target.classifier.leave).toMatchObject({
+    membership: 'leave',
+    requiredRenderStrategy: 'targeted-remove',
+    fallbackReason: 'active-filter-leave-unoptimized'
+  });
+  expect(target.classifier.enter).toMatchObject({
+    membership: 'enter',
+    requiredRenderStrategy: 'targeted-insert',
+    fallbackReason: 'active-filter-enter-unoptimized'
+  });
+  expect(target.classifier.reorder).toMatchObject({
+    membership: 'remain',
+    positionChanged: true,
+    requiredRenderStrategy: 'targeted-move',
+    fallbackReason: 'active-filter-order-change-unoptimized'
+  });
+
+  const runRemoval = async forceSafePath => {
+    await page.evaluate(({ forceSafePath }) => {
+      window.__symbaroumPerfForceSafeInventoryMutations = forceSafePath;
+      const perf = window.symbaroumPerf;
+      perf?.clearHistory?.();
+      const scenarioId = perf?.startScenario?.('filtered-removal-parity', { scope: 'inventory' });
+      perf?.setFlowContext?.('inventory-mutation', scenarioId);
+      window.__filteredRemovalScenarioId = scenarioId;
+    }, { forceSafePath });
+    await page.locator(`#invList li[data-uid="${target.rowUid}"] button[data-act="del"]`).first().click();
+    await expect(page.locator(`#invList li[data-uid="${target.rowUid}"]`)).toHaveCount(0);
+    return page.evaluate(async () => {
+      const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+      await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+      await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'filtered-removal-parity' });
+      await window.symbaroumPerf?.afterNextPaint?.(2);
+      const scenarioId = window.__filteredRemovalScenarioId;
+      window.symbaroumPerf?.clearFlowContext?.('inventory-mutation', scenarioId);
+      const scenario = window.symbaroumPerf?.endScenario?.(scenarioId);
+      return {
+        core: {
+          inventory: JSON.parse(JSON.stringify(window.storeHelper.getInventory(activeStore))).map(row => ({
+            ...row,
+            artifactEffect: row.artifactEffect || '',
+            kvaliteter: Array.isArray(row.kvaliteter) ? row.kvaliteter : [],
+            gratisKval: Array.isArray(row.gratisKval) ? row.gratisKval : [],
+            removedKval: Array.isArray(row.removedKval) ? row.removedKval : []
+          })),
+          money: window.storeHelper.getMoney(activeStore),
+          artifactEffects: window.storeHelper.getArtifactEffects(activeStore),
+          visibleCards: [...document.querySelectorAll('#invList li.entry-card[data-uid]')]
+            .map(card => card.dataset.uid)
+        },
+        counters: scenario?.detail?.profile?.counters || {},
+        fallbacks: scenario?.detail?.profile?.fallbacks || []
+      };
+    });
+  };
+
+  const safe = await runRemoval(true);
+  expect(safe.fallbacks.map(fallback => fallback.reason)).toContain('forced-safe-path');
+  expect(safe.counters.fullInventoryRenders).toBeGreaterThanOrEqual(1);
+
+  await page.evaluate(async ({ target }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.storeHelper.setInventory(activeStore, JSON.parse(JSON.stringify(target.initial)), { bumpDerived: false });
+    window.invUtil.filter.invTxt = target.name;
+    window.invUtil.renderInventory({ trigger: 'filtered-removal-restore' });
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'filtered-removal-restore' });
+  }, { target });
+
+  const optimized = await runRemoval(false);
+  expect(optimized.core).toEqual(safe.core);
+  expect(optimized.fallbacks).toEqual([]);
+  expect(optimized.counters.fullInventoryRenders || 0).toBe(0);
+  expect(optimized.counters.targetedRenders).toBeGreaterThanOrEqual(1);
+  expect(optimized.counters.refreshGenerations).toBe(1);
+  expect(optimized.counters.persistenceSchedules).toBe(1);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  const reloaded = await page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    return JSON.parse(JSON.stringify(window.storeHelper.getInventory(activeStore))).map(row => ({
+      ...row,
+      artifactEffect: row.artifactEffect || '',
+      kvaliteter: Array.isArray(row.kvaliteter) ? row.kvaliteter : [],
+      gratisKval: Array.isArray(row.gratisKval) ? row.gratisKval : [],
+      removedKval: Array.isArray(row.removedKval) ? row.removedKval : []
+    }));
+  });
+  expect(reloaded).toEqual(optimized.core.inventory);
+});
+
 test('declared economy quality add and remove match the forced safe path and reload', async ({ page }) => {
   await seedStore(page);
   await page.goto('/#/inventory');
@@ -284,16 +429,37 @@ test('declared economy quality add and remove match the forced safe path and rel
       artifactEffect: ''
     }];
     window.storeHelper.setInventory(activeStore, initial, { bumpDerived: false });
+    window.invUtil.filter.invTxt = entry.namn;
     window.invUtil.renderInventory({ trigger: 'quality-parity-setup' });
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'quality-parity-setup' });
     const row = window.storeHelper.getInventory(activeStore)[0];
+    const filterImpact = window.invUtil.classifyInventoryFilterMutation({
+      previousRow: row,
+      row: { ...row, kvaliteter: [quality.namn] },
+      previousEntry: entry,
+      entry,
+      previousIndex: 0,
+      nextIndex: 0
+    });
     return {
       entryId: entry.id,
       name: entry.namn,
       quality: quality.namn,
       rowUid: row.__uid,
+      filterImpact,
       initial: JSON.parse(JSON.stringify(window.storeHelper.getInventory(activeStore)))
     };
+  });
+  expect(target.filterImpact).toMatchObject({
+    active: true,
+    provable: true,
+    beforeMatches: true,
+    afterMatches: true,
+    membership: 'remain',
+    positionChanged: false,
+    requiredRenderStrategy: 'targeted-patch',
+    targetedPatchSafe: true,
+    fallbackReason: ''
   });
 
   await page.evaluate(() => { window.__symbaroumPerfForceSafeInventoryMutations = true; });
@@ -307,15 +473,25 @@ test('declared economy quality add and remove match the forced safe path and rel
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'quality-parity-fast-restore' });
     window.__symbaroumPerfForceSafeInventoryMutations = false;
   }, { target });
+  await page.evaluate(({ rowUid }) => {
+    window.__filteredQualityCard = document.querySelector(`#invList li.entry-card[data-uid="${rowUid}"]`);
+  }, { rowUid: target.rowUid });
   await addQualityThroughUi(page, target);
   const fastAdd = await captureQualityState(page, target, 'quality-parity-fast-add');
   expect(fastAdd).toEqual(safeAdd);
+  expect(await page.evaluate(({ rowUid }) => (
+    document.querySelector(`#invList li.entry-card[data-uid="${rowUid}"]`) === window.__filteredQualityCard
+  ), { rowUid: target.rowUid })).toBe(true);
 
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
   const reloadedAdd = await captureQualityState(page, target, 'quality-parity-reload-add');
   expect(reloadedAdd).toEqual(fastAdd);
 
+  await page.evaluate(({ name }) => {
+    window.invUtil.filter.invTxt = name;
+    window.invUtil.renderInventory({ trigger: 'quality-parity-filter-restore' });
+  }, { name: target.name });
   await page.evaluate(() => { window.__symbaroumPerfForceSafeInventoryMutations = true; });
   await page.locator(`#invList li[data-uid="${target.rowUid}"] .db-chip[data-qual="${target.quality}"]`).click();
   await expect(page.locator(`#invList li[data-uid="${target.rowUid}"] .db-chip[data-qual="${target.quality}"]`)).toHaveCount(0);

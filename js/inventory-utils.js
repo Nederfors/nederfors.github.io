@@ -633,6 +633,7 @@
     if (typeof bind !== 'function') return;
     if (dom?.invList) {
       dom.invList.querySelectorAll('.cat-group > details > ul, .vehicle-items.entry-card-list').forEach(listEl => {
+        incrementActiveMutationCounter('autoAnimateBindings');
         bind(listEl, { duration: 100 });
       });
     }
@@ -2212,7 +2213,7 @@
     }, []);
   }
 
-  function getRowByPath(inv, path) {
+  function readInventoryRowByPath(inv, path) {
     let arr = inv;
     let row = null;
     for (let i = 0; i < path.length; i++) {
@@ -2222,6 +2223,299 @@
       if (i < path.length - 1) arr = row.contains || [];
     }
     return { row, parentArr: arr, idx: path[path.length - 1] };
+  }
+
+  function getRowByPath(inv, path) {
+    incrementActiveMutationCounter('inventoryPathLookups');
+    return timeActiveMutationStage('row-path-lookup', () => (
+      readInventoryRowByPath(inv, path)
+    ), {
+      surface: 'inventory',
+      depth: Array.isArray(path) ? path.length : 0
+    });
+  }
+
+  function getInventoryRowCategory(row) {
+    const entry = getEntry(row?.id || row?.name);
+    return (entry?.taggar?.typ || [])[0] || 'Övrigt';
+  }
+
+  function collectInventoryTopologyRows(rows, prefix = [], output = []) {
+    if (!Array.isArray(rows)) return output;
+    rows.forEach((row, index) => {
+      if (!row || typeof row !== 'object') return;
+      const path = [...prefix, index];
+      output.push({ row, path });
+      if (Array.isArray(row.contains)) collectInventoryTopologyRows(row.contains, path, output);
+    });
+    return output;
+  }
+
+  function getTopologyEntryFallbackReasons(entry, row, options = {}) {
+    const reasons = [];
+    const add = reason => {
+      if (reason && !reasons.includes(reason)) reasons.push(reason);
+    };
+    const catalogEntry = entry?.id
+      ? (Array.isArray(window.DB) && window.DB.some(candidate => String(candidate?.id || '') === String(entry.id)))
+      : false;
+    if (!entry) add('unknown-topology-metadata');
+    else if (!catalogEntry) add((entry?.taggar?.typ || []).includes('Hemmagjort') ? 'custom-entry' : 'legacy-metadata');
+    if (!getInventoryBaseIdentity(row, entry) || !getInventoryVariantIdentity(row, entry)) {
+      add('unstable-variant-identity');
+    }
+    if (!String(row?.__uid || '').trim()) add('missing-row-uid');
+    if (row?.typ === 'currency' || row?.money) add('manual-override');
+    if (row?.snapshotSourceKey) add('snapshot-sync');
+    if (row?.artifactEffect || (entry?.taggar?.typ || []).includes('Artefakt') || needsArtifactListSync(entry)) {
+      add('artifact-list-sync');
+    }
+    if (isHiddenType(entry)) add('hidden-revealed-state');
+    if (isInventoryBundleEntry(entry)) add('bundle-expansion');
+    if (Array.isArray(row?.manualQualityOverride) && row.manualQualityOverride.length) add('manual-override');
+    if (row?.perk || row?.perkGratis) add('rule-reconciliation-required');
+    if (!options.allowParent && Array.isArray(row?.contains)) add('container-topology');
+
+    const grants = getEntryRuleListWithFallback(entry, 'ger', { level: entry?.nivå || '' });
+    const conflicts = getEntryRuleListWithFallback(entry, 'krockar', { level: entry?.nivå || '' });
+    if (grants.length || conflicts.length) add('rule-reconciliation-required');
+    if (typeof window.rulesHelper?.requiresFullListReconciliation === 'function'
+        && window.rulesHelper.requiresFullListReconciliation([entry])) {
+      add('list-wide-dependency');
+    }
+    const modifies = getEntryRuleListWithFallback(entry, 'andrar', { level: entry?.nivå || '' });
+    if (modifies.some(rule => !getModifyTargetImpact(getModifyRuleTarget(rule)))) add('unknown-modify-target');
+    return reasons;
+  }
+
+  function planInventoryTopologyMutation(inventory, mutation = {}) {
+    const fallbackReasons = [];
+    const addFallback = reason => {
+      if (reason && !fallbackReasons.includes(reason)) fallbackReasons.push(reason);
+    };
+    const direction = String(mutation.direction || '').trim().toLowerCase();
+    const sourcePath = Array.isArray(mutation.sourcePath) ? [...mutation.sourcePath] : [];
+    const vehiclePath = Array.isArray(mutation.vehiclePath) ? [...mutation.vehiclePath] : [];
+    const list = Array.isArray(mutation.list) ? mutation.list : [];
+    if (mutation.forceSafePath === true) addFallback('forced-safe-path');
+    if (mutation.activeFilters === true) addFallback('active-filter-membership-uncertain');
+    if (mutation.aggregateSnapshotAvailable !== true) addFallback('aggregate-snapshot-unavailable');
+    if (mutation.operationCount !== undefined && Number(mutation.operationCount) !== 1) {
+      addFallback('multi-row-topology-unproven');
+    }
+    if (Number(mutation.moneyAmountO || 0) > 0) addFallback('topology-and-money-batch-unsupported');
+    if (!Array.isArray(inventory)) addFallback('unknown-topology-metadata');
+    if (!['load', 'unload'].includes(direction)) addFallback('unsupported-topology-path');
+    if (vehiclePath.length !== 1
+        || direction === 'load' && sourcePath.length !== 1
+        || direction === 'unload' && sourcePath.length !== 2) {
+      addFallback(direction === 'unload' && sourcePath.length > 2
+        ? 'nested-inventory-path'
+        : 'unsupported-topology-path');
+    }
+
+    const sourceInfo = readInventoryRowByPath(inventory, sourcePath);
+    const vehicleInfo = readInventoryRowByPath(inventory, vehiclePath);
+    const sourceRow = sourceInfo.row;
+    const vehicleRow = vehicleInfo.row;
+    const sourceEntry = getEntry(sourceRow?.id || sourceRow?.name);
+    const vehicleEntry = getEntry(vehicleRow?.id || vehicleRow?.name);
+    if (!sourceRow || !Array.isArray(sourceInfo.parentArr) || sourceInfo.idx < 0) addFallback('source-row-not-found');
+    if (!vehicleRow || !Array.isArray(vehicleInfo.parentArr) || vehicleInfo.idx < 0) addFallback('destination-parent-not-found');
+    if (!(vehicleEntry?.taggar?.typ || []).includes('Färdmedel')) addFallback('unsupported-topology-parent');
+    if (direction === 'unload' && sourcePath[0] !== vehiclePath[0]) addFallback('unsupported-topology-path');
+    if (direction === 'load' && sourceInfo.parentArr !== inventory) addFallback('nested-inventory-path');
+    if (vehicleInfo.parentArr !== inventory) addFallback('nested-inventory-path');
+    if (sourceRow === vehicleRow) addFallback('topology-cycle');
+    if (direction === 'load' && sourcePath[0] === vehiclePath[0]) addFallback('topology-cycle');
+    if (direction === 'unload' && sourceInfo.parentArr !== vehicleRow?.contains) addFallback('unsupported-topology-path');
+
+    const topologyRows = timeActiveMutationStage('topology-uid-validation', () => {
+      const rows = collectInventoryTopologyRows(inventory);
+      const uidCounts = new Map();
+      rows.forEach(({ row }) => {
+        const uid = String(row?.__uid || '').trim();
+        if (!uid) {
+          addFallback('missing-row-uid');
+          return;
+        }
+        uidCounts.set(uid, (uidCounts.get(uid) || 0) + 1);
+      });
+      if ([...uidCounts.values()].some(count => count !== 1)) addFallback('duplicate-row-uid');
+      return rows;
+    }, {
+      surface: 'inventory',
+      direction
+    });
+    getTopologyEntryFallbackReasons(sourceEntry, sourceRow).forEach(addFallback);
+    getTopologyEntryFallbackReasons(vehicleEntry, vehicleRow, { allowParent: true }).forEach(addFallback);
+    if (Array.isArray(sourceRow?.contains)) addFallback('container-topology');
+
+    const totalQty = Math.max(1, Math.floor(Number(sourceRow?.qty) || 1));
+    const moveQty = Math.max(1, Math.floor(Number(mutation.moveQty) || totalQty));
+    if (moveQty !== totalQty) addFallback('partial-stack-topology');
+    if (direction === 'unload') {
+      const mergeTarget = inventory.find(candidate => (
+        candidate !== vehicleRow
+        && candidate !== sourceRow
+        && canStackRows(candidate, sourceRow, sourceEntry)
+      ));
+      if (mergeTarget) addFallback('destination-stack-merge-uncertain');
+    }
+
+    const sourceUid = String(sourceRow?.__uid || '').trim();
+    const vehicleUid = String(vehicleRow?.__uid || '').trim();
+    const orderPlan = timeActiveMutationStage('topology-order-validation', () => {
+      const nextChildren = Array.isArray(vehicleRow?.contains) ? [...vehicleRow.contains] : [];
+      const nextTopLevel = Array.isArray(inventory) ? [...inventory] : [];
+      if (sourceRow && vehicleRow && direction === 'load') {
+        const sourceIndex = nextTopLevel.indexOf(sourceRow);
+        if (sourceIndex >= 0) nextTopLevel.splice(sourceIndex, 1);
+        nextChildren.push(sourceRow);
+        nextChildren.sort(sortInvEntry);
+      } else if (sourceRow && vehicleRow && direction === 'unload') {
+        const childIndex = nextChildren.indexOf(sourceRow);
+        if (childIndex >= 0) nextChildren.splice(childIndex, 1);
+        nextTopLevel.push(sourceRow);
+      }
+      const normalizedTopLevel = [
+        ...nextTopLevel.filter(row => !(getEntry(row?.id || row?.name)?.taggar?.typ || []).includes('Färdmedel')),
+        ...nextTopLevel.filter(row => (getEntry(row?.id || row?.name)?.taggar?.typ || []).includes('Färdmedel'))
+      ];
+      const nextVehicleIndex = normalizedTopLevel.indexOf(vehicleRow);
+      const nextSourcePath = direction === 'load'
+        ? [nextVehicleIndex, nextChildren.indexOf(sourceRow)]
+        : [normalizedTopLevel.indexOf(sourceRow)];
+      const sourceCategory = getInventoryRowCategory(sourceRow);
+      const vehicleCategory = getInventoryRowCategory(vehicleRow);
+      const beforeCategoryRows = (Array.isArray(inventory) ? inventory : [])
+        .filter(row => getInventoryRowCategory(row) === sourceCategory);
+      const afterCategoryRows = normalizedTopLevel
+        .filter(row => getInventoryRowCategory(row) === sourceCategory);
+      return {
+        nextChildren,
+        normalizedTopLevel,
+        nextVehicleIndex,
+        nextSourcePath,
+        sourceCategory,
+        vehicleCategory,
+        beforeCategoryRows,
+        afterCategoryRows
+      };
+    }, {
+      surface: 'inventory',
+      direction,
+      rowCount: topologyRows.length
+    });
+    const {
+      nextChildren,
+      normalizedTopLevel,
+      nextVehicleIndex,
+      nextSourcePath,
+      sourceCategory,
+      vehicleCategory,
+      beforeCategoryRows,
+      afterCategoryRows
+    } = orderPlan;
+    const sourceParentRowsAfter = direction === 'unload'
+      ? nextChildren
+      : normalizedTopLevel;
+    const destinationParentRowsAfter = direction === 'load'
+      ? nextChildren
+      : normalizedTopLevel;
+    const { movedWeight, usedWeightDelta } = timeActiveMutationStage('topology-capacity-calculation', () => {
+      const weight = sourceRow && sourceEntry ? calcRowWeight(sourceRow, list) : 0;
+      return {
+        movedWeight: weight,
+        usedWeightDelta: direction === 'load' ? -weight : weight
+      };
+    }, {
+      surface: 'inventory',
+      direction
+    });
+    const semanticInvalidations = [
+      'inventory.structure',
+      'inventory.totals',
+      'capacity',
+      'summary.economy',
+      'persistence'
+    ];
+
+    return {
+      kind: 'move-row',
+      direction,
+      impactClass: fallbackReasons.length ? 'fallback' : 'local',
+      fastPath: fallbackReasons.length === 0,
+      fallbackReasons,
+      fallbackReason: fallbackReasons[0] || '',
+      source: {
+        uid: sourceUid,
+        id: sourceRow?.id || '',
+        name: sourceRow?.name || sourceEntry?.namn || '',
+        path: sourcePath,
+        parentUid: direction === 'unload' ? vehicleUid : 'root',
+        category: sourceCategory
+      },
+      destination: {
+        parentUid: direction === 'load' ? vehicleUid : 'root',
+        path: nextSourcePath,
+        category: sourceCategory
+      },
+      affectedCategories: [...new Set([sourceCategory, vehicleCategory].filter(Boolean))],
+      affectedParent: {
+        uid: vehicleUid,
+        id: vehicleRow?.id || '',
+        name: vehicleRow?.name || vehicleEntry?.namn || '',
+        pathBefore: vehiclePath,
+        pathAfter: [nextVehicleIndex]
+      },
+      aggregateEffects: {
+        movedWeight,
+        usedWeightDelta,
+        remainingCapacityDelta: -usedWeightDelta,
+        economyDeltaO: 0,
+        foodDelta: 0
+      },
+      parentTransitions: {
+        sourceParentBecomesEmpty: direction === 'unload' && sourceParentRowsAfter.length === 0,
+        destinationParentBecomesVisible: direction === 'load'
+          && (Array.isArray(vehicleRow?.contains) ? vehicleRow.contains.length : 0) === 0,
+        sourceCategoryBecomesEmpty: direction === 'load' && beforeCategoryRows.length > 0 && afterCategoryRows.length === 0,
+        destinationCategoryBecomesVisible: direction === 'unload' && beforeCategoryRows.length === 0
+      },
+      cardChanges: {
+        move: [sourceUid].filter(Boolean),
+        refresh: [vehicleUid].filter(Boolean),
+        preserve: topologyRows.map(({ row }) => String(row?.__uid || '').trim()).filter(Boolean)
+      },
+      invalidates: semanticInvalidations,
+      affectedDomains: semanticInvalidations,
+      derivedInvalidation: 'none',
+      bumpDerived: false,
+      aggregateStrategy: mutation.aggregateSnapshotAvailable === true ? 'delta' : 'rebuild',
+      renderStrategy: fallbackReasons.length ? 'full-fallback' : 'targeted-move',
+      topology: 'category',
+      topologyGuarantee: 'direct-root-vehicle-row-move',
+      targets: {
+        inventoryRows: [sourceUid, vehicleUid].filter(Boolean),
+        inventoryParents: [vehicleUid].filter(Boolean),
+        inventoryCategories: [...new Set([sourceCategory, vehicleCategory].filter(Boolean))]
+      },
+      expected: {
+        topLevelUids: normalizedTopLevel.map(row => String(row?.__uid || '').trim()),
+        vehicleChildUids: nextChildren.map(row => String(row?.__uid || '').trim()),
+        sourceParentUids: sourceParentRowsAfter.map(row => String(row?.__uid || '').trim()),
+        destinationParentUids: destinationParentRowsAfter.map(row => String(row?.__uid || '').trim()),
+        sourceCategoryUids: afterCategoryRows.map(row => String(row?.__uid || '').trim()),
+        sourcePath: nextSourcePath,
+        vehiclePath: [nextVehicleIndex]
+      },
+      refs: {
+        sourceRow,
+        vehicleRow,
+        sourceParent: sourceInfo.parentArr
+      }
+    };
   }
 
   function splitStackRow(row, qty) {
@@ -2739,18 +3033,20 @@
     return { vehicles, flat, nameMap, vehicleNames, vehicleIndexes };
   }
 
-  function buildInventoryBatchCheckboxRow(label, path, meta = '') {
+  function buildInventoryBatchCheckboxRow(label, path, meta = '', rowUid = '') {
     const safeLabel = escapeHtml(label || 'Okänt föremål');
     const safeMeta = meta ? `<span class="inventory-batch-item-meta">${escapeHtml(meta)}</span>` : '';
+    const safeUid = String(rowUid || '').trim();
     return renderDaubCheckboxRow({
       rowClass: 'price-item inventory-batch-item',
+      labelAttrs: safeUid ? ` data-row-uid="${escapeHtml(safeUid)}"` : '',
       copyHtml: `
         <span class="inventory-batch-item-copy">
           <span class="inventory-batch-item-label">${safeLabel}</span>
           ${safeMeta}
         </span>
       `,
-      inputAttrs: ` data-path="${escapeHtml(path)}"`
+      inputAttrs: ` data-path="${escapeHtml(path)}"${safeUid ? ` data-row-uid="${escapeHtml(safeUid)}"` : ''}`
     });
   }
 
@@ -2811,7 +3107,17 @@
     return `Bärkapacitet: ${fmt(usedWeight)}/${fmt(maxCapacity)}`;
   }
 
-  function buildInventoryBatchGroup({ title, subtitle = '', metaText = '', icon = '', count = '', itemsHtml = '', emptyText = '' }) {
+  function buildInventoryBatchGroup({
+    title,
+    subtitle = '',
+    metaText = '',
+    icon = '',
+    count = '',
+    itemsHtml = '',
+    emptyText = '',
+    groupKey = '',
+    parentUid = ''
+  }) {
     const safeTitle = escapeHtml(title || 'Grupp');
     const subtitleHtml = subtitle
       ? `<span class="inventory-batch-group-subtitle">${escapeHtml(subtitle)}</span>`
@@ -2829,8 +3135,12 @@
       ? `<span class="inventory-batch-group-icon" aria-hidden="true">${icon}</span>`
       : '';
     const content = itemsHtml || `<p class="inventory-batch-empty">${escapeHtml(emptyText || 'Inga valbara poster.')}</p>`;
+    const groupAttrs = [
+      groupKey ? `data-group-key="${escapeHtml(groupKey)}"` : '',
+      parentUid ? `data-parent-uid="${escapeHtml(parentUid)}"` : ''
+    ].filter(Boolean).join(' ');
     return `
-      <section class="vehicle-group inventory-batch-group">
+      <section class="vehicle-group inventory-batch-group"${groupAttrs ? ` ${groupAttrs}` : ''}>
         <header class="inventory-batch-group-header">
           <span class="inventory-batch-group-title-wrap">
             ${iconHtml}
@@ -2847,6 +3157,110 @@
         </div>
       </section>
     `;
+  }
+
+  function reconcileVehicleLoadPopup({ inventory, list, select, vehicleRow, sourceRow }) {
+    if (!Array.isArray(inventory) || !list || !select || !vehicleRow || !sourceRow) return false;
+    const vehicleUid = String(vehicleRow.__uid || '').trim();
+    const sourceUid = String(sourceRow.__uid || '').trim();
+    if (!vehicleUid || !sourceUid) return false;
+
+    const selectedVehicleIndex = inventory.indexOf(vehicleRow);
+    if (selectedVehicleIndex < 0) return false;
+    const topologyRows = collectInventoryTopologyRows(inventory);
+    const sourceInfo = topologyRows.find(item => String(item.row?.__uid || '').trim() === sourceUid);
+    if (!sourceInfo) return false;
+    const controls = [...list.querySelectorAll('input[type="checkbox"][data-row-uid]')];
+    const controlsByUid = new Map();
+    for (const control of controls) {
+      const uid = String(control.dataset.rowUid || '').trim();
+      if (!uid || controlsByUid.has(uid)) return false;
+      controlsByUid.set(uid, control);
+      control.checked = false;
+    }
+    const sourceControl = controlsByUid.get(sourceUid);
+    const sourceLabel = sourceControl?.closest('.inventory-batch-item');
+    if (!sourceLabel) return false;
+    sourceControl.dataset.path = sourceInfo.path.join('.');
+    const vehicleEntry = getEntry(vehicleRow.id || vehicleRow.name);
+    if (!vehicleEntry) return false;
+    let vehicleGroup = [...list.querySelectorAll('.inventory-batch-group[data-parent-uid]')]
+      .find(group => String(group.dataset.parentUid || '') === vehicleUid);
+    let createdGroup = false;
+    if (!vehicleGroup) {
+      const vehicleCarry = getVehicleCarrySummary(vehicleRow);
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleEntry.namn || vehicleRow.name || 'Färdmedel',
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicleEntry.namn] || '🛞',
+        count: 1,
+        itemsHtml: '<p class="inventory-batch-empty">Tillfälligt tom.</p>',
+        groupKey: 'vehicle',
+        parentUid: vehicleUid
+      }).trim();
+      vehicleGroup = wrapper.firstElementChild;
+      if (!vehicleGroup) return false;
+      list.appendChild(vehicleGroup);
+      createdGroup = true;
+    }
+    const vehicleItems = vehicleGroup.querySelector('.inventory-batch-group-items');
+    if (!vehicleItems) return false;
+    vehicleItems.querySelector('.inventory-batch-empty')?.remove();
+    vehicleItems.appendChild(sourceLabel);
+
+    const updateGroup = (group, countValue, metaText) => {
+      if (!group) return false;
+      const count = group.querySelector('.inventory-batch-group-count');
+      if (count) count.textContent = String(countValue);
+      const meta = group.querySelector('.inventory-batch-group-meta');
+      if (meta) meta.textContent = metaText;
+      return true;
+    };
+    const rootGroup = list.querySelector('.inventory-batch-group[data-group-key="root"]');
+    const rootItems = rootGroup?.querySelectorAll('.inventory-batch-item[data-row-uid]').length || 0;
+    if (rootItems > 0) {
+      const snapshot = getReusableInventoryAggregateSnapshot();
+      if (!snapshot || !updateGroup(
+        rootGroup,
+        rootItems,
+        formatBatchCapacityText(snapshot.usedWeight, snapshot.maxCapacity)
+      )) return false;
+    } else {
+      rootGroup?.remove();
+    }
+    const vehicleCarry = getVehicleCarrySummary(vehicleRow);
+    const vehicleItemCount = vehicleGroup.querySelectorAll('.inventory-batch-item[data-row-uid]').length;
+    if (!updateGroup(
+      vehicleGroup,
+      vehicleItemCount,
+      formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity)
+    )) return false;
+
+    for (const option of select.options) {
+      const uid = String(option.dataset.rowUid || '').trim();
+      if (!uid) return false;
+      const index = inventory.findIndex(row => String(row?.__uid || '').trim() === uid);
+      if (index < 0) return false;
+      option.value = String(index);
+    }
+
+    select.value = String(selectedVehicleIndex);
+    const finalSourceControl = [...list.querySelectorAll('input[type="checkbox"][data-row-uid]')]
+      .find(control => String(control.dataset.rowUid || '') === sourceUid);
+    const finalParent = finalSourceControl?.closest('.inventory-batch-group[data-parent-uid]');
+    if (!finalSourceControl
+        || finalSourceControl.dataset.path !== sourceInfo.path.join('.')
+        || String(finalParent?.dataset.parentUid || '') !== vehicleUid) {
+      return false;
+    }
+    if (createdGroup) window.DAUB?.init?.(vehicleGroup);
+    const sectionInner = list.closest('.popup-inner');
+    if (sectionInner) sectionInner.scrollTop = 0;
+    incrementActiveMutationCounter('vehiclePopupRowsPatched');
+    requestAnimationFrame(() => highlightInventoryHubSection('vehicle-load'));
+    return true;
   }
 
   function sortAllInventories() {
@@ -2872,6 +3286,138 @@
       return row.contains.some(ch => rowMatchesText(ch, t));
     }
     return false;
+  }
+
+  function getInventoryFilterValues(value) {
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (value instanceof Set) return [...value].filter(Boolean);
+    return [];
+  }
+
+  function getActiveInventoryFilterState() {
+    const typ = getInventoryFilterValues(F.typ);
+    const ark = getInventoryFilterValues(F.ark);
+    const test = getInventoryFilterValues(F.test);
+    const searchTerm = String(F.invTxt || '').trim().toLowerCase();
+    const selectedTags = [...new Set([...typ, ...ark, ...test])];
+    return {
+      active: Boolean(searchTerm || selectedTags.length),
+      searchTerm,
+      hasSearch: Boolean(searchTerm),
+      typ,
+      ark,
+      test,
+      selectedTags,
+      hasTagFilters: selectedTags.length > 0,
+      union: Boolean(storeHelper.getFilterUnion(store))
+    };
+  }
+
+  function getInventoryEntryFilterTags(entry) {
+    const typTags = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    const arkRaw = entry?.taggar?.ark_trad;
+    const arkTags = splitArkTags(arkRaw);
+    const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
+    const testTags = typeof window.getEntryTestTags === 'function'
+      ? window.getEntryTestTags(entry)
+      : (Array.isArray(entry?.taggar?.nivå_data?.Enkel?.test)
+        ? entry.taggar.nivå_data.Enkel.test
+        : (Array.isArray(entry?.taggar?.niva_data?.Enkel?.test)
+          ? entry.taggar.niva_data.Enkel.test
+          : (entry?.taggar?.test || [])));
+    return [...typTags, ...arkList, ...testTags];
+  }
+
+  function inventoryRowPassesActiveFilters(row, entry, filterState = getActiveInventoryFilterState()) {
+    if (!filterState?.active) return true;
+    const itemTags = getInventoryEntryFilterTags(entry);
+    const tagHit = filterState.hasTagFilters && (
+      filterState.union
+        ? filterState.selectedTags.some(tag => itemTags.includes(tag))
+        : filterState.selectedTags.every(tag => itemTags.includes(tag))
+    );
+    const textHit = filterState.hasSearch
+      ? rowMatchesText(row, filterState.searchTerm)
+      : false;
+    if (filterState.union) {
+      return (filterState.hasTagFilters && tagHit) || (filterState.hasSearch && textHit);
+    }
+    if (filterState.hasTagFilters && !tagHit) return false;
+    if (filterState.hasSearch && !textHit) return false;
+    return true;
+  }
+
+  function classifyInventoryFilterMutation({
+    previousRow,
+    row,
+    previousEntry,
+    entry,
+    previousIndex,
+    nextIndex,
+    previousParent = 'root',
+    nextParent = 'root'
+  } = {}) {
+    const filterState = getActiveInventoryFilterState();
+    const beforeEntry = previousEntry || entry;
+    const afterEntry = entry || previousEntry;
+    if (!filterState.active) {
+      return {
+        active: false,
+        provable: true,
+        beforeMatches: true,
+        afterMatches: true,
+        membership: 'remain',
+        positionChanged: false,
+        requiredRenderStrategy: 'targeted-patch',
+        targetedPatchSafe: true,
+        fallbackReason: ''
+      };
+    }
+    const provable = Boolean(previousRow && row && beforeEntry && afterEntry);
+    if (!provable) {
+      return {
+        active: true,
+        provable: false,
+        beforeMatches: null,
+        afterMatches: null,
+        membership: 'unknown',
+        positionChanged: null,
+        requiredRenderStrategy: 'full-fallback',
+        targetedPatchSafe: false,
+        fallbackReason: 'active-filter-membership-uncertain'
+      };
+    }
+    const beforeMatches = inventoryRowPassesActiveFilters(previousRow, beforeEntry, filterState);
+    const afterMatches = inventoryRowPassesActiveFilters(row, afterEntry, filterState);
+    const membership = beforeMatches
+      ? (afterMatches ? 'remain' : 'leave')
+      : (afterMatches ? 'enter' : 'outside');
+    const beforeCategory = (beforeEntry?.taggar?.typ || [])[0] || 'Övrigt';
+    const afterCategory = (afterEntry?.taggar?.typ || [])[0] || 'Övrigt';
+    const hasComparableIndexes = Number.isInteger(previousIndex) && Number.isInteger(nextIndex);
+    const positionChanged = previousParent !== nextParent
+      || beforeCategory !== afterCategory
+      || hasComparableIndexes && previousIndex !== nextIndex;
+    const requiredRenderStrategy = positionChanged
+      ? 'targeted-move'
+      : ({ remain: 'targeted-patch', leave: 'targeted-remove', enter: 'targeted-insert', outside: 'targeted-none' }[membership]);
+    const targetedPatchSafe = membership === 'remain' && !positionChanged;
+    const fallbackReason = targetedPatchSafe
+      ? ''
+      : (positionChanged
+        ? 'active-filter-order-change-unoptimized'
+        : `active-filter-${membership}-unoptimized`);
+    return {
+      active: true,
+      provable: true,
+      beforeMatches,
+      afterMatches,
+      membership,
+      positionChanged,
+      requiredRenderStrategy,
+      targetedPatchSafe,
+      fallbackReason
+    };
   }
 
   function sortQualsForDisplay(list) {
@@ -5093,7 +5639,7 @@
     apply.disabled = false;
 
     sel.innerHTML = vehicles
-      .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
+      .map(v => `<option value="${v.idx}" data-row-uid="${escapeHtml(v.row?.__uid || '')}">${vehicleNames.get(v.idx)}</option>`)
       .join('');
 
     const resolvePreselectIdx = value => {
@@ -5124,7 +5670,8 @@
         title: 'Bältesbörs',
         subtitle: 'Lägg pengar i valt färdmedel',
         icon: '💰',
-        itemsHtml: moneyRowHtml
+        itemsHtml: moneyRowHtml,
+        groupKey: 'money'
       })
     ];
     if (outside.length) {
@@ -5134,8 +5681,14 @@
         icon: '🎒',
         count: outside.length,
         itemsHtml: outside
-          .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
-          .join('')
+          .map(item => buildInventoryBatchCheckboxRow(
+            nameMap.get(item.row),
+            item.path.join('.'),
+            '',
+            item.row?.__uid
+          ))
+          .join(''),
+        groupKey: 'root'
       }));
     }
     vehicles.forEach(vehicle => {
@@ -5149,8 +5702,15 @@
         icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
         count: items.length,
         itemsHtml: items
-          .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
-          .join('')
+          .map(item => buildInventoryBatchCheckboxRow(
+            nameMap.get(item.row),
+            item.path.join('.'),
+            '',
+            item.row?.__uid
+          ))
+          .join(''),
+        groupKey: 'vehicle',
+        parentUid: vehicle.row?.__uid
       }));
     });
     list.innerHTML = sections.join('');
@@ -5189,11 +5749,12 @@
       closeInventoryHub({ skipSection: 'vehiclePopup' });
     };
     const onApply = async () => {
+      markActiveMutationCheckpoint('popup-confirmation', { action: 'vehicle-load' });
+      markActiveMutationCheckpoint('handler-entry', { action: 'vehicle-load' });
       const vIdx = Number(sel.value);
       if (Number.isNaN(vIdx)) return;
       const vehicle = inv[vIdx];
       if (!vehicle) return;
-      vehicle.contains = vehicle.contains || [];
       const vehicleName = vehicleNames.get(vIdx);
       const parseNonNegInt = (input) => {
         if (!input) return 0;
@@ -5226,6 +5787,131 @@
       }
       const normalizedMoney = storeHelper.normalizeMoney(moneyBundle);
       const totalMoneyO = moneyToO(normalizedMoney);
+      const operations = await timeActiveMutationStage('topology-planning', async () => {
+        const livePathByUid = new Map(collectInventoryTopologyRows(inv).map(item => (
+          [String(item.row?.__uid || '').trim(), item.path]
+        )));
+        const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
+          .map(ch => {
+            const uid = String(ch.dataset.rowUid || '').trim();
+            const livePath = uid ? livePathByUid.get(uid) : null;
+            return Array.isArray(livePath)
+              ? [...livePath]
+              : ch.dataset.path.split('.').map(Number);
+          })
+          .sort((a, b) => {
+            for (let i = 0; i < Math.max(a.length, b.length); i++) {
+              const av = a[i], bv = b[i];
+              if (av === undefined) return 1;
+              if (bv === undefined) return -1;
+              if (av !== bv) return bv - av;
+            }
+            return 0;
+          });
+        const planned = [];
+        for (const path of checks) {
+          if (!Array.isArray(path) || !path.length) continue;
+          if (path[0] === vIdx && path.length === 1) continue;
+          const { row, parentArr, idx } = getRowByPath(inv, path);
+          if (!row || !Array.isArray(parentArr) || idx < 0) continue;
+          const qtyRaw = Number(row.qty);
+          const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+          let moveQty = totalQty;
+          if (totalQty > 1) {
+            const entry = getEntry(row.id || row.name) || {};
+            const displayName = nameMap.get(row) || row.name || entry.namn || 'föremål';
+            const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'load', vehicleName });
+            if (!chosen) return [];
+            moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
+          }
+          planned.push({ parentArr, idx, row, moveQty, totalQty, path: [...path] });
+        }
+        return planned;
+      }, {
+        surface: 'inventory',
+        direction: 'load'
+      });
+      const topologyPlan = timeActiveMutationStage('topology-mutation-plan', () => (
+        planInventoryTopologyMutation(inv, {
+          direction: 'load',
+          sourcePath: operations[0]?.path || [],
+          vehiclePath: [vIdx],
+          moveQty: operations[0]?.moveQty,
+          operationCount: operations.length,
+          moneyAmountO: totalMoneyO,
+          list: storeHelper.getCurrentList(store),
+          activeFilters: hasActiveInventoryFilters(),
+          forceSafePath: window.__symbaroumPerfForceSafeInventoryMutations === true,
+          aggregateSnapshotAvailable: Boolean(getReusableInventoryAggregateSnapshot())
+        })
+      ), {
+        surface: 'inventory',
+        direction: 'load',
+        affectedRows: operations.length
+      });
+      markActiveMutationCheckpoint('mutation-plan-complete', {
+        action: 'vehicle-load',
+        impactClass: topologyPlan.impactClass,
+        renderStrategy: topologyPlan.renderStrategy,
+        fallbackReasons: topologyPlan.fallbackReasons
+      });
+      let fallbackReasons = [...topologyPlan.fallbackReasons];
+      if (topologyPlan.fastPath) {
+        const result = timeActiveMutationStage('inventory-tree-mutation', () => (
+          commitInventoryTopologyMutation(inv, topologyPlan, { source: 'inventory-vehicle-load' })
+        ), {
+          surface: 'inventory',
+          direction: 'load',
+          affectedRows: operations.length
+        });
+        if (result.committed) {
+          const keepValue = topologyPlan.expected.vehiclePath[0];
+          const popupReconciled = timeActiveMutationStage('vehicle-popup-targeted-reconciliation', () => (
+            reconcileVehicleLoadPopup({
+              inventory: inv,
+              list,
+              select: sel,
+              vehicleRow: topologyPlan.refs.vehicleRow,
+              sourceRow: topologyPlan.refs.sourceRow
+            })
+          ), {
+            surface: 'inventory',
+            direction: 'load',
+            rowCount: topologyPlan.cardChanges.preserve.length
+          });
+          if (popupReconciled) {
+            markActiveMutationCheckpoint('popup-reconciliation-complete', { action: 'vehicle-load' });
+            markActiveMutationCheckpoint('first-feedback-dom', { action: 'vehicle-load' });
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              markActiveMutationCheckpoint('focus-transition-complete', { action: 'vehicle-load' });
+            }));
+            return;
+          }
+          recordActiveMutationFallback('vehicle-popup-postcondition-failed', {
+            action: 'vehicle-load',
+            rowUid: topologyPlan.source.uid
+          });
+          timeActiveMutationStage('vehicle-popup-close', cleanup, {
+            surface: 'inventory',
+            direction: 'load'
+          });
+          markActiveMutationCheckpoint('popup-close', { action: 'vehicle-load' });
+          timeActiveMutationStage('vehicle-popup-reconstruction', () => {
+            openVehiclePopup(keepValue);
+          }, {
+            surface: 'inventory',
+            direction: 'load'
+          });
+          markActiveMutationCheckpoint('popup-reconstruction-complete', { action: 'vehicle-load' });
+          markActiveMutationCheckpoint('first-feedback-dom', { action: 'vehicle-load' });
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            markActiveMutationCheckpoint('focus-transition-complete', { action: 'vehicle-load' });
+          }));
+          return;
+        }
+        fallbackReasons = result.fallbackReasons || fallbackReasons;
+      }
+      vehicle.contains = Array.isArray(vehicle.contains) ? vehicle.contains : [];
       if (totalMoneyO > 0) {
         const addResult = addMoneyToVehicle(vehicle, normalizedMoney, { skipSave: true, skipRender: true });
         if (!addResult?.success) {
@@ -5233,53 +5919,47 @@
           return;
         }
       }
-      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
-        .map(ch => ch.dataset.path.split('.').map(Number))
-        .sort((a, b) => {
-          for (let i = 0; i < Math.max(a.length, b.length); i++) {
-            const av = a[i], bv = b[i];
-            if (av === undefined) return 1;
-            if (bv === undefined) return -1;
-            if (av !== bv) return bv - av;
+      timeActiveMutationStage('inventory-tree-mutation', () => {
+        operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
+          if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
+          if (totalQty > 1 && moveQty < totalQty) {
+            const { movedRow } = splitStackRow(row, moveQty);
+            if (movedRow) vehicle.contains.push(movedRow);
+            const remaining = Number(row.qty);
+            if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
+          } else {
+            const [item] = parentArr.splice(idx, 1);
+            if (item) vehicle.contains.push(item);
           }
-          return 0;
         });
-      const operations = [];
-      for (const path of checks) {
-        if (!Array.isArray(path) || !path.length) continue;
-        if (path[0] === vIdx && path.length === 1) continue;
-        const { row, parentArr, idx } = getRowByPath(inv, path);
-        if (!row || !Array.isArray(parentArr) || idx < 0) continue;
-        const qtyRaw = Number(row.qty);
-        const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
-        let moveQty = totalQty;
-        if (totalQty > 1) {
-          const entry = getEntry(row.id || row.name) || {};
-          const displayName = nameMap.get(row) || row.name || entry.namn || 'föremål';
-          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'load', vehicleName });
-          if (!chosen) return;
-          moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
-        }
-        operations.push({ parentArr, idx, row, moveQty, totalQty });
-      }
-      operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
-        if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
-        if (totalQty > 1 && moveQty < totalQty) {
-          const { movedRow } = splitStackRow(row, moveQty);
-          if (movedRow) vehicle.contains.push(movedRow);
-          const remaining = Number(row.qty);
-          if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
-        } else {
-          const [item] = parentArr.splice(idx, 1);
-          if (item) vehicle.contains.push(item);
-        }
+        vehicle.contains.sort(sortInvEntry);
+      }, {
+        surface: 'inventory',
+        direction: 'load',
+        affectedRows: operations.length
       });
-      vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
-      renderInventoryWithPerf({ trigger: 'vehicle-load' });
-      const keepValue = vIdx;
-      cleanup();
-      openVehiclePopup(keepValue);
+      renderInventoryWithPerf({
+        trigger: 'vehicle-load',
+        fallbackReasons: fallbackReasons.length ? fallbackReasons : ['vehicle-topology']
+      });
+      const keepValue = inv.indexOf(vehicle);
+      timeActiveMutationStage('vehicle-popup-close', cleanup, {
+        surface: 'inventory',
+        direction: 'load'
+      });
+      markActiveMutationCheckpoint('popup-close', { action: 'vehicle-load' });
+      timeActiveMutationStage('vehicle-popup-reconstruction', () => {
+        openVehiclePopup(keepValue);
+      }, {
+        surface: 'inventory',
+        direction: 'load'
+      });
+      markActiveMutationCheckpoint('popup-reconstruction-complete', { action: 'vehicle-load' });
+      markActiveMutationCheckpoint('first-feedback-dom', { action: 'vehicle-load' });
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        markActiveMutationCheckpoint('focus-transition-complete', { action: 'vehicle-load' });
+      }));
     };
     const onCancel = () => { close(); };
 
@@ -5350,7 +6030,7 @@
           const label = nameMap.get(o.row) || 'Pengar';
           return buildInventoryBatchActionRow(label, 'Ta ut pengar', pathStr, `Tillgängligt: ${amountText}`);
         }
-        return buildInventoryBatchCheckboxRow(nameMap.get(o.row), pathStr);
+        return buildInventoryBatchCheckboxRow(nameMap.get(o.row), pathStr, '', o.row?.__uid);
       });
       list.innerHTML = buildInventoryBatchGroup({
         title: 'Färdmedel',
@@ -5359,7 +6039,9 @@
         icon: VEHICLE_EMOJI[getEntry(vehicle.id || vehicle.name)?.namn] || '🛞',
         count: items.length,
         itemsHtml: parts.join(''),
-        emptyText: 'Det valda färdmedlet är tomt.'
+        emptyText: 'Det valda färdmedlet är tomt.',
+        groupKey: 'vehicle',
+        parentUid: vehicle.__uid
       });
       if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
         const set = new Set(precheckedPaths.map(String));
@@ -5405,57 +6087,142 @@
       closeInventoryHub({ skipSection: 'vehicleRemovePopup' });
     };
     const onApply = async () => {
+      markActiveMutationCheckpoint('popup-confirmation', { action: 'vehicle-unload' });
+      markActiveMutationCheckpoint('handler-entry', { action: 'vehicle-unload' });
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle) return;
       const vehicleName = vehicleNames.get(vIdx);
-      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
-        .map(ch => ch.dataset.path.split('.').map(Number))
-        .sort((a, b) => {
-          for (let i = 0; i < Math.max(a.length, b.length); i++) {
-            const av = a[i], bv = b[i];
-            if (av === undefined) return 1;
-            if (bv === undefined) return -1;
-            if (av !== bv) return bv - av;
+      const operations = await timeActiveMutationStage('topology-planning', async () => {
+        const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
+          .map(ch => ch.dataset.path.split('.').map(Number))
+          .sort((a, b) => {
+            for (let i = 0; i < Math.max(a.length, b.length); i++) {
+              const av = a[i], bv = b[i];
+              if (av === undefined) return 1;
+              if (bv === undefined) return -1;
+              if (av !== bv) return bv - av;
+            }
+            return 0;
+          });
+        const nameMapAll = makeNameMap(flattenInventoryWithPath(inv).map(f => f.row));
+        const planned = [];
+        for (const path of checks) {
+          if (!Array.isArray(path) || !path.length) continue;
+          if (path[0] !== vIdx) continue;
+          const { row, parentArr, idx } = getRowByPath(inv, path);
+          if (!row || !Array.isArray(parentArr) || idx < 0) continue;
+          const qtyRaw = Number(row.qty);
+          const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+          let moveQty = totalQty;
+          if (totalQty > 1) {
+            const entry = getEntry(row.id || row.name) || {};
+            const displayName = nameMapAll.get(row) || row.name || entry.namn || 'föremål';
+            const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'unload', vehicleName });
+            if (!chosen) return [];
+            moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
           }
-          return 0;
+          planned.push({ parentArr, idx, row, moveQty, totalQty, path: [...path] });
+        }
+        return planned;
+      }, {
+        surface: 'inventory',
+        direction: 'unload'
+      });
+      const topologyPlan = timeActiveMutationStage('topology-mutation-plan', () => (
+        planInventoryTopologyMutation(inv, {
+          direction: 'unload',
+          sourcePath: operations[0]?.path || [],
+          vehiclePath: [vIdx],
+          moveQty: operations[0]?.moveQty,
+          operationCount: operations.length,
+          list: storeHelper.getCurrentList(store),
+          activeFilters: hasActiveInventoryFilters(),
+          forceSafePath: window.__symbaroumPerfForceSafeInventoryMutations === true,
+          aggregateSnapshotAvailable: Boolean(getReusableInventoryAggregateSnapshot())
+        })
+      ), {
+        surface: 'inventory',
+        direction: 'unload',
+        affectedRows: operations.length
+      });
+      markActiveMutationCheckpoint('mutation-plan-complete', {
+        action: 'vehicle-unload',
+        impactClass: topologyPlan.impactClass,
+        renderStrategy: topologyPlan.renderStrategy,
+        fallbackReasons: topologyPlan.fallbackReasons
+      });
+      let fallbackReasons = [...topologyPlan.fallbackReasons];
+      if (topologyPlan.fastPath) {
+        const result = timeActiveMutationStage('inventory-tree-mutation', () => (
+          commitInventoryTopologyMutation(inv, topologyPlan, { source: 'inventory-vehicle-unload' })
+        ), {
+          surface: 'inventory',
+          direction: 'unload',
+          affectedRows: operations.length
         });
-      const nameMapAll = makeNameMap(flattenInventoryWithPath(inv).map(f => f.row));
-      const operations = [];
-      for (const path of checks) {
-        if (!Array.isArray(path) || !path.length) continue;
-        if (path[0] !== vIdx) continue;
-        const { row, parentArr, idx } = getRowByPath(inv, path);
-        if (!row || !Array.isArray(parentArr) || idx < 0) continue;
-        const qtyRaw = Number(row.qty);
-        const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
-        let moveQty = totalQty;
-        if (totalQty > 1) {
-          const entry = getEntry(row.id || row.name) || {};
-          const displayName = nameMapAll.get(row) || row.name || entry.namn || 'föremål';
-          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'unload', vehicleName });
-          if (!chosen) return;
-          moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
+        if (result.committed) {
+          const keepValue = topologyPlan.expected.vehiclePath[0];
+          timeActiveMutationStage('vehicle-popup-close', cleanup, {
+            surface: 'inventory',
+            direction: 'unload'
+          });
+          markActiveMutationCheckpoint('popup-close', { action: 'vehicle-unload' });
+          timeActiveMutationStage('vehicle-popup-reconstruction', () => {
+            openVehicleRemovePopup(keepValue);
+          }, {
+            surface: 'inventory',
+            direction: 'unload'
+          });
+          markActiveMutationCheckpoint('popup-reconstruction-complete', { action: 'vehicle-unload' });
+          markActiveMutationCheckpoint('first-feedback-dom', { action: 'vehicle-unload' });
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            markActiveMutationCheckpoint('focus-transition-complete', { action: 'vehicle-unload' });
+          }));
+          return;
         }
-        operations.push({ parentArr, idx, row, moveQty, totalQty });
+        fallbackReasons = result.fallbackReasons || fallbackReasons;
       }
-      operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
-        if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
-        if (totalQty > 1 && moveQty < totalQty) {
-          const { movedRow } = splitStackRow(row, moveQty);
-          if (movedRow) addToInventory(inv, movedRow);
-          const remaining = Number(row.qty);
-          if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
-        } else {
-          const [item] = parentArr.splice(idx, 1);
-          if (item) addToInventory(inv, item);
-        }
+      timeActiveMutationStage('inventory-tree-mutation', () => {
+        operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
+          if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
+          if (totalQty > 1 && moveQty < totalQty) {
+            const { movedRow } = splitStackRow(row, moveQty);
+            if (movedRow) addToInventory(inv, movedRow);
+            const remaining = Number(row.qty);
+            if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
+          } else {
+            const [item] = parentArr.splice(idx, 1);
+            if (item) addToInventory(inv, item);
+          }
+        });
+      }, {
+        surface: 'inventory',
+        direction: 'unload',
+        affectedRows: operations.length
       });
       saveInventory(inv);
-      renderInventoryWithPerf({ trigger: 'vehicle-unload' });
-      const keepValue = vIdx;
-      cleanup();
-      openVehicleRemovePopup(keepValue);
+      renderInventoryWithPerf({
+        trigger: 'vehicle-unload',
+        fallbackReasons: fallbackReasons.length ? fallbackReasons : ['vehicle-topology']
+      });
+      const keepValue = inv.indexOf(vehicle);
+      timeActiveMutationStage('vehicle-popup-close', cleanup, {
+        surface: 'inventory',
+        direction: 'unload'
+      });
+      markActiveMutationCheckpoint('popup-close', { action: 'vehicle-unload' });
+      timeActiveMutationStage('vehicle-popup-reconstruction', () => {
+        openVehicleRemovePopup(keepValue);
+      }, {
+        surface: 'inventory',
+        direction: 'unload'
+      });
+      markActiveMutationCheckpoint('popup-reconstruction-complete', { action: 'vehicle-unload' });
+      markActiveMutationCheckpoint('first-feedback-dom', { action: 'vehicle-unload' });
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        markActiveMutationCheckpoint('focus-transition-complete', { action: 'vehicle-unload' });
+      }));
     };
     const onCancel = () => { close(); };
 
@@ -6114,6 +6881,18 @@
     return inventoryAggregateSnapshot;
   }
 
+  function updateInventoryAggregateSnapshotForTopology(plan) {
+    const snapshot = getReusableInventoryAggregateSnapshot();
+    const usedWeightDelta = Number(plan?.aggregateEffects?.usedWeightDelta);
+    if (!snapshot || !Number.isFinite(usedWeightDelta)) return null;
+    incrementActiveMutationCounter('aggregateDeltaApplications');
+    inventoryAggregateSnapshot = {
+      ...snapshot,
+      usedWeight: snapshot.usedWeight + usedWeightDelta
+    };
+    return inventoryAggregateSnapshot;
+  }
+
   function queueInventoryAggregateQuantityDelta(row, entry, previousQty, nextQty) {
     pendingInventoryAggregateDeltas.push({
       charId: store.current || '',
@@ -6134,11 +6913,23 @@
     });
   }
 
+  function queueInventoryAggregateTopologyDelta(plan) {
+    pendingInventoryAggregateDeltas.push({
+      charId: store.current || '',
+      topology: true,
+      plan
+    });
+  }
+
   function applyPendingInventoryAggregateDeltas() {
     const pending = pendingInventoryAggregateDeltas;
     pendingInventoryAggregateDeltas = [];
     pending.forEach(delta => {
       if (delta.charId !== (store.current || '')) return;
+      if (delta.topology) {
+        updateInventoryAggregateSnapshotForTopology(delta.plan);
+        return;
+      }
       if (delta.rowChange) {
         updateInventoryAggregateSnapshotForRowChange(delta.previousRow, delta.nextRow, delta.entry);
         return;
@@ -6215,6 +7006,484 @@
     return snapshot;
   }
 
+  function getInventoryCardsByUid(uid) {
+    const normalized = String(uid || '').trim();
+    if (!normalized || !dom.invList) return [];
+    return [...dom.invList.querySelectorAll(`li.entry-card[data-uid="${window.CSS.escape(normalized)}"]`)];
+  }
+
+  function createInventoryCategoryGroup(category) {
+    if (!dom.invList || !category) return null;
+    const existing = [...dom.invList.querySelectorAll('.cat-group > details[data-cat]')]
+      .find(details => details.dataset.cat === category);
+    if (existing) return existing.querySelector('ul[data-cat]');
+    const catState = loadInvCatState();
+    const catLi = document.createElement('li');
+    catLi.className = 'cat-group';
+    catLi.dataset.aaKey = `cat:${category}`;
+    const details = document.createElement('details');
+    details.className = 'db-accordion__item';
+    details.dataset.cat = category;
+    details.open = catState[category] !== undefined ? Boolean(catState[category]) : true;
+    const summary = document.createElement('summary');
+    summary.className = 'db-accordion__trigger';
+    summary.textContent = catName(category);
+    const list = document.createElement('ul');
+    list.className = 'db-accordion__content card-list entry-card-list';
+    list.dataset.cat = category;
+    details.appendChild(summary);
+    details.appendChild(list);
+    catLi.appendChild(details);
+    details.addEventListener('toggle', event => {
+      if (!event.isTrusted) return;
+      const state = loadInvCatState();
+      state[category] = details.open;
+      saveInvCatState(state);
+      window.inventorySyncCats?.();
+    });
+    const categoryGroups = [...dom.invList.querySelectorAll(':scope > li.cat-group')];
+    const before = categoryGroups.find(group => {
+      const current = group.querySelector(':scope > details')?.dataset.cat || '';
+      return catComparator(category, current) < 0;
+    });
+    dom.invList.insertBefore(catLi, before || null);
+    incrementActiveMutationCounter('domNodesCreated', 4);
+    return list;
+  }
+
+  function findCardFactValue(card, label) {
+    const fact = [...(card?.querySelectorAll('.card-info-fact') || [])]
+      .find(candidate => candidate.querySelector('.card-info-fact-label')?.textContent === label);
+    return fact?.querySelector('.card-info-fact-value') || null;
+  }
+
+  function patchVehicleTopologyCard(card, vehicleRow) {
+    if (!card?.isConnected || !vehicleRow) return false;
+    const entry = getEntry(vehicleRow.id || vehicleRow.name);
+    if (!entry) return false;
+    const snapshot = getReusableInventoryAggregateSnapshot();
+    const list = snapshot?.list || storeHelper.getCurrentList(store);
+    const baseWeight = vehicleRow.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+    const rowWeight = calcRowWeight(vehicleRow, list);
+    const loadWeight = rowWeight - baseWeight * (Number(vehicleRow.qty) || 0);
+    const capacity = Number(entry.stat?.bärkapacitet || 0);
+    const remaining = capacity - loadWeight;
+    const rowWeightText = formatWeight(rowWeight);
+    const remainingText = formatWeight(remaining);
+    const weightValue = findCardFactValue(card, 'Vikt');
+    if (weightValue) weightValue.textContent = rowWeightText;
+    const capacityValue = findCardFactValue(card, 'Kapacitet');
+    if (capacityValue) {
+      capacityValue.textContent = remainingText;
+      capacityValue.className = getCapacityClass(loadWeight, capacity);
+    }
+    const weightBadge = card.querySelector('.weight-badge');
+    if (weightBadge) {
+      weightBadge.textContent = `V: ${rowWeightText}`;
+      weightBadge.classList.remove('cap-neg', 'cap-crit', 'cap-warn');
+      const weightClass = getCapacityClass(loadWeight, capacity);
+      if (weightClass) weightBadge.classList.add(weightClass);
+    }
+    const capacityBadge = card.querySelector('.capacity-badge');
+    if (capacityBadge) capacityBadge.textContent = `BK: ${formatWeight(capacity)}`;
+    const remainingBadge = card.querySelector('.remaining-badge');
+    if (remainingBadge) {
+      remainingBadge.textContent = `ÅK: ${remainingText}`;
+      remainingBadge.classList.toggle('cap-neg', remaining < 0);
+    }
+    card.classList.toggle('vehicle-over', remaining < 0);
+
+    const {
+      infoBody,
+      infoTagParts,
+      qualityInfoSections
+    } = buildRowDesc(entry, vehicleRow);
+    const priceLabel = 'Pris';
+    const forgeLvl = snapshot?.forgeLvl ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Smideskonst')
+    );
+    const alcLevel = snapshot?.alcLevel ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Alkemist')
+    );
+    const artLevel = snapshot?.artLevel ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Artefaktmakande')
+    );
+    const priceText = formatMoney(calcRowCost(vehicleRow, forgeLvl, alcLevel, artLevel));
+    const vehicleMoneyO = (Array.isArray(vehicleRow.contains) ? vehicleRow.contains : [])
+      .reduce((sum, child) => child?.typ === 'currency' && child.money
+        ? sum + moneyToO(storeHelper.normalizeMoney(child.money))
+        : sum, 0);
+    const meta = [
+      { label: priceLabel, value: priceText },
+      { label: 'Vikt', value: rowWeightText },
+      ...(vehicleMoneyO > 0 ? [{ label: 'Pengar', value: formatMoney(oToMoney(vehicleMoneyO)) }] : []),
+      { label: 'Bärkapacitet', value: formatWeight(capacity) },
+      { label: 'Återstående kapacitet', value: remainingText }
+    ];
+    const infoButton = card.querySelector('.info-btn');
+    if (infoButton) {
+      const infoHtml = buildInfoPanelHtml({
+        tagsHtml: infoTagParts.filter(Boolean).join(' '),
+        bodyHtml: infoBody,
+        meta,
+        sections: qualityInfoSections
+      });
+      infoButton.dataset.info = encodeURIComponent(infoHtml);
+    }
+    return true;
+  }
+
+  function ensureVehicleTopologyList(vehicleCard, vehicleRow) {
+    if (!vehicleCard?.isConnected || !vehicleRow) return null;
+    const children = Array.isArray(vehicleRow.contains) ? vehicleRow.contains : [];
+    let shell = vehicleCard.querySelector('.vehicle-items-shell');
+    if (!children.length) {
+      if (shell) {
+        incrementActiveMutationCounter('domNodesRemoved', shell.querySelectorAll('*').length + 1);
+        shell.remove();
+      }
+      return null;
+    }
+    if (!shell) {
+      shell = document.createElement('div');
+      shell.className = 'vehicle-items-shell';
+      const header = document.createElement('div');
+      header.className = 'vehicle-items-header';
+      const title = document.createElement('span');
+      title.className = 'vehicle-items-title';
+      const vehicleTitle = vehicleCard.querySelector('.entry-title-main')?.textContent
+        || vehicleRow.name
+        || getEntry(vehicleRow.id || vehicleRow.name)?.namn
+        || 'Färdmedel';
+      title.textContent = `Innehåll i ${vehicleTitle}`;
+      const count = document.createElement('span');
+      count.className = 'vehicle-items-count';
+      header.appendChild(title);
+      header.appendChild(count);
+      const list = document.createElement('ul');
+      list.className = 'card-list vehicle-items entry-card-list';
+      shell.appendChild(header);
+      shell.appendChild(list);
+      (vehicleCard.querySelector('.entry-card-details') || vehicleCard).appendChild(shell);
+      incrementActiveMutationCounter('domNodesCreated', 5);
+    }
+    const count = shell.querySelector('.vehicle-items-count');
+    if (count) count.textContent = String(children.length);
+    return shell.querySelector('.vehicle-items.entry-card-list');
+  }
+
+  function patchInventoryTopologyDatasets(inventory, plan) {
+    const cardMap = new Map();
+    dom.invList?.querySelectorAll('li.entry-card[data-uid]').forEach(card => {
+      const uid = String(card.dataset.uid || '').trim();
+      if (uid && !cardMap.has(uid)) cardMap.set(uid, card);
+    });
+    inventory.forEach((row, index) => {
+      const card = cardMap.get(String(row?.__uid || '').trim());
+      if (!card) return;
+      card.dataset.idx = String(index);
+      delete card.dataset.parent;
+      delete card.dataset.child;
+      if (Array.isArray(row.contains)) {
+        row.contains.forEach((child, childIndex) => {
+          const childCard = cardMap.get(String(child?.__uid || '').trim());
+          if (!childCard) return;
+          childCard.dataset.parent = String(index);
+          childCard.dataset.child = String(childIndex);
+          delete childCard.dataset.idx;
+        });
+      }
+    });
+    const sourceCard = cardMap.get(plan.source.uid);
+    if (!sourceCard) return false;
+    const snapshot = getReusableInventoryAggregateSnapshot();
+    if (plan.direction === 'unload') {
+      const capacityClass = getCapacityClass(snapshot?.usedWeight || 0, snapshot?.maxCapacity || 0);
+      const badge = sourceCard.querySelector('.weight-badge');
+      if (badge) {
+        badge.classList.remove('cap-neg', 'cap-crit', 'cap-warn');
+        if (capacityClass) badge.classList.add(capacityClass);
+      }
+      sourceCard.classList.remove('vehicle-over');
+    }
+    return true;
+  }
+
+  function getTopologyDomPreflightReasons(plan) {
+    const reasons = [];
+    const add = reason => {
+      if (reason && !reasons.includes(reason)) reasons.push(reason);
+    };
+    if (!dom.invList) add('target-dom-root-missing');
+    const sourceCards = getInventoryCardsByUid(plan?.source?.uid);
+    const vehicleCards = getInventoryCardsByUid(plan?.affectedParent?.uid);
+    if (!sourceCards.length || !vehicleCards.length) add('target-dom-card-missing');
+    if (sourceCards.length > 1 || vehicleCards.length > 1) add('target-dom-card-duplicate');
+    if (plan?.direction === 'unload' && sourceCards[0] && vehicleCards[0]
+        && !vehicleCards[0].contains(sourceCards[0])) {
+      add('source-dom-parent-mismatch');
+    }
+    if (plan?.direction === 'load' && sourceCards[0]?.closest('.vehicle-items')) {
+      add('source-dom-parent-mismatch');
+    }
+    return reasons;
+  }
+
+  function applyInventoryTopologyTreePlan(inventory, plan) {
+    const sourceInfo = readInventoryRowByPath(inventory, plan.source.path);
+    const vehicleInfo = readInventoryRowByPath(inventory, plan.affectedParent.pathBefore);
+    if (sourceInfo.row !== plan.refs.sourceRow || vehicleInfo.row !== plan.refs.vehicleRow) return false;
+    const previousTopLevel = [...inventory];
+    const vehicleRow = plan.refs.vehicleRow;
+    const previousChildren = Array.isArray(vehicleRow.contains) ? [...vehicleRow.contains] : [];
+    const rollback = () => {
+      inventory.splice(0, inventory.length, ...previousTopLevel);
+      vehicleRow.contains = previousChildren;
+    };
+    if (plan.direction === 'load') {
+      const [moved] = sourceInfo.parentArr.splice(sourceInfo.idx, 1);
+      if (moved !== plan.refs.sourceRow) {
+        rollback();
+        return false;
+      }
+      vehicleRow.contains = Array.isArray(vehicleRow.contains) ? vehicleRow.contains : [];
+      vehicleRow.contains.push(moved);
+      vehicleRow.contains.sort(sortInvEntry);
+    } else {
+      const [moved] = sourceInfo.parentArr.splice(sourceInfo.idx, 1);
+      if (moved !== plan.refs.sourceRow) {
+        rollback();
+        return false;
+      }
+      inventory.push(moved);
+    }
+    const normalized = [
+      ...inventory.filter(row => !(getEntry(row?.id || row?.name)?.taggar?.typ || []).includes('Färdmedel')),
+      ...inventory.filter(row => (getEntry(row?.id || row?.name)?.taggar?.typ || []).includes('Färdmedel'))
+    ];
+    inventory.splice(0, inventory.length, ...normalized);
+    const topLevelUids = inventory.map(row => String(row?.__uid || '').trim());
+    const childUids = (Array.isArray(vehicleRow.contains) ? vehicleRow.contains : [])
+      .map(row => String(row?.__uid || '').trim());
+    if (JSON.stringify(topLevelUids) !== JSON.stringify(plan.expected.topLevelUids)
+        || JSON.stringify(childUids) !== JSON.stringify(plan.expected.vehicleChildUids)) {
+      rollback();
+      return false;
+    }
+    return true;
+  }
+
+  function reconcileInventoryTopologyDom(inventory, plan) {
+    const sourceCard = getInventoryCardsByUid(plan.source.uid)[0];
+    const vehicleCard = getInventoryCardsByUid(plan.affectedParent.uid)[0];
+    if (!sourceCard || !vehicleCard) return false;
+    const sourceListBefore = sourceCard.parentElement;
+    const vehicleRow = plan.refs.vehicleRow;
+    const vehicleList = timeActiveMutationStage('vehicle-child-shell', () => (
+      ensureVehicleTopologyList(vehicleCard, vehicleRow)
+    ), {
+      surface: 'inventory',
+      direction: plan.direction,
+      childCount: Array.isArray(vehicleRow.contains) ? vehicleRow.contains.length : 0
+    });
+    let destinationList = null;
+    if (plan.direction === 'load') {
+      if (!vehicleList) return false;
+      destinationList = vehicleList;
+      window.daubMotion?.destroyAutoAnimate?.(sourceListBefore);
+      window.daubMotion?.destroyAutoAnimate?.(destinationList);
+      const childIndex = vehicleRow.contains.indexOf(plan.refs.sourceRow);
+      const nextChild = vehicleRow.contains.slice(childIndex + 1)
+        .map(row => getInventoryCardsByUid(row.__uid)[0])
+        .find(Boolean);
+      vehicleList.insertBefore(sourceCard, nextChild || null);
+      incrementActiveMutationCounter('domNodesMoved');
+    } else {
+      const categoryList = createInventoryCategoryGroup(plan.destination.category);
+      if (!categoryList) return false;
+      destinationList = categoryList;
+      window.daubMotion?.destroyAutoAnimate?.(sourceListBefore);
+      window.daubMotion?.destroyAutoAnimate?.(destinationList);
+      const categoryRows = inventory.filter(row => getInventoryRowCategory(row) === plan.destination.category);
+      const sourceIndex = categoryRows.indexOf(plan.refs.sourceRow);
+      const nextCard = categoryRows.slice(sourceIndex + 1)
+        .map(row => getInventoryCardsByUid(row.__uid)[0])
+        .find(Boolean);
+      categoryList.insertBefore(sourceCard, nextCard || null);
+      incrementActiveMutationCounter('domNodesMoved');
+      timeActiveMutationStage('vehicle-child-shell', () => (
+        ensureVehicleTopologyList(vehicleCard, vehicleRow)
+      ), {
+        surface: 'inventory',
+        direction: plan.direction,
+        childCount: Array.isArray(vehicleRow.contains) ? vehicleRow.contains.length : 0
+      });
+    }
+    const oldSourceCategory = [...dom.invList.querySelectorAll('.cat-group > details[data-cat]')]
+      .find(details => details.dataset.cat === plan.source.category);
+    const oldSourceList = oldSourceCategory?.querySelector('ul[data-cat]');
+    if (oldSourceList && oldSourceList.childElementCount === 0) {
+      oldSourceCategory.closest('.cat-group')?.remove();
+      incrementActiveMutationCounter('domNodesRemoved', 4);
+    }
+    if (!patchInventoryTopologyDatasets(inventory, plan)) return false;
+    const metadataPatched = timeActiveMutationStage('vehicle-card-metadata-patch', () => {
+      if (!patchVehicleTopologyCard(vehicleCard, vehicleRow)) return false;
+      const list = getReusableInventoryAggregateSnapshot()?.list || storeHelper.getCurrentList(store);
+      const vehicleEntry = getEntry(vehicleRow.id || vehicleRow.name);
+      const baseWeight = vehicleRow.vikt ?? vehicleEntry?.vikt ?? vehicleEntry?.stat?.vikt ?? 0;
+      const loadWeight = calcRowWeight(vehicleRow, list) - baseWeight * (Number(vehicleRow.qty) || 0);
+      const capacity = Number(vehicleEntry?.stat?.bärkapacitet || 0);
+      const childCapacityClass = getCapacityClass(loadWeight, capacity);
+      (Array.isArray(vehicleRow.contains) ? vehicleRow.contains : []).forEach(child => {
+        const card = getInventoryCardsByUid(child.__uid)[0];
+        const badge = card?.querySelector('.weight-badge');
+        if (badge) {
+          badge.classList.remove('cap-neg', 'cap-crit', 'cap-warn');
+          if (childCapacityClass) badge.classList.add(childCapacityClass);
+        }
+        card?.classList.toggle('vehicle-over', capacity - loadWeight < 0);
+      });
+      return true;
+    }, {
+      surface: 'inventory',
+      direction: plan.direction
+    });
+    if (!metadataPatched) return false;
+    [...new Set([sourceListBefore, destinationList])].forEach(listElement => {
+      if (!listElement?.isConnected) return;
+      incrementActiveMutationCounter('autoAnimateBindings');
+      window.daubMotion?.bindAutoAnimate?.(listElement, { duration: 100 });
+    });
+    window.inventorySyncCats?.();
+    incrementActiveMutationCounter('targetedRenders');
+    return true;
+  }
+
+  function verifyInventoryTopologyPostconditions(inventory, plan) {
+    const topologyRows = collectInventoryTopologyRows(inventory);
+    const sourceRows = topologyRows.filter(({ row }) => String(row?.__uid || '').trim() === plan.source.uid);
+    if (sourceRows.length !== 1) return { ok: false, reason: 'moved-row-cardinality-failed' };
+    const targetInfo = readInventoryRowByPath(inventory, plan.expected.sourcePath);
+    if (targetInfo.row !== plan.refs.sourceRow) return { ok: false, reason: 'moved-row-path-failed' };
+    const vehicleInfo = readInventoryRowByPath(inventory, plan.expected.vehiclePath);
+    if (vehicleInfo.row !== plan.refs.vehicleRow) return { ok: false, reason: 'vehicle-parent-path-failed' };
+    const topLevelUids = inventory.map(row => String(row?.__uid || '').trim());
+    if (JSON.stringify(topLevelUids) !== JSON.stringify(plan.expected.topLevelUids)) {
+      return { ok: false, reason: 'top-level-order-failed' };
+    }
+    const childUids = (Array.isArray(plan.refs.vehicleRow.contains) ? plan.refs.vehicleRow.contains : [])
+      .map(row => String(row?.__uid || '').trim());
+    if (JSON.stringify(childUids) !== JSON.stringify(plan.expected.vehicleChildUids)) {
+      return { ok: false, reason: 'parent-order-failed' };
+    }
+    const sourceCards = getInventoryCardsByUid(plan.source.uid);
+    if (sourceCards.length !== 1) return { ok: false, reason: 'moved-card-cardinality-failed' };
+    const vehicleCards = getInventoryCardsByUid(plan.affectedParent.uid);
+    if (vehicleCards.length !== 1) return { ok: false, reason: 'parent-card-cardinality-failed' };
+    const nested = Boolean(sourceCards[0].closest('.vehicle-items'));
+    if (plan.direction === 'load' ? !nested : nested) {
+      return { ok: false, reason: 'moved-card-parent-failed' };
+    }
+    const expectedCategoryUids = inventory
+      .filter(row => getInventoryRowCategory(row) === plan.source.category)
+      .map(row => String(row?.__uid || '').trim());
+    const category = [...dom.invList.querySelectorAll('.cat-group > details[data-cat]')]
+      .find(details => details.dataset.cat === plan.source.category);
+    const renderedCategoryUids = [...(category?.querySelector('ul[data-cat]')?.children || [])]
+      .map(card => String(card?.dataset?.uid || '').trim())
+      .filter(Boolean);
+    if (JSON.stringify(renderedCategoryUids) !== JSON.stringify(expectedCategoryUids)) {
+      return { ok: false, reason: 'category-order-failed' };
+    }
+    if (!plan.refs.vehicleRow.contains.length && vehicleCards[0].querySelector('.vehicle-items-shell')) {
+      return { ok: false, reason: 'empty-parent-visibility-failed' };
+    }
+    const renderedCategoryOrder = [...dom.invList.querySelectorAll('.cat-group > details[data-cat]')]
+      .map(details => details.dataset.cat || '');
+    const expectedCategoryOrder = [...renderedCategoryOrder].sort(catComparator);
+    if (JSON.stringify(renderedCategoryOrder) !== JSON.stringify(expectedCategoryOrder)) {
+      return { ok: false, reason: 'category-order-failed' };
+    }
+    return { ok: true, reason: '' };
+  }
+
+  function commitInventoryTopologyMutation(inventory, plan, options = {}) {
+    if (!plan?.fastPath || !Array.isArray(inventory)) return { committed: false, targeted: false };
+    const preflightReasons = getTopologyDomPreflightReasons(plan);
+    if (preflightReasons.length) {
+      return { committed: false, targeted: false, fallbackReasons: preflightReasons };
+    }
+    if (!applyInventoryTopologyTreePlan(inventory, plan)) {
+      return { committed: false, targeted: false, fallbackReasons: ['topology-plan-stale'] };
+    }
+    timeActiveMutationStage('topology-aggregate-calculation', () => {
+      queueInventoryAggregateTopologyDelta(plan);
+      applyPendingInventoryAggregateDeltas();
+    }, {
+      surface: 'inventory',
+      direction: plan.direction,
+      strategy: plan.aggregateStrategy
+    });
+    storeHelper.batchCurrentCharacterMutation(store, {
+      bumpDerived: plan.bumpDerived,
+      invalidates: plan.invalidates,
+      targets: plan.targets,
+      afterCommit: summary => {
+        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+          charId: summary.charId,
+          version: summary.version,
+          invalidates: summary.invalidates,
+          targets: summary.targets,
+          topology: plan.topology,
+          renderStrategy: plan.renderStrategy,
+          source: options.source || `inventory-vehicle-${plan.direction}`,
+          afterPaint: true
+        });
+      }
+    }, () => {
+      storeHelper.setInventory(store, inventory, {
+        bumpDerived: plan.bumpDerived,
+        fields: ['inventory'],
+        invalidates: plan.invalidates,
+        targets: plan.targets,
+        assumeValidInventoryUids: true,
+        validatedRowUids: [plan.source.uid, plan.affectedParent.uid]
+      });
+    });
+    const reconciled = timeActiveMutationStage('targeted-topology-reconciliation', () => (
+      reconcileInventoryTopologyDom(inventory, plan)
+    ), {
+      surface: 'inventory',
+      direction: plan.direction,
+      strategy: plan.renderStrategy
+    });
+    const postcondition = reconciled
+      ? verifyInventoryTopologyPostconditions(inventory, plan)
+      : { ok: false, reason: 'dom-postcondition-failed' };
+    if (!postcondition.ok) {
+      const reason = postcondition.reason || 'dom-postcondition-failed';
+      recordActiveMutationFallback(reason, {
+        action: `vehicle-${plan.direction}`,
+        rowUid: plan.source.uid
+      });
+      renderInventoryWithPerf({
+        trigger: reason,
+        fallbackReasons: [reason]
+      });
+      return { committed: true, targeted: false, fallbackReasons: [reason] };
+    }
+    markActiveMutationCheckpoint('inventory-dom-reconciled', {
+      action: `vehicle-${plan.direction}`,
+      rowUid: plan.source.uid,
+      renderStrategy: plan.renderStrategy
+    });
+    return { committed: true, targeted: true, fallbackReasons: [] };
+  }
+
   function canUseSimpleQuantityFastPath({ row, entry, inv, parentArr, delta }) {
     if (window.__symbaroumPerfForceSafeInventoryMutations === true) return false;
     if (!row || !entry || parentArr !== inv || !Number.isInteger(delta) || delta === 0) return false;
@@ -6226,6 +7495,16 @@
     if (row.typ === 'currency' || row.money) return false;
     if (Array.isArray(row.contains) && row.contains.length) return false;
     if (row.perk || row.perkGratis || row.snapshotSourceKey || row.artifactEffect) return false;
+    const rowIndex = parentArr.indexOf(row);
+    const filterImpact = classifyInventoryFilterMutation({
+      previousRow: row,
+      row: { ...row, qty: nextQty },
+      previousEntry: entry,
+      entry,
+      previousIndex: rowIndex,
+      nextIndex: rowIndex
+    });
+    if (!filterImpact.targetedPatchSafe) return false;
     const impact = classifyInventoryMutation(entry, row, {
       created: false,
       quantityOnly: true,
@@ -6337,7 +7616,16 @@
     if (!row || !previousRow || !entry) addFallback('legacy-metadata');
     if (!String(row?.__uid || '').trim()) addFallback('missing-row-uid');
     if (parentArr !== inv) addFallback('nested-inventory-path');
-    if (hasActiveInventoryFilters()) addFallback('active-filter-membership-uncertain');
+    const rowIndex = Array.isArray(parentArr) ? parentArr.indexOf(row) : -1;
+    const filterImpact = classifyInventoryFilterMutation({
+      previousRow,
+      row,
+      previousEntry: entry,
+      entry,
+      previousIndex: rowIndex,
+      nextIndex: rowIndex
+    });
+    if (!filterImpact.targetedPatchSafe) addFallback(filterImpact.fallbackReason);
     if (ambiguous
         || Array.isArray(row?.manualQualityOverride) && row.manualQualityOverride.length
         || Array.isArray(previousRow?.manualQualityOverride) && previousRow.manualQualityOverride.length) {
@@ -6398,6 +7686,7 @@
       topology: 'row',
       aggregateStrategy: getReusableInventoryAggregateSnapshot() ? 'delta' : 'rebuild',
       renderStrategy: 'targeted-patch',
+      filterMembership: filterImpact,
       derivedInvalidation: 'none',
       bumpDerived: false,
       targets: {
@@ -6518,7 +7807,8 @@
       action: 'quality-metadata',
       impactClass: impact.impactClass,
       aggregateStrategy: impact.aggregateStrategy,
-      affectedDomains: impact.affectedDomains
+      affectedDomains: impact.affectedDomains,
+      filterMembership: impact.filterMembership
     });
     queueInventoryAggregateRowDelta(
       cloneInventoryMetadataRow(previousRow),
@@ -6568,19 +7858,39 @@
       .filter(operation => operation?.row && operation?.entry && Number.isInteger(operation?.delta) && operation.delta !== 0)
       .map(operation => {
         const previousQty = Math.max(1, Number(operation.row.qty) || 1);
+        const nextQty = previousQty + operation.delta;
+        const rowIndex = inv.indexOf(operation.row);
+        const filterImpact = classifyInventoryFilterMutation({
+          previousRow: operation.row,
+          row: { ...operation.row, qty: nextQty },
+          previousEntry: operation.entry,
+          entry: operation.entry,
+          previousIndex: rowIndex,
+          nextIndex: rowIndex
+        });
         const impact = classifyInventoryMutation(operation.entry, operation.row, {
           created: false,
           quantityOnly: true,
           requiresStableRowUid: true,
           inventory: inv,
           parentArr: inv,
-          aggregateSnapshotAvailable: Boolean(getReusableInventoryAggregateSnapshot())
+          aggregateSnapshotAvailable: Boolean(getReusableInventoryAggregateSnapshot()),
+          activeFilterMembershipUncertain: !filterImpact.targetedPatchSafe
         });
+        if (!filterImpact.targetedPatchSafe) {
+          impact.fallbackReasons = [...new Set([
+            ...impact.fallbackReasons.filter(reason => reason !== 'active-filter-membership-uncertain'),
+            filterImpact.fallbackReason
+          ])];
+          impact.impactClass = 'fallback';
+          impact.fastPath = false;
+        }
         return {
           ...operation,
           impact,
+          filterImpact,
           previousQty,
-          nextQty: previousQty + operation.delta
+          nextQty
         };
       });
     if (!planned.length || planned.some(operation => operation.nextQty < 1)) return false;
@@ -6611,7 +7921,8 @@
     markActiveMutationCheckpoint('mutation-plan-complete', {
       action,
       impactClasses: [...new Set(planned.map(operation => operation.impact.impactClass))],
-      aggregateStrategies: [...new Set(planned.map(operation => operation.impact.aggregateStrategy))]
+      aggregateStrategies: [...new Set(planned.map(operation => operation.impact.aggregateStrategy))],
+      filterMembership: planned.map(operation => operation.filterImpact)
     });
     planned.forEach(operation => {
       queueInventoryAggregateQuantityDelta(
@@ -6678,23 +7989,44 @@
   }
 
   function hasActiveInventoryFilters() {
-    const hasValues = value => Array.isArray(value) ? value.length > 0 : Number(value?.size || 0) > 0;
-    return Boolean(
-      String(F.invTxt || '').trim()
-      || hasValues(F.typ)
-      || hasValues(F.ark)
-      || hasValues(F.test)
-    );
+    return getActiveInventoryFilterState().active;
   }
 
   function getTargetedInventoryRowRemovalImpact({ row, entry, inv, parentArr }) {
+    const filterState = getActiveInventoryFilterState();
+    const beforeMatches = row && entry
+      ? inventoryRowPassesActiveFilters(row, entry, filterState)
+      : null;
+    const filterImpact = filterState.active
+      ? {
+          active: true,
+          provable: beforeMatches !== null,
+          beforeMatches,
+          afterMatches: false,
+          membership: beforeMatches ? 'leave' : 'outside',
+          positionChanged: false,
+          requiredRenderStrategy: beforeMatches ? 'targeted-remove' : 'targeted-none',
+          targetedPatchSafe: beforeMatches === true,
+          fallbackReason: beforeMatches === true ? '' : 'active-filter-outside-unoptimized'
+        }
+      : {
+          active: false,
+          provable: true,
+          beforeMatches: true,
+          afterMatches: false,
+          membership: 'leave',
+          positionChanged: false,
+          requiredRenderStrategy: 'targeted-remove',
+          targetedPatchSafe: true,
+          fallbackReason: ''
+        };
     const impact = classifyInventoryMutation(entry, row, {
       created: false,
       removed: true,
       requiresStableRowUid: true,
       inventory: inv,
       parentArr,
-      activeFilterMembershipUncertain: hasActiveInventoryFilters()
+      activeFilterMembershipUncertain: false
     });
     const fallbackReasons = [...impact.fallbackReasons];
     const addFallback = reason => {
@@ -6704,6 +8036,7 @@
     if (!row || !entry) addFallback('legacy-metadata');
     if (row?.typ === 'currency' || row?.money) addFallback('manual-override');
     if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
+    if (!filterImpact.targetedPatchSafe) addFallback(filterImpact.fallbackReason);
     return {
       ...impact,
       impactClass: fallbackReasons.length ? 'fallback' : impact.impactClass,
@@ -6719,7 +8052,8 @@
       topologyGuarantee: 'known-top-level-row-removal',
       topology: 'row',
       aggregateStrategy: getReusableInventoryAggregateSnapshot() ? 'delta' : 'rebuild',
-      renderStrategy: fallbackReasons.length ? 'full' : 'targeted-remove'
+      renderStrategy: fallbackReasons.length ? 'full' : 'targeted-remove',
+      filterMembership: filterImpact
     };
   }
 
@@ -6858,22 +8192,28 @@
     const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
 
-    const tot = flatInv.reduce((t, row) => {
-      const entry = getEntry(row.id || row.name);
-      const baseQuals = [
-        ...(entry.taggar?.kvalitet ?? []),
-        ...splitQuals(entry.kvalitet)
-      ];
-      const removedQ = row.removedKval ?? [];
-      const allQualsRow = sanitizeArmorQualities(entry, [
-        ...baseQuals.filter(q => !removedQ.includes(q)),
-        ...(row.kvaliteter || [])
-      ]);
-      row.posQualCnt = countPositiveQuals(allQualsRow);
-      const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
-      t.d += m.d; t.s += m.s; t.o += m.o;
-      return t;
-    }, { d: 0, s: 0, o: 0 });
+    const tot = timeActiveMutationStage('inventory-aggregate-work', () => (
+      flatInv.reduce((t, row) => {
+        const entry = getEntry(row.id || row.name);
+        const baseQuals = [
+          ...(entry.taggar?.kvalitet ?? []),
+          ...splitQuals(entry.kvalitet)
+        ];
+        const removedQ = row.removedKval ?? [];
+        const allQualsRow = sanitizeArmorQualities(entry, [
+          ...baseQuals.filter(q => !removedQ.includes(q)),
+          ...(row.kvaliteter || [])
+        ]);
+        row.posQualCnt = countPositiveQuals(allQualsRow);
+        const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
+        t.d += m.d; t.s += m.s; t.o += m.o;
+        return t;
+      }, { d: 0, s: 0, o: 0 })
+    ), {
+      surface: 'inventory',
+      aggregate: 'economy',
+      rows: flatInv.length
+    });
 
     tot.s += Math.floor(tot.o / OBASE); tot.o %= OBASE;
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
@@ -6883,11 +8223,17 @@
     const unusedMoney = oToMoney(Math.max(0, diffO));
     const moneyWeight = calcMoneyWeight(unusedMoney);
 
-    const usedWeight = allInv.reduce((s, r) => {
-      const entry = getEntry(r.id || r.name);
-      const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
-      return s + (isVeh ? 0 : calcRowWeight(r, list));
-    }, 0) + moneyWeight;
+    const usedWeight = timeActiveMutationStage('inventory-aggregate-work', () => (
+      allInv.reduce((s, r) => {
+        const entry = getEntry(r.id || r.name);
+        const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
+        return s + (isVeh ? 0 : calcRowWeight(r, list));
+      }, 0) + moneyWeight
+    ), {
+      surface: 'inventory',
+      aggregate: 'weight',
+      rows: allInv.length
+    });
     const traits = storeHelper.getTraits(store);
     const manualAdjust = storeHelper.getManualAdjustments(store) || {};
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
@@ -6925,58 +8271,30 @@
       })
       .filter(Boolean);
 
-    const searchTerm = (F.invTxt || '').trim().toLowerCase();
-    const hasSearch = Boolean(searchTerm);
-    const union = storeHelper.getFilterUnion(store);
-    const selectedTags = Array.from(new Set([...F.typ, ...F.ark, ...F.test]));
-    const hasTagFilters = selectedTags.length > 0;
-    const forcedCatOpen = new Set(F.typ);
+    const filterState = getActiveInventoryFilterState();
+    const hasSearch = filterState.hasSearch;
+    const forcedCatOpen = new Set(filterState.typ);
     const compactDefault = storeHelper.getCompactEntries(store);
     const filteredRows = [];
     for (let idx = 0; idx < allInv.length; idx++) {
       const row = allInv[idx];
       const entry = getEntry(row.id || row.name);
-      const typTags = entry.taggar?.typ || [];
-      const arkRaw = entry.taggar?.ark_trad;
-      const arkTags = splitArkTags(arkRaw);
-      const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
-      const testTags = typeof window.getEntryTestTags === 'function'
-        ? window.getEntryTestTags(entry)
-        : (Array.isArray(entry.taggar?.nivå_data?.Enkel?.test)
-          ? entry.taggar.nivå_data.Enkel.test
-          : (Array.isArray(entry.taggar?.niva_data?.Enkel?.test)
-            ? entry.taggar.niva_data.Enkel.test
-            : (entry.taggar?.test || [])));
-      const itemTags = [...typTags, ...arkList, ...testTags];
-
-      const tagHit = hasTagFilters && (
-        union
-          ? selectedTags.some(tag => itemTags.includes(tag))
-          : selectedTags.every(tag => itemTags.includes(tag))
-      );
-
-      const textHit = hasSearch ? rowMatchesText(row, searchTerm) : false;
-
-      let passes = true;
-      if (hasTagFilters || hasSearch) {
-        if (union) {
-          passes = (hasTagFilters && tagHit) || (hasSearch && textHit);
-        } else {
-          if (hasTagFilters && !tagHit) passes = false;
-          if (hasSearch && !textHit) passes = false;
-        }
-      }
-
-      if (!passes) continue;
+      if (!inventoryRowPassesActiveFilters(row, entry, filterState)) continue;
       filteredRows.push({ row, idx, entry });
     }
 
-    const foodCount = flatInv
-      .filter(row => {
-        const entry = getEntry(row.id || row.name);
-        return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
-      })
-      .reduce((sum, row) => sum + (row.qty || 0), 0);
+    const foodCount = timeActiveMutationStage('inventory-aggregate-work', () => (
+      flatInv
+        .filter(row => {
+          const entry = getEntry(row.id || row.name);
+          return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
+        })
+        .reduce((sum, row) => sum + (row.qty || 0), 0)
+    ), {
+      surface: 'inventory',
+      aggregate: 'food',
+      rows: flatInv.length
+    });
 
     pendingInventoryAggregateDeltas = [];
     inventoryAggregateSnapshot = {
@@ -7558,13 +8876,23 @@
     if (filteredRows.length) {
       timeActiveMutationStage('sort-group-rebuild', () => {
         categories = new Map();
-        filteredRows.forEach(({ row, idx, entry }) => {
-          const cat = (entry.taggar?.typ || [])[0] || 'Övrigt';
-          const cardEl = renderRowCard(row, idx, entry);
-          if (!categories.has(cat)) categories.set(cat, []);
-          categories.get(cat).push(cardEl);
+        timeActiveMutationStage('card-model-construction', () => {
+          filteredRows.forEach(({ row, idx, entry }) => {
+            const cat = (entry.taggar?.typ || [])[0] || 'Övrigt';
+            const cardEl = renderRowCard(row, idx, entry);
+            if (!categories.has(cat)) categories.set(cat, []);
+            categories.get(cat).push(cardEl);
+          });
+        }, {
+          surface: 'inventory',
+          rows: filteredRows.length
         });
-        catKeys = [...categories.keys()].sort(catComparator);
+        catKeys = timeActiveMutationStage('category-ordering', () => (
+          [...categories.keys()].sort(catComparator)
+        ), {
+          surface: 'inventory',
+          categories: categories.size
+        });
       }, {
         surface: 'inventory',
         rows: filteredRows.length
@@ -7907,6 +9235,7 @@
         return;
       }
       if (act === 'vehicleLoad') {
+        markActiveMutationCheckpoint('production-control-activation', { action: 'vehicle-load' });
         const entry = getEntry(row.id || row.name);
         const rootIdx = Number(li?.dataset?.idx);
         if (!Number.isNaN(rootIdx)) openVehiclePopup(rootIdx);
@@ -7915,6 +9244,7 @@
         return;
       }
       if (act === 'vehicleUnload') {
+        markActiveMutationCheckpoint('production-control-activation', { action: 'vehicle-unload' });
         openVehicleRemovePopup(idx);
         return;
       }
@@ -7976,11 +9306,22 @@
             );
           } else {
             if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
+            markActiveMutationCheckpoint('handler-entry', {
+              action: 'inventory-row-remove',
+              rowKey: row.__uid || row.id || row.name
+            });
             const removalImpact = getTargetedInventoryRowRemovalImpact({
               row,
               entry,
               inv,
               parentArr
+            });
+            markActiveMutationCheckpoint('mutation-plan-complete', {
+              action: 'inventory-row-remove',
+              impactClass: removalImpact.impactClass,
+              renderStrategy: removalImpact.renderStrategy,
+              filterMembership: removalImpact.filterMembership,
+              fallbackReasons: removalImpact.fallbackReasons
             });
             if (commitTargetedInventoryRowRemoval({
               row,
@@ -8677,6 +10018,8 @@
     canStackRows,
     addInventoryVariant,
     classifyInventoryMutation,
+    classifyInventoryFilterMutation,
+    planInventoryTopologyMutation,
     calcRowCost,
     calcRowWeight,
     refreshInventoryTotals,

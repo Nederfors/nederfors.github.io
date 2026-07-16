@@ -8393,7 +8393,14 @@ const characterRefreshCompletions = new Map();
 function applyCharacterRefreshDomains(options = {}) {
   const next = { ...options };
   const domains = new Set(Array.isArray(next.invalidates) ? next.invalidates : []);
-  const targetedInventoryRender = ['targeted-patch', 'targeted-remove', 'targeted-insert']
+  const targetedInventoryRender = [
+    'targeted-patch',
+    'targeted-remove',
+    'targeted-insert',
+    'targeted-move',
+    'targeted-parent-refresh',
+    'targeted-category-refresh'
+  ]
     .includes(String(next.renderStrategy || '').trim());
   if (domains.has('xp')) next.xp = true;
   if (domains.has('traits') || domains.has('traits.counts')) next.traits = true;

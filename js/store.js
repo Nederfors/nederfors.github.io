@@ -3680,6 +3680,16 @@
     return visit(inventory);
   }
 
+  function inventoryContainsRowUid(inventory, targetUid) {
+    const uid = String(targetUid || '').trim();
+    if (!uid || !Array.isArray(inventory)) return false;
+    for (const row of inventory) {
+      if (String(row?.__uid || '').trim() === uid) return true;
+      if (inventoryContainsRowUid(row?.contains, uid)) return true;
+    }
+    return false;
+  }
+
   function setInventory(store, inv, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
@@ -3692,12 +3702,11 @@
       ...(Array.isArray(options.validatedRemovedRowUids) ? options.validatedRemovedRowUids : []),
       options.validatedRemovedRowUid
     ].map(value => String(value || '').trim()).filter(Boolean);
-    const inventoryUidSet = new Set(inv.map(row => String(row?.__uid || '').trim()).filter(Boolean));
     const canReuseValidatedInventory = options.assumeValidInventoryUids === true
       && currentInventory === inv
       && (validatedRowUids.length > 0 || validatedRemovedRowUids.length > 0)
-      && validatedRowUids.every(uid => inventoryUidSet.has(uid))
-      && validatedRemovedRowUids.every(uid => !inventoryUidSet.has(uid));
+      && validatedRowUids.every(uid => inventoryContainsRowUid(inv, uid))
+      && validatedRemovedRowUids.every(uid => !inventoryContainsRowUid(inv, uid));
     if (canReuseValidatedInventory) {
       incrementCurrentListMutationCounter('inventoryUidTargetValidations');
       store.data[store.current].inventory = inv;

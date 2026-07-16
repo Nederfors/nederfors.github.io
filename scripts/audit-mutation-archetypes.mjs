@@ -66,8 +66,8 @@ const SCENARIO_LEDGER = Object.freeze([
   ['inventory-add-quality', 'quality-add', 'mapped-and-optimized'],
   ['inventory-custom-item-create', 'custom-entry-create', 'scenario-does-not-match-real-user-action'],
   ['inventory-custom-item-edit', 'custom-entry-edit', 'scenario-does-not-match-real-user-action'],
-  ['inventory-vehicle-load', 'vehicle-load', 'mapped-with-known-remaining-cost'],
-  ['inventory-vehicle-unload', 'vehicle-unload', 'mapped-with-known-remaining-cost'],
+  ['inventory-vehicle-load', 'vehicle-load', 'mapped-and-optimized'],
+  ['inventory-vehicle-unload', 'vehicle-unload', 'mapped-and-optimized'],
   ['notes-edit', 'field-patch', 'mapped-and-optimized'],
   ['money-edit', 'money-mutation', 'scenario-does-not-match-real-user-action'],
   ['heavy-current-character-save', 'field-patch-large-state', 'scenario-does-not-match-real-user-action'],
@@ -114,7 +114,8 @@ const IMPORTANT_TESTS = Object.freeze([
   ['tests/rules-worker.spec.js', 'worker/local derived parity', 'mapped-and-optimized'],
   ['tests/mobile-layout.spec.js', 'mobile layout correctness', 'device-gap'],
   ['tests/pwa.spec.js', 'PWA correctness', 'device-gap'],
-  ['tests/inventory-mutation-parity.spec.js', 'safe/optimized inventory mutation parity and reload', 'mapped-and-optimized']
+  ['tests/inventory-mutation-parity.spec.js', 'safe/optimized inventory mutation parity and reload', 'mapped-and-optimized'],
+  ['tests/inventory-topology-parity.spec.js', 'pure topology plans, targeted vehicle moves, safe/reload/mobile parity', 'mapped-and-optimized']
 ]);
 
 const HIDDEN_TYPES = new Set(['artefakt', 'kuriositet', 'skatt']);
@@ -735,14 +736,14 @@ async function main() {
       ),
       preferredExamples: ['Fältutrustning', 'Packåsna'],
       pathInfo: {
-        mutationPath: 'Befintlig inventorypipeline; flytt/load/unload/bundle planeras där möjligt.',
-        renderingPath: 'Full inventoryrender är kvar som säker standard för container-/vehicle-/bundletopologi.',
-        commitShape: 'Batchning bevaras, men strukturell fallback kan göra dyrare DOM-arbete.',
+        mutationPath: 'Ren topologiplan före mutation; direkt top-level↔vehicle-flytt appliceras atomärt när identitet och postcondition är bevisbara.',
+        renderingPath: 'Riktad node-preserving move för säker vehicle load/unload; full inventoryrender för övrig container-/nested-/bundletopologi.',
+        commitShape: 'Säker vehicle-flytt gör en storemutation/common commit/refresh/persistensschedule; övriga planer faller tillbaka.',
         reconciliation: 'Endast om posten också har listregler.',
-        invalidates: ['inventory.structure', 'inventory.totals', 'summary.economy', 'persistence'],
-        observers: ['AutoAnimate efter full struktur', 'inventory observers'],
-        fastPath: 'Endast stabil top-level quantity; inte topology mutation.',
-        fallback: ['contains-tree', 'vehicle category', 'bundle expansion', 'individuell instans']
+        invalidates: ['inventory.structure', 'inventory.totals', 'capacity', 'summary.economy', 'persistence'],
+        observers: ['lokal motion-rebind på berörda listor', 'verifierad DOM-/tree-postcondition'],
+        fastPath: 'Ja för en hel stabil katalograd direkt mellan top-level och vehicle; inte generell topology mutation.',
+        fallback: ['container/nested path', 'bundle expansion', 'partial/multi-row', 'artifact/snapshot/custom/legacy', 'misslyckad DOM-postcondition']
       }
     }),
     describeClass({
