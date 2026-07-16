@@ -2643,31 +2643,31 @@
       "effect": "En gång per dag +1 på ett framgångsslag kopplat till en specifik Mystisk kraft eller Ritual (väljs vid inköp)."
     },
     {
-  "id": "l54",
-  "name": "Skuldmynt",
-  "tags": {
-    "types": [
-      "Lägre Artefakt",
-      "Artefakt"
-    ],
-    "traditions": []
-  },
-  "levels": {
-    "Mästare": {
-      "description": "När en dvärg tar betalt i tjänster får den skuldsatte ett handflatsstort, rödflammigt mynt. På ena sidan möts två järnklädda händer, på den andra syns en blodmärkt dolk. Skuldmynt har på senare tid blivit vanliga bland Tistla Fästes skattletare och används även i viss mån av Drottningens folk när ord, sigill och kontrakt inte räcker. Mottagaren binds till myntet genom att offra en poäng Erfarenhet eller ta en poäng permanent Korruption. Bindningen och betalningen hävs när utfärdaren tar tillbaka myntet eller det avtalade åtagandet fullbordas, vilket utfärdaren genast känner. Ritualen Bryta Länk kan också lösa bindningen och återställa betalningen, men utfärdaren blir omedelbart medveten om detta."
+      "id": "l54",
+      "name": "Skuldmynt",
+      "tags": {
+        "types": [
+          "Lägre Artefakt",
+          "Artefakt"
+        ],
+        "traditions": []
+      },
+      "levels": {
+        "Mästare": {
+          "description": "När en dvärg tar betalt i tjänster får den skuldsatte ett handflatsstort, rödflammigt mynt. På ena sidan möts två järnklädda händer, på den andra syns en blodmärkt dolk. Skuldmynt har på senare tid blivit vanliga bland Tistla Fästes skattletare och används även i viss mån av Drottningens folk när ord, sigill och kontrakt inte räcker. Mottagaren binds till myntet genom att offra en poäng Erfarenhet eller ta en poäng permanent Korruption. Bindningen och betalningen hävs när utfärdaren tar tillbaka myntet eller det avtalade åtagandet fullbordas, vilket utfärdaren genast känner. Ritualen Bryta Länk kan också lösa bindningen och återställa betalningen, men utfärdaren blir omedelbart medveten om detta."
+        }
+      },
+      "rules": {},
+      "stats": {
+        "vikt": 0.2,
+        "weight": 0.2
+      },
+      "base_price": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "effect": "Binder mottagaren till en skuld via 1 Erfarenhet eller 1 permanent Korruption; betalningen återställs när skulden fullbordas, myntet återtas eller länken bryts."
     }
-  },
-  "rules": {},
-  "stats": {
-    "vikt": 0.2,
-    "weight": 0.2
-  },
-  "base_price": {
-    "daler": 10,
-    "skilling": 0,
-    "örtegar": 0
-  },
-  "effect": "Binder mottagaren till en skuld via 1 Erfarenhet eller 1 permanent Korruption; betalningen återställs när skulden fullbordas, myntet återtas eller länken bryts."
-}
   ]
 }

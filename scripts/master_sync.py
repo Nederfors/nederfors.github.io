@@ -17,19 +17,39 @@ SCRIPT_SEQUENCE = [
 ]
 
 
+def run_catalog_migration() -> None:
+    print("[master-sync] Migrate catalog schemas", flush=True)
+    subprocess.run(
+        ["node", "scripts/migrate_catalog_schema.mjs"],
+        cwd=ROOT_DIR,
+        check=True,
+    )
+
+
 def run_step(label: str, script_path: str, args: list[str]) -> None:
     print(f"[master-sync] {label}", flush=True)
-    subprocess.run([sys.executable, script_path, *args], cwd=ROOT_DIR, check=True)
+    subprocess.run(
+        [sys.executable, script_path, *args],
+        cwd=ROOT_DIR,
+        check=True,
+    )
 
 
 def run_npm_build() -> None:
     print("[master-sync] npm run build", flush=True)
-    subprocess.run(["npm", "run", "build"], cwd=ROOT_DIR, check=True)
+    subprocess.run(
+        ["npm", "run", "build"],
+        cwd=ROOT_DIR,
+        check=True,
+    )
 
 
 def main() -> None:
+    run_catalog_migration()
+
     for label, script_path, args in SCRIPT_SEQUENCE:
         run_step(label, script_path, args)
+
     run_npm_build()
     print("[master-sync] done", flush=True)
 

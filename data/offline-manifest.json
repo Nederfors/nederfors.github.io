@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "3699aba21e7bfdd0d84438d7d997a3547fec32461ce61d2940daf2a8e959c5ec",
+  "revision": "1c77ccc8ee871b26e7385987f457abe7eeaefb6fe63b793aa82c5c8c9bf97e02",
   "resources": [
     {
       "url": "data/diverse.json",
@@ -164,8 +164,8 @@
     },
     {
       "url": "data/lagre-artefakter.json",
-      "revision": "sha256-bd7b5730b6f00a6d79a42d11c707bc6abec54bdcff9ffc6d842ea4b17ef8cf61",
-      "bytes": 79870
+      "revision": "sha256-073c3914db1671a108cd6fa13389c0b0e44a8b87c029ae3635de33f7f9b7d29b",
+      "bytes": 79974
     },
     {
       "url": "data/fallor.json",
@@ -188,5 +188,5 @@
       "bytes": 56874
     }
   ],
-  "totalBytes": 1781439
+  "totalBytes": 1781543
 }
