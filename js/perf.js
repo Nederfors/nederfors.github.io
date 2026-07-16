@@ -4,6 +4,7 @@ const SCENARIO_HISTORY_KEY = '__symbaroumPerfScenarioHistory';
 const PENDING_SCENARIOS_KEY = '__symbaroumPerfPendingScenarios';
 const MAX_SCENARIOS = 200;
 const ACTIVE_TIMEOUT_MS = 30_000;
+const FALLBACK_REASON_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const state = {
   role: document.body?.dataset?.role || '',
@@ -147,8 +148,16 @@ function finalizeScenario(record, status, detail = {}) {
     detail: cloneDetail(stage.detail || {})
   }));
   const counters = Object.fromEntries(record.counters || []);
-  const profile = (checkpoints.length || stages.length || Object.keys(counters).length)
-    ? { checkpoints, stages, counters }
+  const fallbacks = Array.isArray(record.fallbacks)
+    ? record.fallbacks.map(entry => ({
+        reason: entry.reason,
+        atAbs: entry.atAbs,
+        offsetMs: Math.max(0, entry.atAbs - record.startedAtAbs),
+        detail: cloneDetail(entry.detail || {})
+      }))
+    : [];
+  const profile = (checkpoints.length || stages.length || Object.keys(counters).length || fallbacks.length)
+    ? { checkpoints, stages, counters, fallbacks }
     : null;
   const mergedDetail = {
     ...(record.detail || {}),
@@ -185,6 +194,7 @@ function startScenario(name, detail = {}) {
     checkpoints: [],
     stages: [],
     counters: new Map(),
+    fallbacks: [],
     activeStages: new Map(),
     startMark,
     startedAtAbs: absoluteNow(),
@@ -238,6 +248,21 @@ function incrementScenarioCounter(idOrName, name, delta = 1) {
   const next = current + amount;
   resolved.record.counters.set(String(name), next);
   return next;
+}
+
+function recordFallback(idOrName, reason, detail = {}) {
+  const resolved = resolveScenarioRef(idOrName);
+  const normalizedReason = String(reason || '').trim().toLowerCase();
+  if (!resolved || !FALLBACK_REASON_PATTERN.test(normalizedReason)) return null;
+  const entry = {
+    reason: normalizedReason,
+    atAbs: absoluteNow(),
+    detail: cloneDetail(detail || {})
+  };
+  resolved.record.fallbacks.push(entry);
+  incrementScenarioCounter(resolved.id, 'fallbackActivations');
+  incrementScenarioCounter(resolved.id, `fallbackReason:${normalizedReason}`);
+  return entry;
 }
 
 function startScenarioStage(idOrName, name, detail = {}) {
@@ -459,6 +484,7 @@ window.symbaroumPerf = Object.freeze({
   incrementScenarioCounter,
   markScenario,
   queueNavigationScenario,
+  recordFallback,
   resolveQueuedScenarios,
   scheduleScenarioEnd,
   setContext,

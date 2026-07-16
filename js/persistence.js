@@ -115,6 +115,22 @@ function incrementActiveMutationCounter(name, delta = 1) {
   }
 }
 
+function timeActiveMutationStage(name, callback, detail = {}) {
+  try {
+    const perf = window.symbaroumPerf;
+    const scenarioId = MUTATION_FLOW_CONTEXT_KEYS
+      .map((key) => perf?.getFlowContext?.(key))
+      .find(Boolean);
+    if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') return callback();
+    return perf.timeScenarioStage(scenarioId, name, callback, {
+      surface: 'persistence',
+      ...detail
+    });
+  } catch {
+    return callback();
+  }
+}
+
 function cloneValue(value) {
   if (value === undefined) return undefined;
   if (value === null) return null;
@@ -505,6 +521,7 @@ function queueCharacterFieldWrite(charId, patch = {}) {
       .map(([field, value]) => [String(field || '').trim(), value])
       .filter(([field]) => field);
   if (!entries.length) return;
+  incrementActiveMutationCounter('persistenceQueuedFields', entries.length);
 
   const snapshot = buildQueuedSnapshotBase();
   const nextCharacter = snapshot.data?.[charId] && typeof snapshot.data[charId] === 'object'
@@ -645,8 +662,13 @@ async function commitPendingWrites(batch) {
         field: normalizedField,
         value: cloneValue(resolvedValue)
       });
+      incrementActiveMutationCounter('persistenceFieldClones');
     });
   });
+  incrementActiveMutationCounter(
+    'persistenceRowsMaterialized',
+    replacementPuts.reduce((sum, replacement) => sum + replacement.rows.length, 0) + patchPutRows.length
+  );
 
   const applyCharacterWrites = async (allowedIds = null) => {
     const deleteSet = new Set(replacementDeletes);
@@ -801,8 +823,10 @@ async function flushPendingWrites(options = {}) {
 
   const promise = (async () => {
     while (hasPendingWrites()) {
-      const batch = takePendingWrites();
-      await commitPendingWrites(batch);
+      const batch = timeActiveMutationStage('persistence-queue-preparation', () => takePendingWrites());
+      await timeActiveMutationStage('indexeddb-transaction', () => commitPendingWrites(batch), {
+        reason: options.reason || ''
+      });
     }
   })();
 

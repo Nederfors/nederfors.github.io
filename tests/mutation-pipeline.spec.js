@@ -758,8 +758,10 @@ test('a non-stackable choice inventory variant invalidates rule domains once', a
   });
   const stageNames = (scenario?.detail?.profile?.stages || []).map(stage => stage.name);
   expect(stageNames.filter(stage => stage === 'common-commit')).toHaveLength(1);
-  expect(stageNames).not.toContain('sort-group-rebuild');
-  expect(stageNames).not.toContain('inventory-render');
+  expect(stageNames).toContain('sort-group-rebuild');
+  expect(scenario?.detail?.profile?.fallbacks?.map(fallback => fallback.reason)).toEqual(
+    expect.arrayContaining(['individual-instance'])
+  );
 
   await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'rule-choice-variant-test' }));
   await page.reload();
@@ -1137,7 +1139,7 @@ test('Inventory UI add, subtract, and remove actions persist their resulting qua
     plusPreserved: true,
     hasMinus: true,
     refreshes: [{
-      invalidates: ['inventory.row', 'inventory.totals', 'summary.economy'],
+      invalidates: ['inventory.row', 'inventory.totals', 'summary.economy', 'persistence'],
       topology: 'row'
     }]
   });
@@ -1239,6 +1241,246 @@ test('inventory multi-buy batches an existing stable row without a full render o
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
   await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 6 }]);
+});
+
+test('metadata-bearing stack quantity preserves identity and avoids unrelated inventory work', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/inventory', '#invList');
+  const target = await page.evaluate(async () => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entries = Array.isArray(window.DB) ? window.DB : [];
+    const candidates = entries.filter(entry => {
+      const inventoryMeta = entry?.taggar?.inventory || {};
+      const choices = window.rulesHelper?.getRuleList?.(entry, 'val') || [];
+      const modifies = window.rulesHelper?.getRuleList?.(entry, 'andrar') || [];
+      return window.isInv?.(entry)
+        && inventoryMeta.stackbar === true
+        && ['kraft', 'ritual'].includes(String(entry?.bound || '').trim())
+        && choices.some(rule => String(rule?.field || '').trim() === 'trait')
+        && modifies.length === 0
+        && !window.storeHelper?.isSearchHiddenEntry?.(entry);
+    }).sort((left, right) => {
+      const leftRequirements = (window.rulesHelper?.getRuleList?.(left, 'kraver') || []).length;
+      const rightRequirements = (window.rulesHelper?.getRuleList?.(right, 'kraver') || []).length;
+      return rightRequirements - leftRequirements
+        || String(left?.id || '').localeCompare(String(right?.id || ''));
+    });
+    const entry = candidates[0];
+    const traitEntry = entries.find(candidate => (candidate?.taggar?.typ || []).includes('Mystisk kraft'));
+    if (!entry || !traitEntry) throw new Error('Missing metadata-bearing inventory representative.');
+    const row = {
+      id: entry.id,
+      name: entry.namn,
+      qty: 1,
+      trait: traitEntry.namn,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    };
+    const fillers = entries
+      .filter(candidate => candidate?.id !== entry.id && window.isInv?.(candidate)
+        && !(candidate?.taggar?.typ || []).some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type))
+        && !window.storeHelper?.isSearchHiddenEntry?.(candidate))
+      .slice(0, 99)
+      .map(candidate => ({
+        id: candidate.id,
+        name: candidate.namn,
+        qty: 1,
+        gratis: 0,
+        gratisKval: [],
+        removedKval: []
+      }));
+    window.storeHelper.setInventory(activeStore, [row, ...fillers], { bumpDerived: false });
+    window.invUtil.filter.invTxt = entry.namn;
+    window.invUtil.renderInventory({ trigger: 'test-metadata-quantity-setup' });
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-metadata-quantity-setup' });
+    const persistedRow = window.storeHelper.getInventory(activeStore)[0];
+    const perf = window.symbaroumPerf;
+    perf?.clearHistory?.();
+    const scenarioId = perf?.startScenario?.('test-metadata-quantity', {
+      behaviorSignature: 'stackable-choice-metadata-quantity',
+      stateSize: 100,
+      activeFilters: true
+    });
+    perf?.setFlowContext?.('inventory-mutation', scenarioId);
+    const card = document.querySelector(`#invList li[data-uid="${persistedRow.__uid}"]`);
+    window.__metadataQuantityProbe = {
+      card,
+      scenarioId,
+      uid: persistedRow.__uid,
+      variantIdentity: window.invUtil.getInventoryVariantIdentity(persistedRow, entry)
+    };
+    return { id: entry.id, name: entry.namn, uid: persistedRow.__uid, trait: persistedRow.trait };
+  });
+
+  const card = page.locator(`#invList li[data-uid="${target.uid}"]`).first();
+  await expect(card).toBeVisible();
+  await card.locator('button[data-act="add"]').click();
+  await expect(card.locator('.count-badge')).toHaveText('×2');
+
+  const result = await page.evaluate(async ({ target }) => {
+    await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-metadata-quantity' });
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const row = window.storeHelper.getInventory(activeStore)
+      .find(candidate => String(candidate?.id || '') === String(target.id));
+    const entry = window.lookupEntry?.({ id: target.id, name: target.name });
+    const perf = window.symbaroumPerf;
+    perf?.clearFlowContext?.('inventory-mutation', window.__metadataQuantityProbe.scenarioId);
+    const scenario = perf?.endScenario?.(window.__metadataQuantityProbe.scenarioId);
+    return {
+      cardPreserved: document.querySelector(`#invList li[data-uid="${target.uid}"]`) === window.__metadataQuantityProbe.card,
+      uid: row?.__uid || '',
+      trait: row?.trait || '',
+      qty: Number(row?.qty || 0),
+      variantIdentity: window.invUtil.getInventoryVariantIdentity(row, entry),
+      counters: scenario?.detail?.profile?.counters || {},
+      fallbacks: scenario?.detail?.profile?.fallbacks || []
+    };
+  }, { target });
+
+  expect(result.cardPreserved).toBe(true);
+  expect(result.uid).toBe(target.uid);
+  expect(result.trait).toBe(target.trait);
+  expect(result.qty).toBe(2);
+  expect(result.variantIdentity).toBe(await page.evaluate(() => window.__metadataQuantityProbe.variantIdentity));
+  expect(result.counters.commonCommits).toBe(1);
+  expect(result.counters.persistenceSchedules).toBe(1);
+  expect(result.counters.inventoryUidTargetValidations).toBe(1);
+  expect(result.counters.inventoryUidFullNormalizations || 0).toBe(0);
+  expect(result.counters.inventoryNormalizations || 0).toBe(0);
+  expect(result.counters.artifactEffectScans || 0).toBe(0);
+  expect(result.counters.fullInventoryRenders || 0).toBe(0);
+  expect(result.fallbacks).toEqual([]);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(async () => {
+    const rows = await readInventoryRows(page);
+    return rows.find(row => row.id === target.id) || null;
+  }).toEqual({ id: target.id, name: target.name, qty: 2 });
+
+  await page.evaluate(({ target }) => {
+    const perf = window.symbaroumPerf;
+    perf?.clearHistory?.();
+    const card = document.querySelector(`#invList li[data-name="${window.CSS.escape(target.name)}"]`);
+    const scenarioId = perf?.startScenario?.('test-metadata-final-copy-remove', {
+      behaviorSignature: 'stable-top-level-final-copy-removal'
+    });
+    perf?.setFlowContext?.('inventory-mutation', scenarioId);
+    window.__metadataRemovalProbe = { card, scenarioId };
+  }, { target });
+  await clickInventoryAction(page, target.name, 'del');
+  await expect.poll(async () => (
+    (await readInventoryRows(page)).some(row => row.id === target.id)
+  )).toBe(false);
+  const removal = await page.evaluate(async () => {
+    await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-metadata-final-copy-remove' });
+    const perf = window.symbaroumPerf;
+    perf?.clearFlowContext?.('inventory-mutation', window.__metadataRemovalProbe.scenarioId);
+    const scenario = perf?.endScenario?.(window.__metadataRemovalProbe.scenarioId);
+    return {
+      cardRemoved: !window.__metadataRemovalProbe.card?.isConnected,
+      counters: scenario?.detail?.profile?.counters || {},
+      fallbacks: scenario?.detail?.profile?.fallbacks || [],
+      consistency: (scenario?.detail?.profile?.checkpoints || [])
+        .find(checkpoint => checkpoint.name === 'all-views-consistent')?.detail || null
+    };
+  });
+  expect(removal.cardRemoved).toBe(true);
+  expect(removal.counters.commonCommits).toBe(1);
+  expect(removal.counters.persistenceSchedules).toBe(1);
+  expect(removal.counters.inventoryUidTargetValidations).toBe(1);
+  expect(removal.counters.inventoryUidFullNormalizations || 0).toBe(0);
+  expect(removal.counters.fullInventoryRenders || 0).toBe(0);
+  expect(removal.counters.artifactEffectScans || 0).toBe(0);
+  expect(removal.fallbacks).toEqual([]);
+  expect(removal.consistency).toMatchObject({ renderStrategy: 'targeted-remove' });
+  expect(removal.consistency.invalidates).toEqual(expect.arrayContaining([
+    'inventory.structure',
+    'inventory.totals',
+    'summary.economy',
+    'persistence'
+  ]));
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(async () => (
+    (await readInventoryRows(page)).some(row => row.id === target.id)
+  )).toBe(false);
+});
+
+test('inventory mutation impact contract reports exact conservative fallback reasons', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/inventory', '#invList');
+  const impacts = await page.evaluate(() => {
+    const plain = window.lookupEntry?.({ name: 'Bandage' });
+    const container = (window.DB || []).find(entry => (entry?.taggar?.typ || []).includes('Förvaring'));
+    const localRow = {
+      id: plain.id,
+      name: plain.namn,
+      __uid: 'impact-local-row',
+      qty: 1,
+      gratisKval: [],
+      removedKval: []
+    };
+    const localInventory = [localRow];
+    const local = window.invUtil.classifyInventoryMutation(plain, localRow, {
+      quantityOnly: true,
+      requiresStableRowUid: true,
+      inventory: localInventory,
+      parentArr: localInventory
+    });
+    const containerRow = {
+      id: container?.id,
+      name: container?.namn,
+      __uid: 'impact-container-row',
+      qty: 1,
+      contains: [localRow]
+    };
+    const topology = window.invUtil.classifyInventoryMutation(container, containerRow, {
+      requiresStableRowUid: true,
+      inventory: [containerRow],
+      parentArr: [containerRow]
+    });
+    const custom = {
+      id: 'custom-impact-entry',
+      namn: 'Custom impact entry',
+      taggar: { typ: ['Hemmagjort'] },
+      regler: {
+        andrar: [{ mal: 'unhandled_target', satt: 'add', varde: 1 }]
+      }
+    };
+    const customRow = {
+      id: custom.id,
+      name: custom.namn,
+      __uid: 'impact-custom-row',
+      qty: 1
+    };
+    const unknown = window.invUtil.classifyInventoryMutation(custom, customRow, {
+      requiresStableRowUid: true,
+      manualOverride: true
+    });
+    return { local, topology, unknown };
+  });
+
+  expect(impacts.local).toMatchObject({
+    impactClass: 'local',
+    fastPath: true,
+    fallbackReasons: [],
+    aggregateStrategy: 'delta',
+    renderStrategy: 'targeted-patch',
+    derivedInvalidation: 'none'
+  });
+  expect(impacts.topology.impactClass).toBe('fallback');
+  expect(impacts.topology.fallbackReasons).toEqual(expect.arrayContaining(['container-topology']));
+  expect(impacts.unknown.impactClass).toBe('fallback');
+  expect(impacts.unknown.fallbackReasons).toEqual(expect.arrayContaining([
+    'custom-entry',
+    'manual-override',
+    'unknown-modify-target'
+  ]));
 });
 
 test('character level changes revert when higher-level requirements are blocked', async ({ page }) => {
