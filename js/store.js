@@ -3683,7 +3683,28 @@
   function setInventory(store, inv, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].inventory = ensureInventoryRowUids(inv);
+    const currentInventory = store.data[store.current].inventory;
+    const validatedRowUids = [
+      ...(Array.isArray(options.validatedRowUids) ? options.validatedRowUids : []),
+      options.validatedRowUid
+    ].map(value => String(value || '').trim()).filter(Boolean);
+    const validatedRemovedRowUids = [
+      ...(Array.isArray(options.validatedRemovedRowUids) ? options.validatedRemovedRowUids : []),
+      options.validatedRemovedRowUid
+    ].map(value => String(value || '').trim()).filter(Boolean);
+    const inventoryUidSet = new Set(inv.map(row => String(row?.__uid || '').trim()).filter(Boolean));
+    const canReuseValidatedInventory = options.assumeValidInventoryUids === true
+      && currentInventory === inv
+      && (validatedRowUids.length > 0 || validatedRemovedRowUids.length > 0)
+      && validatedRowUids.every(uid => inventoryUidSet.has(uid))
+      && validatedRemovedRowUids.every(uid => !inventoryUidSet.has(uid));
+    if (canReuseValidatedInventory) {
+      incrementCurrentListMutationCounter('inventoryUidTargetValidations');
+      store.data[store.current].inventory = inv;
+    } else {
+      incrementCurrentListMutationCounter('inventoryUidFullNormalizations');
+      store.data[store.current].inventory = ensureInventoryRowUids(inv);
+    }
     commitCurrentCharacterMutation(store, {
       bumpDerived: options.bumpDerived !== false,
       persist: options.persist,

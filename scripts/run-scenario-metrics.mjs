@@ -265,6 +265,12 @@ function summarizeDetail(detail = {}) {
     branch: detail.branch || null,
     renderMode: detail.renderMode || null,
     entry: detail.entry || null,
+    behaviorSignature: detail.behaviorSignature || null,
+    pathMode: detail.pathMode || null,
+    stateSize: Number.isFinite(Number(detail.stateSize)) ? Number(detail.stateSize) : null,
+    aggregateState: detail.aggregateState || null,
+    activeFilters: detail.activeFilters === true,
+    direction: detail.direction || null,
     trigger: detail.trigger || null,
     source: detail.source || null,
     endStateHash: detail.endStateHash || null
@@ -277,6 +283,8 @@ function aggregateNumbers(values = []) {
     .filter((value) => Number.isFinite(value));
   if (!numeric.length) {
     return {
+      sampleCount: 0,
+      totalMs: 0,
       avgMs: null,
       medianMs: null,
       p95Ms: null,
@@ -286,9 +294,11 @@ function aggregateNumbers(values = []) {
   }
   const sum = numeric.reduce((total, value) => total + value, 0);
   return {
+    sampleCount: numeric.length,
+    totalMs: sum,
     avgMs: sum / numeric.length,
     medianMs: median(numeric),
-    p95Ms: percentile(numeric, 0.95),
+    p95Ms: numeric.length >= 5 ? percentile(numeric, 0.95) : null,
     minMs: Math.min(...numeric),
     maxMs: Math.max(...numeric)
   };
@@ -313,7 +323,11 @@ function aggregateScenarioRuns(name, runs = []) {
         .filter((stage) => stage.name === stageName)
         .reduce((sum, stage) => sum + Number(stage.duration || 0), 0)
     ));
-    return [stageName, aggregateNumbers(totals)];
+    const aggregate = aggregateNumbers(totals);
+    aggregate.callCount = runs.reduce((sum, run) => sum + (
+      (run?.detail?.profile?.stages || []).filter((stage) => stage.name === stageName).length
+    ), 0);
+    return [stageName, aggregate];
   }));
   const checkpointNames = [...new Set(runs.flatMap((run) => (
     Array.isArray(run?.detail?.profile?.checkpoints)
@@ -335,6 +349,29 @@ function aggregateScenarioRuns(name, runs = []) {
     counterName,
     aggregateNumbers(runs.map((run) => Number(run?.detail?.profile?.counters?.[counterName] || 0)))
   ]));
+  const fallbackReasons = [...new Set(runs.flatMap((run) => (
+    (run?.detail?.profile?.fallbacks || []).map((fallback) => fallback.reason)
+  )))].filter(Boolean);
+  const fallbacks = Object.fromEntries(fallbackReasons.map((reason) => {
+    const counts = runs.map((run) => (
+      (run?.detail?.profile?.fallbacks || []).filter((fallback) => fallback.reason === reason).length
+    ));
+    return [reason, {
+      ...aggregateNumbers(counts),
+      count: counts.reduce((sum, count) => sum + count, 0)
+    }];
+  }));
+  const relativeLatency = (targetNames) => aggregateNumbers(runs.map((run) => {
+    const runCheckpoints = run?.detail?.profile?.checkpoints || [];
+    const interaction = runCheckpoints.find(checkpoint => (
+      checkpoint.name === 'interaction-start' || checkpoint.name === 'pointer-received'
+    ));
+    const target = targetNames
+      .map(targetName => runCheckpoints.find(checkpoint => checkpoint.name === targetName))
+      .find(Boolean);
+    if (!target) return NaN;
+    return Math.max(0, Number(target.offsetMs || 0) - Number(interaction?.offsetMs || 0));
+  }));
 
   return {
     name,
@@ -344,6 +381,16 @@ function aggregateScenarioRuns(name, runs = []) {
     stages,
     checkpoints,
     counters,
+    fallbacks,
+    latency: {
+      visibleResponse: relativeLatency([
+        'first-feedback-presented',
+        'first-feedback-dom',
+        'post-render-two-raf'
+      ]),
+      completeConsistency: relativeLatency(['all-views-consistent', 'final-consistency']),
+      persistenceComplete: relativeLatency(['persistence-flush-complete'])
+    },
     samples: runs.map((run) => ({
       durationMs: Number(run?.duration || 0),
       fullCatalogRender: usesFullCatalogRender(run),
@@ -351,6 +398,7 @@ function aggregateScenarioRuns(name, runs = []) {
         [checkpoint.name, Number(checkpoint.offsetMs || 0)]
       ))),
       counters: run?.detail?.profile?.counters || {},
+      fallbacks: run?.detail?.profile?.fallbacks || [],
       detail: summarizeDetail(run?.detail || {})
     })),
     detail: summarizeDetail(runs[0]?.detail || {})
@@ -897,16 +945,23 @@ async function runOpenInventory(browser, iterations) {
   return aggregateScenarioRuns('open-inventory', runs);
 }
 
-async function runSwitchCharacter(browser, iterations) {
+async function runSwitchCharacter(browser, iterations, options = {}) {
+  const scenarioName = options.profile === 'interaction-heavy'
+    ? 'switch-character-large-specialized'
+    : 'switch-character';
   const runs = await collectRuns(browser, iterations, async () => (
-    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
+    withSeededPage(browser, {
+      pathName: '/#/character',
+      readySelector: '#valda',
+      profile: options.profile || 'base'
+    }, async (page) => {
       await clearPerfHistory(page);
       await page.locator('shared-toolbar').locator('#charSelect').selectOption(TEST_CHAR_ID_2);
       await page.locator('#charName').waitFor({ state: 'visible' });
       return waitForScenario(page, 'switch-character');
     })
   ));
-  return aggregateScenarioRuns('switch-character', runs);
+  return aggregateScenarioRuns(scenarioName, runs);
 }
 
 async function runSearchFilter(browser, iterations) {
@@ -1350,23 +1405,14 @@ async function prepareCharacterLevelChangeTarget(page, mode = 'fast') {
 }
 
 async function changeCardLevel(page, { rootSelector, name, value }) {
-  const changed = await page.evaluate(({ rootSelector, name, value }) => {
-    const root = document.querySelector(rootSelector);
-    if (!root) return false;
-    const card = [...root.querySelectorAll('li.entry-card, li.card')]
-      .find((candidate) => String(candidate?.dataset?.name || '').trim() === String(name || '').trim()) || null;
-    if (!card) return false;
-    const select = card.querySelector('select.level');
-    if (!select) return false;
-    select.value = value;
-    window.entryCardFactory?.syncLevelControl?.(select);
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-    return true;
-  }, { rootSelector, name, value });
-
-  if (!changed) {
+  const cards = page.locator(`${rootSelector} li.entry-card, ${rootSelector} li.card`);
+  const index = await cards.evaluateAll((nodes, targetName) => (
+    nodes.findIndex(node => String(node?.dataset?.name || '').trim() === String(targetName || '').trim())
+  ), name);
+  if (index < 0) {
     throw new Error(`Unable to change level for ${name} in ${rootSelector}.`);
   }
+  await cards.nth(index).locator('select.level').selectOption(value);
 }
 
 async function runCharacterLevelChange(browser, iterations, mode) {
@@ -1473,43 +1519,177 @@ async function runInventoryBuyMultiple(browser, iterations) {
   return aggregateScenarioRuns('inventory-buy-multiple', runs);
 }
 
-async function runInventoryAddQuality(browser, iterations) {
+async function runInventoryAddQuality(browser, iterations, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const scenarioName = forceSafePath ? 'inventory-add-quality-safe' : 'inventory-add-quality';
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
+  const aggregateMode = String(process.env.PERF_AGGREGATE_STATE || 'warm').trim().toLowerCase() === 'cold'
+    ? 'cold'
+    : 'warm';
+  const activeFilters = /^(1|true|yes)$/i.test(String(process.env.PERF_ACTIVE_FILTERS || ''));
   const runs = await collectRuns(browser, iterations, async () => (
-    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => (
-      page.evaluate(async () => {
+    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => {
+      const target = await page.evaluate(async ({
+        size,
+        forceSafePath: useSafePath,
+        scenarioName: name,
+        aggregateMode: cacheMode,
+        activeFilters: useFilters
+      }) => {
         const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-        const entry = window.lookupEntry?.({ name: 'Dubbel ringbrynja' });
-        const row = await window.invUtil?.buildInventoryRow?.({
-          entry,
-          list: window.storeHelper.getCurrentList(activeStore)
-        });
-        window.storeHelper.setInventory(activeStore, [row]);
+        const entry = (window.DB || []).filter(candidate => {
+          const types = candidate?.taggar?.typ || [];
+          const hasSpecialRules = ['val', 'kraver', 'krockar', 'ger', 'andrar'].some(key => (
+            (window.rulesHelper?.getRuleList?.(candidate, key) || []).length > 0
+          ));
+          return types.includes('Rustning') && window.isInv?.(candidate) && !hasSpecialRules;
+        }).sort((left, right) => String(left?.id || '').localeCompare(String(right?.id || '')))[0];
+        if (!entry) throw new Error('Unable to find a quality-bearing inventory representative.');
+        const row = {
+          id: entry.id,
+          name: entry.namn,
+          qty: 1,
+          gratis: 0,
+          kvaliteter: [],
+          gratisKval: [],
+          removedKval: []
+        };
+        const fillers = (window.DB || [])
+          .filter(candidate => {
+            const types = candidate?.taggar?.typ || [];
+            return candidate?.id !== entry?.id
+              && window.isInv?.(candidate)
+              && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type))
+              && !window.storeHelper?.isSearchHiddenEntry?.(candidate);
+          })
+          .slice(0, Math.max(0, size - 1))
+          .map(candidate => ({
+            id: candidate.id,
+            name: candidate.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+        }));
+        window.storeHelper.setInventory(activeStore, [row, ...fillers]);
+        window.invUtil.filter.invTxt = useFilters ? entry.namn : '';
         window.invUtil?.renderInventory?.();
-        const qualityEntry = (window.DB || []).find((candidate) => (
-          window.isQual?.(candidate) && window.canApplyQuality?.(entry, candidate)
-        )) || null;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        if (cacheMode === 'cold') {
+          const cloned = window.storeHelper.getInventory(activeStore).map(candidate => ({ ...candidate }));
+          window.storeHelper.setInventory(activeStore, cloned, { bumpDerived: false });
+        }
+        const economyDomains = new Set(['inventory.row', 'inventory.totals', 'summary.economy', 'persistence']);
+        const qualityEntry = (window.DB || []).find((candidate) => {
+          if (!window.isQual?.(candidate) || !window.canApplyQuality?.(entry, candidate)) return false;
+          if (String(entry?.kvalitet || '').split(',').map(value => value.trim()).includes(candidate?.namn)) return false;
+          const impact = window.invUtil?.classifyInventoryMutation?.(candidate, {
+            id: candidate.id,
+            name: candidate.namn,
+            __uid: 'quality-signature-probe',
+            qty: 1
+          }, { requiresStableRowUid: true });
+          return impact?.fastPath === true
+            && (impact.affectedDomains || []).every(domain => economyDomains.has(domain));
+        }) || null;
+        if (!qualityEntry) throw new Error('Missing applicable quality representative.');
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-inventory-add-quality' });
+        window.__symbaroumPerfForceSafeInventoryMutations = useSafePath;
         window.symbaroumPerf?.clearHistory?.();
         const perf = window.symbaroumPerf;
-        const scenarioId = perf?.startScenario?.('inventory-add-quality', {
+        const scenarioId = perf?.startScenario?.(name, {
           scope: 'inventory',
           entry: entry?.namn || null,
-          quality: qualityEntry?.namn || null
+          quality: qualityEntry?.namn || null,
+          behaviorSignature: 'quality-bearing-existing-row:economy-only',
+          pathMode: useSafePath ? 'safe' : 'optimized',
+          stateSize: 1 + fillers.length,
+          aggregateState: cacheMode,
+          activeFilters: useFilters
         });
-        await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', () => {
-          row.kvaliteter = [...(row.kvaliteter || []), qualityEntry?.namn || 'Massivt'];
-          window.invUtil?.saveInventory?.([row], { source: 'perf-add-quality', afterPaint: false });
-        });
-        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => window.symbaroumPersistence?.flushPendingWrites?.());
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        window.__inventoryQualityScenarioId = scenarioId;
+        return {
+          id: entry.id,
+          name: entry.namn,
+          rowUid: row.__uid,
+          quality: qualityEntry.namn,
+          stateSize: 1 + fillers.length
+        };
+      }, {
+        size: requestedSize,
+        forceSafePath,
+        scenarioName,
+        aggregateMode,
+        activeFilters
+      });
+
+      const card = page.locator(`#invList li.entry-card[data-uid="${target.rowUid}"]`).first();
+      const addQualityButton = card.locator('button[data-act="addQual"]');
+      if (!await addQualityButton.isVisible()) {
+        await card.locator('.card-title').click({ timeout: 10_000 });
+      }
+      await addQualityButton.click({ timeout: 10_000 });
+      const search = page.locator('shared-toolbar #qualSearch');
+      await search.waitFor({ state: 'visible', timeout: 10_000 });
+      await search.fill(target.quality);
+      const choice = page.locator('shared-toolbar #qualOptions .quality-option').first();
+      await choice.click({ timeout: 10_000 });
+      await page.evaluate(() => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__inventoryQualityScenarioId;
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', { action: 'quality-add-apply' });
+        }, { capture: true, once: true });
+      });
+      await page.locator('shared-toolbar #qualApply').click({ timeout: 10_000 });
+      await page.waitForFunction(({ id, quality }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const row = window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.id || '') === String(id));
+        return Array.isArray(row?.kvaliteter) && row.kvaliteter.includes(quality);
+      }, { id: target.id, quality: target.quality }, { timeout: 10_000 });
+      await page.evaluate(() => {
+        window.symbaroumPerf?.markScenario?.(
+          window.__inventoryQualityScenarioId,
+          'first-feedback-dom',
+          { action: 'quality-add' }
+        );
+      });
+
+      return page.evaluate(async ({ target, aggregateMode: cacheMode, activeFilters: useFilters }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__inventoryQualityScenarioId;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-add-quality' })
+        ));
         await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'first-feedback-presented', { action: 'quality-add' });
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const row = window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.id || '') === String(target.id));
+        perf?.markScenario?.(scenarioId, 'final-consistency', { quality: target.quality });
+        perf?.clearFlowContext?.('inventory-mutation', scenarioId);
         return perf?.endScenario?.(scenarioId, {
           scope: 'inventory',
-          entry: entry?.namn || null,
-          quality: qualityEntry?.namn || 'Massivt'
+          entry: target.name,
+          quality: target.quality,
+          behaviorSignature: 'quality-bearing-existing-row:economy-only',
+          pathMode: window.__symbaroumPerfForceSafeInventoryMutations ? 'safe' : 'optimized',
+          stateSize: target.stateSize,
+          aggregateState: cacheMode,
+          activeFilters: useFilters,
+          endStateHash: JSON.stringify({
+            id: row?.id || '',
+            uid: row?.__uid || '',
+            qualities: row?.kvaliteter || []
+          })
         });
-      })
-    ))
+      }, { target, aggregateMode, activeFilters });
+    })
   ));
-  return aggregateScenarioRuns('inventory-add-quality', runs);
+  return aggregateScenarioRuns(scenarioName, runs);
 }
 
 async function runInventoryCustomItemCreate(browser, iterations) {
@@ -1586,53 +1766,128 @@ async function runInventoryCustomItemEdit(browser, iterations) {
 
 async function runVehicleScenario(browser, iterations, direction) {
   const scenarioName = direction === 'load' ? 'inventory-vehicle-load' : 'inventory-vehicle-unload';
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
   const runs = await collectRuns(browser, iterations, async () => (
-    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => (
-      page.evaluate(async (mode) => {
+    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => {
+      const target = await page.evaluate(async ({ mode, size, scenarioName: name }) => {
         const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-        const vehicleEntry = window.lookupEntry?.({ name: 'Kärra' }) || window.lookupEntry?.({ name: 'Mulåsna' });
-        const itemEntry = window.lookupEntry?.({ name: 'Bandage' }) || window.lookupEntry?.({ name: 'Dryckesbälte' });
-        const vehicleRow = await window.invUtil?.buildInventoryRow?.({
-          entry: vehicleEntry,
-          list: window.storeHelper.getCurrentList(activeStore)
-        });
-        const itemRow = await window.invUtil?.buildInventoryRow?.({
-          entry: itemEntry,
-          list: window.storeHelper.getCurrentList(activeStore)
-        });
+        const entries = Array.isArray(window.DB) ? window.DB : [];
+        const vehicleEntry = entries
+          .filter(candidate => (candidate?.taggar?.typ || []).includes('Färdmedel') && window.isInv?.(candidate))
+          .sort((left, right) => String(left?.id || '').localeCompare(String(right?.id || '')))[0];
+        const itemEntry = entries
+          .filter(candidate => {
+            const types = candidate?.taggar?.typ || [];
+            return window.isInv?.(candidate)
+              && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
+          })
+          .sort((left, right) => String(left?.id || '').localeCompare(String(right?.id || '')))[0];
+        if (!vehicleEntry || !itemEntry) throw new Error('Missing vehicle topology representative.');
+        const itemRow = {
+          id: itemEntry.id,
+          name: itemEntry.namn,
+          qty: 1,
+          gratis: 0,
+          gratisKval: [],
+          removedKval: []
+        };
+        const vehicleRow = {
+          id: vehicleEntry.id,
+          name: vehicleEntry.namn,
+          qty: 1,
+          gratis: 0,
+          contains: mode === 'unload' ? [itemRow] : [],
+          gratisKval: [],
+          removedKval: []
+        };
+        const fillers = entries
+          .filter(candidate => candidate.id !== vehicleEntry.id && candidate.id !== itemEntry.id
+            && window.isInv?.(candidate)
+            && !(candidate?.taggar?.typ || []).some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type)))
+          .slice(0, Math.max(0, size - 2))
+          .map(candidate => ({
+            id: candidate.id,
+            name: candidate.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+          }));
         vehicleRow.contains = mode === 'unload' ? [itemRow] : [];
-        const inventory = mode === 'unload' ? [vehicleRow] : [vehicleRow, itemRow];
+        const inventory = mode === 'unload'
+          ? [vehicleRow, ...fillers]
+          : [vehicleRow, itemRow, ...fillers];
         window.storeHelper.setInventory(activeStore, inventory);
         window.invUtil?.renderInventory?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
         const perf = window.symbaroumPerf;
         perf?.clearHistory?.();
-        const scenarioId = perf?.startScenario?.(mode === 'load' ? 'inventory-vehicle-load' : 'inventory-vehicle-unload', {
+        const scenarioId = perf?.startScenario?.(name, {
           scope: 'inventory',
           vehicle: vehicleEntry?.namn || null,
-          item: itemEntry?.namn || null
+          item: itemEntry?.namn || null,
+          behaviorSignature: 'vehicle-topology-move',
+          stateSize: inventory.length,
+          direction: mode
         });
-        await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', () => {
-          if (mode === 'load') {
-            const moved = inventory.pop();
-            vehicleRow.contains = [...(vehicleRow.contains || []), moved];
-          } else {
-            const moved = (vehicleRow.contains || []).shift();
-            inventory.push(moved);
-          }
-          window.invUtil?.saveInventory?.(inventory, {
-            source: mode === 'load' ? 'perf-vehicle-load' : 'perf-vehicle-unload',
-            afterPaint: false
-          });
-        });
-        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => window.symbaroumPersistence?.flushPendingWrites?.());
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        window.__vehicleScenarioId = scenarioId;
+        return {
+          vehicleUid: vehicleRow.__uid,
+          vehicleId: vehicleEntry.id,
+          vehicle: vehicleEntry.namn,
+          itemId: itemEntry.id,
+          item: itemEntry.namn,
+          stateSize: inventory.length
+        };
+      }, { mode: direction, size: requestedSize, scenarioName });
+
+      const vehicleCard = page.locator(`#invList li.entry-card[data-uid="${target.vehicleUid}"]`).first();
+      const action = direction === 'load' ? 'vehicleLoad' : 'vehicleUnload';
+      const button = vehicleCard.locator(`button[data-act="${action}"]`);
+      if (!await button.isVisible()) await vehicleCard.locator('.card-title').click();
+      await button.click();
+      const listSelector = direction === 'load' ? '#vehicleItemList' : '#vehicleRemoveItemList';
+      const applySelector = direction === 'load' ? '#vehicleApply' : '#vehicleRemoveApply';
+      const option = page.locator(`shared-toolbar ${listSelector} .price-item`)
+        .filter({ hasText: target.item }).first();
+      await option.click();
+      await page.evaluate(({ mode }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__vehicleScenarioId;
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', { action: `vehicle-${mode}` });
+        }, { capture: true, once: true });
+      }, { mode: direction });
+      await page.locator(`shared-toolbar ${applySelector}`).click();
+      await page.waitForFunction(({ vehicleId, itemId, mode }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const inventory = window.storeHelper.getInventory(activeStore);
+        const vehicle = inventory.find(row => String(row?.id || '') === String(vehicleId));
+        const inside = (vehicle?.contains || []).some(row => String(row?.id || '') === String(itemId));
+        return mode === 'load' ? inside : !inside;
+      }, { vehicleId: target.vehicleId, itemId: target.itemId, mode: direction });
+
+      return page.evaluate(async ({ target, scenarioName: name, mode }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__vehicleScenarioId;
+        perf?.markScenario?.(scenarioId, 'first-feedback-dom', { action: `vehicle-${mode}` });
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: name });
         await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'first-feedback-presented', { action: `vehicle-${mode}` });
+        perf?.markScenario?.(scenarioId, 'final-consistency', { action: `vehicle-${mode}` });
+        perf?.clearFlowContext?.('inventory-mutation', scenarioId);
         return perf?.endScenario?.(scenarioId, {
           scope: 'inventory',
-          vehicle: vehicleEntry?.namn || null,
-          item: itemEntry?.namn || null
+          vehicle: target.vehicle,
+          item: target.item,
+          behaviorSignature: 'vehicle-topology-move',
+          stateSize: target.stateSize,
+          direction: mode
         });
-      }, direction)
-    ))
+      }, { target, scenarioName, mode: direction });
+    })
   ));
   return aggregateScenarioRuns(scenarioName, runs);
 }
@@ -2167,6 +2422,173 @@ async function runInventoryQuantity(browser, iterations, direction) {
   return aggregateScenarioRuns(scenarioName, runs);
 }
 
+async function runMetadataInventoryQuantity(browser, iterations, direction, options = {}) {
+  const isAdd = direction === 'add';
+  const isRemove = direction === 'remove';
+  const forceSafePath = options.forceSafePath === true;
+  const baseScenarioName = isRemove
+    ? 'inventory-metadata-final-copy-remove'
+    : (isAdd ? 'inventory-metadata-quantity-add' : 'inventory-metadata-quantity-subtract');
+  const scenarioName = forceSafePath ? `${baseScenarioName}-safe` : baseScenarioName;
+  const initialQuantity = isAdd || isRemove ? 1 : 2;
+  const expectedQuantity = isRemove ? 0 : (isAdd ? 2 : 1);
+  const action = isRemove ? 'del' : (isAdd ? 'add' : 'sub');
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 100) || 100);
+  const aggregateMode = String(process.env.PERF_AGGREGATE_STATE || 'warm').trim().toLowerCase() === 'cold'
+    ? 'cold'
+    : 'warm';
+  const activeFilters = /^(1|true|yes)$/i.test(String(process.env.PERF_ACTIVE_FILTERS || ''));
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/inventory',
+      readySelector: '#invList'
+    }, async (page) => {
+      const target = await page.evaluate(async ({
+        initialQuantity: quantity,
+        requestedSize: size,
+        aggregateMode: cacheMode,
+        activeFilters: useFilters,
+        isRemove: removeMode,
+        forceSafePath: useSafePath,
+        scenarioName: name
+      }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entries = Array.isArray(window.DB) ? window.DB : [];
+        const candidates = entries.filter(entry => {
+          const types = entry?.taggar?.typ || [];
+          const inventoryMeta = entry?.taggar?.inventory || {};
+          const choiceRules = window.rulesHelper?.getRuleList?.(entry, 'val') || [];
+          return window.isInv?.(entry)
+            && inventoryMeta.stackbar === true
+            && ['kraft', 'ritual'].includes(String(entry?.bound || '').trim())
+            && choiceRules.some(rule => String(rule?.field || '').trim() === 'trait')
+            && !types.includes('Artefakt');
+        }).sort((left, right) => {
+          const leftRuleCount = ['val', 'kraver', 'andrar'].reduce((sum, key) => (
+            sum + (window.rulesHelper?.getRuleList?.(left, key) || []).length
+          ), 0);
+          const rightRuleCount = ['val', 'kraver', 'andrar'].reduce((sum, key) => (
+            sum + (window.rulesHelper?.getRuleList?.(right, key) || []).length
+          ), 0);
+          return rightRuleCount - leftRuleCount
+            || String(left?.id || '').localeCompare(String(right?.id || ''));
+        });
+        const entry = candidates[0] || null;
+        if (!entry) throw new Error('Missing stackable metadata-bearing choice representative.');
+        const traitEntry = entries.find(candidate => (
+          (candidate?.taggar?.typ || []).includes('Mystisk kraft')
+        ));
+        const targetRow = {
+          id: entry.id,
+          name: entry.namn,
+          qty: quantity,
+          trait: traitEntry?.namn || 'Metadatarepresentant',
+          gratis: 0,
+          gratisKval: [],
+          removedKval: []
+        };
+        const fillers = entries
+          .filter(candidate => {
+            const types = candidate?.taggar?.typ || [];
+            return candidate?.id !== entry.id
+              && window.isInv?.(candidate)
+              && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type))
+              && !window.storeHelper?.isSearchHiddenEntry?.(candidate);
+          })
+          .slice(0, Math.max(0, size - 1))
+          .map(candidate => ({
+            id: candidate.id,
+            name: candidate.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+          }));
+        window.storeHelper.setInventory(activeStore, [targetRow, ...fillers], { bumpDerived: false });
+        window.invUtil.filter.invTxt = useFilters ? entry.namn : '';
+        window.invUtil.renderInventory({ trigger: 'metadata-quantity-setup' });
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        if (cacheMode === 'cold') {
+          const cloned = window.storeHelper.getInventory(activeStore).map(row => ({ ...row }));
+          window.storeHelper.setInventory(activeStore, cloned, { bumpDerived: false });
+        }
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
+        const row = window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.id || '') === String(entry.id));
+        window.__symbaroumPerfForceSafeInventoryMutations = useSafePath;
+        const perf = window.symbaroumPerf;
+        perf?.clearHistory?.();
+        const scenarioId = perf?.startScenario?.(name, {
+          scope: 'inventory',
+          entry: entry.namn,
+          behaviorSignature: 'stackable-choice-metadata-quantity',
+          stateSize: 1 + fillers.length,
+          aggregateState: cacheMode,
+          activeFilters: useFilters,
+          pathMode: useSafePath ? 'safe' : 'optimized',
+          direction: removeMode ? 'remove' : (quantity === 1 ? 'add' : 'subtract')
+        });
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', {
+            action: removeMode ? 'complete-stack-removal' : (quantity === 1 ? 'quantity-add' : 'quantity-subtract')
+          });
+        }, { capture: true, once: true });
+        window.__metadataQuantityScenarioId = scenarioId;
+        return {
+          id: entry.id,
+          name: entry.namn,
+          rowUid: row?.__uid || '',
+          stateSize: 1 + fillers.length
+        };
+      }, {
+        initialQuantity,
+        requestedSize,
+        aggregateMode,
+        activeFilters,
+        isRemove,
+        forceSafePath,
+        scenarioName
+      });
+
+      const card = page.locator(`#invList li.entry-card[data-uid="${target.rowUid}"]`).first();
+      await card.locator(`button[data-act="${action}"]`).click();
+      await page.waitForFunction(({ id, quantity }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        return Number(window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.id || '') === String(id))?.qty || 0) === quantity;
+      }, { id: target.id, quantity: expectedQuantity });
+
+      return page.evaluate(async ({ expectedQuantity: quantity, scenarioName: name, target }) => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__metadataQuantityScenarioId;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: name });
+        await perf?.afterNextPaint?.(2);
+        perf?.markScenario?.(scenarioId, 'final-consistency', { quantity });
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const row = window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.id || '') === String(target.id));
+        perf?.clearFlowContext?.('inventory-mutation', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'inventory',
+          entry: target.name,
+          behaviorSignature: 'stackable-choice-metadata-quantity',
+          pathMode: window.__symbaroumPerfForceSafeInventoryMutations ? 'safe' : 'optimized',
+          stateSize: target.stateSize,
+          endStateHash: JSON.stringify({
+            id: row?.id || '',
+            uid: row?.__uid || '',
+            trait: row?.trait || '',
+            quantity: Number(row?.qty || 0)
+          })
+        });
+      }, { expectedQuantity, scenarioName, target });
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
 async function runTraitMutation(browser, iterations, delta) {
   const scenarioNames = {
     1: 'trait-plus-one',
@@ -2265,6 +2687,7 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'routeChange', name: 'route-change', run: () => runRouteChange(browser, iterations) },
       { key: 'openInventory', name: 'open-inventory', run: () => runOpenInventory(browser, iterations) },
       { key: 'switchCharacter', name: 'switch-character', run: () => runSwitchCharacter(browser, iterations) },
+      { key: 'switchCharacterLargeSpecialized', name: 'switch-character-large-specialized', aliases: ['switch large'], run: () => runSwitchCharacter(browser, iterations, { profile: 'interaction-heavy' }) },
       { key: 'addIndexList', name: 'index-list-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'list') },
       { key: 'addIndexPopup', name: 'index-popup-add', aliases: ['add', 'popup add'], run: () => runIndexPopupAdd(browser, iterations) },
       { key: 'addIndexInventoryChoice', name: 'index-inventory-choice-add', aliases: ['add', 'popup add', 'inventory choice'], run: () => runIndexInventoryChoiceAdd(browser, iterations) },
@@ -2273,6 +2696,7 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'searchFilter', name: 'search-filter', run: () => runSearchFilter(browser, iterations) },
       { key: 'inventoryBuyMultiple', name: 'inventory-buy-multiple', aliases: ['inventory add'], run: () => runInventoryBuyMultiple(browser, iterations) },
       { key: 'inventoryAddQuality', name: 'inventory-add-quality', aliases: ['inventory add'], run: () => runInventoryAddQuality(browser, iterations) },
+      { key: 'inventoryAddQualitySafe', name: 'inventory-add-quality-safe', aliases: ['inventory quality safe'], run: () => runInventoryAddQuality(browser, iterations, { forceSafePath: true }) },
       { key: 'inventoryCustomItemCreate', name: 'inventory-custom-item-create', aliases: ['inventory add'], run: () => runInventoryCustomItemCreate(browser, iterations) },
       { key: 'inventoryCustomItemEdit', name: 'inventory-custom-item-edit', run: () => runInventoryCustomItemEdit(browser, iterations) },
       { key: 'inventoryVehicleLoad', name: 'inventory-vehicle-load', aliases: ['inventory add'], run: () => runVehicleScenario(browser, iterations, 'load') },
@@ -2301,6 +2725,11 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'inventoryClear', name: 'inventory-clear', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'clear-inventory') },
       { key: 'inventoryQuantityAdd', name: 'inventory-quantity-add', aliases: ['inventory quantity'], run: () => runInventoryQuantity(browser, iterations, 'add') },
       { key: 'inventoryQuantitySubtract', name: 'inventory-quantity-subtract', aliases: ['inventory quantity'], run: () => runInventoryQuantity(browser, iterations, 'subtract') },
+      { key: 'inventoryMetadataQuantityAdd', name: 'inventory-metadata-quantity-add', aliases: ['inventory metadata quantity'], run: () => runMetadataInventoryQuantity(browser, iterations, 'add') },
+      { key: 'inventoryMetadataQuantityAddSafe', name: 'inventory-metadata-quantity-add-safe', aliases: ['inventory metadata quantity safe'], run: () => runMetadataInventoryQuantity(browser, iterations, 'add', { forceSafePath: true }) },
+      { key: 'inventoryMetadataQuantitySubtract', name: 'inventory-metadata-quantity-subtract', aliases: ['inventory metadata quantity'], run: () => runMetadataInventoryQuantity(browser, iterations, 'subtract') },
+      { key: 'inventoryMetadataFinalCopyRemove', name: 'inventory-metadata-final-copy-remove', aliases: ['inventory metadata remove'], run: () => runMetadataInventoryQuantity(browser, iterations, 'remove') },
+      { key: 'inventoryMetadataFinalCopyRemoveSafe', name: 'inventory-metadata-final-copy-remove-safe', aliases: ['inventory metadata remove safe'], run: () => runMetadataInventoryQuantity(browser, iterations, 'remove', { forceSafePath: true }) },
       { key: 'traitPlusOne', name: 'trait-plus-one', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, 1) },
       { key: 'traitPlusFive', name: 'trait-plus-five', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, 5) },
       { key: 'traitMinusOne', name: 'trait-minus-one', aliases: ['trait mutation'], run: () => runTraitMutation(browser, iterations, -1) },

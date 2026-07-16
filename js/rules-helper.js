@@ -12,6 +12,20 @@
     if (!scenarioId) return 0;
     return perf.incrementScenarioCounter?.(scenarioId, name, delta) || 0;
   }
+  function mutationPerfNow() {
+    return typeof performance !== 'undefined' && typeof performance.now === 'function'
+      ? performance.now()
+      : Date.now();
+  }
+  function measureMutationRuleWork(callCounter, timeCounter, callback) {
+    incrementMutationPerfCounter(callCounter);
+    const startedAt = mutationPerfNow();
+    try {
+      return callback();
+    } finally {
+      incrementMutationPerfCounter(timeCounter, mutationPerfNow() - startedAt);
+    }
+  }
   const ENTRY_RULES_CACHE = new WeakMap();
   const DEFAULT_LEVEL_ORDER = Object.freeze(['novis', 'gesall', 'mastare']);
   const LEVEL_VALUE_MAP = Object.freeze({
@@ -866,21 +880,30 @@
     const catalogGeneration = Number.isFinite(window.__entryDataVersions?.db)
       ? window.__entryDataVersions.db
       : null;
+    incrementMutationPerfCounter('ruleCacheLookups');
     if (cacheable) {
       const cached = ENTRY_RULES_CACHE.get(entry);
       if (cached?.catalogRef === catalogRef
           && cached?.catalogSize === catalogSize
           && cached?.catalogGeneration === catalogGeneration
           && cached.byLevel.has(cacheKey)) {
+        incrementMutationPerfCounter('ruleCacheHits');
         return cached.byLevel.get(cacheKey);
       }
     }
+    incrementMutationPerfCounter('ruleCacheMisses');
+    const sourceStartedAt = mutationPerfNow();
     const sourceEntry = resolveRuleSourceEntry(entry);
+    incrementMutationPerfCounter('ruleSourceResolutions');
+    incrementMutationPerfCounter('ruleSourceResolveMs', mutationPerfNow() - sourceStartedAt);
+    const normalizationStartedAt = mutationPerfNow();
     const typeRules = getTypeRules(sourceEntry, level);
     const entryRules = !level
       ? getTopLevelRules(sourceEntry)
       : mergeRuleBlocks(getTopLevelRules(sourceEntry), getLevelRules(sourceEntry, level));
     const result = mergeRuleBlocksByHierarchy(typeRules, entryRules);
+    incrementMutationPerfCounter('ruleNormalizations');
+    incrementMutationPerfCounter('ruleNormalizationMs', mutationPerfNow() - normalizationStartedAt);
     if (cacheable) {
       let cached = ENTRY_RULES_CACHE.get(entry);
       if (!cached
@@ -981,8 +1004,9 @@
   // declare one of the flags above on the entry, its rule block, or a rule.
   // Keeping this check in the rule layer also covers inherited type rules.
   function requiresFullListReconciliation(entries) {
-    const list = Array.isArray(entries) ? entries : [];
-    return list.some(entry => {
+    return measureMutationRuleWork('listWideDependencyChecks', 'listWideDependencyMs', () => {
+      const list = Array.isArray(entries) ? entries : [];
+      return list.some(entry => {
       if (!entry || typeof entry !== 'object') return false;
       const level = typeof entry.nivå === 'string' ? entry.nivå : '';
       const sourceEntry = resolveRuleSourceEntry(entry);
@@ -1003,6 +1027,7 @@
         return ['post', 'foremal', 'pengar'].includes(target)
           && ruleDependsOnListMembership(rule);
       }));
+      });
     });
   }
 
@@ -2139,7 +2164,8 @@
   }
 
   function getEntryGrantTargets(list) {
-    const aggregate = new Map();
+    return measureMutationRuleWork('grantPlanningCalls', 'grantPlanningMs', () => {
+      const aggregate = new Map();
 
     getListRules(list, { key: 'ger', mal: 'post' }).forEach(rule => {
       if (!matchesListCondition(rule, list)) return;
@@ -2173,7 +2199,8 @@
       });
     });
 
-    return Array.from(aggregate.values());
+      return Array.from(aggregate.values());
+    });
   }
 
   function getPartialGrantInfo(entry, list) {
@@ -2415,9 +2442,10 @@
   }
 
   function getEntryGrantDependents(list, removedEntry) {
-    if (!removedEntry || typeof removedEntry !== 'object') return [];
-    const entries = getRuleEntries(list);
-    if (!entries.length) return [];
+    return measureMutationRuleWork('grantDependentDiscoveryCalls', 'grantDependentDiscoveryMs', () => {
+      if (!removedEntry || typeof removedEntry !== 'object') return [];
+      const entries = getRuleEntries(list);
+      if (!entries.length) return [];
 
     const sourceEntry = resolveRuleSourceEntry(removedEntry);
     const sourceLevel = typeof removedEntry?.nivå === 'string'
@@ -2447,7 +2475,8 @@
       });
     });
 
-    return out;
+      return out;
+    });
   }
 
   function getMoneyGrant(list) {
@@ -3921,8 +3950,9 @@
   }
 
   function getConflictReasonsForCandidate(candidateEntry, list, options = {}) {
-    if (!candidateEntry || typeof candidateEntry !== 'object') return [];
-    const entries = getRuleEntries(list);
+    return measureMutationRuleWork('conflictEvaluationCalls', 'conflictEvaluationMs', () => {
+      if (!candidateEntry || typeof candidateEntry !== 'object') return [];
+      const entries = getRuleEntries(list);
     const conditionContext = options?.conditionContext && typeof options.conditionContext === 'object'
       ? options.conditionContext
       : {};
@@ -3962,7 +3992,8 @@
       );
     });
 
-    return out;
+      return out;
+    });
   }
 
   function getConflictResolutionForCandidate(candidateEntry, list, options = {}) {
@@ -4635,8 +4666,9 @@
   }
 
   function getMissingRequirementReasonsForCandidate(candidateEntry, list, options = {}) {
-    if (!candidateEntry || typeof candidateEntry !== 'object') return [];
-    const entries = getRuleEntries(list);
+    return measureMutationRuleWork('requirementEvaluationCalls', 'requirementEvaluationMs', () => {
+      if (!candidateEntry || typeof candidateEntry !== 'object') return [];
+      const entries = getRuleEntries(list);
     const candidateLevel = typeof options?.level === 'string' && options.level.trim()
       ? options.level.trim()
       : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
@@ -4644,7 +4676,8 @@
       ? { ...candidateEntry, nivå: candidateLevel }
       : candidateEntry;
     const evaluation = buildCandidateRequirementEvaluationSet(candidate, entries, candidateLevel);
-    return evaluation.missingReasons;
+      return evaluation.missingReasons;
+    });
   }
 
   function getRequirementEffectsForCandidate(candidateEntry, list, options = {}) {
@@ -5635,7 +5668,8 @@
   }
 
   function buildConflictReplacementPlan(list, stopResult = {}) {
-    const replacementNames = [...new Set(
+    return measureMutationRuleWork('conflictReplacementPlanningCalls', 'conflictReplacementPlanningMs', () => {
+      const replacementNames = [...new Set(
       toArray(stopResult?.replaceTargetNames)
         .map(value => String(value || '').trim())
         .filter(Boolean)
@@ -5654,11 +5688,12 @@
     ));
     if (!removedEntries.length) return null;
     const projectedList = entries.filter(entry => !removedEntries.includes(entry));
-    return {
-      replacementNames,
-      removedEntries,
-      projectedList
-    };
+      return {
+        replacementNames,
+        removedEntries,
+        projectedList
+      };
+    });
   }
 
   function getEntryStopOverrideKeys(candidateEntry, stopResult = {}) {
@@ -5839,9 +5874,10 @@
   }
 
   function getRequirementDependents(list, removedEntry, options = {}) {
-    if (!removedEntry || typeof removedEntry !== 'object') return [];
-    const entries = getRuleEntries(list);
-    if (!entries.length) return [];
+    return measureMutationRuleWork('requirementDependentDiscoveryCalls', 'requirementDependentDiscoveryMs', () => {
+      if (!removedEntry || typeof removedEntry !== 'object') return [];
+      const entries = getRuleEntries(list);
+      if (!entries.length) return [];
 
     const removedName = normalizeLevelName(removedEntry?.namn || '');
     if (!removedName) return [];
@@ -5880,7 +5916,8 @@
       out.push(candidateName);
     });
 
-    return out;
+      return out;
+    });
   }
 
   function getFormulaBaseValue(baseKey, sourceEntry, options = {}) {

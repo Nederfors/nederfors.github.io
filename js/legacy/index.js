@@ -3991,11 +3991,14 @@
                   );
                   const hidden = isHidden(p);
                   const artifactTagged = hasArtifactTag(p);
-                  if (hidden) impact.fallbackReasons.push('hidden-or-revealed-state');
-                  if (artifactTagged && !impact.fallbackReasons.includes('artifact-list-or-snapshot-coupling')) {
-                    impact.fallbackReasons.push('artifact-list-or-snapshot-coupling');
+                  if (hidden && !impact.fallbackReasons.includes('hidden-revealed-state')) {
+                    impact.fallbackReasons.push('hidden-revealed-state');
+                  }
+                  if (artifactTagged && !impact.fallbackReasons.includes('artifact-list-sync')) {
+                    impact.fallbackReasons.push('artifact-list-sync');
                   }
                   impact.fastPath = impact.fallbackReasons.length === 0;
+                  impact.impactClass = impact.fastPath ? impact.impactClass : 'fallback';
 
                   if (impact.fastPath) {
                     invUtil.saveInventory(inv, {
@@ -4020,7 +4023,25 @@
                     skipIndexRerender = true;
                     skipImmediateDerivedRefresh = true;
                   } else {
-                    invUtil.saveInventory(inv);
+                    invUtil.saveInventory(inv, {
+                      skipCharacterRefresh: true,
+                      recalculateArtifactEffects: impact.recalculateArtifactEffects,
+                      bumpDerived: impact.bumpDerived,
+                      fields: liveEnabled ? ['inventory', 'money'] : ['inventory'],
+                      invalidates: impact.invalidates,
+                      targets: impact.targets,
+                      afterCommit: summary => {
+                        scheduleCharacterMutationRefresh({
+                          charId: summary.charId,
+                          version: summary.version,
+                          invalidates: summary.invalidates,
+                          targets: summary.targets,
+                          topology: impact.topology,
+                          source: 'index-inventory-variant-add',
+                          afterPaint: true
+                        });
+                      }
+                    });
                     invUtil.renderInventory({
                       trigger: 'index-inventory-add',
                       fallbackReasons: impact.fallbackReasons,

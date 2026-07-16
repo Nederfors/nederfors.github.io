@@ -64,7 +64,7 @@ const buildPanelRefreshOptions = (options = {}) => {
     .forEach(key => {
       if (options[key]) next[key] = true;
     });
-  ['invalidates', 'targets', 'topology', 'source', 'charId', 'version', 'generation']
+  ['invalidates', 'targets', 'topology', 'renderStrategy', 'source', 'charId', 'version', 'generation']
     .forEach(key => {
       if (options[key] !== undefined) next[key] = options[key];
     });
@@ -8113,6 +8113,12 @@ function runDerivedRequest(pending) {
     version: request.version,
     charId: request.charId
   };
+  const queueWaitMs = Math.max(0, performance.now() - Number(pending.queuedAt || performance.now()));
+  perf?.incrementScenarioCounter?.(pending.scenarioId || null, 'derivedQueueWaitMs', queueWaitMs);
+  perf?.markScenario?.(pending.scenarioId || null, 'derived-worker-started', {
+    ...stageDetail,
+    queueWaitMs
+  });
   perf?.incrementScenarioCounter?.(pending.scenarioId || null, 'workerRequests');
   const derivedStageToken = perf?.startScenarioStage?.(
     pending.scenarioId || null,
@@ -8126,6 +8132,7 @@ function runDerivedRequest(pending) {
     const summary = computeLocalDerivedCharacter(request);
     const liveVersion = Number(storeHelper.getDerivedVersion?.(store, request.charId) ?? request.version);
     const stale = liveVersion !== request.version || store?.current !== request.charId;
+    if (stale) perf?.incrementScenarioCounter?.(pending.scenarioId || null, 'derivedStaleResults');
     finishDerivedStage({
       ...detail,
       applied: !stale,
@@ -8165,6 +8172,7 @@ function runDerivedRequest(pending) {
     });
     const liveVersion = Number(storeHelper.getDerivedVersion?.(store, request.charId) ?? request.version);
     const stale = liveVersion !== request.version || store?.current !== request.charId;
+    if (stale) perf?.incrementScenarioCounter?.(pending.scenarioId || null, 'derivedStaleResults');
     if (!summary || stale) {
       finishDerivedStage({
         applied: false,
@@ -8257,9 +8265,15 @@ function scheduleDerivedRequest(charId, afterPaint = false) {
 }
 
 function requestCurrentCharacterDerived(options = {}) {
-  const request = buildDerivedRequest(options);
-  window.symbaroumPerf?.incrementScenarioCounter?.(
-    options.scenarioId || getActiveMutationPerfScenarioId(),
+  const perf = window.symbaroumPerf;
+  const scenarioId = options.scenarioId || getActiveMutationPerfScenarioId();
+  const request = typeof perf?.timeScenarioStage === 'function'
+    ? perf.timeScenarioStage(scenarioId, 'derived-request-build', () => buildDerivedRequest(options), {
+        source: options.source || 'derived'
+      })
+    : buildDerivedRequest(options);
+  perf?.incrementScenarioCounter?.(
+    scenarioId,
     'derivedRequests'
   );
   if (!request.charId) {
@@ -8298,8 +8312,9 @@ function requestCurrentCharacterDerived(options = {}) {
     promise,
     subscribers,
     afterPaint: options.afterPaint === true,
-    scenarioId: options.scenarioId || getActiveMutationPerfScenarioId(),
-    source: options.source || 'derived'
+    scenarioId,
+    source: options.source || 'derived',
+    queuedAt: performance.now()
   });
   scheduleDerivedRequest(request.charId, options.afterPaint === true);
   return promise;
@@ -8345,6 +8360,16 @@ function mergeDeferredCharacterSyncOptions(current, next) {
       if (nextRank >= currentRank) merged[key] = next[key];
       return;
     }
+    if (key === 'renderStrategy') {
+      const currentStrategy = String(merged[key] || '').trim();
+      const nextStrategy = String(next[key] || '').trim();
+      if (!currentStrategy) {
+        merged[key] = nextStrategy;
+      } else if (nextStrategy && currentStrategy !== nextStrategy) {
+        merged[key] = 'full';
+      }
+      return;
+    }
     if (typeof next[key] === 'boolean') {
       merged[key] = merged[key] || next[key];
       return;
@@ -8364,13 +8389,15 @@ const characterRefreshCompletions = new Map();
 function applyCharacterRefreshDomains(options = {}) {
   const next = { ...options };
   const domains = new Set(Array.isArray(next.invalidates) ? next.invalidates : []);
+  const targetedInventoryRender = ['targeted-patch', 'targeted-remove', 'targeted-insert']
+    .includes(String(next.renderStrategy || '').trim());
   if (domains.has('xp')) next.xp = true;
   if (domains.has('traits') || domains.has('traits.counts')) next.traits = true;
   if ([...domains].some(domain => domain.startsWith('traits.') && domain !== 'traits.counts')) next.traitTargets = true;
   if ([...domains].some(domain => domain === 'summary' || domain.startsWith('summary.'))) next.summary = true;
   if (domains.has('effects')) next.effects = true;
   if (domains.has('inventory.totals')) next.inventoryTotals = true;
-  if (domains.has('inventory.structure')) next.inventory = true;
+  if (domains.has('inventory.structure') && !targetedInventoryRender) next.inventory = true;
   if ([...domains].some(domain => domain === 'catalog.structure')) next.selection = true;
   return next;
 }
@@ -8472,7 +8499,8 @@ async function flushCharacterConsistencyRefresh() {
   next.generation = generation;
   const renderStage = perf?.startScenarioStage?.(scenarioId, 'surface-render', {
     generation,
-    invalidates: next.invalidates || []
+    invalidates: next.invalidates || [],
+    renderStrategy: next.renderStrategy || 'default'
   }) || null;
 
   const pending = [];
@@ -8488,6 +8516,7 @@ async function flushCharacterConsistencyRefresh() {
     if (Object.keys(refreshOptions).length) {
       const role = next.role || getCurrentRouteRole();
       if (role !== getCurrentRouteRole()) {
+        perf?.incrementScenarioCounter?.(scenarioId, 'hiddenSurfaceRefreshes');
         pending.push(Promise.resolve(refreshRoleView(role, refreshOptions)));
       } else {
         pending.push(Promise.resolve(refreshCurrentView(refreshOptions)));
@@ -8504,6 +8533,7 @@ async function flushCharacterConsistencyRefresh() {
     charId: next.charId || batch.tickets.at(-1)?.charId || '',
     version: Number(next.version ?? batch.tickets.at(-1)?.version ?? 0),
     invalidates: next.invalidates || [],
+    renderStrategy: next.renderStrategy || 'default',
     results
   };
   batch.tickets.forEach(ticket => {
@@ -8512,7 +8542,8 @@ async function flushCharacterConsistencyRefresh() {
   });
   perf?.markScenario?.(scenarioId, 'all-views-consistent', {
     generation,
-    invalidates: next.invalidates || []
+    invalidates: next.invalidates || [],
+    renderStrategy: next.renderStrategy || 'default'
   });
   activeCharacterRefresh = null;
   deferredCharacterSyncPromise = null;
