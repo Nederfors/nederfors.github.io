@@ -540,6 +540,237 @@ test('index popup adds close the choice popup before store mutation and stay on 
   }).toBe('Gesäll');
 });
 
+test('choice-bound inventory variants batch identical quantities, preserve distinct choices, and reload', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/index', '#lista');
+  await setDialogOverrides(page, { confirmResult: true });
+  await clearPerfHistory(page, { awaitFlush: true });
+  await revealIndexEntry(page, 'Formelsigill (Novis)');
+
+  const identityChecks = await page.evaluate(() => {
+    const entry = window.lookupEntry?.({ name: 'Formelsigill (Novis)' });
+    const left = {
+      id: entry.id,
+      name: entry.namn,
+      qty: 1,
+      trait: 'Anatema',
+      kvaliteter: ['Bräcklig', 'Diskret'],
+      boundData: { beta: 2, alpha: 1 }
+    };
+    const reordered = {
+      boundData: { alpha: 1, beta: 2 },
+      kvaliteter: ['Diskret', 'Bräcklig'],
+      trait: 'Anatema',
+      qty: 9,
+      name: entry.namn,
+      id: entry.id
+    };
+    const otherChoice = { ...left, trait: 'Andeplåga' };
+    return {
+      stableAcrossPropertyOrder: window.invUtil.getInventoryVariantIdentity(left, entry)
+        === window.invUtil.getInventoryVariantIdentity(reordered, entry),
+      separatesChoice: window.invUtil.getInventoryVariantIdentity(left, entry)
+        !== window.invUtil.getInventoryVariantIdentity(otherChoice, entry),
+      stackableAcrossQuantity: window.invUtil.canStackRows(left, reordered, entry),
+      rejectsDifferentChoice: window.invUtil.canStackRows(left, otherChoice, entry)
+    };
+  });
+  expect(identityChecks).toEqual({
+    stableAcrossPropertyOrder: true,
+    separatesChoice: true,
+    stackableAcrossQuantity: true,
+    rejectsDifferentChoice: false
+  });
+
+  await page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.__variantBatchProbe = {
+      initialDerivedVersion: window.storeHelper.getDerivedVersion(activeStore),
+      refreshes: []
+    };
+    const pipeline = window.symbaroumMutationPipeline;
+    const originalSchedule = pipeline.scheduleCharacterRefresh;
+    window.__variantBatchProbe.restore = () => { pipeline.scheduleCharacterRefresh = originalSchedule; };
+    pipeline.scheduleCharacterRefresh = options => {
+      window.__variantBatchProbe.refreshes.push({
+        source: options.source || '',
+        invalidates: options.invalidates || [],
+        topology: options.topology || ''
+      });
+      return originalSchedule(options);
+    };
+  });
+
+  const addChoice = async choice => {
+    const completedBefore = await page.evaluate(() => (
+      window.symbaroumPerf?.getSnapshot?.()?.scenarios || []
+    ).filter(entry => entry.name === 'add-item-to-character' && entry.status === 'completed').length);
+    await clickIndexAdd(page, 'Formelsigill (Novis)');
+    await choosePopupOption(page, choice);
+    await expect.poll(() => page.evaluate(() => (
+      window.symbaroumPerf?.getSnapshot?.()?.scenarios || []
+    ).filter(entry => entry.name === 'add-item-to-character' && entry.status === 'completed').length)).toBeGreaterThan(completedBefore);
+    await page.evaluate(() => window.symbaroumMutationPipeline.waitForCharacterRefresh());
+  };
+  for (let index = 0; index < 5; index += 1) await addChoice('Anatema');
+  await addChoice('Andeplåga');
+
+  const acceptedScenario = await readLatestScenario(page, 'add-item-to-character');
+  const acceptedStages = (acceptedScenario?.detail?.profile?.stages || []).map(stage => stage.name);
+  expect(acceptedStages.filter(stage => stage === 'common-commit')).toHaveLength(1);
+  expect(acceptedStages).not.toContain('sort-group-rebuild');
+  expect(acceptedStages).not.toContain('inventory-render');
+
+  const readVariants = () => page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    return window.storeHelper.getInventory(activeStore)
+      .filter(row => row.id === 'l13')
+      .map(row => ({ trait: row.trait || '', qty: Number(row.qty) || 0 }))
+      .sort((left, right) => left.trait.localeCompare(right.trait, 'sv'));
+  });
+  await expect.poll(readVariants).toEqual([
+    { trait: 'Anatema', qty: 5 },
+    { trait: 'Andeplåga', qty: 1 }
+  ]);
+
+  const beforeCancelled = await page.evaluate(() => JSON.stringify(
+    window.storeHelper.getInventory(typeof store === 'object' && store ? store : window.storeHelper.load())
+  ));
+  await clickIndexAdd(page, 'Formelsigill (Novis)');
+  await page.locator('#choicePopup').waitFor({ state: 'visible' });
+  await page.locator('#choicePopup #choiceClose').click();
+  await expect(page.locator('#choicePopup')).toBeHidden();
+  expect(await page.evaluate(() => JSON.stringify(
+    window.storeHelper.getInventory(typeof store === 'object' && store ? store : window.storeHelper.load())
+  ))).toBe(beforeCancelled);
+
+  await setDialogOverrides(page, { confirmResult: false });
+  await clickIndexAdd(page, 'Formelsigill (Novis)');
+  await choosePopupOption(page, 'Anatema');
+  await expect.poll(() => page.evaluate(() => JSON.stringify(
+    window.storeHelper.getInventory(typeof store === 'object' && store ? store : window.storeHelper.load())
+  ))).toBe(beforeCancelled);
+
+  const probe = await page.evaluate(async () => {
+    await window.symbaroumMutationPipeline.waitForCharacterRefresh();
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const result = {
+      derivedVersion: window.storeHelper.getDerivedVersion(activeStore),
+      initialDerivedVersion: window.__variantBatchProbe.initialDerivedVersion,
+      refreshes: window.__variantBatchProbe.refreshes
+    };
+    window.__variantBatchProbe.restore();
+    return result;
+  });
+  expect(probe.derivedVersion).toBe(probe.initialDerivedVersion);
+  expect(probe.refreshes).toHaveLength(6);
+  probe.refreshes.forEach(refresh => {
+    expect(refresh.source).toBe('index-inventory-variant-add');
+    expect(refresh.invalidates).toEqual(expect.arrayContaining([
+      'inventory.totals',
+      'summary.economy',
+      'persistence'
+    ]));
+  });
+
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'choice-variant-batch-test' }));
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(readVariants).toEqual([
+    { trait: 'Anatema', qty: 5 },
+    { trait: 'Andeplåga', qty: 1 }
+  ]);
+
+  await page.goto('/#/inventory');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.locator('#invList').waitFor({ state: 'visible' });
+  const anatemaCard = page.locator('#invList li[data-name="Formelsigill (Novis)"][data-trait="Anatema"]').first();
+  await expect(anatemaCard).toBeVisible();
+  await anatemaCard.locator('button[data-act="sub"]').click();
+  await expect.poll(readVariants).toEqual([
+    { trait: 'Anatema', qty: 4 },
+    { trait: 'Andeplåga', qty: 1 }
+  ]);
+  await anatemaCard.locator('button[data-act="del"]').click();
+  await expect.poll(readVariants).toEqual([{ trait: 'Andeplåga', qty: 1 }]);
+
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'choice-variant-removal-test' }));
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(readVariants).toEqual([{ trait: 'Andeplåga', qty: 1 }]);
+});
+
+test('a non-stackable choice inventory variant invalidates rule domains once', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/index', '#lista');
+  await setDialogOverrides(page, { confirmResult: true });
+  await clearPerfHistory(page, { awaitFlush: true });
+  await revealIndexEntry(page, 'Djurmask');
+  await page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.__ruleVariantProbe = {
+      version: window.storeHelper.getDerivedVersion(activeStore),
+      refreshes: []
+    };
+    const pipeline = window.symbaroumMutationPipeline;
+    const originalSchedule = pipeline.scheduleCharacterRefresh;
+    window.__ruleVariantProbe.restore = () => { pipeline.scheduleCharacterRefresh = originalSchedule; };
+    pipeline.scheduleCharacterRefresh = options => {
+      window.__ruleVariantProbe.refreshes.push({
+        source: options.source || '',
+        invalidates: options.invalidates || []
+      });
+      return originalSchedule(options);
+    };
+  });
+
+  await clickIndexAdd(page, 'Djurmask');
+  await choosePopupOption(page, 'Stark');
+  const scenario = await readLatestScenario(page, 'add-item-to-character');
+  await page.evaluate(() => window.symbaroumMutationPipeline.waitForCharacterRefresh());
+
+  const result = await page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const row = window.storeHelper.getInventory(activeStore).find(candidate => candidate.id === 'l9');
+    const output = {
+      row: row ? { trait: row.trait || '', qty: Number(row.qty) || 0 } : null,
+      version: window.storeHelper.getDerivedVersion(activeStore),
+      initialVersion: window.__ruleVariantProbe.version,
+      refreshes: window.__ruleVariantProbe.refreshes
+    };
+    window.__ruleVariantProbe.restore();
+    return output;
+  });
+  expect(result.row).toEqual({ trait: 'Stark', qty: 1 });
+  expect(result.version).toBe(result.initialVersion + 1);
+  expect(result.refreshes).toHaveLength(1);
+  expect(result.refreshes[0]).toEqual({
+    source: 'index-inventory-variant-add',
+    invalidates: expect.arrayContaining([
+      'inventory.structure',
+      'inventory.totals',
+      'traits',
+      'combat',
+      'effects',
+      'summary',
+      'persistence'
+    ])
+  });
+  const stageNames = (scenario?.detail?.profile?.stages || []).map(stage => stage.name);
+  expect(stageNames.filter(stage => stage === 'common-commit')).toHaveLength(1);
+  expect(stageNames).not.toContain('sort-group-rebuild');
+  expect(stageNames).not.toContain('inventory-render');
+
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'rule-choice-variant-test' }));
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => page.evaluate(() => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const row = window.storeHelper.getInventory(activeStore).find(candidate => candidate.id === 'l9');
+    return row ? { trait: row.trait || '', qty: Number(row.qty) || 0 } : null;
+  })).toEqual({ trait: 'Stark', qty: 1 });
+});
+
 test('character repeated additions hold foreground catalog priority', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/character', '#valda');
@@ -636,6 +867,36 @@ test('choice-popup add with replace_existing upgrades the existing Exceptionellt
   });
 });
 
+test('conflict replacement patches known catalog cards without a full catalog render', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/index', '#lista');
+  await seedNamedEntries(page, [{ name: 'Korruptionskänslig' }]);
+  await revealIndexEntry(page, 'Dvärg');
+  await clearPerfHistory(page, { awaitFlush: true });
+
+  await clickIndexAdd(page, 'Dvärg');
+  const popup = page.locator('#daub-dialog-modal');
+  await expect(popup).toBeVisible();
+  await expect(popup.locator('.db-modal__body')).toContainText('ersätter');
+  await popup.locator('[data-dialog-action="ok"]').click();
+
+  const scenario = await readLatestScenario(page, 'add-item-to-character');
+  const stages = (scenario?.detail?.profile?.stages || []).map(stage => stage.name);
+  const entries = await readListEntries(page, '');
+  expect(entries.some(entry => entry.name === 'Dvärg')).toBe(true);
+  expect(entries.some(entry => entry.name === 'Korruptionskänslig')).toBe(false);
+  expect(scenario?.detail?.renderMode).toBe('incremental');
+  expect(stages.filter(stage => stage === 'common-commit')).toHaveLength(1);
+  expect(stages).toContain('targeted-ui-refresh');
+  expect(stages).not.toContain('sort-group-rebuild');
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  const afterReload = await readListEntries(page, '');
+  expect(afterReload.some(entry => entry.name === 'Dvärg')).toBe(true);
+  expect(afterReload.some(entry => entry.name === 'Korruptionskänslig')).toBe(false);
+});
+
 test('Monsterlärd hides Add and preserves four entries when every specialization is used', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');
@@ -701,7 +962,7 @@ test('character fast level changes stay targeted and survive reload', async ({ p
   )).toBe(target.toLevel);
 });
 
-test('character structural level changes fall back to a full selection render when grants add entries', async ({ page }) => {
+test('character structural level changes batch granted cards without a full selection render', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/character', '#valda');
   const target = await prepareCharacterLevelCandidate(page, 'structural');
@@ -713,14 +974,58 @@ test('character structural level changes fall back to a full selection render wh
   const granted = entries.filter((entry) => entry.name.startsWith('Hamnskifte:'));
   const stageNames = (scenario?.detail?.profile?.stages || []).map((entry) => entry.name);
 
-  expect(scenario?.detail?.renderMode).toBe('full');
+  expect(scenario?.detail?.renderMode).toBe('targeted');
   expect(stageNames).toEqual(expect.arrayContaining([
     'store-mutation',
     'pending-choice-resolution',
-    'selection-render',
+    'targeted-ui-refresh',
     'persistence-flush'
   ]));
+  expect(stageNames).not.toContain('selection-render');
+  expect(stageNames.filter(stage => stage === 'common-commit')).toHaveLength(1);
   expect(granted.length).toBeGreaterThan(0);
+  for (const entry of granted) {
+    await expect(page.locator(`#valda li[data-name="${entry.name}"]`).first()).toBeAttached();
+  }
+});
+
+test('cascading grant removal patches all affected cards in one committed batch', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/character', '#valda');
+  await seedNamedEntries(page, [{
+    name: 'Hamnskifte',
+    level: 'Gesäll'
+  }]);
+  const grantedBefore = (await readListEntries(page, '')).filter(entry => entry.name.startsWith('Hamnskifte:'));
+  expect(grantedBefore.length).toBeGreaterThan(0);
+
+  await page.evaluate(() => {
+    window.__symbaroumPerfCaptureRemovals = true;
+    window.__symbaroumPerfAwaitFlush = true;
+    window.symbaroumPerf?.clearHistory?.();
+  });
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(String(error?.stack || error)));
+  const sourceCard = await revealCharacterEntry(page, 'Hamnskifte');
+  await sourceCard.locator('button[data-act="rem"], button[data-act="del"], button[data-act="sub"]').first().click();
+  await resolveCascadeDialog(page, { keepGenerated: false });
+  const scenario = await readLatestScenario(page, 'remove-item-from-character');
+  expect(pageErrors).toEqual([]);
+  const stages = (scenario?.detail?.profile?.stages || []).map(stage => stage.name);
+  expect(scenario?.detail?.renderMode).toBe('targeted');
+  expect(stages.filter(stage => stage === 'common-commit')).toHaveLength(1);
+  expect(stages).toContain('targeted-ui-refresh');
+  expect(stages).not.toContain('selection-render');
+  expect(await readListEntries(page, '')).toEqual([]);
+  await expect(page.locator('#valda li[data-name="Hamnskifte"]')).toHaveCount(0);
+  for (const entry of grantedBefore) {
+    await expect(page.locator(`#valda li[data-name="${entry.name}"]`)).toHaveCount(0);
+  }
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.locator('#valda').waitFor({ state: 'visible' });
+  expect(await readListEntries(page, '')).toEqual([]);
 });
 
 test('character level changes can keep granted entries by accepting the real cleanup dialog', async ({ page }) => {
@@ -880,6 +1185,60 @@ test('Inventory UI add, subtract, and remove actions persist their resulting qua
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
   await expect.poll(() => readInventoryRows(page)).toEqual([]);
+});
+
+test('inventory multi-buy batches an existing stable row without a full render or derived refresh', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/inventory', '#invList');
+  await seedInventoryRow(page, { id: 'di1', name: 'Bandage', qty: 1 });
+  await clearPerfHistory(page, { awaitFlush: true });
+
+  await page.evaluate(() => {
+    const perf = window.symbaroumPerf;
+    const card = document.querySelector('#invList li[data-name="Bandage"]');
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.__multiQuantityProbe = {
+      card,
+      uid: window.storeHelper.getInventory(activeStore).find(row => row?.name === 'Bandage')?.__uid || '',
+      scenarioId: perf?.startScenario?.('test-inventory-multi-buy', { scope: 'inventory' })
+    };
+    perf?.setFlowContext?.('inventory-mutation', window.__multiQuantityProbe.scenarioId);
+  });
+
+  const card = page.locator('#invList li[data-name="Bandage"]').first();
+  await card.locator('button[data-act="buyMulti"]').click();
+  await page.locator('#buyMultipleInput').fill('5');
+  await page.locator('#buyMultipleConfirm').click();
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 6 }]);
+  await expect(card.locator('.count-badge')).toHaveText('×6');
+
+  const result = await page.evaluate(async () => {
+    await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-inventory-multi-buy' });
+    const perf = window.symbaroumPerf;
+    const scenario = perf?.endScenario?.(window.__multiQuantityProbe.scenarioId);
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const row = window.storeHelper.getInventory(activeStore).find(candidate => candidate?.name === 'Bandage');
+    return {
+      cardPreserved: document.querySelector('#invList li[data-name="Bandage"]') === window.__multiQuantityProbe.card,
+      uidPreserved: row?.__uid === window.__multiQuantityProbe.uid,
+      availableMoneyText: document.querySelector('shared-toolbar')?.shadowRoot
+        ?.querySelector('.dash-unused-out')?.textContent?.replace(/\s+/g, ' ').trim() || '',
+      counters: scenario?.detail?.profile?.counters || {}
+    };
+  });
+  expect(result.cardPreserved).toBe(true);
+  expect(result.uidPreserved).toBe(true);
+  expect(result.availableMoneyText).toContain('9 D · 7 S · 0 Ö');
+  expect(result.counters.rootBatches).toBe(1);
+  expect(result.counters.commonCommits).toBe(1);
+  expect(result.counters.derivedVersions || 0).toBe(0);
+  expect(result.counters.persistenceSchedules).toBe(1);
+  expect(result.counters.fullInventoryRenders || 0).toBe(0);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 6 }]);
 });
 
 test('character level changes revert when higher-level requirements are blocked', async ({ page }) => {

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { chromium } from 'playwright';
+import { chromium, devices, webkit } from 'playwright';
 import {
   PREVIEW_HOST,
   PREVIEW_PORT,
@@ -11,6 +11,8 @@ import {
 } from './perf-common.mjs';
 
 const DEFAULT_ITERATIONS = 5;
+const DEFAULT_RUNTIME = 'desktop-chromium';
+const MOBILE_CPU_THROTTLE_RATE = 4;
 const TEST_CHAR_ID = 'perf-char-a';
 const TEST_CHAR_ID_2 = 'perf-char-b';
 const STANDARD_FOLDER_ID = 'fd-standard';
@@ -133,6 +135,66 @@ async function waitForApp(page, pathName, readySelector, options = {}) {
   await page.waitForTimeout(500);
 }
 
+function getRuntimeConfig(runtimeName = DEFAULT_RUNTIME) {
+  const runtime = String(runtimeName || DEFAULT_RUNTIME).trim().toLowerCase();
+  if (runtime === 'mobile-chromium') {
+    return {
+      name: runtime,
+      browserType: chromium,
+      contextOptions: { ...devices['Pixel 7'], serviceWorkers: 'allow' },
+      cpuThrottleRate: MOBILE_CPU_THROTTLE_RATE,
+      pwa: false
+    };
+  }
+  if (runtime === 'mobile-webkit') {
+    return {
+      name: runtime,
+      browserType: webkit,
+      contextOptions: { ...devices['iPhone 15'], serviceWorkers: 'allow' },
+      cpuThrottleRate: 1,
+      pwa: false
+    };
+  }
+  if (runtime === 'pwa-chromium') {
+    return {
+      name: runtime,
+      browserType: chromium,
+      contextOptions: { ...devices['Pixel 7'], serviceWorkers: 'allow' },
+      cpuThrottleRate: MOBILE_CPU_THROTTLE_RATE,
+      pwa: true
+    };
+  }
+  return {
+    name: DEFAULT_RUNTIME,
+    browserType: chromium,
+    contextOptions: { ...devices['Desktop Chrome'], serviceWorkers: 'allow' },
+    cpuThrottleRate: 1,
+    pwa: false
+  };
+}
+
+async function ensurePwaControlled(page, options = {}) {
+  if (!options.pwa) return;
+  await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) throw new Error('Service workers are unavailable.');
+    await navigator.serviceWorker.ready;
+  });
+  if (!await page.evaluate(() => Boolean(navigator.serviceWorker.controller))) {
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 120_000 });
+    await page.waitForFunction(() => (
+      Boolean(window.__symbaroumBootCompleted)
+      && Boolean(navigator.serviceWorker?.controller)
+    ), null, { timeout: 120_000 });
+  }
+}
+
+async function setChromiumCpuThrottle(page, rate) {
+  const runtime = getRuntimeConfig(process.env.PERF_RUNTIME || DEFAULT_RUNTIME);
+  if (runtime.browserType !== chromium) return;
+  const session = await page.context().newCDPSession(page);
+  await session.send('Emulation.setCPUThrottlingRate', { rate: Math.max(1, Number(rate) || 1) });
+}
+
 async function clearPerfHistory(page) {
   await page.evaluate(() => {
     window.symbaroumPerf?.clearHistory?.();
@@ -159,13 +221,18 @@ async function waitForScenario(page, name) {
 }
 
 async function withSeededPage(browser, options, action) {
-  const context = await browser.newContext();
+  const runtime = getRuntimeConfig(process.env.PERF_RUNTIME || DEFAULT_RUNTIME);
+  const context = await browser.newContext(runtime.contextOptions);
   try {
     await seedStore(context, { profile: options.profile || 'base' });
     const page = await context.newPage();
     await waitForApp(page, options.pathName, options.readySelector, {
       timeoutMs: options.timeoutMs
     });
+    await ensurePwaControlled(page, runtime);
+    if (runtime.cpuThrottleRate > 1) {
+      await setChromiumCpuThrottle(page, runtime.cpuThrottleRate);
+    }
     return await action(page, context);
   } finally {
     await context.close();
@@ -261,6 +328,13 @@ function aggregateScenarioRuns(name, runs = []) {
     ));
     return [checkpointName, aggregateNumbers(offsets)];
   }));
+  const counterNames = [...new Set(runs.flatMap((run) => (
+    Object.keys(run?.detail?.profile?.counters || {})
+  )))].filter(Boolean);
+  const counters = Object.fromEntries(counterNames.map((counterName) => [
+    counterName,
+    aggregateNumbers(runs.map((run) => Number(run?.detail?.profile?.counters?.[counterName] || 0)))
+  ]));
 
   return {
     name,
@@ -269,12 +343,14 @@ function aggregateScenarioRuns(name, runs = []) {
     fullCatalogRenderCount: runs.filter(usesFullCatalogRender).length,
     stages,
     checkpoints,
+    counters,
     samples: runs.map((run) => ({
       durationMs: Number(run?.duration || 0),
       fullCatalogRender: usesFullCatalogRender(run),
       checkpoints: Object.fromEntries((run?.detail?.profile?.checkpoints || []).map((checkpoint) => (
         [checkpoint.name, Number(checkpoint.offsetMs || 0)]
       ))),
+      counters: run?.detail?.profile?.counters || {},
       detail: summarizeDetail(run?.detail || {})
     })),
     detail: summarizeDetail(runs[0]?.detail || {})
@@ -481,23 +557,25 @@ async function settleAfterMutation(page) {
   }));
 }
 
-async function enableRemoveProfiling(page) {
-  await page.evaluate(async () => {
+async function enableRemoveProfiling(page, options = {}) {
+  await page.evaluate(async ({ overrideDialogs }) => {
     window.__symbaroumPerfCaptureRemovals = true;
     window.__symbaroumPerfAwaitFlush = true;
-    if (!window.__symbaroumPerfDialogOverrides) {
+    if (overrideDialogs && !window.__symbaroumPerfDialogOverrides) {
       window.__symbaroumPerfDialogOverrides = {
         alertPopup: window.alertPopup,
         confirmPopup: window.confirmPopup,
         openDialog: window.openDialog
       };
     }
-    window.alertPopup = async () => true;
-    window.confirmPopup = async () => true;
-    window.openDialog = async () => true;
+    if (overrideDialogs) {
+      window.alertPopup = async () => true;
+      window.confirmPopup = async () => true;
+      window.openDialog = async () => true;
+    }
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'remove-prep' });
     window.symbaroumPerf?.clearHistory?.();
-  });
+  }, { overrideDialogs: options.overrideDialogs !== false });
 }
 
 async function clickCardAction(page, { rootSelector, name, act }) {
@@ -620,6 +698,30 @@ async function prepareCharacterArtifactRemove(page) {
       strict: true
     });
     return { name: entry.namn, id: entry.id || null };
+  });
+}
+
+async function prepareCharacterGrantCascadeRemove(page) {
+  return page.evaluate(async () => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entry = window.lookupEntry?.({ name: 'Hamnskifte' })
+      || (window.DB || []).find(candidate => String(candidate?.namn || '').trim() === 'Hamnskifte')
+      || null;
+    if (!entry) throw new Error('Missing grant source for cascading remove scenario.');
+    const levels = Object.keys(entry.nivåer || {});
+    const level = levels.includes('Mästare') ? 'Mästare' : (levels.at(-1) || entry.nivå || 'Novis');
+    window.storeHelper.setCurrentList(activeStore, [{
+      ...JSON.parse(JSON.stringify(entry)),
+      nivå: level,
+      __uid: `perf-grant-cascade-${Date.now()}`
+    }]);
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-grant-cascade' });
+    window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
+    return {
+      name: entry.namn,
+      level,
+      grantedCount: window.storeHelper.getCurrentList(activeStore).filter(candidate => candidate.namn !== entry.namn).length
+    };
   });
 }
 
@@ -1002,6 +1104,176 @@ async function runIndexPopupAdd(browser, iterations) {
   return aggregateScenarioRuns('index-popup-add', runs);
 }
 
+async function runIndexConflictReplacement(browser, iterations) {
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/index',
+      readySelector: '#lista',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      await page.evaluate(async () => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entry = window.lookupEntry?.({ name: 'Korruptionskänslig' });
+        if (!entry) throw new Error('Missing conflict seed entry Korruptionskänslig.');
+        window.storeHelper.setCurrentList(activeStore, [{
+          ...JSON.parse(JSON.stringify(entry)),
+          __uid: `perf-conflict-${Date.now()}`
+        }]);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-index-conflict-replacement' });
+        window.symbaroumViewBridge?.refreshCurrent({
+          selection: true,
+          inventory: true,
+          filters: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          strict: true
+        });
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+      });
+      await revealIndexPerfTarget(page, 'list', { entryName: 'Dvärg' });
+      await page.evaluate(() => {
+        window.__symbaroumPerfAwaitFlush = true;
+        window.symbaroumPerf?.clearHistory?.();
+      });
+      const clicked = await page.evaluate(() => {
+        const card = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')]
+          .find(candidate => String(candidate?.dataset?.name || '').trim() === 'Dvärg');
+        const button = card?.querySelector('button[data-act="add"]');
+        if (!button) return false;
+        button.click();
+        return true;
+      });
+      if (!clicked) throw new Error('Unable to trigger Dvärg conflict replacement.');
+      const dialog = page.locator('#daub-dialog-modal');
+      await dialog.waitFor({ state: 'visible' });
+      await page.evaluate(() => {
+        const scenario = window.symbaroumPerf?.getSnapshot?.().active
+          ?.find(candidate => candidate.name === 'add-item-to-character');
+        if (scenario?.id) {
+          window.symbaroumPerf?.markScenario?.(scenario.id, 'confirmation-start', {
+            action: 'conflict-replacement',
+            entry: 'Dvärg'
+          });
+        }
+      });
+      await dialog.locator('[data-dialog-action="ok"]').click();
+      await dialog.waitFor({ state: 'hidden' });
+      await page.evaluate(() => {
+        const scenario = window.symbaroumPerf?.getSnapshot?.().active
+          ?.find(candidate => candidate.name === 'add-item-to-character');
+        if (scenario?.id) {
+          window.symbaroumPerf?.markScenario?.(scenario.id, 'confirmation-feedback-presented', {
+            action: 'conflict-replacement',
+            entry: 'Dvärg'
+          });
+        }
+      });
+      const scenario = await waitForScenario(page, 'add-item-to-character');
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          entry: 'Dvärg',
+          source: 'conflict-replacement'
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns('index-conflict-replacement', runs);
+}
+
+async function runIndexInventoryChoiceAdd(browser, iterations) {
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/index',
+      readySelector: '#lista',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      const target = await revealIndexPerfTarget(page, 'inventory', {
+        entryName: 'Formelsigill (Novis)'
+      });
+      await clearPerfHistory(page);
+      await page.evaluate(({ id, name }) => {
+        window.__symbaroumPerfAwaitFlush = true;
+        const cards = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')];
+        const card = cards.find(candidate => (
+          (id && String(candidate?.dataset?.id || '') === String(id))
+          || String(candidate?.dataset?.name || '').trim() === String(name || '').trim()
+        ));
+        const button = card?.querySelector('button[data-act="add"]');
+        if (!button) throw new Error(`Unable to click choice-bound inventory add for ${name}.`);
+        button.click();
+      }, target);
+      await page.locator('#choicePopup').waitFor({ state: 'visible', timeout: 30_000 });
+      const picked = await page.evaluate(async () => {
+        const popup = document.getElementById('choicePopup');
+        const optionRoot = popup?.querySelector('#choiceOpts') || popup;
+        const option = optionRoot
+          ? [...optionRoot.querySelectorAll('input[type="radio"], button')]
+            .find(control => !control.disabled && (
+              control.matches('input[type="radio"]')
+              || String(control.textContent || '').trim()
+            ))
+          : null;
+        if (!option) throw new Error('Choice-bound inventory popup had no selectable option.');
+        const labelRoot = option.closest('label') || option;
+        const label = String(labelRoot.textContent || option.value || '').trim();
+        const isVisible = () => {
+          if (!popup?.isConnected || popup.hidden || popup.getAttribute('aria-hidden') === 'true') return false;
+          const style = window.getComputedStyle(popup);
+          return style.display !== 'none' && style.visibility !== 'hidden' && popup.getBoundingClientRect().height > 0;
+        };
+        const startedAt = performance.now();
+        option.click();
+        if (option.matches('input[type="radio"]')) {
+          option.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const timeoutAt = performance.now() + 5000;
+        await new Promise((resolve, reject) => {
+          const tick = () => {
+            if (!isVisible()) return resolve();
+            if (performance.now() > timeoutAt) return reject(new Error('Choice-bound inventory popup did not close.'));
+            requestAnimationFrame(tick);
+          };
+          tick();
+        });
+        return { label, closeDurationMs: Math.max(0, performance.now() - startedAt) };
+      });
+      const scenario = await waitForScenario(page, 'add-item-to-character');
+      const endState = await page.evaluate(async ({ targetName, picked }) => {
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'index-inventory-choice-add' });
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        return window.storeHelper.getInventory(activeStore)
+          .filter(row => row?.name === targetName && row?.trait === picked)
+          .map(row => ({ id: row.id || '', name: row.name || '', trait: row.trait || '', qty: Number(row.qty) || 0 }));
+      }, { targetName: target.name, picked: picked.label });
+      const profile = scenario?.detail?.profile || {};
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target: { ...target, choice: picked.label },
+          endStateHash: JSON.stringify(endState),
+          profile: {
+            ...profile,
+            stages: [
+              ...(Array.isArray(profile.stages) ? profile.stages : []),
+              {
+                name: 'popup-close',
+                duration: picked.closeDurationMs,
+                detail: { surface: 'index', entry: target.name, option: picked.label }
+              }
+            ]
+          }
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns('index-inventory-choice-add', runs);
+}
+
 async function prepareCharacterLevelChangeTarget(page, mode = 'fast') {
   return page.evaluate(async ({ mode }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
@@ -1107,8 +1379,11 @@ async function runCharacterLevelChange(browser, iterations, mode) {
       readySelector: '#valda',
       profile: 'interaction-heavy'
     }, async (page) => {
+      const runtime = getRuntimeConfig(process.env.PERF_RUNTIME || DEFAULT_RUNTIME);
+      if (runtime.cpuThrottleRate > 1) await setChromiumCpuThrottle(page, 1);
       const target = await prepareCharacterLevelChangeTarget(page, mode);
       await settleAfterMutation(page);
+      if (runtime.cpuThrottleRate > 1) await setChromiumCpuThrottle(page, runtime.cpuThrottleRate);
       await changeCardLevel(page, {
         rootSelector: '#valda',
         name: target.name,
@@ -1129,28 +1404,71 @@ async function runCharacterLevelChange(browser, iterations, mode) {
 
 async function runInventoryBuyMultiple(browser, iterations) {
   const runs = await collectRuns(browser, iterations, async () => (
-    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => (
-      page.evaluate(async () => {
+    withSeededPage(browser, {
+      pathName: '/#/inventory',
+      readySelector: '#invList',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      await page.evaluate(async () => {
         const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-        const entry = window.lookupEntry?.({ name: 'Dubbel ringbrynja' });
+        const entry = window.lookupEntry?.({ name: 'Bandage' });
         const row = await window.invUtil?.buildInventoryRow?.({
           entry,
           list: window.storeHelper.getCurrentList(activeStore)
         });
-        window.storeHelper.setInventory(activeStore, [row]);
+        row.qty = 1;
+        const current = window.storeHelper.getInventory(activeStore)
+          .filter(candidate => String(candidate?.name || '') !== 'Bandage');
+        window.storeHelper.setInventory(activeStore, [row, ...current]);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-inventory-buy-multiple' });
         window.invUtil?.renderInventory?.();
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
         window.symbaroumPerf?.clearHistory?.();
         const perf = window.symbaroumPerf;
         const scenarioId = perf?.startScenario?.('inventory-buy-multiple', { scope: 'inventory', entry: entry?.namn || null });
-        await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', () => {
-          row.qty = (Number(row.qty) || 0) + 4;
-          window.invUtil?.saveInventory?.([row], { source: 'perf-buy-multiple', afterPaint: false });
-        });
-        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => window.symbaroumPersistence?.flushPendingWrites?.());
+        perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        document.addEventListener('pointerdown', () => {
+          perf?.markScenario?.(scenarioId, 'interaction-start', { action: 'buy-multiple', quantity: 5 });
+        }, { capture: true, once: true });
+        window.__inventoryBuyMultipleScenarioId = scenarioId;
+      });
+
+      const card = page.locator('#invList li.entry-card[data-name="Bandage"]').first();
+      await card.locator('button[data-act="buyMulti"]').click();
+      await page.locator('#buyMultipleInput').fill('5');
+      await page.evaluate(() => {
+        window.symbaroumPerf?.markScenario?.(
+          window.__inventoryBuyMultipleScenarioId,
+          'confirmation-start',
+          { action: 'buy-multiple', quantity: 5 }
+        );
+      });
+      await page.locator('#buyMultipleConfirm').click();
+      await page.waitForFunction(() => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        return Number(window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.name || '') === 'Bandage')?.qty || 0) === 6;
+      });
+
+      return page.evaluate(async () => {
+        const perf = window.symbaroumPerf;
+        const scenarioId = window.__inventoryBuyMultipleScenarioId;
+        await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'inventory-buy-multiple' })
+        ));
         await perf?.afterNextPaint?.(2);
-        return perf?.endScenario?.(scenarioId, { scope: 'inventory', entry: entry?.namn || null });
-      })
-    ))
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const row = window.storeHelper.getInventory(activeStore)
+          .find(candidate => String(candidate?.name || '') === 'Bandage');
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'inventory',
+          entry: 'Bandage',
+          quantity: Number(row?.qty || 0),
+          endStateHash: JSON.stringify({ id: row?.id || '', name: row?.name || '', qty: Number(row?.qty || 0) })
+        });
+      });
+    })
   ));
   return aggregateScenarioRuns('inventory-buy-multiple', runs);
 }
@@ -1518,126 +1836,28 @@ async function runCharacterRemoveMulti(browser, iterations, action) {
 async function runCharacterArtifactRemove(browser, iterations) {
   const scenarioName = 'character-artifact-cascade-remove';
   const runs = await collectRuns(browser, iterations, async () => (
-    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => (
-      page.evaluate(async ({ scenarioName }) => {
-        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-        const waitWithTimeout = (value, label, timeoutMs = 8_000) => Promise.race([
-          Promise.resolve(value),
-          new Promise((_, reject) => {
-            setTimeout(() => reject(new Error(label)), timeoutMs);
-          })
-        ]);
-        const candidates = (window.DB || []).filter((candidate) => (
-          window.isInv?.(candidate)
-          && Array.isArray(candidate?.taggar?.typ)
-          && candidate.taggar.typ.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
-        ));
-        const entry = candidates.find((candidate) => (
-          Array.isArray(candidate?.taggar?.typ)
-          && candidate.taggar.typ.some((type) => String(type || '').trim() === 'Artefakt')
-        )) || candidates[0] || null;
-        if (!entry) throw new Error('Missing artifact entry for character remove scenario.');
-
-        const row = {
-          id: entry.id,
-          name: entry.namn,
-          qty: 1,
-          gratis: 0,
-          gratisKval: [],
-          removedKval: [],
-          artifactEffect: entry.artifactEffect || ''
-        };
-
-        const levels = Object.keys(entry.nivåer || {});
-        window.storeHelper.setCurrentList(activeStore, [{
-          ...JSON.parse(JSON.stringify(entry)),
-          nivå: levels[0] || entry.nivå || 'Novis',
-          __uid: 'perf-character-artifact-remove'
-        }]);
-        window.storeHelper.setInventory(activeStore, [row]);
-        if (entry.id) window.storeHelper.addRevealedArtifact(activeStore, entry.id);
-        await waitWithTimeout(
-          window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName }),
-          'Artifact scenario setup flush timed out.'
-        );
-        window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
-        window.symbaroumPerf?.clearHistory?.();
-
-        const perf = window.symbaroumPerf;
-        const scenarioId = perf?.startScenario?.(scenarioName, {
-          scope: 'character',
-          entry: entry.namn,
-          branch: 'list'
-        });
-        perf?.setFlowContext?.('remove-item', scenarioId);
-
-        const runMutationBatch = typeof window.storeHelper?.batchCurrentCharacterMutation === 'function'
-          ? (callback) => window.storeHelper.batchCurrentCharacterMutation(activeStore, {}, callback)
-          : async (callback) => callback();
-
-        await waitWithTimeout(runMutationBatch(async () => {
-          await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', () => {
-            window.storeHelper.setCurrentList(activeStore, []);
-          }, {
-            surface: 'character',
-            branch: 'list'
-          });
-
-          const nextInventory = window.storeHelper.getInventory(activeStore);
-          const removeItem = (items) => {
-            for (let index = items.length - 1; index >= 0; index -= 1) {
-              if (items[index]?.id === entry.id) items.splice(index, 1);
-              else if (Array.isArray(items[index]?.contains)) removeItem(items[index].contains);
-            }
-          };
-          removeItem(nextInventory);
-
-          await perf?.timeScenarioStage?.(scenarioId, 'inventory-sync', () => (
-            window.invUtil?.saveInventory?.(nextInventory, {
-              source: 'perf-character-artifact-remove',
-              skipCharacterRefresh: true,
-              afterPaint: false
-            })
-          ), {
-            surface: 'character',
-            branch: 'list'
-          });
-
-          if (entry.id) {
-            window.storeHelper.removeRevealedArtifact(activeStore, entry.id);
-          }
-        }), 'Artifact scenario mutation batch timed out.');
-
-        await perf?.timeScenarioStage?.(scenarioId, 'selection-render', () => {
-          window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
-        }, {
-          surface: 'character',
-          branch: 'list'
-        });
-
-        await perf?.timeScenarioStage?.(scenarioId, 'derived-refresh', () => {
-          if (typeof window.updateXP === 'function') window.updateXP();
-          if (typeof window.renderTraits === 'function') window.renderTraits();
-        }, {
-          surface: 'character',
-          branch: 'list'
-        });
-
-        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => (
-          waitWithTimeout(
-            window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName }),
-            'Artifact scenario final flush timed out.'
-          )
-        ));
-        await perf?.afterNextPaint?.(2);
-        perf?.clearFlowContext?.('remove-item', scenarioId);
-        return perf?.endScenario?.(scenarioId, {
-          scope: 'character',
-          entry: entry.namn,
-          branch: 'list'
-        });
-      }, { scenarioName })
-    ))
+    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
+      const target = await prepareCharacterGrantCascadeRemove(page);
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page, { overrideDialogs: false });
+      await clickCardAction(page, {
+        rootSelector: '#valda',
+        name: target.name,
+        act: ['rem', 'del', 'sub']
+      });
+      const dialog = page.locator('#daub-dialog-modal');
+      await dialog.waitFor({ state: 'visible' });
+      await page.keyboard.press('Escape');
+      await dialog.waitFor({ state: 'hidden' });
+      const scenario = await waitForRemoveScenario(page);
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target
+        }
+      };
+    })
   ));
   return aggregateScenarioRuns(scenarioName, runs);
 }
@@ -2017,11 +2237,13 @@ async function runTraitMutation(browser, iterations, delta) {
   return aggregateScenarioRuns(scenarioName, runs);
 }
 
-export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_ITERATIONS } = {}) {
+export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_ITERATIONS, runtimeName = null } = {}) {
   const resolvedRunDir = runDir || await createRunDir('scenarios');
   const reportDir = path.join(resolvedRunDir, 'scenarios');
   const server = await startPreviewServer({ port: PREVIEW_PORT });
-  const browser = await chromium.launch({ headless: true });
+  const runtime = getRuntimeConfig(runtimeName || process.env.PERF_RUNTIME || DEFAULT_RUNTIME);
+  process.env.PERF_RUNTIME = runtime.name;
+  const browser = await runtime.browserType.launch({ headless: true });
   const scenarioFilter = String(process.env.SCENARIO_FILTER || '').trim().toLowerCase();
   const normalizeScenarioToken = (value) => String(value || '').trim().toLowerCase();
   const splitScenarioTokens = (value) => normalizeScenarioToken(value).split(/[\s-]+/).filter(Boolean);
@@ -2045,7 +2267,9 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'switchCharacter', name: 'switch-character', run: () => runSwitchCharacter(browser, iterations) },
       { key: 'addIndexList', name: 'index-list-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'list') },
       { key: 'addIndexPopup', name: 'index-popup-add', aliases: ['add', 'popup add'], run: () => runIndexPopupAdd(browser, iterations) },
+      { key: 'addIndexInventoryChoice', name: 'index-inventory-choice-add', aliases: ['add', 'popup add', 'inventory choice'], run: () => runIndexInventoryChoiceAdd(browser, iterations) },
       { key: 'addIndexInventory', name: 'index-inventory-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'inventory') },
+      { key: 'indexConflictReplacement', name: 'index-conflict-replacement', aliases: ['add', 'conflict replacement'], run: () => runIndexConflictReplacement(browser, iterations) },
       { key: 'searchFilter', name: 'search-filter', run: () => runSearchFilter(browser, iterations) },
       { key: 'inventoryBuyMultiple', name: 'inventory-buy-multiple', aliases: ['inventory add'], run: () => runInventoryBuyMultiple(browser, iterations) },
       { key: 'inventoryAddQuality', name: 'inventory-add-quality', aliases: ['inventory add'], run: () => runInventoryAddQuality(browser, iterations) },
@@ -2093,6 +2317,13 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       generatedAt: new Date().toISOString(),
       reportDir,
       iterations,
+      runtime: {
+        name: runtime.name,
+        browser: runtime.browserType === webkit ? 'webkit' : 'chromium',
+        mobile: runtime.name.startsWith('mobile-') || runtime.name.startsWith('pwa-'),
+        cpuThrottleRate: runtime.cpuThrottleRate,
+        serviceWorkerControlled: runtime.pwa
+      },
       scenarios,
       vitals: {
         firstLoad: scenarios.firstLoad?.vitals || []
@@ -2110,6 +2341,7 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
 const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isDirectRun) {
-  const summary = await runScenarioMetrics();
+  const requestedIterations = Math.max(1, Number(process.env.PERF_ITERATIONS) || DEFAULT_ITERATIONS);
+  const summary = await runScenarioMetrics({ iterations: requestedIterations });
   console.log(JSON.stringify(summary, null, 2));
 }

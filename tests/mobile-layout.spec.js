@@ -272,7 +272,7 @@ for (const width of [320, 390, 640]) {
     const overview = toolbar.locator('#overviewToggle');
     await expect(overview).toHaveAttribute('data-context', 'inventory');
     await expect(overview).toHaveAttribute('aria-controls', 'invDashPanel');
-    await expect(overview.locator('.overview-action-label')).toHaveText('Översikt');
+    await expect(overview.locator('.overview-action-label')).toHaveText('Tillgängligt');
     await expect(page.locator('#manageItemsBtn')).toHaveCount(0);
     await expect(page.locator('#manageEconomyBtn')).toHaveCount(0);
     await expect(page.locator('#invDashFloatBtn')).toHaveCount(0);

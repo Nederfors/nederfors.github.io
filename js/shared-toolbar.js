@@ -3068,6 +3068,7 @@ class SharedToolbar extends HTMLElement {
     const toggle = this.shadowRoot.getElementById('overviewToggle');
     const summaryIcon = this.shadowRoot.querySelector('.overview-action-icon--summary');
     const inventoryIcon = this.shadowRoot.querySelector('.overview-action-icon--inventory');
+    const label = this.shadowRoot.querySelector('.overview-action-label');
     const xpValue = this.shadowRoot.querySelector('.overview-action-value--xp');
     const moneyValue = this.shadowRoot.querySelector('.overview-action-value--money');
     if (!toggle) return;
@@ -3080,12 +3081,13 @@ class SharedToolbar extends HTMLElement {
     toggle.title = isInventory ? 'Öppna Inventarium' : 'Öppna Översikt';
     if (summaryIcon) summaryIcon.hidden = isInventory;
     if (inventoryIcon) inventoryIcon.hidden = !isInventory;
+    if (label) label.textContent = isInventory ? 'Tillgängligt' : 'Översikt';
     if (xpValue) xpValue.hidden = isInventory;
     if (moneyValue) moneyValue.hidden = !isInventory;
 
     if (isInventory) {
       toggle.classList.remove('under');
-      toggle.setAttribute('aria-label', `Öppna Inventarium, saldo ${describeToolbarMoney(this._toolbarMoney)}`);
+      toggle.setAttribute('aria-label', `Öppna Inventarium, tillgängligt ${describeToolbarMoney(this._toolbarMoney)}`);
     } else {
       const xp = this.shadowRoot.getElementById('xpOut')?.textContent?.trim() || '0';
       toggle.classList.toggle('under', Number(xp) < 0);

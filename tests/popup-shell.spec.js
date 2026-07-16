@@ -67,6 +67,34 @@ async function seedInventoryFixtures(page) {
   });
 }
 
+async function seedToolbarAvailableMoneyFixture(page) {
+  await page.evaluate(() => {
+    const fixtureName = 'Toolbar tillgängligt-fixtur';
+    const existingCustom = window.storeHelper.getCustomEntries(store)
+      .filter(entry => entry?.namn !== fixtureName);
+    const result = window.storeHelper.setCustomEntries(store, [
+      ...existingCustom,
+      {
+        id: 'toolbar-available-fixture',
+        namn: fixtureName,
+        taggar: { typ: ['Hemmagjort'] },
+        grundpris: { daler: 2, skilling: 0, 'örtegar': 0 },
+        vikt: 0
+      }
+    ]);
+    const fixture = result.entries.find(entry => entry?.namn === fixtureName);
+    window.storeHelper.setInventory(store, [{
+      id: fixture.id,
+      name: fixture.namn,
+      qty: 2,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    }]);
+    window.invUtil.renderInventory();
+  });
+}
+
 async function expectEconomyPanelReady(page, tabId, contentSelector) {
   const popup = page.locator('#inventoryEconomyPopup');
   const tab = popup.locator(`.tools-tab[data-tab="${tabId}"]`);
@@ -471,13 +499,15 @@ test('toolbar overview switches destination and live counter with the active rou
     && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
   ));
   await seedInventoryFixtures(page);
+  await seedToolbarAvailableMoneyFixture(page);
 
   await expect(overview).toHaveAttribute('data-context', 'inventory');
   await expect(overview).toHaveAttribute('aria-controls', 'invDashPanel');
-  await expect(overview).toHaveAttribute('aria-label', 'Öppna Inventarium, saldo 12 daler, 3 skilling, 4 örtegar');
+  await expect(overview.locator('.overview-action-label')).toHaveText('Tillgängligt');
+  await expect(overview).toHaveAttribute('aria-label', 'Öppna Inventarium, tillgängligt 8 daler, 3 skilling, 4 örtegar');
   await expect(overview.locator('.overview-action-icon--summary')).toBeHidden();
   await expect(overview.locator('.overview-action-icon--inventory')).toBeVisible();
-  await expect(overview.locator('#moneyOut')).toHaveText('12D 3S 4Ö');
+  await expect(overview.locator('#moneyOut')).toHaveText('8D 3S 4Ö');
   await expect(overview.locator('.overview-action-value--xp')).toBeHidden();
 
   await overview.click();
@@ -485,7 +515,7 @@ test('toolbar overview switches destination and live counter with the active rou
   await expect(inventoryDrawer).toBeVisible();
   await expect(summary).toBeHidden();
   await inventoryDrawer.locator('button[data-act="moneyPlus"]').click();
-  await expect(overview.locator('#moneyOut')).toHaveText('13D 3S 4Ö');
+  await expect(overview.locator('#moneyOut')).toHaveText('9D 3S 4Ö');
   await expect(overview).toHaveAttribute('aria-expanded', 'true');
 
   await inventoryDrawer.locator('button[data-close="invDashPanel"]').click();

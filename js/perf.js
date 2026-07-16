@@ -146,7 +146,10 @@ function finalizeScenario(record, status, detail = {}) {
     finishedOffsetMs: Math.max(0, stage.finishedAtAbs - record.startedAtAbs),
     detail: cloneDetail(stage.detail || {})
   }));
-  const profile = (checkpoints.length || stages.length) ? { checkpoints, stages } : null;
+  const counters = Object.fromEntries(record.counters || []);
+  const profile = (checkpoints.length || stages.length || Object.keys(counters).length)
+    ? { checkpoints, stages, counters }
+    : null;
   const mergedDetail = {
     ...(record.detail || {}),
     ...(detail || {}),
@@ -181,6 +184,7 @@ function startScenario(name, detail = {}) {
     detail,
     checkpoints: [],
     stages: [],
+    counters: new Map(),
     activeStages: new Map(),
     startMark,
     startedAtAbs: absoluteNow(),
@@ -223,6 +227,17 @@ function markScenario(idOrName, name, detail = {}) {
   };
   record.checkpoints.push(entry);
   return entry;
+}
+
+function incrementScenarioCounter(idOrName, name, delta = 1) {
+  const resolved = resolveScenarioRef(idOrName);
+  if (!resolved || !name) return 0;
+  const amount = Number(delta);
+  if (!Number.isFinite(amount)) return resolved.record.counters?.get(name) || 0;
+  const current = Number(resolved.record.counters?.get(name)) || 0;
+  const next = current + amount;
+  resolved.record.counters.set(String(name), next);
+  return next;
 }
 
 function startScenarioStage(idOrName, name, detail = {}) {
@@ -441,6 +456,7 @@ window.symbaroumPerf = Object.freeze({
   finishScenarioStage,
   getFlowContext,
   getSnapshot,
+  incrementScenarioCounter,
   markScenario,
   queueNavigationScenario,
   resolveQueuedScenarios,

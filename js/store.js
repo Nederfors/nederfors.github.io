@@ -55,6 +55,7 @@
     const key = getDerivedVersionKey(store, charId);
     if (!key) return 0;
     runtimeVersions.derivedByCharacter[key] = (runtimeVersions.derivedByCharacter[key] || 0) + 1;
+    incrementCurrentListMutationCounter('derivedVersions');
     return runtimeVersions.derivedByCharacter[key];
   };
   const getDerivedVersionMeta = (store, charId) => {
@@ -461,6 +462,7 @@
   function commitCurrentCharacterMutation(store, options = {}) {
     const charId = getDerivedVersionKey(store);
     if (!charId) return null;
+    incrementCurrentListMutationCounter('storeMutations');
     const normalizedFields = normalizeMutationFields(options.fields);
     const activeBatch = currentCharacterMutationBatch;
     if (activeBatch && activeBatch.store === store && activeBatch.charId === charId) {
@@ -477,6 +479,7 @@
       return charId;
     }
     return timeCurrentListMutationStage('common-commit', () => {
+      incrementCurrentListMutationCounter('commonCommits');
       const version = options.bumpDerived
         ? bumpDerivedVersion(store, charId)
         : getDerivedVersionMeta(store, charId);
@@ -573,6 +576,7 @@
         };
     if (!parentBatch || parentBatch !== batch) {
       currentCharacterMutationBatch = batch;
+      incrementCurrentListMutationCounter('rootBatches');
     }
     batch.depth += 1;
 
@@ -595,6 +599,7 @@
         currentCharacterMutationBatch = null;
       }
       timeCurrentListMutationStage('common-commit', () => {
+        incrementCurrentListMutationCounter('commonCommits');
         const version = batch.bumpDerived
           ? bumpDerivedVersion(store, charId)
           : getDerivedVersionMeta(store, charId);
@@ -2590,6 +2595,11 @@
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+    const conflictSources = typeof global.rulesHelper?.getRuleList === 'function'
+      ? list.filter(entry => global.rulesHelper.getRuleList(entry, 'krockar', {
+        level: typeof entry?.nivå === 'string' ? entry.nivå : ''
+      }).length > 0)
+      : null;
 
     const kept = [];
     list.forEach(entry => {
@@ -2600,7 +2610,10 @@
       }
       const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
       const resolution = hasResolutionHelper
-        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, {
+          level,
+          ...(conflictSources ? { conflictSources } : {})
+        })
         : {
           reasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
           blockingReasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
@@ -2638,6 +2651,11 @@
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+    const conflictSources = typeof global.rulesHelper?.getRuleList === 'function'
+      ? list.filter(entry => global.rulesHelper.getRuleList(entry, 'krockar', {
+        level: typeof entry?.nivå === 'string' ? entry.nivå : ''
+      }).length > 0)
+      : null;
     const kept = list.slice(0, retainedPrefixLength);
     const appended = list.slice(retainedPrefixLength);
 
@@ -2649,7 +2667,10 @@
       }
       const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
       const resolution = hasResolutionHelper
-        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, {
+          level,
+          ...(conflictSources ? { conflictSources } : {})
+        })
         : {
           blockingReasons: hasReasonHelper
             ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level })
@@ -3419,10 +3440,18 @@
     if (typeof perf?.getFlowContext !== 'function') return null;
     return perf.getFlowContext('add-item')
       || perf.getFlowContext('remove-item')
+      || perf.getFlowContext('level-change')
       || perf.getFlowContext('character-level-change')
       || perf.getFlowContext('inventory-mutation')
       || perf.getFlowContext('trait-mutation')
       || null;
+  }
+
+  function incrementCurrentListMutationCounter(name, delta = 1) {
+    const perf = global.symbaroumPerf;
+    const scenarioId = getCurrentListMutationScenarioId();
+    if (!scenarioId || typeof perf?.incrementScenarioCounter !== 'function') return 0;
+    return perf.incrementScenarioCounter(scenarioId, name, delta);
   }
 
   function timeCurrentListMutationStage(name, callback, detail = {}) {
@@ -3651,13 +3680,17 @@
     return visit(inventory);
   }
 
-  function setInventory(store, inv) {
+  function setInventory(store, inv, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].inventory = ensureInventoryRowUids(inv);
     commitCurrentCharacterMutation(store, {
-      bumpDerived: true,
-      fields: INVENTORY_MUTATION_FIELDS
+      bumpDerived: options.bumpDerived !== false,
+      persist: options.persist,
+      fields: options.fields || INVENTORY_MUTATION_FIELDS,
+      invalidates: options.invalidates,
+      targets: options.targets,
+      afterCommit: options.afterCommit
     });
   }
 
