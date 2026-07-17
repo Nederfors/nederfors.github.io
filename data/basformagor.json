@@ -7,7 +7,7 @@
     {
       "id": "bas1",
       "name": "Stärkande Måltid",
-      "description": "Handling: Speciell. Denna kunskap låter karaktären förvandla enkla råvaror till en festmåltid som stärker både kropp och sinne i vildmarkens mörker. En varm, välgjord gryta kan vara skillnaden mellan hopp och förtvivlan för en sargad trupp. Tillagningen tar en timme i anspråk och kräver ett etablerat läger med eld och kokkärl, samt tillgång till ordentliga råvaror (ej enbart torkad färdkost). Det är möjligt att dryga ut måltiden med färdkost, förutsatt att minst hälften av ingredienserna utgörs av färska råvaror (exempelvis inköpta i stad eller insamlade med förmågan Vildmarksvana). Om färdkost används som utfyllnad krävs ett lyckat test mot [Listig − antalet portioner färdkost] för att måltiden ska få avsedd verkan. Vid lyckat resultat, eller om enbart råvaror använts, erhåller alla som äter av måltiden +1T4 i tillfällig Tålighet. Denna bonus fungerar som en buffert mot skada och försvinner först när den förbrukats eller efter ett dygn. En person kan endast tillgodogöra sig effekten av en stärkande måltid en gång per dag.",
+      "description": "Handling: Speciell. Denna kunskap låter karaktären förvandla enkla råvaror till en festmåltid som stärker både kropp och sinne i vildmarkens mörker. En varm, välgjord gryta kan vara skillnaden mellan hopp och förtvivlan för en sargad trupp. Tillagningen tar en timme i anspråk och kräver ett etablerat läger med eld och kokkärl, samt tillgång till ordentliga råvaror (exempelvis inköpta i stad eller insamlade med förmågan Vildmarksvana). En stärkande måltid ger alla som äter av den +1T4 i tillfällig Tålighet. Denna bonus fungerar som en buffert mot skada och försvinner först när den förbrukats eller efter ett dygn. En skicklig kock kan dryga ut den stärkande måltiden och låta hälften av ingredienserna bestå av torkad fältkost som saltat kött eller långfärdsbröd, men tillagningen kräver då ett lyckat slag i [Listig] för att ge önskad effekt. Varje person kan endast tillgodogöra sig effekten av en stärkande måltid en gång per dag.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -31,7 +31,7 @@
     {
       "id": "bas2",
       "name": "Mental Försegling",
-      "description": "Handling: Reaktiv. Genom strikta mentalövningar och djup meditation har karaktären lärt sig att sluta sitt sinne mot Davokars viskningar. Denna disciplin fungerar som en sista försvarslinje när skuggan hotar att bryta ner karaktärens motståndskraft. Förmågan är reaktiv och kan användas en gång per dag. Den aktiveras när karaktären drabbas av korruption (tillfällig eller permanent) som gör att den Totala Korruptionen når eller överstiger karaktärens Korruptionströskel. Spelaren slår då 1T20. Om resultatet är högre än rollpersonens Totala Korruption (innan den inkommande mängden), lyckas karaktären stöta bort mörkret och den inkommande korruptionen negeras helt. Om slaget misslyckas tas korruptionen emot som vanligt.",
+      "description": "Handling: Reaktiv. Genom strikta mentalövningar och djup meditation har karaktären lärt sig att sluta sitt sinne mot Davokars viskningar. Denna disciplin fungerar som en sista försvarslinje när skuggan hotar att bryta ner karaktärens motståndskraft. Förmågan är reaktiv och kan en gång per dag aktiveras när karaktären drabbas av korruption (tillfällig eller permanent) som gör att dess totala korruption når eller överstiger karaktärens Korruptionströskel. Spelaren slår då 1T20. Om resultatet är högre än rollpersonens totala korruption (innan den inkommande mängden), lyckas karaktären stöta bort mörkret och den inkommande korruptionen negeras helt. Om slaget misslyckas tas korruptionen emot som vanligt.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -76,7 +76,7 @@
     {
       "id": "bas4",
       "name": "Repmästare",
-      "description": "Handling: Speciell. Karaktären är en virtuos med tågvirke och änterhake. Genom att omsorgsfullt förbereda en passage – välja strategiska fästpunkter, slå korrekta knopar och säkra repet – kan riskerna för sällskapet minimeras. Att rigga en sådan säker led tar en timme i anspråk och kräver ett slag på [Listig]. Vid framgång får alla allierade som använder repet +3 på [Kvick] vid slag för klättring eller balansering. Därtill besitter karaktären en särskild teknik för att packa sina rep, vilket gör att rep som bärs av karaktären endast upptar hälften av normalt utrymme (vikt) i packningen.",
+      "description": "Handling: Speciell. Karaktären är en virtuos med tågvirke och änterhake. Genom att omsorgsfullt förbereda en passage – välja strategiska fästpunkter, slå korrekta knopar och säkra repet – kan riskerna för sällskapet minimeras. Att rigga en sådan säker led tar en timme i anspråk och kräver, utöver korrekt och tillräcklig utrustning, ett lyckat slag på [Listig]. Vid framgång får alla allierade som använder repet +5 på [Kvick] vid slag som förlitar sig på de riggade repen. Därtill besitter karaktären en särskild teknik för att packa sina rep, vilket gör att rep som bärs av karaktären endast upptar hälften av normalt utrymme (vikt) i packningen.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -115,7 +115,7 @@
     {
       "id": "bas5",
       "name": "Stavsprång",
-      "description": "Handling: Aktiv. Konsten att använda sitt vapen eller sin vandringsstav som en hävstång är ovärderlig i oländig terräng. Handlingen kräver karaktären håller ett långt föremål i händerna (exempelvis spjut, stav eller hillebard). Genom att ta sats kan karaktären med ett lyckat test mot [Kvick] slunga sig över hinder upp till 5 meter i höjd eller längd. Tekniken kan även nyttjas för att dämpa landningar; ett lyckat test mot [Kvick] tillåter karaktären att hoppa ner från höjder upp till 10 meter utan att ta fallskada. Manövern kräver god rörlighet och kan inte utföras om karaktären bär Tung rustning eller besitter särdraget Robust.",
+      "description": "Handling: Aktiv. Konsten att använda sitt långa vapen som en hävstång är ovärderlig i oländig terräng. Handlingen kräver karaktären håller ett långt föremål i händerna (exempelvis spjut, stav eller hillebard). Genom att ta sats kan karaktären med ett lyckat slag mot [Kvick] slunga sig över hinder upp till 5 meter i höjd eller längd. Tekniken kan även nyttjas för att dämpa landningar; ett lyckat test mot [Kvick] tillåter karaktären att hoppa ner från höjder upp till 10 meter utan att ta fallskada. Manövern kräver god rörlighet och kan inte utföras om karaktären bär Medeltung/Tung rustning eller besitter särdraget Robust.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -139,7 +139,7 @@
     {
       "id": "bas6",
       "name": "Djurvän",
-      "description": "Handling: Speciell. Banden mellan klanfolken och skogens varelser är urgamla; de delar mark, bytesdjur och ibland till och med gudar. Karaktären har tillägnat sig denna djupa samhörighet och erhåller därmed särdraget Bestars tunga. Karaktärens förståelse för djurisk instinkt är så pass djup att inget test mot [Övertygande] krävs för att be en best om hjälp, förutsatt att varelsen har [Listig] lägre än 10. Begäran måste dock ligga inom ramen för vad djuret naturligt kan och vill göra.",
+      "description": "Handling: Speciell. Banden mellan klanfolken och skogens varelser är urgamla; de delar mark, bytesdjur och ibland till och med gudar. Karaktären har tillägnat sig denna djupa samhörighet och erhåller därmed fördelen Bestars tunga. Karaktärens förståelse för djurisk instinkt är dessutom så pass djup att inget slag mot [Övertygande] krävs för att be en best om hjälp, förutsatt att varelsen har [Listig] lägre än 10. Begäran måste dock ligga inom ramen för vad djuret naturligt kan göra.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -253,7 +253,7 @@
     {
       "id": "bas11",
       "name": "Desinformationsspridning",
-      "description": "Handling: Speciell. Information är en handelsvara i krig, och falsk sådan är en fälla. Karaktären sprider noggrant kalkylerade lögner om sällskapets storlek eller mål. Efter en kvälls arbete slås ett slag på [Övertygande ← Vaksam]. Vid framgång blir fiendens ledare övertygad om lögnerna och kommer att basera sina strategiska beslut på dessa, förutsatt att informationen är någorlunda trovärdig.",
+      "description": "Handling: Speciell. Information är en handelsvara i krig, och falsk sådan är en fälla. Karaktären sprider noggrant kalkylerade lögner om sällskapets storlek eller mål. Efter en kvälls arbete slås ett slag på [Övertygande ← Listig]. Vid framgång blir fiendens ledare övertygad om lögnerna och kommer att basera sina strategiska beslut på dessa, förutsatt att informationen är någorlunda trovärdig.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -273,7 +273,7 @@
     {
       "id": "bas12",
       "name": "Meditationsledning",
-      "description": "Handling: Speciell. I en värld där korruption och skräck ständigt hotar, är sinnesro en bristvara. Karaktären leder sällskapet i mentala övningar för att stärka själen. Ritualen tar en timme. Med ett lyckat test mot [Övertygande] läker alla deltagande allierade 1T8 Tålighet utöver naturlig återhämtning. Dessutom reduceras 1T4 tillfällig Korruption hos deltagarna. Kan endast nyttjas en gång per dygn per person.",
+      "description": "Handling: Speciell. I en värld där korruption och skräck ständigt hotar, är sinnesro en bristvara. Karaktären kan under en timme leda sällskapet i mentala övningar för att stärka själen. Med ett lyckat slag mot [Övertygande] läker alla deltagande allierade 1T8 Tålighet utöver naturlig återhämtning. Dessutom reduceras 1T4 tillfällig Korruption hos deltagarna. Kan endast nyttjas en gång per dygn per person.",
       "tags": {
         "types": [
           "Basförmåga"
@@ -313,7 +313,7 @@
     {
       "id": "bas14",
       "name": "Retorisk trollbindning",
-      "description": "Handling: Speciell. Ord kan fängsla lika effektivt som kedjor. Genom retorik och gester kan karaktären fånga vakters eller en folksamlings uppmärksamhet utanför strid. Med ett lyckat slag mot [Övertygande ← Vaksam] blir åhörarna så distraherade att närbelägna allierade får använda talarens [Övertygande] istället för sitt egna [Diskret] för att undvika att bli upptäckta.",
+      "description": "Handling: Speciell. Ord kan fängsla lika effektivt som kedjor. Genom retorik och gester kan karaktären fånga vakters eller en folksamlings uppmärksamhet utanför strid. Med ett lyckat slag mot [Övertygande] blir åhörarna så distraherade att närbelägna allierade får använda talarens [Övertygande] istället för sitt egna [Diskret] för att undvika att bli upptäckta.",
       "tags": {
         "types": [
           "Basförmåga"

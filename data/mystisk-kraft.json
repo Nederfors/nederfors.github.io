@@ -3002,44 +3002,44 @@
       },
       "rules": {}
     },
-    {
-      "id": "mystiskkr85",
-      "name": "Bergatroll",
-      "description": "Tradition: Trollsång\nMaterial: En bit av en stalaktit eller en trolltand.\n Genom dova, skrapande toner vibrerar mystikern i takt med underjordens massiva urberg. De rytmiska, malande ljuden är en ekokammare av jordens geologiska minne. Trollets naturliga drag antar berggrundens karaktär. Skaldens hud blir en tjock, sprickfri mantel av grovkornig sten, naglarna förvandlas till vassa, glimmande stalaktiter, och blodet sjuder av bergets sega livskraft. Sången stärker det slumrande trollarvet och gör mystikern till en levande avatar av urberget, rotad i världens äldsta materia",
-      "tags": {
-        "types": [
-          "Mystisk kraft",
-          "Elityrkesförmåga"
-        ],
-        "traditions": [
-          "Skald"
-        ],
-        "tests": [
-          "Viljestark"
-        ]
-      },
-      "levels": {
-        "Novis": {
-          "description": "Handling: Aktiv. Mystikern sjunger fram en hud av levande gråsten. Med ett lyckat Viljestark erhåller mystikern särdraget Pansar på novisnivå (skydd 1T4). Om mystikern redan besitter naturligt pansar ökar skyddstärningen istället ett steg. Effekten varar under en scen.",
-          "actions": [
-            "Aktiv"
-          ]
-        },
-        "Gesäll": {
-          "description": "Handling: Aktiv. Sången gör händerna tunga och naglarna skarpa som flinta. Med ett lyckat Viljestark får mystikern särdraget Naturligt vapen på novisnivå (skada 1T6). Om mystikern redan har naturliga vapen ökar skadetärningen ett steg (exempelvis från 1T6 till 1T8). Effekten aktiveras samtidigt som Pansar-effekten från novisnivån.",
-          "actions": [
-            "Aktiv"
-          ]
-        },
-        "Mästare": {
-          "description": "Handling: Aktiv. Mystikern väcker trollens legendariska läkekraft i sitt eget blod. Med ett lyckat Viljestark får mystikern särdraget Regeneration på novisnivå (återfår 1T4 Tålighet per runda). Om mystikern redan har regeneration ökar effekttärningen ett steg (exempelvis från 1T4 till 1T6). Denna nivå aktiverar samtidigt effekterna från både novis- och gesällnivå.",
-          "actions": [
-            "Aktiv"
-          ]
-        }
-      },
-      "rules": {}
+{
+  "id": "mystiskkr85",
+  "name": "Bergatroll",
+  "description": "Tradition: Trollsång\nMaterial: En bit av en stalaktit eller en trolltand.\n\nGenom dova, skrapande toner vibrerar mystikern i takt med underjordens massiva urberg. De rytmiska, malande ljuden bildar en ekokammare för jordens geologiska minne. Trollets naturliga drag antar berggrundens karaktär: skaldens hud blir en tjock mantel av grovkornig sten, naglarna förvandlas till vassa, glimmande stalaktiter och kroppen växer sig tung och väldig.\n\nSången sägs härstamma från Garataroxox, det första och största av urtrollens skalder, vars väldiga gestalt enligt legenden reste sig högre än bergen och vars sånger kunde trollbinda självaste Världsormen. Genom sången väcker mystikern en skärva av Garataroxox uråldriga kraft och blir en levande avatar av urberget, rotad i världens äldsta materia.",
+  "tags": {
+    "types": [
+      "Mystisk kraft",
+      "Elityrkesförmåga"
+    ],
+    "traditions": [
+      "Skald"
+    ],
+    "tests": [
+      "Viljestark"
+    ]
+  },
+  "levels": {
+    "Novis": {
+      "description": "Handling: Aktiv. Med ett lyckat Viljestark förvandlas mystikerns hud till levande gråsten. Mystikern får Naturligt Pansar på novisnivå, eller +1T4 i skydd om särdraget redan finns. Effekten varar under en scen.",
+      "actions": [
+        "Aktiv"
+      ]
     },
+    "Gesäll": {
+      "description": "Handling: Aktiv. Med ett lyckat Viljestark hårdnar mystikerns hud och naglar till sten. Mystikern får Naturligt Vapen på novisnivå och Naturligt Pansar på gesällnivå. Befintliga särdrag får istället +1T4 i skada respektive +1T6 i skydd. Effekterna varar under en scen.",
+      "actions": [
+        "Aktiv"
+      ]
+    },
+    "Mästare": {
+      "description": "Handling: Aktiv. Med ett lyckat Viljestark åkallar mystikern urtrollet Garataroxox väldiga kraft. Mystikern får Robust på novisnivå, eller höjer ett befintligt Robust med en nivå, upp till mästarnivå. Har mystikern redan Robust på mästarnivå får hen istället Väldig på novisnivå, eller höjer ett befintligt Väldig med en nivå. Mystikern får även Naturligt Vapen och Naturligt Pansar på gesällnivå. Befintliga särdrag får istället +1T6 i skada respektive +1T8 i skydd. Effekterna varar under en scen.",
+      "actions": [
+        "Aktiv"
+      ]
+    }
+  },
+  "rules": {}
+},
     {
       "id": "mystiskkr86",
       "name": "Pestvind",
@@ -3068,7 +3068,7 @@
           "damage_type": "Gift"
         },
         "Mästare": {
-          "description": "Handling: Aktiv. Gasen blir tjockare, mer frätande och svårstoppad. Skadan ökar till 1T6 per runda i 1T6 rundor för alla drabbade. Om slaget misslyckas tar målet endast 1T6 skada omedelbart när gasen passerar, utan kvardröjande effekt.",
+          "description": "Handling: Aktiv. Som gesäll, men gasen blir tjockare, mer frätande och svårstoppad. Skadan ökar till 1T6 per runda i 1T6 rundor för alla drabbade och ett misslyckat slag när mystikern leder gasen vidare stoppar inte kedjan, istället tar den drabbade 1T6 i skada utan kvardröjande effekt innan gasen rör sig vidare till nästa offer.",
           "actions": "Aktiv",
           "damage_type": "Gift"
         }

@@ -543,7 +543,7 @@
           "damage_type": "Yttre fysisk"
         },
         "Mästare": {
-          "description": "Handling: Aktiv. Rollpersonen kan lägga hela sin tyngd bakom en attack per runda vilken ger +1T8 i skada (i stället för +1T4).",
+          "description": "Handling: Aktiv. Rollpersonen kan lägga hela sin tyngd bakom en attack per runda vilken ger ytterligare +1T4 i skada",
           "actions": "Aktiv",
           "damage_type": "Yttre fysisk"
         }
@@ -3767,17 +3767,17 @@
       },
       "levels": {
         "Novis": {
-          "description": "Handling: Fri. Även i stridens hetta når rollpersonens röst fram. En gång per runda kan rollpersonen ropa stärkande ord till en allierad inom synhåll. Med ett lyckat slag för Övertygande får den allierade +1T4 på sitt nästa framgångsslag innan rundans slut. Denna effekt kan endast appliceras en gång per scen för varje unik allierad.",
+          "description": "Handling: Fri. Även i stridens hetta når rollpersonens röst fram. En gång per runda kan rollpersonen ropa stärkande ord till en allierad inom hörhåll innan den utför en handling. Med ett lyckat slag för Övertygande får den allierade +1T4 på sitt nästa framgångsslag. Denna effekt kan endast appliceras en gång per scen för varje unik allierad.",
           "actions": "Fri",
           "damage_type": "Ingen"
         },
         "Gesäll": {
-          "description": "Handling: Aktiv. En gång per dag kan rollpersonen hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka femton minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
+          "description": "Handling: Aktiv. En gång per dag kan rollpersonen hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka femton minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning, till exempel för att klättra upp på en klippa eller vada över en ström.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         },
         "Mästare": {
-          "description": "Handling: Reaktiv. Rollpersonen vägrar låta sina kamrater falla. När en allierad inom hörhåll misslyckas med ett slag kan rollpersonen omedelbart ingripa. Rollpersonen slår ett slag mot Övertygande; om det lyckas får den allierade slå om sitt tärningsslag och använder då rollpersonens Övertygande som värde istället för sitt eget karaktärsdrag. Denna inspiration kan endast utföras en gång per scen för varje unik allierad.",
+          "description": "Handling: Aktiv. Rollpersonen vägrar låta sina kamrater falla. När en allierad inom hörhåll misslyckas med ett slag kan rollpersonen omedelbart ingripa. Rollpersonen slår ett slag mot Övertygande; om det lyckas slår talaren 1T12 varpå den allierade får subtrahera resultatet från sitt egna framgångsslag. Denna inspiration kan endast utföras en gång per scen för varje unik allierad.",
           "actions": "Reaktiv",
           "damage_type": "Ingen"
         }
@@ -3803,12 +3803,12 @@
       },
       "levels": {
         "Novis": {
-          "description": "Handling: Förflyttning. Rollpersonen kan offra sin förflyttning för att aktivt föra ett sådant oväsen att brukandet av mystiska krafter försvåras. Med ett lyckat slag mot Övertygande får alla fientliga mystiker inom hörhåll modifikationen -1T4 på sitt nästa slag för att aktivera mystiska krafter.",
+          "description": "Handling: Förflyttning. Rollpersonen kan offra sin förflyttning för att aktivt föra ett sådant oväsen att brukandet av mystiska krafter försvåras. Med ett lyckat slag på [Övertygande ← Viljestark] får alla fientliga mystiker inom hörhåll modifikationen -1T4 på sitt nästa slag för att aktivera mystiska krafter.",
           "actions": "Förflyttning",
           "damage_type": "Ingen"
         },
         "Gesäll": {
-          "description": "Handling: Aktiv. Rollpersonen riktar ett skärande, fokuserat oljud mot en enskild fiende inom syn- och hörhåll. Om rollpersonen lyckas med ett slag mot [Övertygande ← Viljestark] bryts fiendens koncentration omedelbart. Detta avbryter alla pågående effekter som kräver koncentration av målet.",
+          "description": "Handling: Aktiv. Rollpersonen riktar ett skärande, fokuserat oljud mot en enskild fiende inom syn- och hörhåll. Om rollpersonen lyckas med ett slag på [Övertygande ← Viljestark] bryts fiendens koncentration omedelbart. Detta avbryter alla pågående effekter som kräver koncentration av målet.",
           "actions": "Aktiv",
           "damage_type": "Ingen"
         },
@@ -3856,7 +3856,7 @@
     {
       "id": "form88",
       "name": "Sköldföring",
-      "description": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att fungera.",
+      "description": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att kunna användas.",
       "tags": {
         "types": [
           "Förmåga"
@@ -3914,7 +3914,7 @@
           "damage_type": "Ingen"
         },
         "Mästare": {
-          "description": "Handling: Reaktiv. En gång per runda när rollpersonen träffas av ett anfall, kan hen aktivt möta och styra undan anfallet. När rollpersonen träffas av en närstridsattack kan denne försöka blockera slaget helt med skölden genom att slå [Träffsäker]. Om slaget lyckas styrs attacken bort mot sköldens tåligaste delar och orsakar ingen skada.",
+          "description": "Handling: Reaktiv. En gång per runda när rollpersonen träffas av ett anfall, kan hen aktivt möta och styra undan anfallet. När rollpersonen träffas av en närstridsattack kan denne försöka minska slagets kraft med skölden genom att slå [Träffsäker]. Om slaget lyckas styrs attacken bort över sköldens tåligaste delar innan det slår mot kroppen och skadan det orsakar halveras (avrundat uppåt).",
           "actions": "Reaktiv",
           "damage_type": "Ingen"
         }
