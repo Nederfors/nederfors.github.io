@@ -42,7 +42,7 @@
         "data/avstandsvapen.json",
         "data/narstridsvapen.json"
       ],
-      "genererad": "2026-07-16T15:56:55.340092+00:00"
+      "genererad": "2026-07-17T10:18:10.545239+00:00"
     },
     "Allmän kvalitet": {
       "antal": 2,
@@ -2687,7 +2687,7 @@
       ]
     },
     "Kvalitet": {
-      "antal": 62,
+      "antal": 63,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",
@@ -3759,7 +3759,7 @@
       ]
     },
     "Mystisk kvalitet": {
-      "antal": 29,
+      "antal": 30,
       "källfiler": [
         "data/mystisk-kvalitet.json"
       ],
@@ -3767,7 +3767,7 @@
         {
           "id": "mystiskkv1",
           "name": "Banevapen",
-          "description": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familj en gör banevapnet +1T4 i skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
+          "description": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familjen gör banevapnet 1T4 extra mystisk skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
           "tags": {
             "types": [
               "Mystisk kvalitet",
@@ -3781,7 +3781,7 @@
         {
           "id": "mystiskkv2",
           "name": "Brinnande",
-          "description": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet börjar sedan brinna, 1T4 skada i 1T4 rundor, med start rundan efter initial träff. Målet kan släcka sig genom att spendera en hel runda på att rulla på marken och lyckas med ett Kvick.",
+          "description": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet fattar sedan eld och tar 1T4 elementär eldskada per runda i 1T4 rundor, med början rundan efter den första träffen. Målet kan släcka elden genom att spendera en hel runda på att rulla på marken och lyckas med ett slag i Kvick.",
           "tags": {
             "types": [
               "Mystisk kvalitet",
@@ -3794,8 +3794,8 @@
         },
         {
           "id": "mystiskkv3",
-          "name": "Dundrande",
-          "description": "Vapnet är smitt med stormande och dundrande runor. Varje träff med vapnet ekar med blixtars kraft vilket gör 1T8 dundrande skada, vilket slås separat i förhållande till den vanliga skadan från attacken. Förmågor påverkar inte denna extra dundrande skada. Om något av den dundrande skadan går genom rustning och skadar målet måste offret dessutom klara ett slag i Stark eller förlora en handling på grund av knallens kraft.",
+          "name": "Runhammrat",
+          "description": "Vapnet är smitt med runor som släpper lös våldsamma tryckvågor vid varje träff. Varje träff med vapnet gör dessutom 1T8 yttre fysisk skada i form av ett hamrande slag, vilken slås separat från attackens vanliga skada. Förmågor påverkar inte denna extra skada. Om någon del av den hamrande skadan går genom målets bepansring och orsakar skada måste offret dessutom klara ett slag i Stark eller förlora sin nästa runda på grund av slagets förkrossande kraft.",
           "tags": {
             "types": [
               "Mystisk kvalitet",
@@ -3804,7 +3804,7 @@
             ]
           },
           "levels": {},
-          "effect": "+1T8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
+          "effect": "+1T8 hamrande skada; går skadan igenom krävs Stark eller en handling förloras."
         }
       ]
     },
@@ -4723,7 +4723,7 @@
       ]
     },
     "Rustningskvalitet": {
-      "antal": 18,
+      "antal": 19,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",
@@ -5723,7 +5723,7 @@
       ]
     },
     "Vapenkvalitet": {
-      "antal": 47,
+      "antal": 48,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",

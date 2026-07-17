@@ -269,7 +269,7 @@
     {
       "id": "ri13",
       "name": "Helgande rit",
-      "description": "Tradition: Teurgi\nMystikern helgar en plats vilket skyddar och skyler den från mystisk påverkan utifrån. En helgad plats blockerar ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande, men om ritualen spårar eller spanar på en person så återupptas effekten så snart denne lämnar det helgade området.\nStyggelser (varelser som ingår i monsterkategorin Styggelse) mår illa av att närma sig ett helgat område och tar 1T4 i skada, Bepansring skyddar ej, för varje runda de vistas på helgad mark. Också varelser som smittats med vederstygglighet men inte ännu utvecklats till styggelser känner starkt obehag av helgade platser och föremål.\nHelgande rit kan också göras på ett vapen, vilket är ett krav för att använda förmågan Häxhammare.",
+      "description": "Tradition: Teurgi\nMystikern helgar en plats vilket skyddar och skyler den från mystisk påverkan utifrån. En helgad plats blockerar ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande, men om ritualen spårar eller spanar på en person så återupptas effekten så snart denne lämnar det helgade området.\nStyggelser (varelser som ingår i monsterkategorin Styggelse) mår illa av att närma sig ett helgat område och tar 1T4 i skada, Bepansring skyddar ej, för varje runda de vistas på helgad mark. Också varelser som smittats med vederstygglighet men inte ännu utvecklats till styggelser känner starkt obehag av helgade platser och föremål.\nHelgande rit kan också göras på ett vapen eller rustning vilket ger det helgade föremålet kvaliteten 'Heligt'.",
       "tags": {
         "types": [
           "Ritual"
@@ -667,7 +667,7 @@
     {
       "id": "ri31",
       "name": "Vanhelgande rit",
-      "description": "Tradition: Svartkonst\nMystikern vanhelgar en plats vilket besudlar den och straffar dem som försöker påverka platsen utifrån. En vanhelgad plats korrumperar dem\nsom använder ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande. Vanhelgandet ger 1T6 temporär korruption till dem som utför sagda ritualer, och om de framhärdar att få information av ritualen så tar de ytterligare 1T6 korruption – permanent.\nStyggelser (varelser som tillhör monsterkategorin Styggelse) dras till vanhelgade områden och helas 1T4 för varje timme de vistas på vanhelgad mark. Även varelser som har smittats med vederstygglighet men som ännu inte har utvecklats till styggelser känner en stark lockelse till vanhelgade platser och föremål.\nVanhelgande rit kan också göras på ett vapen, vilket är ett krav för att använda förmågan Vandråp.",
+      "description": "Tradition: Svartkonst\nMystikern vanhelgar en plats vilket besudlar den och straffar dem som försöker påverka platsen utifrån. En vanhelgad plats korrumperar dem\nsom använder ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande. Vanhelgandet ger 1T6 temporär korruption till dem som utför sagda ritualer, och om de framhärdar att få information av ritualen så tar de ytterligare 1T6 korruption – permanent.\nStyggelser (varelser som tillhör monsterkategorin Styggelse) dras till vanhelgade områden och helas 1T4 för varje timme de vistas på vanhelgad mark. Även varelser som har smittats med vederstygglighet men som ännu inte har utvecklats till styggelser känner en stark lockelse till vanhelgade platser och föremål.\nVanhelgande rit kan också göras på ett vapen eller rustning vilket ger det vanhelgade föremålet kvaliteten 'Vanhelgat'.",
       "tags": {
         "types": [
           "Ritual"

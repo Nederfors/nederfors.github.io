@@ -26,7 +26,7 @@
     {
       "id": "mystiskkv1",
       "name": "Banevapen",
-      "description": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familj en gör banevapnet +1T4 i skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
+      "description": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familjen gör banevapnet 1T4 extra mystisk skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -40,7 +40,7 @@
     {
       "id": "mystiskkv2",
       "name": "Brinnande",
-      "description": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet börjar sedan brinna, 1T4 skada i 1T4 rundor, med start rundan efter initial träff. Målet kan släcka sig genom att spendera en hel runda på att rulla på marken och lyckas med ett Kvick.",
+      "description": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet fattar sedan eld och tar 1T4 elementär eldskada per runda i 1T4 rundor, med början rundan efter den första träffen. Målet kan släcka elden genom att spendera en hel runda på att rulla på marken och lyckas med ett slag i Kvick.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -53,8 +53,8 @@
     },
     {
       "id": "mystiskkv3",
-      "name": "Dundrande",
-      "description": "Vapnet är smitt med stormande och dundrande runor. Varje träff med vapnet ekar med blixtars kraft vilket gör 1T8 dundrande skada, vilket slås separat i förhållande till den vanliga skadan från attacken. Förmågor påverkar inte denna extra dundrande skada. Om något av den dundrande skadan går genom rustning och skadar målet måste offret dessutom klara ett slag i Stark eller förlora en handling på grund av knallens kraft.",
+      "name": "Runhammrat",
+      "description": "Vapnet är smitt med runor som släpper lös våldsamma tryckvågor vid varje träff. Varje träff med vapnet gör dessutom 1T8 yttre fysisk skada i form av ett hamrande slag, vilken slås separat från attackens vanliga skada. Förmågor påverkar inte denna extra skada. Om någon del av den hamrande skadan går genom målets bepansring och orsakar skada måste offret dessutom klara ett slag i Stark eller förlora sin nästa runda på grund av slagets förkrossande kraft.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -63,12 +63,12 @@
         ]
       },
       "levels": {},
-      "effect": "+1T8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
+      "effect": "+1T8 hamrande skada; går skadan igenom krävs Stark eller en handling förloras."
     },
     {
       "id": "mystiskkv4",
       "name": "Dödsruna",
-      "description": "Vapnet är smitt med livsförnekande runor och gör 1T4 extra skada mot levande och icke-genomkorrumperade varelser. Dessutom helar dödsenergierna vandöda och andra genomkorrumperade varelser med samma värde.",
+      "description": "Vapnet är smitt med livsförnekande runor och gör 1T4 extra mystisk skada mot levande och icke-genomkorrumperade varelser. Samma dödsenergier helar i stället vandöda och andra genomkorrumperade varelser med motsvarande värde.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -82,7 +82,7 @@
     {
       "id": "mystiskkv5",
       "name": "Giftdrypande",
-      "description": "Uråldriga gifttekniker gör varje attack till potentiellt förgiftande. När en attack skadar målet tar det också giftskada, 1T4 i skada i 1T4 rundor.",
+      "description": "Vapnet är smitt och förpestat med tungmetaller och föroreningar som ger vapnet ett inneboende svagt gift. När en attack orsakar skada på målet appliceras giftet med ett lyckat [Listig←Stark] och gör 1T4 intern skada i 1T4 rundor. Om vapnet får ett annat gift applicerat förstärker istället vapnets gift effekten och ökar skadan med 1T4 per runda.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -91,12 +91,12 @@
         ]
       },
       "levels": {},
-      "effect": "Efter skada: 1T4 giftskada i 1T4 rundor."
+      "effect": "Efter skada: 1T4 giftskada i 1T4 rundor; förstärker annat gift med 1T4 skada per runda."
     },
     {
       "id": "mystiskkv6",
-      "name": "Helig",
-      "description": "Vapnet eller rustningen är smitt i helig eld och skadar respektive skyddar mot korrumperade varelser. En varelse som skadas måste slå 1T20 och slå över sin korruption, eller ta 1T4 extra i skada. Och i samband med en lyckad attack mot någon iförd en helig rustning måste anfallaren slå över sin korruption med 1T20; är slaget under anfallarens korruption skyddar rustningen 1T4 extra mot angreppet. Genomkorrumperade varelser misslyckas alltid med slaget, liksom helt rena varelser (0 i korruption) alltid lyckas.",
+      "name": "Heligt",
+      "description": "Vapnet eller rustningen har helgats i ren eld och skadar respektive skyddar mot korrumperade varelser. En varelse som skadas av ett heligt vapen måste slå 1T20 och slå över sin korruption, eller ta 1T4 extra mystisk skada. När någon lyckas med en attack mot en varelse iförd en helig rustning måste anfallaren slå över sin korruption med 1T20. Om slaget är under anfallarens korruption ger rustningen 1T4 mystisk bepansring mot angreppet. Genomkorrumperade varelser misslyckas alltid med slaget, medan helt rena varelser med 0 i korruption alltid lyckas. Kvaliteten kan ingjutas i föremål med hjälp av ritualen Helgande Rit.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -110,8 +110,8 @@
     },
     {
       "id": "mystiskkv7",
-      "name": "Oheligt",
-      "description": "Vapnet eller rustningen är smitt i svart eld och skadar respektive skyddar mot rena varelser. En varelse som skadas av ett oheligt vapen måste slå 1T20 och slå under sin korruption, eller ta 1T4 extra i skada. Så snart en varelse lyckas med en attack mot någon iförd en ohelig rustning måste anfallaren slå mot sin korruption med 1T20; är slaget över anfallarens korruption skyddar rustningen 1T4 extra mot angreppet. Genomkorrumperade varelser lyckas alltid med slaget, liksom helt rena varelser (0 i korruption) alltid misslyckas.",
+      "name": "Vanhelgat",
+      "description": "Vapnet eller rustningen har vanhelgats i svart eld och skadar respektive skyddar mot rena varelser. En varelse som skadas av ett vanhelgat vapen måste slå 1T20 och slå under sin korruption, eller ta 1T4 extra mystisk skada. När någon lyckas med en attack mot en varelse iförd en vanhelgad rustning måste anfallaren slå mot sin korruption med 1T20. Om slaget är över anfallarens korruption ger rustningen 1T4 mystisk bepansring mot angreppet. Genomkorrumperade varelser lyckas alltid med slaget, medan helt rena varelser med 0 i korruption alltid misslyckas. Kvaliteten kan ingjutas i föremål med hjälp av ritualen Vanhelgande Rit.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -121,26 +121,27 @@
         ]
       },
       "levels": {},
-      "effect": "Misslyckat 1T20 under korruption ger +1T4; ohelig rustning ger +1T4 skydd om angriparen slår över sin korruption."
+      "effect": "Misslyckat 1T20 under korruption ger +1T4; vanhelgad rustning ger +1T4 skydd om angriparen slår över sin korruption."
     },
     {
       "id": "mystiskkv8",
       "name": "Syraosande",
-      "description": "Vapnet är smitt med korrosiva tekniker som gör att vapnet är frätande. Varje träff med vapnet gör 1T4 extra i skada i 1T4 rundor. Syraskadan läggs inte till vapenskadan utan slås separat som en ytterligare träff. Vapnet bärs i en särskild skida eller hylsa för att inte skada användaren. I strid drabbas bäraren själv av syran om anfallsslaget blir 20 och ett andra slag blir över svingarens Träffsäker (eller det karaktärsdrag som ersätter Träffsäker).",
+      "description": "Föremålet osar av mystisk syra som fräter på skydd och vapen. När kvaliteten finns på ett vapen sänker varje träff målets Bepansring med 1 under resten av striden. När den finns på en rustning sänker varje träff det anfallande vapnets skada med 1 under resten av striden. Båda effekterna är kumulativa. Pansar och vapen som är en del av målets kropp återställs genom läkning. Rustningar och tillverkade vapen måste  däremot omvårdas i en timme per förlorad poäng för att återfå sin fulla funktion.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
           "Vapenkvalitet",
+          "Rustningskvalitet",
           "Kvalitet"
         ]
       },
       "levels": {},
-      "effect": "Efter träff: 1T4 syraskada i 1T4 rundor som separata träffar; fummel kan skada bäraren."
+      "effect": "Vapen: sänker Bepansring med 1T4 per träff. Rustning: sänker det träffande vapnets skada med 1T4 per träff. Effekterna är kumulativa under striden."
     },
     {
       "id": "mystiskkv9",
       "name": "Vedergällande",
-      "description": "Rustningen är smidd med hemliga och hämnande tekniker och osar av syra. Varje träff i närstrid mot rustningen kräver att anfallaren lyckas med ett Kvick, annars träffas anfallaren av syrastänk som gör 1T4 i skada i 1T4 rundor.",
+      "description": "Rustningen är smidd med hemliga och hämnande tekniker och skjuder av elementär kraft. Varje träff i närstrid mot rustningen kräver att anfallaren lyckas med ett slag i Kvick. Vid ett misslyckande träffas anfallaren av en elementär vedergällning som orsakar 1T8 elementär skada. Vilket element som finns i rustningen väljs vid smidningen.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -149,7 +150,7 @@
         ]
       },
       "levels": {},
-      "effect": "Närstridsanfallare som misslyckas med Kvick tar 1T4 syraskada i 1T4 rundor."
+      "effect": "Närstridsanfallare som misslyckas med Kvick tar 1T8 elementär skada."
     },
     {
       "id": "mystiskkv10",
@@ -168,7 +169,7 @@
     {
       "id": "mystiskkv11",
       "name": "Bräckande",
-      "description": "Den klang som uppstår när ett Bräckande närstridsvapen träffar metall inrymmer försvagande harmonier som steg för steg förstör rustningen eller skölden. En rustning får sitt värde i Bepansring sänkt med 1 för varje lyckad träff, medan en sköld löper risk att bli obrukbar vid varje lyckat försvar [1–5 på 1T20] *",
+      "description": "Den klang som uppstår när ett Bräckande närstridsvapen träffar metall inrymmer försvagande harmonier som steg för steg förstör rustningen eller skölden. En tung rustning får sitt värde i Bepansring sänkt med 1T4 för varje lyckad träff, medan en sköld löper risk att bli obrukbar vid varje lyckat försvar [1–10 på 1T20]",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -182,7 +183,7 @@
     {
       "id": "mystiskkv12",
       "name": "Blodsdrickande",
-      "description": "Vid varje skadande träff helas bäraren 1 Tålighet.",
+      "description": "Vapnet törstar efter blod och delar gärna med sig till den som bär det. Vid varje skadande träff helas bäraren 1 Tålighet.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -210,7 +211,7 @@
     {
       "id": "mystiskkv14",
       "name": "Vindkraft",
-      "description": "Avståndsattacker med detta vapen tycks styras mot fiendernas svaga punkter av vinden själv. Denna dödliga precission gör att projektilerna ignorerar 1T4 i Bepansring när de träffar sin måltavla.",
+      "description": "Avståndsattacker med detta vapen samspelar med vinden själv och styrs mot fiendernas svaga punkter. Denna dödliga precission gör att projektilerna ignorerar 1T4 i Bepansring när de träffar sin måltavla.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -224,7 +225,7 @@
     {
       "id": "mystiskkv15",
       "name": "Blodsstärkt",
-      "description": "Före en handling kan bäraren ta valfri mängd skada för att få hälften så mycket + i träffsäker vid nästa anfall.",
+      "description": "Vapnet är blodsstärkt och följer bärarens vilja och måldmedvetenhet, mot ett pris. Före en handling kan bäraren ta valfri mängd inre fysisk skada för att få en lika stor bonus i Träffsäkerhet vid sitt nästa anfall.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -252,7 +253,7 @@
     {
       "id": "mystiskkv17",
       "name": "Översköld",
-      "description": "I rustningens väv slumrar en gammal skyddsformel som växer sig starkare i stillhet. Så länge bäraren undgår fiendens slag fylls dess aura av kraft. Varje lyckat Försvar i strid då bäraren inte träffas av en fysisk attack laddas skyddet och förstärker rustningens bepansring med +1. Vid nästa fysiska träff frigörs kraften, varpå auran åter börjar samla styrka från 0. Rustningen kan som mest ansamla +5 i bepansring.",
+      "description": "I rustningens väv slumrar en gammal skyddsformel som växer sig starkare av bärarens kinetiska energi. Så länge bäraren undgår fiendens slag fylls dess aura av kraft. Varje gång bäraren lyckas med ett slag mot [Försvar] i strid laddas skyddet och förstärker rustningens vanliga bepansring med +1. Vid nästa fysiska träff frigörs den samlade kraften, varefter auran åter börjar samla styrka från 0. Kraften kan dock överladdas och om laddningen överstiger 6 stöts allt kraft ut och alla inom närstrids räckvidd från bäraren tar 1T6 fysisk skada.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -280,7 +281,7 @@
     {
       "id": "mystiskkv19",
       "name": "Barrikadrunor",
-      "description": "I rustningen har ristats tecken som låser fast skyddet och vägrar släppa taget. När pansaret håller stånd dröjer sig kraften kvar, och delar av förra rundans bepansring står bäraren bi i nästa. Upp till 4 poäng av den bepansring som inte genombryts förs vidare som bonus. Bonusen varar endast en runda och förfaller därefter, men kan åter byggas på så länge runorna får näring av varje träff som inte bryter igenom.",
+      "description": "I rustningen har ristats tecken som låser fast skyddet och vägrar släppa taget. När pansaret håller stånd dröjer sig kraften kvar, och delar av förra rundans skydd står bäraren bi i nästa. Upp till 4 poäng av rustningens vanliga bepansring som inte genombryts förs vidare som bonus. Bonusen varar endast en runda och förfaller därefter, men kan byggas upp på nytt så länge runorna får näring av träffar som inte bryter igenom.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -322,7 +323,7 @@
     {
       "id": "mystiskkv22",
       "name": "Giftkatalysator",
-      "description": "I klingan vilar en katalys som väcker gifter till liv på nytt. När den träffar ett redan förgiftat mål rycker det till som om toxinet flammar upp en gång till. Giftet triggas omedelbart en extra gång på en nivå svagare: svagt ger 1 skada, medelstarkt 1T4, starkt 1T6. Denna effekt ignorerar rustning och pulserar direkt i köttet.",
+      "description": "I klingan vilar en katalys som väcker gifter till liv på nytt. När vapnet skadar ett redan förgiftat mål rycker det till som om toxinet flammar upp ännu en gång. Giftet utlöses omedelbart en extra gång och får giftskadan att omedelbart pulsera en extra gång med sin slagna effekt.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -331,7 +332,7 @@
         ]
       },
       "levels": {},
-      "effect": "Utlöser pågående gift en extra gång en nivå svagare; ignorerar rustning."
+      "effect": "Utlöser pågående gift en extra gång."
     },
     {
       "id": "mystiskkv23",
@@ -365,7 +366,7 @@
     {
       "id": "mystiskkv25",
       "name": "Stenpansar",
-      "description": "Rustningen är vävd med stens hårdhet och tyngd, en kraft som skyddar till priset av smidighet. När den bärs blir rörelserna klumpiga och långsamma, och en ytterligare begränsning på −4 läggs till, en nackdel som inte kan minskas av förmågan rustmästare. I gengäld härdas pansaret och ger +1T6 i bepansring. För att rustningen ska kunna bära denna tyngd krävs minst medeltung grundrustning.",
+      "description": "Rustningen är vävd med stenens hårdhet och tyngd, en kraft som skyddar till priset av smidighet. När den bärs blir rörelserna klumpiga och långsamma, och en ytterligare begränsning på −4 läggs till. Denna nackdel kan inte minskas av förmågan Rustmästare. I gengäld härdas pansaret och rustningens vanliga bepansring ökar med +1T6. För att rustningen ska kunna bära denna tyngd krävs minst en medeltung grundrustning.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -388,7 +389,7 @@
     {
       "id": "mystiskkv26",
       "name": "Lindormsfjäll",
-      "description": "När korruption söker att fläcka själen väcks Lindormens urkraft i rustningen. Förbannelsen vrids bort från anden och förvandlas till en brännande börda för kroppen. Bäraren kan, innan tärningsutfallet slås, välja att ta hela korruptionsnivån som skada istället. Skadan motsvarar den fulla mängden korruption och bränner inifrån tills den är helt förtärd. Endast sömn och naturlig återhämtning kan läka skadan.",
+      "description": "När korruption söker att fläcka själen väcks lindormens urkraft i rustningen. Förbannelsen vrids bort från anden och förvandlas till en brännande börda för kroppen. Innan tärningsutfallet slås kan bäraren välja att ta hela korruptionsnivån som inre fysisk skada i stället. Skadan motsvarar den fulla mängden korruption och bränner inifrån tills den är helt läkt. Endast sömn och naturlig återhämtning kan läka denna skada.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -402,7 +403,7 @@
     {
       "id": "mystiskkv27",
       "name": "Skuggsköld",
-      "description": "I rustningens väv slumrar en mörk skyddsformel som växer sig starkare i stillhet. När skyddsformeln väcks med en fri handling pulserar en dov kraft genom rustningen, men priset blir genast 1T4 temporär korruption. Så länge bäraren undgår att träffas av fysiska attacker växer energin stilla för varje runda, och rustningens pansar tjocknar stegvis och ökar bepansringen med +1 varje runda. När en fysisk attack till slut träffar frigörs all samlad styrka i samma ögonblick, och bonusen förbrukas i slaget. Därefter faller rustningen tillbaka till sitt ursprungliga tillstånd, och skyddsformeln måste aktiveras på nytt om dess kraft åter ska samlas.",
+      "description": "I rustningens väv slumrar en mörk skyddsformel som växer sig starkare i stillhet. När skyddsformeln väcks med en fri handling pulserar en dov kraft genom rustningen, men priset blir genast 1T4 temporär korruption. För varje runda som rustningen inte måste skydda bäraren växer energin för och ger +1 mystisk bepansring per runda. När skyddet till slut aktiveras frigörs all samlad styrka i samma ögonblick, och bonusen förbrukas mot angreppet. Därefter faller rustningen tillbaka till sitt ursprungliga tillstånd, och skyddsformeln måste aktiveras på nytt om dess kraft åter ska börja samlas.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -416,7 +417,7 @@
     {
       "id": "mystiskkv28",
       "name": "Blodsvultet",
-      "description": "I strid måste vapnet få känna fiendens blod. Varje runda det gör skada ökar skadan på nästa anfall med +1, kumulativt, då vapnet ivrar efter mer. Men om vapnet missar, inte biter genom pansar eller träffar ett blodlöst mål nollställs bonusen direkt av dess besvikelse, varpå vapnet tar ut besvikelsen på sin bärare och rollpersonen tar lika mycket intern skada som vapnet byggt upp.",
+      "description": "I strid måste vapnet få känna fiendens blod. Varje runda det orsakar skada ökar skadan på nästa anfall med +1T4, kumulativt, då vapnet ivrar efter mer. Om vapnet missar, inte biter genom pansaret eller träffar ett blodlöst mål nollställs bonusen omedelbart. Vapnet tar då ut sin besvikelse på bäraren, som tar lika mycket inre fysisk skada som den bonus vapnet hade byggt upp.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -425,12 +426,12 @@
         ]
       },
       "levels": {},
-      "effect": "Skadan ökar med +1 kumulativt för varje runda vapnet orsakar skada; nollställs och skadar bärare vid miss, ingen skada eller blodlöst mål."
+      "effect": "Skadan ökar med +1T4 kumulativt för varje runda vapnet orsakar skada; nollställs och skadar bärare vid miss, ingen skada eller blodlöst mål."
     },
     {
       "id": "mystiskkv29",
       "name": "Isande",
-      "description": "Vapnet avger en isig dimma vid användning. Vapnet gör normal skada vid träff, men målets sår fryser till is om det tar skada och ger 1 skada på offrets Kvick, med start rundan efter initial träff. Den alternativa skadan läks omedelbart om målet träffas av någon eldbaserad attack eller på annat sätt lyckas värma sig igen.",
+      "description": "Vapnet avger isig dimma och gör normal skada. Om träffen går genom målets bepansring och orsakar skada förfryser den berörda vävnaden, vilket orsakar 1T4 alternativ skada mot Kvick under 1T4 rundor. Skadan läks omedelbart av en eldbaserad attack eller annan kraftig uppvärmning.",
       "tags": {
         "types": [
           "Mystisk kvalitet",
@@ -439,7 +440,21 @@
         ]
       },
       "levels": {},
-      "effect": "Efter träff: 1 i skada på Kvick som läks av värme."
+      "effect": "Efter skada: 1T4 i skada på Kvick i 1T4 rundor som läks av värme."
+    },
+    {
+      "id": "mystiskkv30",
+      "name": "Dundrande",
+      "description": "Vapnet är smitt med stormrunor som får blixtar att löpa genom det träffade målets kropp. Vapnet gör normal skada, men om träffen går genom målets bepansring och orsakar skada måste offret slå [Viljestark − Skada], där Skada motsvarar den skada som gick genom bepansringen. Vid ett misslyckat slag tar offret 1T6 alternativ skada mot Viljestark när blixtarna slår genom kropp och sinne.",
+      "tags": {
+        "types": [
+          "Mystisk kvalitet",
+          "Vapenkvalitet",
+          "Kvalitet"
+        ]
+      },
+      "levels": {},
+      "effect": "Efter genomträngande träff: slå [Viljestark − Skada]; misslyckande ger 1T6 skada på Viljestark."
     }
   ]
 }
