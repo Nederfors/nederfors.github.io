@@ -42,7 +42,7 @@
         "data/avstandsvapen.json",
         "data/narstridsvapen.json"
       ],
-      "genererad": "2026-07-17T10:18:10.545239+00:00"
+      "genererad": "2026-07-17T12:17:10.446364+00:00"
     },
     "Allmän kvalitet": {
       "antal": 2,
@@ -536,7 +536,7 @@
         {
           "id": "bas1",
           "name": "Stärkande Måltid",
-          "description": "Handling: Speciell. Denna kunskap låter karaktären förvandla enkla råvaror till en festmåltid som stärker både kropp och sinne i vildmarkens mörker. En varm, välgjord gryta kan vara skillnaden mellan hopp och förtvivlan för en sargad trupp. Tillagningen tar en timme i anspråk och kräver ett etablerat läger med eld och kokkärl, samt tillgång till ordentliga råvaror (ej enbart torkad färdkost). Det är möjligt att dryga ut måltiden med färdkost, förutsatt att minst hälften av ingredienserna utgörs av färska råvaror (exempelvis inköpta i stad eller insamlade med förmågan Vildmarksvana). Om färdkost används som utfyllnad krävs ett lyckat test mot [Listig − antalet portioner färdkost] för att måltiden ska få avsedd verkan. Vid lyckat resultat, eller om enbart råvaror använts, erhåller alla som äter av måltiden +1T4 i tillfällig Tålighet. Denna bonus fungerar som en buffert mot skada och försvinner först när den förbrukats eller efter ett dygn. En person kan endast tillgodogöra sig effekten av en stärkande måltid en gång per dag.",
+          "description": "Handling: Speciell. Denna kunskap låter karaktären förvandla enkla råvaror till en festmåltid som stärker både kropp och sinne i vildmarkens mörker. En varm, välgjord gryta kan vara skillnaden mellan hopp och förtvivlan för en sargad trupp. Tillagningen tar en timme i anspråk och kräver ett etablerat läger med eld och kokkärl, samt tillgång till ordentliga råvaror (exempelvis inköpta i stad eller insamlade med förmågan Vildmarksvana). En stärkande måltid ger alla som äter av den +1T4 i tillfällig Tålighet. Denna bonus fungerar som en buffert mot skada och försvinner först när den förbrukats eller efter ett dygn. En skicklig kock kan dryga ut den stärkande måltiden och låta hälften av ingredienserna bestå av torkad fältkost som saltat kött eller långfärdsbröd, men tillagningen kräver då ett lyckat slag i [Listig] för att ge önskad effekt. Varje person kan endast tillgodogöra sig effekten av en stärkande måltid en gång per dag.",
           "tags": {
             "types": [
               "Basförmåga"
@@ -560,7 +560,7 @@
         {
           "id": "bas2",
           "name": "Mental Försegling",
-          "description": "Handling: Reaktiv. Genom strikta mentalövningar och djup meditation har karaktären lärt sig att sluta sitt sinne mot Davokars viskningar. Denna disciplin fungerar som en sista försvarslinje när skuggan hotar att bryta ner karaktärens motståndskraft. Förmågan är reaktiv och kan användas en gång per dag. Den aktiveras när karaktären drabbas av korruption (tillfällig eller permanent) som gör att den Totala Korruptionen når eller överstiger karaktärens Korruptionströskel. Spelaren slår då 1T20. Om resultatet är högre än rollpersonens Totala Korruption (innan den inkommande mängden), lyckas karaktären stöta bort mörkret och den inkommande korruptionen negeras helt. Om slaget misslyckas tas korruptionen emot som vanligt.",
+          "description": "Handling: Reaktiv. Genom strikta mentalövningar och djup meditation har karaktären lärt sig att sluta sitt sinne mot Davokars viskningar. Denna disciplin fungerar som en sista försvarslinje när skuggan hotar att bryta ner karaktärens motståndskraft. Förmågan är reaktiv och kan en gång per dag aktiveras när karaktären drabbas av korruption (tillfällig eller permanent) som gör att dess totala korruption når eller överstiger karaktärens Korruptionströskel. Spelaren slår då 1T20. Om resultatet är högre än rollpersonens totala korruption (innan den inkommande mängden), lyckas karaktären stöta bort mörkret och den inkommande korruptionen negeras helt. Om slaget misslyckas tas korruptionen emot som vanligt.",
           "tags": {
             "types": [
               "Basförmåga"
