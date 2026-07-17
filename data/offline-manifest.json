@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "7e7150e3f4156f1d2f91ebe7698d30e5e4af55aca6e9b1335abe7cdf9e6fc6e9",
+  "revision": "f220ce2b3e1f99972ab19e35dcccdb829ce4f571456d690117ddeac1503d7762",
   "resources": [
     {
       "url": "data/diverse.json",
@@ -29,13 +29,13 @@
     },
     {
       "url": "data/formaga.json",
-      "revision": "sha256-5f59a04b3c3425cb207200103483a279c8d224450ab212b279be6a84413fa7e3",
-      "bytes": 208918
+      "revision": "sha256-d53d15ec3d19c52b55695c6d7b2a43f04a9315e8451d38c749b82ec87f54d915",
+      "bytes": 209029
     },
     {
       "url": "data/basformagor.json",
-      "revision": "sha256-f364a8441cc9d04b8d2b8b57d06b1ec609e33fc7d54c10918e650f9148af2e47",
-      "bytes": 16642
+      "revision": "sha256-991becc9d7236a7117859cc2ac371613e3ecda2345e61c483095b7a4b31ca5d6",
+      "bytes": 16554
     },
     {
       "url": "data/kvalitet.json",
@@ -44,8 +44,8 @@
     },
     {
       "url": "data/mystisk-kraft.json",
-      "revision": "sha256-af096e40a61b4df2acd82705be4cc983b82ead45b66f97371e288f8d5a5f4bdc",
-      "bytes": 173366
+      "revision": "sha256-0810b9d2b9cf23c5bd99863edcf8e7d61b7fdeb79553f3b6694c74191283d324",
+      "bytes": 173711
     },
     {
       "url": "data/mystisk-kvalitet.json",
@@ -188,5 +188,5 @@
       "bytes": 56874
     }
   ],
-  "totalBytes": 1783448
+  "totalBytes": 1783816
 }
