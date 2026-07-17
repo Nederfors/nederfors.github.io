@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "1c77ccc8ee871b26e7385987f457abe7eeaefb6fe63b793aa82c5c8c9bf97e02",
+  "revision": "7e7150e3f4156f1d2f91ebe7698d30e5e4af55aca6e9b1335abe7cdf9e6fc6e9",
   "resources": [
     {
       "url": "data/diverse.json",
@@ -44,13 +44,13 @@
     },
     {
       "url": "data/mystisk-kraft.json",
-      "revision": "sha256-5681499858e545384ad8276808a4ee15c6e76e6a81f55c32b8e6c0647e526b61",
-      "bytes": 173284
+      "revision": "sha256-af096e40a61b4df2acd82705be4cc983b82ead45b66f97371e288f8d5a5f4bdc",
+      "bytes": 173366
     },
     {
       "url": "data/mystisk-kvalitet.json",
-      "revision": "sha256-e615d0cd113bd80d5d76727ae14e2ea2142097cf2d2d375cb34f9dcde58769b0",
-      "bytes": 21036
+      "revision": "sha256-b90f7b5a96d2cbe61ba5da825dc5efa5c573b91fcd8a2ac1a4c4c4fa71bbd1d5",
+      "bytes": 22834
     },
     {
       "url": "data/neutral-kvalitet.json",
@@ -129,8 +129,8 @@
     },
     {
       "url": "data/ritual.json",
-      "revision": "sha256-26f194ec20b4e716a867b303199ea9cb5935e6c2dd2f2fa16dc97fa6103367be",
-      "bytes": 113549
+      "revision": "sha256-76152878a16e4cc2f43c3b800aadebfc72c622bd288c65a797d07793edf79ef4",
+      "bytes": 113574
     },
     {
       "url": "data/rustning.json",
@@ -188,5 +188,5 @@
       "bytes": 56874
     }
   ],
-  "totalBytes": 1781543
+  "totalBytes": 1783448
 }

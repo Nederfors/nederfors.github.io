@@ -711,7 +711,7 @@
     {
       "id": "mystiskkr19",
       "name": "Häxhammare",
-      "description": "Material: Ett närstridsvapen helgat med ritualen Helgande rit.  \nMystikern behärskar förmågan att i likhet med den legendariska ljusbringaren Ofelya av Attio innesluta sitt närstridsvapen med helig och styggelsehatande eld. För att aktivera Häxhammare krävs ett lyckat slag mot Viljestark.",
+      "description": "Material: Ett närstridsvapen helgat med ritualen Helgande rit. och således har kvaliteten 'Heligt'.  \nMystikern behärskar förmågan att i likhet med den legendariska ljusbringaren Ofelya av Attio innesluta sitt närstridsvapen med helig och styggelsehatande eld. För att aktivera Häxhammare krävs ett lyckat slag mot Viljestark.",
       "tags": {
         "types": [
           "Mystisk kraft"
@@ -1412,7 +1412,7 @@
     {
       "id": "mystiskkr39",
       "name": "Vandråp",
-      "description": "Material: Ett vapen fläckat av ritualen Vanhelgande rit. \n Svartkonstnärens vapen omhöljs av ond kraft vilken bidrar till att öka skadan mot levande varelser. Ännu värre är att varelser som dräps med vandråpets illvilliga makt återuppväcks som dragouler, vandrande lik, i svartkonstnärens våld. Vandöda som skapas med vandråpet har samma värden som monstret dragoul (läs mer på sidan 230). De vandöda dör på riktigt efter scenens slut. För att aktivera kraften krävs ett lyckat slag mot Viljestark",
+      "description": "Material: Ett vapen fläckat av ritualen Vanhelgande rit och som således har kvaliteten 'Vanhelgat'. \n Svartkonstnärens vapen omhöljs av ond kraft vilken bidrar till att öka skadan mot levande varelser. Ännu värre är att varelser som dräps med vandråpets illvilliga makt återuppväcks som dragouler, vandrande lik, i svartkonstnärens våld. Vandöda som skapas med vandråpet har samma värden som monstret dragoul (läs mer på sidan 230). De vandöda dör på riktigt efter scenens slut. För att aktivera kraften krävs ett lyckat slag mot Viljestark",
       "tags": {
         "types": [
           "Mystisk kraft"
