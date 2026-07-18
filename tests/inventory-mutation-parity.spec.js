@@ -245,6 +245,118 @@ test('metadata quantity fast path matches the conservative save/render path and 
   expect(removalReload).toEqual(fastRemovalState.inventory);
 });
 
+test('owned hidden stack quantity matches forced-safe state without replaying reveal work', async ({ page }) => {
+  await seedStore(page);
+  await page.goto('/#/inventory');
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await page.locator('#invList').waitFor({ state: 'visible' });
+
+  const target = await page.evaluate(async () => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entry = (window.DB || []).find(candidate => (
+      candidate?.taggar?.typ?.[0] === 'Skatt'
+      && window.inventoryCapabilities?.resolve?.(candidate)?.quantityMode === 'stack'
+    ));
+    if (!entry) throw new Error('Missing hidden stack parity representative.');
+    window.storeHelper.setInventory(activeStore, [{
+      id: entry.id,
+      name: entry.namn,
+      qty: 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    }], { bumpDerived: false });
+    window.storeHelper.addRevealedArtifact(activeStore, entry.id);
+    window.invUtil.renderInventory({ trigger: 'hidden-quantity-parity-setup' });
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'hidden-quantity-parity-setup' });
+    return {
+      id: entry.id,
+      name: entry.namn,
+      initial: JSON.parse(JSON.stringify(window.storeHelper.getInventory(activeStore))),
+      revealed: [...window.storeHelper.getRevealedArtifacts(activeStore)]
+    };
+  });
+
+  const run = async forceSafe => {
+    await page.evaluate(({ forceSafe }) => {
+      const perf = window.symbaroumPerf;
+      perf?.clearHistory?.();
+      window.__symbaroumPerfForceSafeInventoryMutations = forceSafe;
+      const scenarioId = perf?.startScenario?.(`hidden-quantity-${forceSafe ? 'safe' : 'declared'}`, {
+        behaviorSignature: 'owned-hidden-stack-quantity',
+        forcedSafe: forceSafe
+      });
+      perf?.setFlowContext?.('inventory-mutation', scenarioId);
+      window.__hiddenQuantityParityScenario = scenarioId;
+    }, { forceSafe });
+    const card = page.locator(`#invList li[data-name="${target.name}"]`).first();
+    await expect(card).toBeVisible();
+    await card.locator('button[data-act="add"]').click();
+    await expect(card.locator('.count-badge')).toHaveText('×2');
+    return page.evaluate(async ({ target }) => {
+      const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+      await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+      await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'hidden-quantity-parity-capture' });
+      const perf = window.symbaroumPerf;
+      perf?.clearFlowContext?.('inventory-mutation', window.__hiddenQuantityParityScenario);
+      const scenario = perf?.endScenario?.(window.__hiddenQuantityParityScenario);
+      const row = window.storeHelper.getInventory(activeStore)
+        .find(candidate => String(candidate?.id || '') === String(target.id));
+      const card = document.querySelector(`#invList li[data-name="${window.CSS.escape(target.name)}"]`);
+      return {
+        core: {
+          inventory: JSON.parse(JSON.stringify(window.storeHelper.getInventory(activeStore))),
+          revealed: [...window.storeHelper.getRevealedArtifacts(activeStore)],
+          artifactEffects: window.storeHelper.getArtifactEffects(activeStore),
+          rendered: {
+            quantity: card?.querySelector('.count-badge')?.textContent || '',
+            totalWeight: document.querySelector('#weightOutput')?.textContent || ''
+          },
+          rowUid: row?.__uid || ''
+        },
+        counters: scenario?.detail?.profile?.counters || {},
+        fallbacks: scenario?.detail?.profile?.fallbacks || []
+      };
+    }, { target });
+  };
+
+  const safe = await run(true);
+  expect(safe.counters.fullInventoryRenders).toBeGreaterThanOrEqual(1);
+
+  await page.evaluate(async ({ target }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.storeHelper.setInventory(activeStore, JSON.parse(JSON.stringify(target.initial)), { bumpDerived: false });
+    const currentRevealed = new Set(window.storeHelper.getRevealedArtifacts(activeStore));
+    currentRevealed.forEach(id => window.storeHelper.removeRevealedArtifact(activeStore, id));
+    target.revealed.forEach(id => window.storeHelper.addRevealedArtifact(activeStore, id));
+    window.invUtil.renderInventory({ trigger: 'hidden-quantity-parity-restore' });
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'hidden-quantity-parity-restore' });
+    window.__symbaroumPerfForceSafeInventoryMutations = false;
+  }, { target });
+
+  const declared = await run(false);
+  expect(declared.core).toEqual(safe.core);
+  expect(declared.core.revealed).toEqual(target.revealed);
+  expect(declared.counters.fullInventoryRenders || 0).toBe(0);
+  expect(declared.counters.artifactEffectScans || 0).toBe(0);
+  expect(declared.counters.commonCommits).toBe(1);
+  expect(declared.counters.persistenceSchedules).toBe(1);
+  expect(declared.fallbacks).toEqual([]);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  const reloaded = await page.evaluate(({ id }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const row = window.storeHelper.getInventory(activeStore)
+      .find(candidate => String(candidate?.id || '') === String(id));
+    return {
+      qty: Number(row?.qty || 0),
+      revealed: [...window.storeHelper.getRevealedArtifacts(activeStore)]
+    };
+  }, { id: target.id });
+  expect(reloaded).toEqual({ qty: 2, revealed: target.revealed });
+});
+
 test('filtered final-row removal matches the forced safe path and reload', async ({ page }) => {
   await seedStore(page);
   await page.goto('/#/inventory');

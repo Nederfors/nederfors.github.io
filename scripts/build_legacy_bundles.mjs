@@ -11,6 +11,7 @@ const PRELOAD_SCRIPTS = [
   'js/catalog-schema.js',
   'js/utils.js',
   'js/rules-helper.js',
+  'js/inventory-capabilities.js',
   'js/store.js'
 ];
 

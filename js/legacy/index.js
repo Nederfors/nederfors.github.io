@@ -3910,8 +3910,10 @@
               }
             });
           } else {
-            const indiv = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel']
-              .some(t => p.taggar.typ.includes(t)) && !isStackableInventoryEntry(p);
+            const indiv = typeof invUtil.isIndividualItem === 'function'
+              ? invUtil.isIndividualItem(p)
+              : ([...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel']
+                .some(t => p.taggar.typ.includes(t)) && !isStackableInventoryEntry(p));
             const rowTemplate = await invUtil.buildInventoryRow({ entry: p, list });
             if (!rowTemplate) {
               cancelAddScenario(addScenarioId, {
@@ -3971,36 +3973,66 @@
                   candidate.qty = qtyToAdd;
                   if (trait) candidate.trait = trait;
                   assignPrice(candidate);
-                  const inventoryMutation = invUtil.addInventoryVariant(inv, candidate, {
-                    entry: p,
-                    quantity: qtyToAdd,
-                    individual: indiv
-                  });
+                  const declaredPlan = typeof invUtil.planInventoryMutation === 'function'
+                    ? invUtil.planInventoryMutation({
+                        kind: 'add',
+                        entry: p,
+                        candidate,
+                        quantity: qtyToAdd,
+                        inv,
+                        surface: 'index',
+                        paymentHandled: liveEnabled
+                      })
+                    : null;
+                  const declaredResult = declaredPlan?.fastPath
+                    && typeof invUtil.commitInventoryMutation === 'function'
+                    ? invUtil.commitInventoryMutation(declaredPlan, {
+                        source: 'index-inventory-capability-add',
+                        fields: liveEnabled ? ['inventory', 'money'] : ['inventory'],
+                        beforeCommit: ({ changes }) => {
+                          if (livePairs) livePairs.push(...changes);
+                          finalizeLivePayment();
+                        }
+                      })
+                    : null;
+                  const usedDeclaredPipeline = declaredResult?.committed === true;
+                  const inventoryMutation = usedDeclaredPipeline
+                    ? declaredResult.mutation
+                    : invUtil.addInventoryVariant(inv, candidate, {
+                        entry: p,
+                        quantity: qtyToAdd,
+                        individual: indiv
+                      });
                   if (!inventoryMutation) return;
-                  if (livePairs) {
+                  if (!usedDeclaredPipeline && livePairs) {
                     inventoryMutation.changes.forEach(change => {
                       livePairs.push({ prev: change.prev, next: change.next });
                     });
                   }
-                  finalizeLivePayment();
+                  if (!usedDeclaredPipeline) finalizeLivePayment();
 
-                  const impact = invUtil.classifyInventoryMutation(
-                    p,
-                    inventoryMutation.row,
-                    inventoryMutation
-                  );
+                  const impact = usedDeclaredPipeline
+                    ? declaredResult.impact
+                    : invUtil.classifyInventoryMutation(
+                        p,
+                        inventoryMutation.row,
+                        inventoryMutation
+                      );
                   const hidden = isHidden(p);
                   const artifactTagged = hasArtifactTag(p);
-                  if (hidden && !impact.fallbackReasons.includes('hidden-revealed-state')) {
+                  if (!usedDeclaredPipeline && hidden && !impact.fallbackReasons.includes('hidden-revealed-state')) {
                     impact.fallbackReasons.push('hidden-revealed-state');
                   }
-                  if (artifactTagged && !impact.fallbackReasons.includes('artifact-list-sync')) {
+                  if (!usedDeclaredPipeline && artifactTagged && !impact.fallbackReasons.includes('artifact-list-sync')) {
                     impact.fallbackReasons.push('artifact-list-sync');
                   }
                   impact.fastPath = impact.fallbackReasons.length === 0;
                   impact.impactClass = impact.fastPath ? impact.impactClass : 'fallback';
 
-                  if (impact.fastPath) {
+                  if (usedDeclaredPipeline) {
+                    skipIndexRerender = true;
+                    skipImmediateDerivedRefresh = true;
+                  } else if (impact.fastPath) {
                     invUtil.saveInventory(inv, {
                       skipCharacterRefresh: true,
                       recalculateArtifactEffects: impact.recalculateArtifactEffects,
@@ -4050,7 +4082,7 @@
                   }
 
                   let addedToList = false;
-                  if (hidden || artifactTagged) {
+                  if (!usedDeclaredPipeline && (hidden || artifactTagged)) {
                     const list = [...storeHelper.getCurrentList(store)];
                     if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
                       list.push({ ...p, noInv: true });
@@ -4072,9 +4104,10 @@
                       storeHelper.addRevealedArtifact(store, p.id);
                     }
                   }
+                  if (usedDeclaredPipeline && hidden) needsFullRefresh = true;
                   if (!hidden && !addedToList) skipIndexRerender = true;
                   queueUpdate(p);
-                  if (hidden || addedToList) needsFullRefresh = true;
+                  if (!usedDeclaredPipeline && (hidden || addedToList)) needsFullRefresh = true;
                   const flashIdx = inventoryMutation.index;
                   const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
                   if (li && !impact.fastPath) {

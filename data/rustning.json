@@ -1,7 +1,19 @@
 {
   "schema_version": 3,
   "type_rules": {
-    "Rustning": {},
+    "Rustning": {
+      "tags": {
+        "inventory": {
+          "capability_version": 1,
+          "item": true,
+          "purchasable": true,
+          "quantity_mode": "instance",
+          "topology": "leaf",
+          "state_links": [],
+          "derived_domains": []
+        }
+      }
+    },
     "Lätt Rustning": {},
     "Medeltung Rustning": {},
     "Tung Rustning": {}

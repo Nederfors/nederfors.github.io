@@ -2,6 +2,17 @@
   "schema_version": 3,
   "type_rules": {
     "Lägre artefakt": {
+      "tags": {
+        "inventory": {
+          "capability_version": 1,
+          "item": true,
+          "purchasable": true,
+          "quantity_mode": "instance",
+          "topology": "leaf",
+          "state_links": [],
+          "derived_domains": []
+        }
+      },
       "rules": {
         "kraver_logik": "and",
         "kraver_typ_och_entry": "and"

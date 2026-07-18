@@ -89,9 +89,39 @@ Canonical `tags` keys:
 | `race` | Race binding |
 | `artifact_binding` | Artifact payment/binding config |
 | `xp` | XP/ERF metadata |
-| `inventory` | Inventory grouping flag |
+| `inventory` | Versioned inventory behavior capabilities |
 
 `arm_fast` is still accepted as a domain tag because runtime behavior depends on it.
+
+Inventory behavior belongs in a matching type rule so new entries inherit it:
+
+```json
+{
+  "tags": {
+    "inventory": {
+      "capability_version": 1,
+      "item": true,
+      "purchasable": true,
+      "quantity_mode": "stack",
+      "topology": "leaf",
+      "state_links": [],
+      "derived_domains": []
+    }
+  }
+}
+```
+
+`quantity_mode` is `stack` or `instance`. `topology` is `leaf`, `container`,
+`vehicle`, or `bundle`. Supported state links are
+`catalog-reveal-while-owned`, `selection-mirror-while-owned`,
+`artifact-binding-effects`, and `snapshot-sources`. Hidden catalog behavior
+is normally inferred from a declared `modify` rule targeting `hidden`, so it
+does not need to be repeated in `state_links`.
+
+An entry may override an inherited capability. Existing `stackbar` entry tags
+are accepted as a transitional override for `quantity_mode`. Custom or legacy
+entries without `capability_version: 1` intentionally use the conservative
+mutation path.
 
 ## Levels and Actions
 

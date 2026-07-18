@@ -1,26 +1,26 @@
 {
   "schemaVersion": 1,
-  "revision": "f220ce2b3e1f99972ab19e35dcccdb829ce4f571456d690117ddeac1503d7762",
+  "revision": "7642a3597996b46b0d40df4682776f34828634763806c96f61c9c99dea8a4d4c",
   "resources": [
     {
       "url": "data/diverse.json",
-      "revision": "sha256-9790188f1b963f0c8e78bb2a6db15948f315baa007fe61eed15b02c3582aacb9",
-      "bytes": 33408
+      "revision": "sha256-10a4a30ea59410905eaf8cae38551587e346a098fcb430b21ad273e39a8aa19b",
+      "bytes": 33687
     },
     {
       "url": "data/kuriositeter.json",
-      "revision": "sha256-5ce8b904ca6e85eaa1d452f71d534560a80045b36b449d7adf18d7d4b19634fb",
-      "bytes": 68239
+      "revision": "sha256-839dc01865375af474f6ef5544553cb87c0441c2d69daf227d108eb07b6c1dc6",
+      "bytes": 68514
     },
     {
       "url": "data/skatter.json",
-      "revision": "sha256-9eba8c29706e7df80b00f7e8a0e049d064dd3d828adfec167a41cd2f50f0c8a4",
-      "bytes": 33630
+      "revision": "sha256-823b87e77a7c3bd09d202dbde4d49eea527eca7f27c8a2aca5ab59213be2bf26",
+      "bytes": 33905
     },
     {
       "url": "data/elixir.json",
-      "revision": "sha256-dc51a7f1d1b69ec812b312fcbeb50721e8a50947ec1f982e17d1bfaae1d12b0f",
-      "bytes": 68424
+      "revision": "sha256-fb29d7500daacf733dd5dc083eff0d31d637fce09caabd9a61090789c7c7fda7",
+      "bytes": 68982
     },
     {
       "url": "data/fordel.json",
@@ -74,8 +74,8 @@
     },
     {
       "url": "data/byggnader.json",
-      "revision": "sha256-55a414afe2c078f3ea2ca33028697928bf2dd8c700312551b8e87638cfbe8759",
-      "bytes": 3123
+      "revision": "sha256-9f743629d2385053ccbb7d6356469cc1f1bbfe85c7b2bfd838693219a33c0b22",
+      "bytes": 3402
     },
     {
       "url": "data/yrke.json",
@@ -94,33 +94,33 @@
     },
     {
       "url": "data/fardmedel.json",
-      "revision": "sha256-0eefd54a61f0c0002142124c1395c7d7c18226b990a3f44365c11933b3f363f2",
-      "bytes": 4035
+      "revision": "sha256-29ad2a0cc43aada5222ddd33baffa21ae9d354adcf531d66ad1b1409f56b615b",
+      "bytes": 4320
     },
     {
       "url": "data/forvaring.json",
-      "revision": "sha256-42bc0743e5884ff3f972a9edd14d0ca779275003370f1c9f96b3780f9d59a9a8",
-      "bytes": 5599
+      "revision": "sha256-54ad0eb58ab1cc5b2ab2faf7befbdec8886d0d18acc5dfe3e6669d795d09babe",
+      "bytes": 5883
     },
     {
       "url": "data/gardsdjur.json",
-      "revision": "sha256-8d706457978051676946c57eb34352531add28a4edd133d6a148b40908e31260",
-      "bytes": 3087
+      "revision": "sha256-d03ccd20981208f93d2ef3bfaab536371adad3e213a6b427ee4dde9d7eabb105",
+      "bytes": 3366
     },
     {
       "url": "data/instrument.json",
-      "revision": "sha256-505b44dd00b7fed9f145899ecfd3c7afc7e2ad5cc27e2c6c24ecaff52bd09c50",
-      "bytes": 5931
+      "revision": "sha256-853f0bc802a81e7b490c25c159dd2048f5dbab1f347669ace3ace5bd0e46f076",
+      "bytes": 6489
     },
     {
       "url": "data/klader.json",
-      "revision": "sha256-5b972d3c12cd4f647f84139de58a3c28d565173d07f6466ab6da78f2bb4c8f9e",
-      "bytes": 9807
+      "revision": "sha256-54ec03ea907d83989babd0dd769d95fce75755378e73a165ea6c5fd218d4cedb",
+      "bytes": 10086
     },
     {
       "url": "data/specialverktyg.json",
-      "revision": "sha256-5136e4e383972837c0af7051da24385ef37a1943d0b227cfbd4209da982623f4",
-      "bytes": 25310
+      "revision": "sha256-8687d74ca39536fc37e9210410657485b0869acaaa16ae19260a270da4646bd2",
+      "bytes": 25589
     },
     {
       "url": "data/tjanster.json",
@@ -134,18 +134,18 @@
     },
     {
       "url": "data/rustning.json",
-      "revision": "sha256-eb3fb6b6be16518b6bcaa40d9b00a9c323657c4de3b016f468518d0f59db135e",
-      "bytes": 14492
+      "revision": "sha256-59e521005952e9abd0fdeba05c0b05521e137ec9c614126c2dcccc3408598b4f",
+      "bytes": 14774
     },
     {
       "url": "data/mat.json",
-      "revision": "sha256-f3ab98972437adf721ea46e786e66f03337c215a651b6efab7bb3a2fb2893593",
-      "bytes": 27228
+      "revision": "sha256-d27dc09df1b65bb7c78f3446ef95bd3d8adcbfe9eb87f6c015d3c71342a094e4",
+      "bytes": 27507
     },
     {
       "url": "data/dryck.json",
-      "revision": "sha256-42445639ef022ab2a042559194d0de8ff881357f298282d27003adf9bc06fad4",
-      "bytes": 10605
+      "revision": "sha256-b4c668854ac29b87985c890cca15c1728e5be56b1972662d292d8215f8826c50",
+      "bytes": 10884
     },
     {
       "url": "data/sardrag.json",
@@ -159,28 +159,28 @@
     },
     {
       "url": "data/artefakter.json",
-      "revision": "sha256-6f6e4e8a01cdaab330cfa43f5cce38307615783758a704d3320c1889dbe7c5c9",
-      "bytes": 257703
+      "revision": "sha256-697cc71c660fedb7ee62df7c3045d29aa7f87254dee87e75a20598f14141fa67",
+      "bytes": 258181
     },
     {
       "url": "data/lagre-artefakter.json",
-      "revision": "sha256-073c3914db1671a108cd6fa13389c0b0e44a8b87c029ae3635de33f7f9b7d29b",
-      "bytes": 79974
+      "revision": "sha256-93bb4d46bb97d8a9bd084f03a34041317b50853b9b827e42ef134fef344b8e28",
+      "bytes": 80252
     },
     {
       "url": "data/fallor.json",
-      "revision": "sha256-ebe24e978616280941767babb77739ee63fd2c437347f01af30c56dd9d14e8d4",
-      "bytes": 6029
+      "revision": "sha256-bddd17a003c9cb410571052e78483eb40eb12488b49796872bea8968183744bd",
+      "bytes": 6587
     },
     {
       "url": "data/avstandsvapen.json",
-      "revision": "sha256-bf405f7dcb0903539479a3f6c6c0f2adc8ecf31310bc17d5a08030c1bb14166f",
-      "bytes": 27524
+      "revision": "sha256-f243233470cd531b17d190ea937b3ee4fd31e95e97a13c075a70e0218e87d40e",
+      "bytes": 27806
     },
     {
       "url": "data/narstridsvapen.json",
-      "revision": "sha256-a67cfdc310109b6003c2bccfab1c807c3211a8dec8cb585d524d365e40873535",
-      "bytes": 24331
+      "revision": "sha256-55ffaa799c2795efe686d6985401bf5e9a9ecc677c8e2ffd4846e4d63ec5c1c3",
+      "bytes": 24895
     },
     {
       "url": "data/tabeller.json",
@@ -188,5 +188,5 @@
       "bytes": 56874
     }
   ],
-  "totalBytes": 1783816
+  "totalBytes": 1790446
 }
