@@ -1,8 +1,32 @@
 {
   "schema_version": 3,
   "type_rules": {
-    "Musikinstrument": {},
-    "Diverse": {}
+    "Musikinstrument": {
+      "tags": {
+        "inventory": {
+          "capability_version": 1,
+          "item": true,
+          "purchasable": true,
+          "quantity_mode": "stack",
+          "topology": "leaf",
+          "state_links": [],
+          "derived_domains": []
+        }
+      }
+    },
+    "Diverse": {
+      "tags": {
+        "inventory": {
+          "capability_version": 1,
+          "item": true,
+          "purchasable": true,
+          "quantity_mode": "stack",
+          "topology": "leaf",
+          "state_links": [],
+          "derived_domains": []
+        }
+      }
+    }
   },
   "entries": [
     {

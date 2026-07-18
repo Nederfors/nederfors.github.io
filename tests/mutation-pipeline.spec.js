@@ -453,6 +453,240 @@ async function clickInventoryAction(page, name, action) {
   await target.locator(`button[data-act="${action}"]`).click();
 }
 
+test('declared inventory capabilities compose through one mutation planner', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/inventory', '#invList');
+
+  const result = await page.evaluate(async () => {
+    const entries = Array.isArray(window.DB) ? window.DB : [];
+    const byPrimaryType = type => entries.find(candidate => candidate?.taggar?.typ?.[0] === type);
+    const ordinary = byPrimaryType('Diverse');
+    const treasure = byPrimaryType('Skatt');
+    const curiosity = byPrimaryType('Kuriositet');
+    const artifact = byPrimaryType('Artefakt');
+    if (!ordinary || !treasure || !curiosity || !artifact) {
+      throw new Error('Missing inventory capability representatives.');
+    }
+    const summarize = entry => {
+      const capabilities = window.inventoryCapabilities.resolve(entry);
+      return {
+        known: capabilities.known,
+        item: capabilities.item,
+        purchasable: capabilities.purchasable,
+        quantityMode: capabilities.quantityMode,
+        topology: capabilities.topology,
+        stateLinks: capabilities.stateLinks
+      };
+    };
+    const makeRow = (entry, qty = 1, uid = '') => ({
+      id: entry.id,
+      name: entry.namn,
+      qty,
+      ...(uid ? { __uid: uid } : {})
+    });
+    const hiddenQuantityPlan = entry => {
+      const row = makeRow(entry, 1, `owned-${entry.id}`);
+      const inventory = [row];
+      const plan = window.invUtil.planInventoryMutation({
+        kind: 'quantity',
+        row,
+        entry,
+        inv: inventory,
+        parentArr: inventory,
+        delta: 1,
+        surface: 'index'
+      });
+      return {
+        fastPath: plan.fastPath,
+        changedStateLinks: plan.stateTransitions.map(transition => transition.link),
+        invalidates: plan.invalidates
+      };
+    };
+    const firstPurchasePlan = entry => {
+      const plan = window.invUtil.planInventoryMutation({
+        kind: 'add',
+        entry,
+        candidate: makeRow(entry),
+        quantity: 1,
+        inv: [],
+        surface: 'index'
+      });
+      return {
+        fastPath: plan.fastPath,
+        changedStateLinks: plan.stateTransitions.map(transition => transition.link),
+        fallbackReasons: plan.fallbackReasons
+      };
+    };
+    const currentCustom = {
+      id: 'custom-current-schema',
+      namn: 'Current-schema custom',
+      taggar: {
+        typ: ['Hemmagjort'],
+        inventory: {
+          capability_version: 1,
+          item: true,
+          purchasable: true,
+          quantity_mode: 'stack',
+          topology: 'leaf',
+          state_links: [],
+          derived_domains: []
+        }
+      }
+    };
+    const legacyCustom = {
+      id: 'custom-legacy',
+      namn: 'Legacy custom',
+      taggar: { typ: ['Hemmagjort'] }
+    };
+    const artifactPlan = firstPurchasePlan(artifact);
+    const currentCustomPlan = firstPurchasePlan(currentCustom);
+    const legacyCustomPlan = firstPurchasePlan(legacyCustom);
+    window.__symbaroumPerfForceSafeInventoryMutations = true;
+    const forcedSafePlan = firstPurchasePlan(ordinary);
+    window.__symbaroumPerfForceSafeInventoryMutations = false;
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    window.storeHelper.setInventory(activeStore, [], { bumpDerived: false });
+    window.storeHelper.removeRevealedArtifact(activeStore, treasure.id);
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'capability-first-purchase-setup' });
+    const perf = window.symbaroumPerf;
+    perf?.clearHistory?.();
+    const scenarioId = perf?.startScenario?.('capability-first-hidden-purchase', {
+      behaviorSignature: 'stack-leaf-with-reveal-transition'
+    });
+    perf?.setFlowContext?.('inventory-mutation', scenarioId);
+    const storeInventory = window.storeHelper.getInventory(activeStore);
+    const committedPlan = window.invUtil.planInventoryMutation({
+      kind: 'add',
+      entry: treasure,
+      candidate: makeRow(treasure),
+      quantity: 1,
+      inv: storeInventory,
+      surface: 'index'
+    });
+    const committedResult = window.invUtil.commitInventoryMutation(committedPlan, {
+      source: 'test-capability-first-hidden-purchase'
+    });
+    await window.symbaroumMutationPipeline?.waitForCharacterRefresh?.();
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'capability-first-hidden-purchase' });
+    perf?.clearFlowContext?.('inventory-mutation', scenarioId);
+    const committedScenario = perf?.endScenario?.(scenarioId);
+
+    return {
+      capabilities: {
+        ordinary: summarize(ordinary),
+        treasure: summarize(treasure),
+        curiosity: summarize(curiosity),
+        artifact: summarize(artifact),
+        currentCustom: summarize(currentCustom),
+        legacyCustom: summarize(legacyCustom)
+      },
+      hiddenOwnedQuantity: {
+        treasure: hiddenQuantityPlan(treasure),
+        curiosity: hiddenQuantityPlan(curiosity)
+      },
+      firstPurchases: {
+        ordinary: firstPurchasePlan(ordinary),
+        treasure: firstPurchasePlan(treasure),
+        curiosity: firstPurchasePlan(curiosity),
+        artifact: artifactPlan,
+        currentCustom: currentCustomPlan,
+        legacyCustom: legacyCustomPlan,
+        forcedSafe: forcedSafePlan
+      },
+      committedFirstHiddenPurchase: {
+        entryId: treasure.id,
+        committed: committedResult.committed,
+        inventory: window.storeHelper.getInventory(activeStore).map(row => ({
+          id: row.id,
+          qty: Number(row.qty) || 0
+        })),
+        revealed: window.storeHelper.getRevealedArtifacts(activeStore),
+        invalidates: committedPlan.invalidates,
+        counters: committedScenario?.detail?.profile?.counters || {},
+        fallbacks: committedScenario?.detail?.profile?.fallbacks || []
+      }
+    };
+  });
+
+  const commonStack = {
+    known: true,
+    item: true,
+    purchasable: true,
+    quantityMode: 'stack',
+    topology: 'leaf'
+  };
+  expect(result.capabilities.ordinary).toEqual({ ...commonStack, stateLinks: [] });
+  expect(result.capabilities.treasure).toEqual({
+    ...commonStack,
+    stateLinks: ['catalog-reveal-while-owned']
+  });
+  expect(result.capabilities.curiosity).toEqual({
+    ...commonStack,
+    stateLinks: ['catalog-reveal-while-owned']
+  });
+  expect(result.capabilities.artifact).toMatchObject({
+    known: true,
+    item: true,
+    purchasable: true,
+    quantityMode: 'instance',
+    topology: 'leaf'
+  });
+  expect(result.capabilities.artifact.stateLinks).toEqual(expect.arrayContaining([
+    'catalog-reveal-while-owned',
+    'selection-mirror-while-owned',
+    'artifact-binding-effects',
+    'snapshot-sources'
+  ]));
+  expect(result.capabilities.currentCustom).toEqual({ ...commonStack, stateLinks: [] });
+  expect(result.capabilities.legacyCustom).toMatchObject({
+    known: false,
+    item: false,
+    purchasable: false
+  });
+
+  Object.values(result.hiddenOwnedQuantity).forEach(plan => {
+    expect(plan.fastPath).toBe(true);
+    expect(plan.changedStateLinks).toEqual([]);
+    expect(plan.invalidates).not.toContain('catalog.structure');
+  });
+  expect(result.firstPurchases.ordinary).toMatchObject({ fastPath: true, changedStateLinks: [] });
+  expect(result.firstPurchases.treasure).toMatchObject({
+    fastPath: true,
+    changedStateLinks: ['catalog-reveal-while-owned']
+  });
+  expect(result.firstPurchases.curiosity).toMatchObject({
+    fastPath: true,
+    changedStateLinks: ['catalog-reveal-while-owned']
+  });
+  expect(result.firstPurchases.artifact.fastPath).toBe(false);
+  expect(result.firstPurchases.artifact.fallbackReasons).toEqual(expect.arrayContaining([
+    'quantity-mode-instance',
+    'state-link-selection-mirror-while-owned-unoptimized',
+    'state-link-artifact-binding-effects-unoptimized',
+    'state-link-snapshot-sources-unoptimized'
+  ]));
+  expect(result.firstPurchases.currentCustom).toMatchObject({ fastPath: true, fallbackReasons: [] });
+  expect(result.firstPurchases.legacyCustom).toMatchObject({
+    fastPath: false,
+    fallbackReasons: expect.arrayContaining(['custom-capabilities-missing'])
+  });
+  expect(result.firstPurchases.forcedSafe).toMatchObject({
+    fastPath: false,
+    fallbackReasons: expect.arrayContaining(['forced-safe-path'])
+  });
+  expect(result.committedFirstHiddenPurchase).toMatchObject({
+    committed: true,
+    inventory: [{ id: result.committedFirstHiddenPurchase.entryId, qty: 1 }],
+    revealed: expect.arrayContaining([result.committedFirstHiddenPurchase.entryId]),
+    invalidates: expect.arrayContaining(['catalog.structure']),
+    fallbacks: []
+  });
+  expect(result.committedFirstHiddenPurchase.counters.commonCommits).toBe(1);
+  expect(result.committedFirstHiddenPurchase.counters.persistenceSchedules).toBe(1);
+  expect(result.committedFirstHiddenPurchase.counters.fullInventoryRenders || 0).toBe(0);
+  expect(result.committedFirstHiddenPurchase.counters.artifactEffectScans || 0).toBe(0);
+});
+
 test('a normal ability can be added, levelled, observed, and reloaded through user controls', async ({ page }) => {
   await seedProfileStore(page);
   await waitForApp(page, '/#/index', '#lista');
@@ -665,7 +899,7 @@ test('choice-bound inventory variants batch identical quantities, preserve disti
   expect(probe.derivedVersion).toBe(probe.initialDerivedVersion);
   expect(probe.refreshes).toHaveLength(6);
   probe.refreshes.forEach(refresh => {
-    expect(refresh.source).toBe('index-inventory-variant-add');
+    expect(refresh.source).toBe('index-inventory-capability-add');
     expect(refresh.invalidates).toEqual(expect.arrayContaining([
       'inventory.totals',
       'summary.economy',
@@ -1237,6 +1471,27 @@ test('inventory multi-buy batches an existing stable row without a full render o
   expect(result.counters.derivedVersions || 0).toBe(0);
   expect(result.counters.persistenceSchedules).toBe(1);
   expect(result.counters.fullInventoryRenders || 0).toBe(0);
+
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 6 }]);
+});
+
+test('index multi-buy updates an existing stack without a mounted inventory card', async ({ page }) => {
+  await seedProfileStore(page);
+  await waitForApp(page, '/#/index', '#lista');
+  await seedInventoryRow(page, { id: 'di1', name: 'Bandage', qty: 1 });
+  await revealIndexEntry(page, 'Bandage');
+
+  const card = visibleEntryCard(page, '#lista', 'Bandage');
+  await expect(card).toBeVisible();
+  await card.locator('button[data-act="buyMulti"]').click();
+  await page.locator('#buyMultipleInput').fill('5');
+  await page.locator('#buyMultipleConfirm').click();
+
+  await expect.poll(() => readInventoryRows(page)).toEqual([{ id: 'di1', name: 'Bandage', qty: 6 }]);
+  await expect(card.locator('.count-badge')).toHaveText('×6');
+  await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'test-index-multi-buy' }));
 
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));

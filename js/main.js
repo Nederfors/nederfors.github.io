@@ -8391,6 +8391,7 @@ function applyCharacterRefreshDomains(options = {}) {
   const domains = new Set(Array.isArray(next.invalidates) ? next.invalidates : []);
   const targetedInventoryRender = [
     'targeted-patch',
+    'targeted-none',
     'targeted-remove',
     'targeted-insert',
     'targeted-move',
@@ -8641,6 +8642,7 @@ function scheduleCharacterMutationRefresh(options = {}) {
 
 window.symbaroumMutationPipeline = {
   scheduleCharacterRefresh: scheduleCharacterMutationRefresh,
+  mutateInventory: options => window.invUtil?.mutateInventory?.(options),
   waitForCharacterRefresh: ticket => window.symbaroumDerivedState?.waitForCharacterConsistencyRefresh?.(ticket) || Promise.resolve()
 };
 

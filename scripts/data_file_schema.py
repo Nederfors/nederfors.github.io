@@ -56,6 +56,27 @@ TAG_KEYS = frozenset({
     "inventory",
     "arm_fast",
 })
+INVENTORY_TAG_KEYS = frozenset({
+    "capability_version",
+    "item",
+    "purchasable",
+    "quantity_mode",
+    "topology",
+    "state_links",
+    "derived_domains",
+    # Transitional entry-level aliases still present in canonical V3 data.
+    "stackbar",
+    "traitbunden",
+    "traitBound",
+})
+INVENTORY_QUANTITY_MODES = frozenset({"stack", "instance"})
+INVENTORY_TOPOLOGIES = frozenset({"leaf", "container", "vehicle", "bundle"})
+INVENTORY_STATE_LINKS = frozenset({
+    "catalog-reveal-while-owned",
+    "selection-mirror-while-owned",
+    "artifact-binding-effects",
+    "snapshot-sources",
+})
 
 LEVEL_KEYS = frozenset({
     "description",
@@ -416,6 +437,41 @@ def validate_tags(tags: Any, path: str, errors: list[str]) -> None:
             _add_error(errors, _join_path(path, key), "unknown tag key")
     if "artifact_binding" in tags:
         _validate_artifact_binding(tags["artifact_binding"], _join_path(path, "artifact_binding"), errors)
+    if "inventory" in tags:
+        inventory = tags["inventory"]
+        inventory_path = _join_path(path, "inventory")
+        if not _is_object(inventory):
+            _add_error(errors, inventory_path, "inventory must be an object")
+        else:
+            for key in inventory.keys():
+                if key not in INVENTORY_TAG_KEYS:
+                    _add_error(errors, _join_path(inventory_path, key), "unknown inventory capability key")
+            version = inventory.get("capability_version")
+            if version is not None and (not isinstance(version, int) or isinstance(version, bool) or version < 1):
+                _add_error(errors, _join_path(inventory_path, "capability_version"), "capability_version must be a positive integer")
+            for key in ("item", "purchasable", "stackbar", "traitbunden", "traitBound"):
+                if key in inventory and not isinstance(inventory[key], bool):
+                    _add_error(errors, _join_path(inventory_path, key), f"{key} must be boolean")
+            quantity_mode = inventory.get("quantity_mode")
+            if quantity_mode is not None and quantity_mode not in INVENTORY_QUANTITY_MODES:
+                _add_error(errors, _join_path(inventory_path, "quantity_mode"), f"unsupported quantity mode {quantity_mode!r}")
+            topology = inventory.get("topology")
+            if topology is not None and topology not in INVENTORY_TOPOLOGIES:
+                _add_error(errors, _join_path(inventory_path, "topology"), f"unsupported inventory topology {topology!r}")
+            state_links = inventory.get("state_links")
+            if state_links is not None:
+                if not isinstance(state_links, list):
+                    _add_error(errors, _join_path(inventory_path, "state_links"), "state_links must be an array")
+                else:
+                    for index, state_link in enumerate(state_links):
+                        if state_link not in INVENTORY_STATE_LINKS:
+                            _add_error(errors, f"{inventory_path}.state_links[{index}]", f"unsupported state link {state_link!r}")
+            derived_domains = inventory.get("derived_domains")
+            if derived_domains is not None and (
+                not isinstance(derived_domains, list)
+                or any(not isinstance(domain, str) or not domain.strip() for domain in derived_domains)
+            ):
+                _add_error(errors, _join_path(inventory_path, "derived_domains"), "derived_domains must be an array of non-empty strings")
 
 
 def validate_elite_requirements(raw: Any, path: str, errors: list[str]) -> None:

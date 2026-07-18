@@ -261,6 +261,8 @@
 
   const EQUIP_LC_SET = new Set(EQUIP.map(t => String(t).toLowerCase()));
   function isInv(p){
+    const declared = window.inventoryCapabilities?.isInventoryItem?.(p);
+    if (typeof declared === 'boolean') return !p.noInv && declared;
     return !p.noInv && (p.taggar?.typ||[]).some(t => EQUIP_LC_SET.has(String(t).toLowerCase()));
   }
   function isQual(p){

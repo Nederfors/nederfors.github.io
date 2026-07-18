@@ -1,7 +1,19 @@
 {
   "schema_version": 3,
   "type_rules": {
-    "Förvaring": {}
+    "Förvaring": {
+      "tags": {
+        "inventory": {
+          "capability_version": 1,
+          "item": true,
+          "purchasable": true,
+          "quantity_mode": "stack",
+          "topology": "container",
+          "state_links": [],
+          "derived_domains": []
+        }
+      }
+    }
   },
   "entries": [
     {
