@@ -997,6 +997,44 @@
       typeof window.invUtil?.removeInventoryBundle === 'function'
         ? window.invUtil.removeInventoryBundle(inv, entry, units)
         : false;
+    const commitBundleTopologyMutation = ({ inv, entry, mode, units = 1 }) => {
+      if (!Array.isArray(inv)
+          || !entry
+          || typeof window.invUtil?.createInventoryTopologyCandidate !== 'function'
+          || typeof window.invUtil?.planInventoryTopologyMutation !== 'function'
+          || typeof window.invUtil?.commitInventoryTopologyMutation !== 'function') {
+        return { committed: false, refs: [], fallbackReasons: ['inventory-topology-planner-missing'] };
+      }
+      let refs = [];
+      const afterInventory = window.invUtil.createInventoryTopologyCandidate(inv, candidate => {
+        if (mode === 'insert') {
+          refs = addBundleForEntry(candidate, entry);
+        } else {
+          refs = window.invUtil.getInventoryBundleItems(entry)
+            .map(item => ({ id: item.id, name: item.name }));
+          removeBundleForEntry(candidate, entry, units);
+        }
+      });
+      const plan = window.invUtil.planInventoryTopologyMutation(inv, {
+        afterInventory,
+        action: mode === 'insert' ? 'bundle-insert' : 'bundle-remove',
+        surface: 'index',
+        sourceEntry: entry,
+        units,
+        forceSafePath: window.__symbaroumPerfForceSafeInventoryMutations === true
+      });
+      const result = plan.fastPath
+        ? window.invUtil.commitInventoryTopologyMutation(inv, plan, {
+            source: mode === 'insert' ? 'index-bundle-insert' : 'index-bundle-remove'
+          })
+        : { committed: false, fallbackReasons: plan.fallbackReasons };
+      return {
+        ...result,
+        plan,
+        refs,
+        fallbackReasons: result.fallbackReasons || plan.fallbackReasons
+      };
+    };
     const WEAPON_BASE_TYPES = Array.isArray(window.WEAPON_BASE_TYPES)
       ? window.WEAPON_BASE_TYPES
       : ['Närstridsvapen', 'Avståndsvapen', 'Vapen'];
@@ -3880,12 +3918,22 @@
           const bundleRefs = hasBundle
             ? ((await withBusyInteraction(btn, () => (
               runForegroundCatalogMutation(() => {
-                const refs = addBundleForEntry(inv, p);
-                if (refs.length) {
+                const topologyResult = commitBundleTopologyMutation({
+                  inv,
+                  entry: p,
+                  mode: 'insert'
+                });
+                const refs = topologyResult.refs || [];
+                if (topologyResult.committed) return refs;
+                const fallbackRefs = addBundleForEntry(inv, p);
+                if (fallbackRefs.length) {
                   invUtil.saveInventory(inv);
-                  invUtil.renderInventory();
+                  invUtil.renderInventory({
+                    trigger: 'bundle-insert',
+                    fallbackReasons: topologyResult.fallbackReasons
+                  });
                 }
-                return refs;
+                return fallbackRefs;
               })
             ))) || [])
             : [];
@@ -4503,38 +4551,55 @@
           if (!hidden && !artifactTagged) {
             skipIndexRerender = true;
           }
-          await runCurrentCharacterMutationBatch(() => {
-            const bundleCount = getBundleCountForEntry(inv, p);
-            if (bundleCount !== null) {
-              const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
-              if (removeCnt > 0) removeBundleForEntry(inv, p, removeCnt);
-            } else {
-              const idxInv = inv.findIndex(x => x.id === p.id);
-              if (idxInv >= 0) {
-                if (act === 'del' || act === 'rem') {
-                  inv.splice(idxInv, 1);
-                } else {
-                  inv[idxInv].qty--;
-                  if (inv[idxInv].qty < 1) inv.splice(idxInv, 1);
+          const bundleCount = getBundleCountForEntry(inv, p);
+          let topologyResult = null;
+          if (bundleCount !== null) {
+            const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
+            if (removeCnt > 0) {
+              topologyResult = commitBundleTopologyMutation({
+                inv,
+                entry: p,
+                mode: 'remove',
+                units: removeCnt
+              });
+            }
+          }
+          if (!topologyResult?.committed) {
+            await runCurrentCharacterMutationBatch(() => {
+              if (bundleCount !== null) {
+                const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
+                if (removeCnt > 0) removeBundleForEntry(inv, p, removeCnt);
+              } else {
+                const idxInv = inv.findIndex(x => x.id === p.id);
+                if (idxInv >= 0) {
+                  if (act === 'del' || act === 'rem') {
+                    inv.splice(idxInv, 1);
+                  } else {
+                    inv[idxInv].qty--;
+                    if (inv[idxInv].qty < 1) inv.splice(idxInv, 1);
+                  }
                 }
               }
-            }
-            invUtil.saveInventory(inv);
-            if (hidden || artifactTagged) {
-              const still = inv.some(r => r.id === p.id);
-              if (!still) {
-                const list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
-                storeHelper.setCurrentList(store, list);
-                if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
+              invUtil.saveInventory(inv);
+              if (hidden || artifactTagged) {
+                const still = inv.some(r => r.id === p.id);
+                if (!still) {
+                  const list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
+                  storeHelper.setCurrentList(store, list);
+                  if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
+                }
               }
-            }
-          });
-          timeActiveAddStage('inventory-render', () => {
-            invUtil.renderInventory();
-          }, {
-            surface: 'index',
-            branch: 'inventory'
-          });
+            });
+            timeActiveAddStage('inventory-render', () => {
+              invUtil.renderInventory({
+                trigger: bundleCount !== null ? 'bundle-remove' : 'index-inventory-remove',
+                fallbackReasons: topologyResult?.fallbackReasons
+              });
+            }, {
+              surface: 'index',
+              branch: 'inventory'
+            });
+          }
           queueUpdate(p);
           if (hidden || artifactTagged) {
             needsFullRefresh = Boolean(storeHelper.getOnlySelected(store));

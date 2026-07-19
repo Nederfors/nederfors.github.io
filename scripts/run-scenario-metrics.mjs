@@ -440,7 +440,10 @@ async function readCanonicalInventory(page) {
       }, {});
     };
     const normalize = rows => (Array.isArray(rows) ? rows : []).map(row => {
-      const { contains, ...rest } = row || {};
+      const contains = row?.contains;
+      const rest = { ...(row || {}) };
+      delete rest.contains;
+      delete rest.posQualCnt;
       return {
         ...rest,
         artifactEffect: row?.artifactEffect || '',
@@ -2684,8 +2687,93 @@ async function runIndexInventoryRemove(browser, iterations, options = {}) {
   return aggregateScenarioRuns(scenarioName, runs);
 }
 
-async function runIndexBundleRemove(browser, iterations) {
-  const scenarioName = 'index-inventory-bundle-remove';
+async function runIndexBundleAdd(browser, iterations, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const scenarioName = forceSafePath
+    ? 'index-inventory-bundle-add-safe'
+    : 'index-inventory-bundle-add';
+  const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
+      const target = await page.evaluate(async ({ size, scenarioName: name }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entries = Array.isArray(window.DB) ? window.DB : [];
+        const bundleSummary = entries.find(entry => String(entry?.id || '') === 'di79');
+        const bundleEntry = await window.catalogLoader?.ensureEntryData?.(bundleSummary);
+        if (!bundleEntry) throw new Error('Missing inventory bundle production-control representative.');
+        const inventory = entries
+          .filter(entry => {
+            const types = entry?.taggar?.typ || [];
+            return entry.id !== bundleEntry.id
+              && window.isInv?.(entry)
+              && !(window.invUtil?.getInventoryBundleItems?.(entry)?.length || 0)
+              && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
+          })
+          .slice(0, Math.max(0, size - 6))
+          .map(entry => ({
+            id: entry.id,
+            name: entry.namn,
+            qty: 1,
+            gratis: 0,
+            gratisKval: [],
+            removedKval: []
+          }));
+        window.storeHelper.setInventory(activeStore, inventory);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${name}` });
+        return {
+          id: bundleEntry.id,
+          name: bundleEntry.namn,
+          affectedRows: window.invUtil.getInventoryBundleItems(bundleEntry).length,
+          stateSize: inventory.length
+        };
+      }, { size: requestedSize, scenarioName });
+
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      await page.locator('#lista').waitFor({ state: 'attached' });
+      await revealIndexPerfTarget(page, 'inventory', {
+        entryName: target.name,
+        actionSelector: 'button[data-act="add"]'
+      });
+      await settleAfterMutation(page);
+      await page.evaluate(useSafePath => {
+        window.__symbaroumPerfAwaitFlush = true;
+        window.__symbaroumPerfForceSafeInventoryMutations = useSafePath;
+        window.symbaroumPerf?.clearHistory?.();
+      }, forceSafePath);
+      const browserCapture = await startBrowserWorkCapture(page);
+      await clickCardAction(page, { rootSelector: '#lista', name: target.name, act: 'add' });
+      const scenario = await waitForScenario(page, 'add-item-to-character');
+      const browserWork = await finishBrowserWorkCapture(browserCapture);
+      await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'bundle-add-parity' }));
+      const beforeReload = await readCanonicalInventory(page);
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
+      const afterReload = await readCanonicalInventory(page);
+      scenario.detail = {
+        ...(scenario.detail || {}),
+        behaviorSignature: 'bundle-insertion',
+        pathMode: forceSafePath ? 'safe' : 'optimized',
+        stateSize: target.stateSize,
+        browserWork,
+        uiStability: {
+          inventorySurfaceMounted: false,
+          affectedRows: target.affectedRows,
+          affectedParents: ['root'],
+          persistenceReloadParity: beforeReload === afterReload
+        }
+      };
+      return scenario;
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runIndexBundleRemove(browser, iterations, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const scenarioName = forceSafePath
+    ? 'index-inventory-bundle-remove-safe'
+    : 'index-inventory-bundle-remove';
   const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
@@ -2733,6 +2821,9 @@ async function runIndexBundleRemove(browser, iterations) {
       });
       await settleAfterMutation(page);
       await enableRemoveProfiling(page);
+      await page.evaluate(useSafePath => {
+        window.__symbaroumPerfForceSafeInventoryMutations = useSafePath;
+      }, forceSafePath);
       const browserCapture = await startBrowserWorkCapture(page);
       await clickCardAction(page, { rootSelector: '#lista', name: target.name, act: ['sub', 'del', 'rem'] });
       const scenario = await waitForRemoveScenario(page);
@@ -2745,6 +2836,7 @@ async function runIndexBundleRemove(browser, iterations) {
       scenario.detail = {
         ...(scenario.detail || {}),
         behaviorSignature: 'bundle-removal',
+        pathMode: forceSafePath ? 'safe' : 'optimized',
         stateSize: target.stateSize,
         browserWork,
         uiStability: {
@@ -2760,8 +2852,11 @@ async function runIndexBundleRemove(browser, iterations) {
   return aggregateScenarioRuns(scenarioName, runs);
 }
 
-async function runContainerUnwrap(browser, iterations) {
-  const scenarioName = 'inventory-container-unwrap';
+async function runContainerUnwrap(browser, iterations, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const scenarioName = forceSafePath
+    ? 'inventory-container-unwrap-safe'
+    : 'inventory-container-unwrap';
   const requestedSize = Math.max(10, Number(process.env.PERF_STATE_SIZE || 20) || 20);
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => {
@@ -2832,22 +2927,23 @@ async function runContainerUnwrap(browser, iterations) {
       const controlActivationMs = await page.evaluate(start => performance.now() - start, activationStart);
 
       await installInventoryDomProbe(page);
-      await page.evaluate(({ name, target, controlActivationMs }) => {
+      await page.evaluate(({ name, target, controlActivationMs, forceSafePath }) => {
         const perf = window.symbaroumPerf;
         perf?.clearHistory?.();
         const scenarioId = perf?.startScenario?.(name, {
           scope: 'inventory',
           behaviorSignature: 'container-unwrap',
           stateSize: target.stateSize,
-          pathMode: 'fallback',
+          pathMode: forceSafePath ? 'safe' : 'optimized',
           controlActivationMs
         });
         perf?.setFlowContext?.('inventory-mutation', scenarioId);
+        window.__symbaroumPerfForceSafeInventoryMutations = forceSafePath;
         window.__containerScenarioId = scenarioId;
         document.addEventListener('pointerdown', () => {
           perf?.markScenario?.(scenarioId, 'interaction-start', { action: 'container-unwrap' });
         }, { capture: true, once: true });
-      }, { name: scenarioName, target, controlActivationMs });
+      }, { name: scenarioName, target, controlActivationMs, forceSafePath });
       const browserCapture = await startBrowserWorkCapture(page);
       await confirm.click();
       await page.waitForFunction(({ vehicleId, itemId }) => {
@@ -2856,7 +2952,7 @@ async function runContainerUnwrap(browser, iterations) {
         return !inventory.some(row => String(row?.id || '') === String(vehicleId))
           && inventory.some(row => String(row?.id || '') === String(itemId));
       }, { vehicleId: target.vehicleId, itemId: target.itemId });
-      const scenario = await page.evaluate(async ({ target, controlActivationMs }) => {
+      const scenario = await page.evaluate(async ({ target, controlActivationMs, forceSafePath }) => {
         const perf = window.symbaroumPerf;
         const scenarioId = window.__containerScenarioId;
         perf?.markScenario?.(scenarioId, 'first-feedback-dom', { action: 'container-unwrap' });
@@ -2871,10 +2967,10 @@ async function runContainerUnwrap(browser, iterations) {
           scope: 'inventory',
           behaviorSignature: 'container-unwrap',
           stateSize: target.stateSize,
-          pathMode: 'fallback',
+          pathMode: forceSafePath ? 'safe' : 'optimized',
           controlActivationMs
         });
-      }, { target, controlActivationMs });
+      }, { target, controlActivationMs, forceSafePath });
       const uiStability = await readInventoryDomProbe(page);
       const browserWork = await finishBrowserWorkCapture(browserCapture);
       const beforeReload = await readCanonicalInventory(page);
@@ -3518,6 +3614,7 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'inventoryVehicleUnloadSafe', name: 'inventory-vehicle-unload-safe', aliases: ['vehicle unload safe', 'vehicle topology'], run: () => runVehicleScenario(browser, iterations, 'unload', { forceSafePath: true }) },
       { key: 'inventoryVehicleNestedTransfer', name: 'inventory-vehicle-nested-transfer', aliases: ['nested topology'], run: () => runVehicleScenario(browser, iterations, 'load', { nestedTransfer: true }) },
       { key: 'inventoryContainerUnwrap', name: 'inventory-container-unwrap', aliases: ['container topology'], run: () => runContainerUnwrap(browser, iterations) },
+      { key: 'inventoryContainerUnwrapSafe', name: 'inventory-container-unwrap-safe', aliases: ['container topology safe'], run: () => runContainerUnwrap(browser, iterations, { forceSafePath: true }) },
       { key: 'inventoryFilteredRowRemove', name: 'inventory-filtered-row-remove', aliases: ['filtered membership'], run: () => runFilteredRowRemoval(browser, iterations) },
       { key: 'inventoryFilteredRowRemoveSafe', name: 'inventory-filtered-row-remove-safe', aliases: ['filtered membership safe'], run: () => runFilteredRowRemoval(browser, iterations, { forceSafePath: true }) },
       { key: 'notesEdit', name: 'notes-edit', run: () => runNotesEdit(browser, iterations) },
@@ -3532,7 +3629,10 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'characterClearNonInventory', name: 'character-clear-non-inventory', aliases: ['remove', 'character remove'], run: () => runCharacterClearNonInv(browser, iterations) },
       { key: 'indexListRemove', name: 'index-list-remove', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations) },
       { key: 'indexInventoryRemove', name: 'index-inventory-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations) },
+      { key: 'indexInventoryBundleAdd', name: 'index-inventory-bundle-add', aliases: ['bundle insertion'], run: () => runIndexBundleAdd(browser, iterations) },
+      { key: 'indexInventoryBundleAddSafe', name: 'index-inventory-bundle-add-safe', aliases: ['bundle insertion safe'], run: () => runIndexBundleAdd(browser, iterations, { forceSafePath: true }) },
       { key: 'indexInventoryBundleRemove', name: 'index-inventory-bundle-remove', aliases: ['bundle removal'], run: () => runIndexBundleRemove(browser, iterations) },
+      { key: 'indexInventoryBundleRemoveSafe', name: 'index-inventory-bundle-remove-safe', aliases: ['bundle removal safe'], run: () => runIndexBundleRemove(browser, iterations, { forceSafePath: true }) },
       { key: 'indexHiddenArtifactRemove', name: 'index-hidden-artifact-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations, { useArtifactCandidate: true }) },
       { key: 'indexListRemoveFullRerender', name: 'index-list-remove-full-rerender', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations, { onlySelected: true }) },
       { key: 'inventoryRowDelete', name: 'inventory-row-delete', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'row-delete') },

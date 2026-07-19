@@ -8358,7 +8358,7 @@ function mergeDeferredCharacterSyncOptions(current, next) {
       return;
     }
     if (key === 'topology') {
-      const ranks = { none: 0, row: 1, category: 2, full: 3 };
+      const ranks = { none: 0, row: 1, category: 2, 'inventory-tree': 3, full: 4 };
       const currentRank = ranks[merged[key]] ?? -1;
       const nextRank = ranks[next[key]] ?? -1;
       if (nextRank >= currentRank) merged[key] = next[key];
@@ -8399,6 +8399,7 @@ function applyCharacterRefreshDomains(options = {}) {
     'targeted-remove',
     'targeted-insert',
     'targeted-move',
+    'targeted-topology',
     'targeted-parent-refresh',
     'targeted-category-refresh'
   ]
