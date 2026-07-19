@@ -194,6 +194,36 @@ describe('rules-helper unit coverage', () => {
     expect(rulesHelper.requiresFullListReconciliation([typeFlag])).toBe(true);
   });
 
+  it('distinguishes removal-sensitive conditional conflicts from static conflicts', () => {
+    const rulesHelper = loadRulesHelper();
+    const staticConflict = {
+      id: 'static-conflict',
+      namn: 'Static conflict',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          krockar: [{ namn: ['Spärr'] }]
+        }
+      }
+    };
+    const conditionalConflict = {
+      id: 'conditional-conflict',
+      namn: 'Conditional conflict',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          krockar: [{
+            namn: ['Spärr'],
+            nar: { saknar_namn: ['Nyckel'] }
+          }]
+        }
+      }
+    };
+
+    expect(rulesHelper.requiresRemovalListReconciliation([staticConflict])).toBe(false);
+    expect(rulesHelper.requiresRemovalListReconciliation([conditionalConflict])).toBe(true);
+  });
+
   it('supports nested requirement groups with mixed and/or logic', () => {
     const rulesHelper = loadRulesHelper();
     const getMissingReasons = rulesHelper.getMissingRequirementReasonsForCandidate;
@@ -228,6 +258,41 @@ describe('rules-helper unit coverage', () => {
     expect(getMissingReasons(entry, [{ namn: 'Andebesvarjare' }])).toHaveLength(0);
     expect(getMissingReasons(entry, [{ namn: 'Monster' }]).length).toBeGreaterThan(0);
     expect(getMissingReasons(entry, [{ namn: 'Andeform' }]).length).toBeGreaterThan(0);
+  });
+
+  it('discovers removal dependents while ignoring entries without requirement rules', () => {
+    const rulesHelper = loadRulesHelper();
+    const source = {
+      id: 'requirement-source',
+      __uid: 'requirement-source-uid',
+      namn: 'Kravkälla',
+      taggar: { typ: ['Förmåga'] }
+    };
+    const unrelated = {
+      id: 'rule-free-entry',
+      __uid: 'rule-free-entry-uid',
+      namn: 'Fristående',
+      taggar: { typ: ['Förmåga'] }
+    };
+    const dependent = {
+      id: 'requirement-dependent',
+      __uid: 'requirement-dependent-uid',
+      namn: 'Beroende',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          kraver: [{ namn: ['Kravkälla'] }]
+        }
+      }
+    };
+
+    expect(rulesHelper.getRequirementDependents([source, unrelated, dependent], source)).toEqual(['Beroende']);
+    expect(rulesHelper.getRequirementDependents(
+      [source, unrelated, dependent],
+      source,
+      { candidateUids: ['requirement-dependent-uid'] }
+    )).toEqual(['Beroende']);
+    expect(rulesHelper.getRequirementDependents([source, unrelated, dependent], unrelated)).toEqual([]);
   });
 
   it('normalizes legacy handling into canonical levels actions', () => {

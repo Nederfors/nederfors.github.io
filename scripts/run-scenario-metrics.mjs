@@ -275,6 +275,8 @@ function summarizeDetail(detail = {}) {
     source: detail.source || null,
     endStateHash: detail.endStateHash || null,
     classifier: detail.classifier || null,
+    reconciliationMode: detail.reconciliationMode || null,
+    reconciliationReason: detail.reconciliationReason || null,
     uiStability: detail.uiStability || null,
     browserWork: detail.browserWork || null
   };
@@ -818,7 +820,12 @@ async function waitForRemoveScenario(page) {
 }
 
 async function prepareCharacterListEntry(page, options = {}) {
-  return page.evaluate(async ({ entryName = 'Akrobatik', count = 1, onlySelected = false }) => {
+  return page.evaluate(async ({
+    entryName = 'Akrobatik',
+    count = 1,
+    unrelatedCount = 0,
+    onlySelected = false
+  }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
     const entry = window.lookupEntry?.({ name: entryName })
       || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
@@ -826,11 +833,28 @@ async function prepareCharacterListEntry(page, options = {}) {
     if (!entry) throw new Error(`Missing entry: ${entryName}`);
     const levels = Object.keys(entry.nivåer || {});
     const level = levels[0] || entry.nivå || 'Novis';
-    const list = Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => ({
+    const targetEntries = Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => ({
       ...JSON.parse(JSON.stringify(entry)),
       nivå: level,
       __uid: `perf-char-${Date.now()}-${index}`
     }));
+    const targetId = String(entry.id || '').trim();
+    const neutralCatalogEntries = (window.DB || [])
+      .filter(candidate => {
+        if (!candidate || String(candidate.id || '').trim() === targetId) return false;
+        if (window.isInv?.(candidate) || window.isEmployment?.(candidate) || window.isService?.(candidate)) return false;
+        if (window.storeHelper?.isSearchHiddenEntry?.(candidate)) return false;
+        return !window.rulesHelper?.hasRules?.(candidate, {
+          level: Object.keys(candidate.nivåer || {})[0] || candidate.nivå || ''
+        });
+      })
+      .slice(0, Math.max(0, Number(unrelatedCount) || 0))
+      .map((candidate, index) => ({
+        ...JSON.parse(JSON.stringify(candidate)),
+        nivå: Object.keys(candidate.nivåer || {})[0] || candidate.nivå || 'Novis',
+        __uid: `perf-char-unrelated-${Date.now()}-${index}`
+      }));
+    const list = [...targetEntries, ...neutralCatalogEntries];
     window.storeHelper.setCurrentList(activeStore, list);
     window.storeHelper.setOnlySelected(activeStore, Boolean(onlySelected));
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-character-list' });
@@ -847,49 +871,72 @@ async function prepareCharacterListEntry(page, options = {}) {
     if (typeof window.renderTraits === 'function') window.renderTraits();
     return {
       name: entry.namn,
-      count: list.length
+      count: targetEntries.length,
+      stateSize: list.length
     };
   }, options);
 }
 
-// Retained for targeted artifact-removal profiling runs.
-// eslint-disable-next-line no-unused-vars
 async function prepareCharacterArtifactRemove(page) {
   return page.evaluate(async () => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    await window.catalogLoader?.ensureFullDatabase?.();
     const candidates = (window.DB || []).filter((candidate) => (
       window.isInv?.(candidate)
       && Array.isArray(candidate?.taggar?.typ)
-      && candidate.taggar.typ.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
-    ));
-    const entry = candidates.find((candidate) => (
-      Array.isArray(candidate?.taggar?.typ)
       && candidate.taggar.typ.some((type) => String(type || '').trim() === 'Artefakt')
-    )) || candidates[0] || null;
+    ));
+    let entry = candidates[0] || null;
     if (!entry) throw new Error('Missing artifact entry for character remove scenario.');
-    const row = {
-      id: entry.id,
-      name: entry.namn,
-      qty: 1,
-      gratis: 0,
-      gratisKval: [],
-      removedKval: [],
-      artifactEffect: entry.artifactEffect || ''
-    };
+    entry = await window.catalogLoader?.ensureEntryData?.(entry) || entry;
+    const picker = window.choicePopup;
+    const originalPick = picker?.pickForEntry;
+    if (picker && typeof originalPick === 'function') {
+      picker.pickForEntry = async () => ({
+        hasChoice: true,
+        cancelled: false,
+        value: ''
+      });
+    }
+    let row;
+    try {
+      row = await window.invUtil?.buildInventoryRow?.({
+        entry,
+        list: window.storeHelper.getCurrentList(activeStore)
+      });
+    } finally {
+      if (picker && typeof originalPick === 'function') picker.pickForEntry = originalPick;
+    }
+    if (!row?.snapshotSourceKey) throw new Error('Canonical artifact row is missing snapshot source identity.');
+    const inventory = [];
+    const added = window.invUtil?.addInventoryVariant?.(inventory, row, {
+      entry,
+      quantity: 1,
+      individual: true
+    });
+    if (!added) throw new Error('Unable to construct canonical artifact inventory instance.');
+    window.invUtil.saveInventory(inventory, {
+      source: 'prepare-character-artifact',
+      skipCharacterRefresh: true
+    });
     const levels = Object.keys(entry.nivåer || {});
     window.storeHelper.setCurrentList(activeStore, [{
       ...JSON.parse(JSON.stringify(entry)),
       nivå: levels[0] || entry.nivå || 'Novis',
-      __uid: `perf-artifact-${Date.now()}`
+      noInv: true
     }]);
-    window.storeHelper.setInventory(activeStore, [row]);
     if (entry.id) window.storeHelper.addRevealedArtifact(activeStore, entry.id);
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-character-artifact' });
     window.symbaroumViewBridge?.refreshCurrent({
       selection: true,
       strict: true
     });
-    return { name: entry.namn, id: entry.id || null };
+    return {
+      name: entry.namn,
+      id: entry.id || null,
+      rowUid: added.row?.__uid || '',
+      snapshotSourceKey: added.row?.snapshotSourceKey || ''
+    };
   });
 }
 
@@ -950,7 +997,13 @@ async function prepareIndexListEntry(page, options = {}) {
 }
 
 async function prepareIndexInventoryEntry(page, options = {}) {
-  return page.evaluate(async ({ entryName = 'Dubbel ringbrynja', qty = 1, useArtifactCandidate = false, onlySelected = false }) => {
+  return page.evaluate(async ({
+    entryName = 'Dubbel ringbrynja',
+    qty = 1,
+    useArtifactCandidate = false,
+    useHiddenCandidate = false,
+    onlySelected = false
+  }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
     let entry = useArtifactCandidate
       ? (() => {
@@ -979,6 +1032,12 @@ async function prepareIndexInventoryEntry(page, options = {}) {
             && window.storeHelper?.isSearchHiddenEntry?.(candidate)
           )) || null;
         })()
+      : useHiddenCandidate
+        ? (window.DB || []).find((candidate) => (
+            window.isInv?.(candidate)
+            && window.storeHelper?.isSearchHiddenEntry?.(candidate)
+            && !(candidate?.taggar?.typ || []).some(type => String(type || '').trim() === 'Artefakt')
+          )) || null
       : window.lookupEntry?.({ name: entryName })
         || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
         || null;
@@ -986,32 +1045,52 @@ async function prepareIndexInventoryEntry(page, options = {}) {
     if (typeof window.catalogLoader?.ensureEntryData === 'function') {
       entry = await window.catalogLoader.ensureEntryData(entry);
     }
-    const row = useArtifactCandidate
-      ? {
-          id: entry.id,
-          name: entry.namn,
-          qty: 1,
-          gratis: 0,
-          gratisKval: [],
-          removedKval: [],
-          artifactEffect: entry.artifactEffect || ''
-        }
-      : await window.invUtil?.buildInventoryRow?.({
+    const picker = window.choicePopup;
+    const originalPick = picker?.pickForEntry;
+    if (useArtifactCandidate && picker && typeof originalPick === 'function') {
+      picker.pickForEntry = async () => ({
+        hasChoice: true,
+        cancelled: false,
+        value: ''
+      });
+    }
+    let row;
+    try {
+      row = await window.invUtil?.buildInventoryRow?.({
           entry,
           list: window.storeHelper.getCurrentList(activeStore)
-        });
+      });
+    } finally {
+      if (picker && typeof originalPick === 'function') picker.pickForEntry = originalPick;
+    }
     if (!row) throw new Error('Unable to build inventory row.');
+    if (useArtifactCandidate && !row.snapshotSourceKey) {
+      throw new Error('Canonical artifact row is missing snapshot source identity.');
+    }
     row.qty = Math.max(1, Number(qty) || 1);
-    window.storeHelper.setInventory(activeStore, [row]);
+    const inventory = [];
+    const inventoryMutation = window.invUtil?.addInventoryVariant?.(inventory, row, {
+      entry,
+      quantity: row.qty,
+      individual: window.invUtil?.isIndividualItem?.(entry)
+    });
+    if (!inventoryMutation) throw new Error('Unable to construct canonical inventory fixture.');
+    window.invUtil.saveInventory(inventory, {
+      source: 'prepare-index-inventory',
+      skipCharacterRefresh: true
+    });
     if (useArtifactCandidate) {
       const levels = Object.keys(entry.nivåer || {});
       window.storeHelper.setCurrentList(activeStore, [{
         ...JSON.parse(JSON.stringify(entry)),
-        nivå: levels[0] || entry.nivå || 'Novis'
+        nivå: levels[0] || entry.nivå || 'Novis',
+        noInv: true
       }]);
-      if (entry.id && typeof window.storeHelper.addRevealedArtifact === 'function') {
-        window.storeHelper.addRevealedArtifact(activeStore, entry.id);
-      }
+    }
+    if ((useArtifactCandidate || useHiddenCandidate)
+        && entry.id
+        && typeof window.storeHelper.addRevealedArtifact === 'function') {
+      window.storeHelper.addRevealedArtifact(activeStore, entry.id);
     }
     window.storeHelper.setOnlySelected(activeStore, Boolean(onlySelected));
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-index-inventory' });
@@ -1027,7 +1106,10 @@ async function prepareIndexInventoryEntry(page, options = {}) {
     return {
       name: entry.namn,
       qty: row.qty,
-      useArtifactCandidate
+      useArtifactCandidate,
+      useHiddenCandidate,
+      rowUid: inventoryMutation.row?.__uid || '',
+      snapshotSourceKey: inventoryMutation.row?.snapshotSourceKey || ''
     };
   }, options);
 }
@@ -2466,24 +2548,42 @@ async function runHeavyCurrentCharacterSave(browser, iterations) {
   return aggregateScenarioRuns('heavy-current-character-save', runs);
 }
 
-async function runCharacterRemoveSingle(browser, iterations) {
+async function runCharacterRemoveSingle(browser, iterations, options = {}) {
+  const forceSafePath = options.forceSafePath === true;
+  const baseScenarioName = String(options.scenarioName || 'character-list-remove-single');
+  const scenarioName = forceSafePath ? `${baseScenarioName}-safe` : baseScenarioName;
+  const entryName = String(options.entryName || 'Akrobatik');
+  const requestedSize = Math.max(1, Number(process.env.PERF_STATE_SIZE || 20) || 20);
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
-      const target = await prepareCharacterListEntry(page, { entryName: 'Akrobatik', count: 1 });
+      const target = await prepareCharacterListEntry(page, {
+        entryName,
+        count: 1,
+        unrelatedCount: requestedSize - 1
+      });
       await settleAfterMutation(page);
       await enableRemoveProfiling(page);
-      await clickCardAction(page, { rootSelector: '#valda', name: target.name, act: 'rem' });
+      await page.evaluate(useSafePath => {
+        window.__symbaroumPerfForceSafeListMutations = useSafePath;
+      }, forceSafePath);
+      await clickCardAction(page, {
+        rootSelector: '#valda',
+        name: target.name,
+        act: ['rem', 'del', 'sub']
+      });
       const scenario = await waitForRemoveScenario(page);
       return {
         ...scenario,
         detail: {
           ...(scenario?.detail || {}),
-          target
+          target,
+          pathMode: forceSafePath ? 'safe' : 'optimized',
+          stateSize: target.stateSize
         }
       };
     })
   ));
-  return aggregateScenarioRuns('character-list-remove-single', runs);
+  return aggregateScenarioRuns(scenarioName, runs);
 }
 
 async function runCharacterRemoveMulti(browser, iterations, action) {
@@ -2552,7 +2652,33 @@ async function runCharacterRemoveMulti(browser, iterations, action) {
 }
 
 async function runCharacterArtifactRemove(browser, iterations) {
-  const scenarioName = 'character-artifact-cascade-remove';
+  const scenarioName = 'character-artifact-remove';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
+      const target = await prepareCharacterArtifactRemove(page);
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page);
+      await clickCardAction(page, {
+        rootSelector: '#valda',
+        name: target.name,
+        act: ['rem', 'del', 'sub']
+      });
+      const scenario = await waitForRemoveScenario(page);
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target,
+          behaviorSignature: 'artifact-linked-complete-removal'
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runCharacterGrantCascadeRemove(browser, iterations) {
+  const scenarioName = 'character-grant-cascade-remove';
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
       const target = await prepareCharacterGrantCascadeRemove(page);
@@ -2572,7 +2698,8 @@ async function runCharacterArtifactRemove(browser, iterations) {
         ...scenario,
         detail: {
           ...(scenario?.detail || {}),
-          target
+          target,
+          behaviorSignature: 'grant-dependent-cascade'
         }
       };
     })
@@ -2655,13 +2782,16 @@ async function runIndexListRemove(browser, iterations, options = {}) {
 }
 
 async function runIndexInventoryRemove(browser, iterations, options = {}) {
-  const scenarioName = options.useArtifactCandidate ? 'index-hidden-artifact-remove' : 'index-inventory-remove';
+  const scenarioName = options.useArtifactCandidate
+    ? 'index-artifact-remove'
+    : (options.useHiddenCandidate ? 'index-hidden-inventory-remove' : 'index-inventory-remove');
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
       const target = await prepareIndexInventoryEntry(page, {
         entryName: 'Dubbel ringbrynja',
-        qty: options.useArtifactCandidate ? 1 : 2,
-        useArtifactCandidate: Boolean(options.useArtifactCandidate)
+        qty: 1,
+        useArtifactCandidate: Boolean(options.useArtifactCandidate),
+        useHiddenCandidate: Boolean(options.useHiddenCandidate)
       });
       await settleAfterMutation(page);
       await revealIndexPerfTarget(page, 'inventory', {
@@ -2672,7 +2802,7 @@ async function runIndexInventoryRemove(browser, iterations, options = {}) {
       await clickCardAction(page, {
         rootSelector: '#lista',
         name: target.name,
-        act: options.useArtifactCandidate ? ['rem', 'del', 'sub'] : 'sub'
+        act: ['rem', 'del', 'sub']
       });
       const scenario = await waitForRemoveScenario(page);
       return {
@@ -3575,19 +3705,24 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
   const runtime = getRuntimeConfig(runtimeName || process.env.PERF_RUNTIME || DEFAULT_RUNTIME);
   process.env.PERF_RUNTIME = runtime.name;
   const browser = await runtime.browserType.launch({ headless: true });
-  const scenarioFilter = String(process.env.SCENARIO_FILTER || '').trim().toLowerCase();
+  const scenarioFilters = String(process.env.SCENARIO_FILTER || '')
+    .split(',')
+    .map(value => value.trim().toLowerCase())
+    .filter(Boolean);
   const normalizeScenarioToken = (value) => String(value || '').trim().toLowerCase();
   const splitScenarioTokens = (value) => normalizeScenarioToken(value).split(/[\s-]+/).filter(Boolean);
   const includeScenario = (name, aliases = []) => {
-    if (!scenarioFilter) return true;
+    if (!scenarioFilters.length) return true;
     const candidates = [name, ...aliases]
       .map(normalizeScenarioToken)
       .filter(Boolean);
     if (!candidates.length) return false;
-    if (candidates.includes(scenarioFilter)) return true;
-    const filterTokens = splitScenarioTokens(scenarioFilter);
-    if (filterTokens.length !== 1) return false;
-    return candidates.some((candidate) => splitScenarioTokens(candidate).includes(filterTokens[0]));
+    return scenarioFilters.some(scenarioFilter => {
+      if (candidates.includes(scenarioFilter)) return true;
+      const filterTokens = splitScenarioTokens(scenarioFilter);
+      if (filterTokens.length !== 1) return false;
+      return candidates.some((candidate) => splitScenarioTokens(candidate).includes(filterTokens[0]));
+    });
   };
 
   try {
@@ -3623,9 +3758,14 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'characterLevelChangeFast', name: 'character-level-change-fast', aliases: ['character level change'], run: () => runCharacterLevelChange(browser, iterations, 'fast') },
       { key: 'characterLevelChangeStructural', name: 'character-level-change-structural', aliases: ['character level change'], run: () => runCharacterLevelChange(browser, iterations, 'structural') },
       { key: 'characterListRemoveSingle', name: 'character-list-remove-single', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations) },
+      { key: 'characterListRemoveSingleSafe', name: 'character-list-remove-single-safe', aliases: ['character remove safe'], run: () => runCharacterRemoveSingle(browser, iterations, { forceSafePath: true }) },
+      { key: 'characterBoonRemove', name: 'character-boon-remove', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-boon-remove', entryName: 'Arkivarie' }) },
+      { key: 'characterBurdenRemove', name: 'character-burden-remove', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-burden-remove', entryName: 'Impulsiv' }) },
+      { key: 'characterTraitRemove', name: 'character-trait-remove', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-trait-remove', entryName: 'Robust' }) },
       { key: 'characterListRemoveDecrement', name: 'character-list-remove-decrement', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveMulti(browser, iterations, 'sub') },
       { key: 'characterListRemoveAll', name: 'character-list-remove-all', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveMulti(browser, iterations, 'del') },
-      { key: 'characterArtifactCascadeRemove', name: 'character-artifact-cascade-remove', aliases: ['remove', 'character remove'], run: () => runCharacterArtifactRemove(browser, iterations) },
+      { key: 'characterArtifactRemove', name: 'character-artifact-remove', aliases: ['remove', 'character remove', 'artifact remove'], run: () => runCharacterArtifactRemove(browser, iterations) },
+      { key: 'characterGrantCascadeRemove', name: 'character-grant-cascade-remove', aliases: ['remove', 'character remove', 'cascade remove'], run: () => runCharacterGrantCascadeRemove(browser, iterations) },
       { key: 'characterClearNonInventory', name: 'character-clear-non-inventory', aliases: ['remove', 'character remove'], run: () => runCharacterClearNonInv(browser, iterations) },
       { key: 'indexListRemove', name: 'index-list-remove', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations) },
       { key: 'indexInventoryRemove', name: 'index-inventory-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations) },
@@ -3633,7 +3773,8 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'indexInventoryBundleAddSafe', name: 'index-inventory-bundle-add-safe', aliases: ['bundle insertion safe'], run: () => runIndexBundleAdd(browser, iterations, { forceSafePath: true }) },
       { key: 'indexInventoryBundleRemove', name: 'index-inventory-bundle-remove', aliases: ['bundle removal'], run: () => runIndexBundleRemove(browser, iterations) },
       { key: 'indexInventoryBundleRemoveSafe', name: 'index-inventory-bundle-remove-safe', aliases: ['bundle removal safe'], run: () => runIndexBundleRemove(browser, iterations, { forceSafePath: true }) },
-      { key: 'indexHiddenArtifactRemove', name: 'index-hidden-artifact-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations, { useArtifactCandidate: true }) },
+      { key: 'indexHiddenInventoryRemove', name: 'index-hidden-inventory-remove', aliases: ['remove', 'index remove', 'hidden remove'], run: () => runIndexInventoryRemove(browser, iterations, { useHiddenCandidate: true }) },
+      { key: 'indexArtifactRemove', name: 'index-artifact-remove', aliases: ['remove', 'index remove', 'artifact remove'], run: () => runIndexInventoryRemove(browser, iterations, { useArtifactCandidate: true }) },
       { key: 'indexListRemoveFullRerender', name: 'index-list-remove-full-rerender', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations, { onlySelected: true }) },
       { key: 'inventoryRowDelete', name: 'inventory-row-delete', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'row-delete') },
       { key: 'inventoryStackDecrement', name: 'inventory-stack-decrement', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'stack-decrement') },

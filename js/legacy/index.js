@@ -4593,7 +4593,10 @@
             timeActiveAddStage('inventory-render', () => {
               invUtil.renderInventory({
                 trigger: bundleCount !== null ? 'bundle-remove' : 'index-inventory-remove',
-                fallbackReasons: topologyResult?.fallbackReasons
+                fallbackReasons: topologyResult?.fallbackReasons?.length
+                  ? topologyResult.fallbackReasons
+                  : ['unplanned-index-inventory-removal'],
+                entryId: p.id || ''
               });
             }, {
               surface: 'index',
@@ -4645,7 +4648,12 @@
           const removed = matchedForRemoval
             || before.find(it => matchesListEntryWithOptions(it, removalRef, cardChoiceOptions));
           if (removed && !(await handleSnapshotEntryRemoval(removed))) return;
-          const remDeps = storeHelper.getDependents(before, removed);
+          let removalPlan = typeof storeHelper.planCurrentListRemoval === 'function'
+            ? storeHelper.planCurrentListRemoval(store, list)
+            : null;
+          const remDeps = removalPlan?.dependentsProven && Array.isArray(removalPlan?.dependents)
+            ? removalPlan.dependents
+            : storeHelper.getDependents(before, removed);
           if (p.namn === 'Mörkt blod' && remDeps.length) {
             if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
               list = list.filter(x => !remDeps.includes(x.namn));
@@ -4665,17 +4673,22 @@
               return;
           }
           if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
-            const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+            const toClean = removalPlan?.grantCleanupProven && Array.isArray(removalPlan?.grantCleanup)
+              ? removalPlan.grantCleanup
+              : storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
             if (toClean.length > 0) {
               const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
               if (await confirmPopup(`Att ta bort "${p.namn}" tar även bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
                 toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+                removalPlan = typeof storeHelper.planCurrentListRemoval === 'function'
+                  ? storeHelper.planCurrentListRemoval(store, list)
+                  : null;
               }
             }
           }
           const applyListRemoval = async () => {
             const mutationSummary = timeActiveAddStage('store-mutation', () => (
-              storeHelper.setCurrentList(store, list)
+              storeHelper.setCurrentList(store, list, { removalPlan })
             ), {
               branch: 'list',
               mode: 'remove',

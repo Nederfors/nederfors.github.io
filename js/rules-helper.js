@@ -1031,6 +1031,35 @@
     });
   }
 
+  // Removing a list member cannot create a new static conflict, but it can
+  // activate a conditional conflict whose condition depends on list
+  // membership (for example, "while X is absent"). Keep that proof separate
+  // from requirements, which are checked against the concrete before/after
+  // lists by getRequirementDependents.
+  function requiresRemovalListReconciliation(entries) {
+    return measureMutationRuleWork('removalListWideDependencyChecks', 'removalListWideDependencyMs', () => {
+      const list = Array.isArray(entries) ? entries : [];
+      return list.some(entry => {
+        if (!entry || typeof entry !== 'object') return false;
+        const level = typeof entry.nivå === 'string' ? entry.nivå : '';
+        const sourceEntry = resolveRuleSourceEntry(entry);
+        const rawRuleBlocks = getRawReconciliationRuleBlocks(entry, level);
+        if (sourceEntry && sourceEntry !== entry) {
+          rawRuleBlocks.push(...getRawReconciliationRuleBlocks(sourceEntry, level));
+        }
+        getTypeRuleTemplateEntries(sourceEntry || entry).forEach(templateEntry => {
+          rawRuleBlocks.push(...getRawReconciliationRuleBlocks(templateEntry, level));
+        });
+        if (rawRuleBlocks.some(requestsFullListReconciliation)) return true;
+        const rules = getEntryRules(entry, level ? { level } : {});
+        if (requestsFullListReconciliation(rules)) return true;
+        return ['ger', 'krockar'].some(key => toRuleList(rules?.[key]).some(rule => (
+          requestsFullListReconciliation(rule) || ruleDependsOnListMembership(rule)
+        )));
+      });
+    });
+  }
+
   function normalizeChoiceField(value) {
     const field = String(value || '').trim();
     return CHOICE_FIELDS.includes(field) ? field : '';
@@ -4316,6 +4345,15 @@
     };
   }
 
+  function hasRequirementRulesForCandidate(candidateEntry, options = {}) {
+    if (!candidateEntry || typeof candidateEntry !== 'object') return false;
+    const level = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
+    const ruleSets = getCandidateRequirementRuleSets(candidateEntry, level);
+    return Boolean(ruleSets.entryRequirements.length || ruleSets.typeRequirements.length);
+  }
+
   function buildRequirementReason(rule, candidate, entries, contextEntries, nameSet) {
     // --- Nested group: grupp contains sub-rules combined with grupp_logik ---
     if (Array.isArray(rule?.grupp) && rule.grupp.length) {
@@ -5878,43 +5916,57 @@
       if (!removedEntry || typeof removedEntry !== 'object') return [];
       const entries = getRuleEntries(list);
       if (!entries.length) return [];
+      const indexedCandidateUids = Array.isArray(options?.candidateUids)
+        ? new Set(options.candidateUids.map(uid => String(uid || '').trim()).filter(Boolean))
+        : null;
 
-    const removedName = normalizeLevelName(removedEntry?.namn || '');
-    if (!removedName) return [];
-    const afterEntries = removeOneMatchingEntry(entries, removedEntry);
-    const afterNameSet = buildNameSet(afterEntries);
-    const out = [];
-    const seen = new Set();
+      const removedName = normalizeLevelName(removedEntry?.namn || '');
+      if (!removedName) return [];
+      const afterEntries = removeOneMatchingEntry(entries, removedEntry);
+      const afterNameSet = buildNameSet(afterEntries);
+      const out = [];
+      const seen = new Set();
 
-    entries.forEach(candidate => {
-      if (!candidate || candidate === removedEntry) return;
-      const candidateLevel = typeof candidate?.nivå === 'string' ? candidate.nivå : '';
-      const beforeMissing = getMissingRequirementReasonsForCandidate(candidate, entries, { level: candidateLevel });
-      if (beforeMissing.length) return;
+      entries.forEach(candidate => {
+        if (!candidate || candidate === removedEntry) return;
+        if (indexedCandidateUids) {
+          const candidateUid = String(candidate?.__uid || '').trim();
+          if (!candidateUid || !indexedCandidateUids.has(candidateUid)) {
+            incrementMutationPerfCounter('requirementCandidatesIndexedOut');
+            return;
+          }
+        }
+        const candidateLevel = typeof candidate?.nivå === 'string' ? candidate.nivå : '';
+        if (!hasRequirementRulesForCandidate(candidate, { level: candidateLevel })) {
+          incrementMutationPerfCounter('requirementCandidatesSkipped');
+          return;
+        }
+        const beforeMissing = getMissingRequirementReasonsForCandidate(candidate, entries, { level: candidateLevel });
+        if (beforeMissing.length) return;
 
-      const afterMissing = getMissingRequirementReasonsForCandidate(candidate, afterEntries, { level: candidateLevel });
-      if (!afterMissing.length) return;
+        const afterMissing = getMissingRequirementReasonsForCandidate(candidate, afterEntries, { level: candidateLevel });
+        if (!afterMissing.length) return;
 
-      const removedStillExists = afterNameSet.has(removedName);
-      const referencesRemoved = afterMissing.some(reason =>
-        (Array.isArray(reason?.requiredNames) ? reason.requiredNames : [])
-          .map(name => normalizeLevelName(name))
-          .includes(removedName)
-        || (Array.isArray(reason?.missingNames) ? reason.missingNames : [])
-          .map(name => normalizeLevelName(name))
-          .includes(removedName)
-        || [...(Array.isArray(reason?.levelRequirements) ? reason.levelRequirements : []), ...(Array.isArray(reason?.missingLevelRequirements) ? reason.missingLevelRequirements : [])]
-          .map(requirement => normalizeLevelName(requirement?.name || ''))
-          .includes(removedName)
-      );
-      if (!referencesRemoved && !removedStillExists) return;
+        const removedStillExists = afterNameSet.has(removedName);
+        const referencesRemoved = afterMissing.some(reason =>
+          (Array.isArray(reason?.requiredNames) ? reason.requiredNames : [])
+            .map(name => normalizeLevelName(name))
+            .includes(removedName)
+          || (Array.isArray(reason?.missingNames) ? reason.missingNames : [])
+            .map(name => normalizeLevelName(name))
+            .includes(removedName)
+          || [...(Array.isArray(reason?.levelRequirements) ? reason.levelRequirements : []), ...(Array.isArray(reason?.missingLevelRequirements) ? reason.missingLevelRequirements : [])]
+            .map(requirement => normalizeLevelName(requirement?.name || ''))
+            .includes(removedName)
+        );
+        if (!referencesRemoved && !removedStillExists) return;
 
-      const candidateName = String(candidate?.namn || '').trim();
-      const dedupeKey = normalizeLevelName(candidateName);
-      if (!candidateName || !dedupeKey || seen.has(dedupeKey)) return;
-      seen.add(dedupeKey);
-      out.push(candidateName);
-    });
+        const candidateName = String(candidate?.namn || '').trim();
+        const dedupeKey = normalizeLevelName(candidateName);
+        if (!candidateName || !dedupeKey || seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+        out.push(candidateName);
+      });
 
       return out;
     });
@@ -7084,6 +7136,7 @@
     getEntryRules,
     getRuleList,
     requiresFullListReconciliation,
+    requiresRemovalListReconciliation,
     getEntryChoiceRule,
     getEntryChoiceDisplay,
     formatEntryDisplayName,
@@ -7104,6 +7157,7 @@
     getConflictResolutionForCandidate,
     getMissingRequirementReasonsForCandidate,
     getRequirementEffectsForCandidate,
+    hasRequirementRulesForCandidate,
     shouldSkipRequirementPopup,
     getLevelData,
     getRequirementAssistOptions,

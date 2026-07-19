@@ -171,6 +171,7 @@ test('incremental and forced-full list reconciliation produce identical public s
             '__order',
             '__appliedDigest',
             '__dbPinnedDigest',
+            'requirementCandidateUids',
             'lastCurrentListMutationSummary'
           ].includes(childKey)) return;
           if (childKey === 'sourceKey') return;
@@ -364,4 +365,107 @@ test('catalog entry replacement invalidates the trusted incremental baseline', a
   expect(result.nextMode).toBe('full');
   expect(result.nextReason).toBe('reconciliation-version-mismatch');
   expect(result.names).toContain('Villkorad gåva');
+});
+
+test('proven single removal matches forced-safe reconciliation state', async ({ page }) => {
+  await seedHostCharacter(page);
+  await page.goto('/#/index');
+  await page.waitForFunction(() => (
+    Boolean(window.__symbaroumBootCompleted)
+    && Boolean(window.storeHelper?.planCurrentListRemoval)
+    && Boolean(window.storeHelper?.setCurrentList)
+  ));
+
+  const result = await page.evaluate(async () => {
+    await window.catalogLoader?.ensureFullDatabase?.();
+    const clone = value => JSON.parse(JSON.stringify(value));
+    const lookup = name => {
+      const entry = window.lookupEntry?.({ name })
+        || (window.DB || []).find(candidate => String(candidate?.namn || '').trim() === name)
+        || null;
+      if (!entry) throw new Error(`Missing removal parity entry: ${name}`);
+      return clone(entry);
+    };
+    const money = () => ({ daler: 0, skilling: 0, 'örtegar': 0 });
+    const makeStore = id => ({
+      current: id,
+      characters: [{ id, name: id }],
+      folders: [],
+      data: {
+        [id]: {
+          list: [
+            { ...lookup('Akrobatik'), nivå: 'Novis', __uid: `${id}-remove`, __order: 1 },
+            { ...lookup('Sjätte sinne'), nivå: 'Novis', __uid: `${id}-keep`, __order: 2 }
+          ],
+          inventory: [],
+          custom: [],
+          privMoney: money(),
+          possessionMoney: money(),
+          bonusMoney: money(),
+          entryOrderCounter: 2,
+          snapshotRules: [],
+          revealedArtifacts: []
+        }
+      }
+    });
+    const normalize = data => {
+      const clean = value => {
+        if (Array.isArray(value)) return value.map(clean);
+        if (!value || typeof value !== 'object') return value;
+        const out = {};
+        Object.keys(value).sort().forEach(key => {
+          if (['__uid', '__order', 'lastCurrentListMutationSummary'].includes(key)) return;
+          out[key] = clean(value[key]);
+        });
+        return out;
+      };
+      return clean(data);
+    };
+
+    const optimizedStore = makeStore('remove-optimized');
+    const safeStore = makeStore('remove-safe');
+    window.storeHelper.setCurrentList(
+      optimizedStore,
+      window.storeHelper.getCurrentList(optimizedStore)
+    );
+    window.storeHelper.setCurrentList(
+      safeStore,
+      window.storeHelper.getCurrentList(safeStore)
+    );
+
+    const optimizedNext = window.storeHelper.getCurrentList(optimizedStore).slice(1);
+    const optimizedPlan = window.storeHelper.planCurrentListRemoval(optimizedStore, optimizedNext);
+    const optimizedSummary = window.storeHelper.setCurrentList(
+      optimizedStore,
+      optimizedNext,
+      { removalPlan: optimizedPlan }
+    );
+
+    window.__symbaroumPerfForceSafeListMutations = true;
+    const safeNext = window.storeHelper.getCurrentList(safeStore).slice(1);
+    const safePlan = window.storeHelper.planCurrentListRemoval(safeStore, safeNext);
+    const safeSummary = window.storeHelper.setCurrentList(
+      safeStore,
+      safeNext,
+      { removalPlan: safePlan }
+    );
+    window.__symbaroumPerfForceSafeListMutations = false;
+
+    return {
+      optimizedPlanMode: optimizedPlan?.mode || '',
+      optimizedMode: optimizedSummary?.reconciliationMode || '',
+      safePlanMode: safePlan?.mode || '',
+      safeMode: safeSummary?.reconciliationMode || '',
+      safeReason: safeSummary?.reconciliationReason || '',
+      optimizedState: normalize(optimizedStore.data[optimizedStore.current]),
+      safeState: normalize(safeStore.data[safeStore.current])
+    };
+  });
+
+  expect(result.optimizedPlanMode).toBe('incremental-remove');
+  expect(result.optimizedMode).toBe('incremental-remove');
+  expect(result.safePlanMode).toBe('full');
+  expect(result.safeMode).toBe('full');
+  expect(result.safeReason).toBe('forced-safe-path');
+  expect(result.optimizedState).toEqual(result.safeState);
 });
