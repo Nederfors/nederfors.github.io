@@ -20161,7 +20161,7 @@ function defaultTraits() {
     return reasons;
   }
 
-  function planInventoryTopologyMutation(inventory, mutation = {}) {
+  function planLegacyVehicleTopologyMutation(inventory, mutation = {}) {
     const fallbackReasons = [];
     const addFallback = reason => {
       if (reason && !fallbackReasons.includes(reason)) fallbackReasons.push(reason);
@@ -20387,6 +20387,763 @@ function defaultTraits() {
         sourceRow,
         vehicleRow,
         sourceParent: sourceInfo.parentArr
+      }
+    };
+  }
+
+  let topologyCandidateUidSequence = 0;
+
+  function cloneInventoryTopologyTree(inventory) {
+    return JSON.parse(JSON.stringify(Array.isArray(inventory) ? inventory : []));
+  }
+
+  function createInventoryTopologyCandidate(inventory, mutator) {
+    const candidate = cloneInventoryTopologyTree(inventory);
+    if (typeof mutator === 'function') mutator(candidate);
+    const nonVehicles = [];
+    const vehicles = [];
+    candidate.forEach(row => {
+      const entry = getEntry(row?.id || row?.name);
+      const capabilities = window.inventoryCapabilities?.resolve?.(entry);
+      if (capabilities?.topology === 'vehicle') vehicles.push(row);
+      else nonVehicles.push(row);
+    });
+    candidate.splice(0, candidate.length, ...nonVehicles, ...vehicles);
+    const beforeUids = new Set(
+      collectInventoryTopologyRows(inventory)
+        .map(({ row }) => String(row?.__uid || '').trim())
+        .filter(Boolean)
+    );
+    const candidateSeen = new Set();
+    collectInventoryTopologyRows(candidate).forEach(({ row }) => {
+      let uid = String(row?.__uid || '').trim();
+      if (!uid || candidateSeen.has(uid)) {
+        do {
+          topologyCandidateUidSequence += 1;
+          uid = `inv-topology-${Date.now().toString(36)}-${topologyCandidateUidSequence.toString(36)}`;
+        } while (beforeUids.has(uid) || candidateSeen.has(uid));
+        row.__uid = uid;
+      }
+      candidateSeen.add(uid);
+    });
+    return candidate;
+  }
+
+  function getTopologyRowMetadata(row) {
+    if (!row || typeof row !== 'object') return null;
+    const metadata = {};
+    Object.keys(row).sort((left, right) => left.localeCompare(right, 'sv')).forEach(key => {
+      if (key === 'contains' || key === 'posQualCnt') return;
+      metadata[key] = row[key];
+    });
+    return metadata;
+  }
+
+  function getTopologyRowPatchKeys(beforeRow, afterRow) {
+    const before = getTopologyRowMetadata(beforeRow) || {};
+    const after = getTopologyRowMetadata(afterRow) || {};
+    return [...new Set([...Object.keys(before), ...Object.keys(after)])]
+      .filter(key => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
+  }
+
+  function collectInventoryTopologyState(rows) {
+    const items = [];
+    const byUid = new Map();
+    const uidCounts = new Map();
+    const parentOrders = new Map();
+    const categoryOrders = new Map();
+    let invalidTree = false;
+    const visitedRows = new Set();
+    const visit = (list, prefix = [], parentUid = 'root') => {
+      if (!Array.isArray(list)) return;
+      const order = [];
+      list.forEach((row, index) => {
+        if (!row || typeof row !== 'object') {
+          invalidTree = true;
+          return;
+        }
+        if (visitedRows.has(row)) {
+          invalidTree = true;
+          return;
+        }
+        visitedRows.add(row);
+        const path = [...prefix, index];
+        const uid = String(row.__uid || '').trim();
+        const entry = getEntry(row.id || row.name);
+        const category = parentUid === 'root' ? getInventoryRowCategory(row) : '';
+        const item = {
+          uid,
+          row,
+          entry,
+          path,
+          parentUid,
+          category,
+          index,
+          childUids: []
+        };
+        items.push(item);
+        if (uid) {
+          uidCounts.set(uid, (uidCounts.get(uid) || 0) + 1);
+          if (!byUid.has(uid)) byUid.set(uid, item);
+          order.push(uid);
+          if (category) {
+            if (!categoryOrders.has(category)) categoryOrders.set(category, []);
+            categoryOrders.get(category).push(uid);
+          }
+        }
+        if (Array.isArray(row.contains)) {
+          item.childUids = row.contains.map(child => String(child?.__uid || '').trim()).filter(Boolean);
+          visit(row.contains, path, uid || `missing:${path.join('.')}`);
+        }
+      });
+      parentOrders.set(parentUid, order);
+    };
+    visit(rows);
+    return {
+      items,
+      byUid,
+      uidCounts,
+      parentOrders,
+      categoryOrders,
+      invalidTree
+    };
+  }
+
+  function topologyOrderChanged(beforeOrder = [], afterOrder = []) {
+    const shared = new Set(beforeOrder.filter(uid => afterOrder.includes(uid)));
+    const beforeShared = beforeOrder.filter(uid => shared.has(uid));
+    const afterShared = afterOrder.filter(uid => shared.has(uid));
+    return JSON.stringify(beforeShared) !== JSON.stringify(afterShared);
+  }
+
+  function getDeclaredTopologyRowImpact({
+    beforeInventory,
+    afterInventory,
+    beforeItem,
+    afterItem,
+    sourceEntry = null
+  }) {
+    const row = afterItem?.row || beforeItem?.row;
+    const entry = afterItem?.entry || beforeItem?.entry || sourceEntry;
+    const capabilities = window.inventoryCapabilities?.resolve?.(entry) || {
+      known: false,
+      fallbackReason: 'inventory-capability-resolver-missing',
+      stateLinks: [],
+      derivedDomains: []
+    };
+    const fallbackReasons = [];
+    const addFallback = reason => {
+      if (reason && !fallbackReasons.includes(reason)) fallbackReasons.push(reason);
+    };
+    if (!capabilities.known) addFallback(capabilities.fallbackReason);
+    if (capabilities.known && !capabilities.item) addFallback('not-an-inventory-item');
+    if (!getInventoryBaseIdentity(row, entry) || !getInventoryVariantIdentity(row, entry)) {
+      addFallback('unstable-variant-identity');
+    }
+    if (!String(row?.__uid || '').trim()) addFallback('missing-row-uid');
+    if (row?.typ === 'currency' || row?.money) addFallback('manual-override');
+    if (row?.snapshotSourceKey) addFallback('snapshot-sync');
+    if (row?.artifactEffect || capabilities.stateLinks.includes('artifact-binding-effects')) {
+      addFallback('artifact-list-sync');
+    }
+    if (Array.isArray(row?.manualQualityOverride) && row.manualQualityOverride.length) {
+      addFallback('manual-override');
+    }
+    if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
+
+    const beforeQty = beforeItem
+      ? countInventoryBaseQuantity(beforeInventory, entry)
+      : 0;
+    const afterQty = afterItem
+      ? countInventoryBaseQuantity(afterInventory, entry)
+      : 0;
+    const ownershipChanged = (beforeQty > 0) !== (afterQty > 0);
+    const stateTransitions = getInventoryStateTransitions(
+      capabilities,
+      beforeQty > 0,
+      afterQty > 0
+    );
+    const sharedImpact = classifyInventoryMutation(entry, row, {
+      capabilityAware: true,
+      allowedTopologies: ['leaf', 'container', 'vehicle'],
+      allowIndividualInstance: true,
+      requiresStableRowUid: true,
+      aggregateSnapshotAvailable: true,
+      stateTransitions
+    });
+    sharedImpact.fallbackReasons.forEach(addFallback);
+    if (ownershipChanged) {
+      capabilities.stateLinks.forEach(link => {
+        if (link === 'catalog-reveal-while-owned') addFallback('hidden-revealed-state');
+        else addFallback(`state-link-${link}-unoptimized`);
+      });
+      if (capabilities.derivedDomains.length) addFallback('declared-topology-derived-unoptimized');
+    }
+    return {
+      entry,
+      capabilities,
+      fallbackReasons,
+      invalidates: [...new Set([
+        ...(sharedImpact.invalidates || []),
+        'inventory.structure',
+        'inventory.totals',
+        'capacity',
+        'summary.economy',
+        'persistence'
+      ])],
+      bumpDerived: sharedImpact.bumpDerived === true
+    };
+  }
+
+  function getTopologyRowCostO(item, list) {
+    if (!item?.row || !item?.entry) return 0;
+    const snapshot = getReusableInventoryAggregateSnapshot();
+    const forgeLvl = snapshot?.forgeLvl ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Smideskonst')
+    );
+    const alcLevel = snapshot?.alcLevel ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Alkemist')
+    );
+    const artLevel = snapshot?.artLevel ?? Math.max(
+      LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0,
+      storeHelper.abilityLevel(list, 'Artefaktmakande')
+    );
+    return moneyToO(calcRowCost(item.row, forgeLvl, alcLevel, artLevel));
+  }
+
+  function getTopologyFoodQuantity(item) {
+    const isFood = (item?.entry?.taggar?.typ || [])
+      .some(type => String(type || '').toLocaleLowerCase('sv-SE') === 'mat');
+    return isFood ? Math.max(0, Number(item?.row?.qty) || 0) : 0;
+  }
+
+  function getTopologyRootWeight(item, list) {
+    if (!item || item.parentUid !== 'root' || !item.row || !item.entry) return 0;
+    const capabilities = window.inventoryCapabilities?.resolve?.(item.entry);
+    if (capabilities?.topology === 'vehicle') return 0;
+    return calcRowWeight(item.row, list);
+  }
+
+  function serializeTopologyState(state) {
+    return JSON.stringify(state.items.map(item => ({
+      uid: item.uid,
+      path: item.path,
+      parentUid: item.parentUid,
+      metadata: getTopologyRowMetadata(item.row),
+      children: item.childUids
+    })));
+  }
+
+  function planGeneralInventoryTopologyTransition(beforeInventory, mutation = {}) {
+    const afterInventory = Array.isArray(mutation.afterInventory)
+      ? mutation.afterInventory
+      : null;
+    const fallbackReasons = [];
+    const addFallback = reason => {
+      if (reason && !fallbackReasons.includes(reason)) fallbackReasons.push(reason);
+    };
+    if (!Array.isArray(beforeInventory) || !afterInventory) addFallback('unknown-topology-metadata');
+    if (mutation.forceSafePath === true) addFallback('forced-safe-path');
+    if (mutation.activeFilters === true) addFallback('active-filter-membership-uncertain');
+    const aggregateSnapshotAvailable = mutation.aggregateSnapshotAvailable !== undefined
+      ? mutation.aggregateSnapshotAvailable === true
+      : Boolean(getReusableInventoryAggregateSnapshot());
+    if (!aggregateSnapshotAvailable) addFallback('aggregate-snapshot-unavailable');
+    if (Number(mutation.moneyAmountO || 0) > 0) addFallback('topology-and-money-batch-unsupported');
+
+    const before = collectInventoryTopologyState(beforeInventory);
+    const after = collectInventoryTopologyState(afterInventory || []);
+    if (before.invalidTree || after.invalidTree) addFallback('topology-cycle');
+    [...before.items, ...after.items].forEach(item => {
+      if (!item.uid) addFallback('missing-row-uid');
+      if (item.path.length > 2) addFallback('nested-inventory-path');
+    });
+    if ([...before.uidCounts.values(), ...after.uidCounts.values()].some(count => count !== 1)) {
+      addFallback('duplicate-row-uid');
+    }
+
+    const inserted = after.items.filter(item => !before.byUid.has(item.uid));
+    const removed = before.items.filter(item => !after.byUid.has(item.uid));
+    const moved = [];
+    const reordered = [];
+    const patched = [];
+    const commonUids = after.items.map(item => item.uid).filter(uid => before.byUid.has(uid));
+    commonUids.forEach(uid => {
+      const beforeItem = before.byUid.get(uid);
+      const afterItem = after.byUid.get(uid);
+      if (beforeItem.parentUid !== afterItem.parentUid) {
+        moved.push({ uid, before: beforeItem, after: afterItem });
+      }
+      const patchKeys = getTopologyRowPatchKeys(beforeItem.row, afterItem.row);
+      if (patchKeys.length) patched.push({ uid, before: beforeItem, after: afterItem, patchKeys });
+    });
+    const allParentUids = new Set([...before.parentOrders.keys(), ...after.parentOrders.keys()]);
+    allParentUids.forEach(parentUid => {
+      const beforeOrder = before.parentOrders.get(parentUid) || [];
+      const afterOrder = after.parentOrders.get(parentUid) || [];
+      if (!topologyOrderChanged(beforeOrder, afterOrder)) return;
+      const shared = beforeOrder.filter(uid => afterOrder.includes(uid));
+      shared.forEach(uid => {
+        const beforeIndex = beforeOrder.indexOf(uid);
+        const afterIndex = afterOrder.indexOf(uid);
+        if (beforeIndex !== afterIndex && !moved.some(change => change.uid === uid)) {
+          reordered.push({
+            uid,
+            before: before.byUid.get(uid),
+            after: after.byUid.get(uid)
+          });
+        }
+      });
+    });
+
+    const changedUids = new Set([
+      ...inserted.map(item => item.uid),
+      ...removed.map(item => item.uid),
+      ...moved.map(change => change.uid),
+      ...reordered.map(change => change.uid),
+      ...patched.map(change => change.uid)
+    ]);
+    if (!changedUids.size) addFallback('empty-mutation-plan');
+    if (mutation.operationCount !== undefined
+        && Number(mutation.operationCount) !== changedUids.size) {
+      addFallback('multi-row-topology-plan-mismatch');
+    }
+
+    const sourceEntry = mutation.sourceEntry || null;
+    if (sourceEntry) {
+      const sourceCapabilities = window.inventoryCapabilities?.resolve?.(sourceEntry);
+      if (!sourceCapabilities?.known) {
+        addFallback(sourceCapabilities?.fallbackReason || 'legacy-capabilities-missing');
+      } else if (sourceCapabilities.topology !== 'bundle') {
+        addFallback('unsupported-topology-source');
+      } else {
+        const bundleItems = getInventoryBundleItems(sourceEntry);
+        if (!bundleItems.length) addFallback('bundle-expansion');
+        const sourceGrants = getEntryRuleListWithFallback(sourceEntry, 'ger', {
+          level: sourceEntry?.nivå || ''
+        });
+        const sourceConflicts = getEntryRuleListWithFallback(sourceEntry, 'krockar', {
+          level: sourceEntry?.nivå || ''
+        });
+        const sourceModifies = getEntryRuleListWithFallback(sourceEntry, 'andrar', {
+          level: sourceEntry?.nivå || ''
+        });
+        if (sourceGrants.some(rule => String(rule?.mal || '').trim() !== 'foremal')) {
+          addFallback('unconsumed-bundle-grant');
+        }
+        if (sourceConflicts.length || sourceModifies.length) {
+          addFallback('bundle-rule-reconciliation-required');
+        }
+        if (typeof window.rulesHelper?.requiresFullListReconciliation === 'function'
+            && window.rulesHelper.requiresFullListReconciliation([sourceEntry])) {
+          addFallback('list-wide-dependency');
+        }
+        const bundleIds = new Set(bundleItems.map(item => String(item.id || '').trim()).filter(Boolean));
+        const changedIds = new Set(
+          [...inserted, ...removed, ...patched.map(change => change.after || change.before)]
+            .map(item => String(item?.row?.id || '').trim())
+          .filter(Boolean)
+        );
+        if ([...changedIds].some(id => !bundleIds.has(id))) addFallback('bundle-transition-mismatch');
+        const bundleUnits = Math.max(1, Math.floor(Number(mutation.units) || 1));
+        const bundleMode = String(mutation.action || '').includes('insert')
+          ? 'insert'
+          : (String(mutation.action || '').includes('remove') ? 'remove' : '');
+        if (!bundleMode) addFallback('bundle-transition-mode-unknown');
+        bundleItems.forEach(item => {
+          const beforeQty = getInventoryRefQuantity(beforeInventory, item);
+          const afterQty = getInventoryRefQuantity(afterInventory, item);
+          const expectedDelta = item.qty * bundleUnits * (bundleMode === 'insert' ? 1 : -1);
+          if (afterQty - beforeQty !== expectedDelta) addFallback('bundle-transition-mismatch');
+        });
+      }
+    }
+
+    const removedUidSet = new Set(removed.map(item => item.uid));
+    const exactSubtreeRemoval = removed.length > 0
+      && !inserted.length
+      && !moved.length
+      && !patched.length
+      && removed.every(item => item.childUids.every(uid => removedUidSet.has(uid)));
+    const unwrapParent = removed.length === 1 ? removed[0] : null;
+    const unwrapChildUids = new Set(unwrapParent?.childUids || []);
+    const exactParentUnwrap = Boolean(
+      unwrapParent
+      && unwrapChildUids.size
+      && !inserted.length
+      && !patched.length
+      && moved.length === unwrapChildUids.size
+      && moved.every(change => (
+        unwrapChildUids.has(change.uid)
+        && change.before.parentUid === unwrapParent.uid
+        && change.after.parentUid === unwrapParent.parentUid
+      ))
+    );
+    const movedRow = moved.length === 1 ? moved[0] : null;
+    const nonRootMoveParentUids = movedRow
+      ? [movedRow.before.parentUid, movedRow.after.parentUid].filter(uid => uid !== 'root')
+      : [];
+    const directVehicleLeafMove = Boolean(
+      movedRow
+      && !inserted.length
+      && !removed.length
+      && !patched.length
+      && movedRow.before.path.length <= 2
+      && movedRow.after.path.length <= 2
+      && window.inventoryCapabilities?.resolve?.(movedRow.after.entry)?.topology === 'leaf'
+      && nonRootMoveParentUids.length === 1
+      && window.inventoryCapabilities?.resolve?.(
+        after.byUid.get(nonRootMoveParentUids[0])?.entry
+          || before.byUid.get(nonRootMoveParentUids[0])?.entry
+      )?.topology === 'vehicle'
+    );
+    const exactBundleTransition = Boolean(
+      sourceEntry
+      && !moved.length
+      && !reordered.length
+      && [...inserted, ...removed].every(item => item.parentUid === 'root')
+      && patched.every(change => change.before.parentUid === 'root' && change.after.parentUid === 'root')
+    );
+    if (!exactSubtreeRemoval
+        && !exactParentUnwrap
+        && !directVehicleLeafMove
+        && !exactBundleTransition) {
+      addFallback('unsupported-topology-transition');
+    }
+
+    const impacts = [];
+    changedUids.forEach(uid => {
+      const beforeItem = before.byUid.get(uid) || null;
+      const afterItem = after.byUid.get(uid) || null;
+      const impact = getDeclaredTopologyRowImpact({
+        beforeInventory,
+        afterInventory,
+        beforeItem,
+        afterItem
+      });
+      impacts.push(impact);
+      impact.fallbackReasons.forEach(addFallback);
+      const topology = impact.capabilities?.topology;
+      if (!['leaf', 'container', 'vehicle'].includes(topology)) {
+        addFallback(`inventory-topology-${topology || 'missing'}`);
+      }
+    });
+    if (sourceEntry) {
+      const sourceCapabilities = window.inventoryCapabilities?.resolve?.(sourceEntry);
+      if (sourceCapabilities?.stateLinks?.length) {
+        sourceCapabilities.stateLinks.forEach(link => addFallback(`state-link-${link}-unoptimized`));
+      }
+      if (sourceCapabilities?.derivedDomains?.length) {
+        addFallback('declared-topology-derived-unoptimized');
+      }
+    }
+
+    const unsupportedPatchKeys = patched.flatMap(change => (
+      change.patchKeys.filter(key => !['qty', 'gratis', 'perkGratis'].includes(key))
+    ));
+    if (unsupportedPatchKeys.length) addFallback('unsupported-topology-row-patch');
+    if (mutation.surface !== 'index' && inserted.length && mutation.allowMountedInsert !== true) {
+      addFallback('target-dom-insert-unoptimized');
+    }
+
+    const affectedParentUids = new Set();
+    [...inserted, ...removed].forEach(item => affectedParentUids.add(item.parentUid));
+    moved.forEach(change => {
+      affectedParentUids.add(change.before.parentUid);
+      affectedParentUids.add(change.after.parentUid);
+    });
+    reordered.forEach(change => affectedParentUids.add(change.after.parentUid));
+    affectedParentUids.delete('');
+    const affectedParents = [...affectedParentUids].map(uid => ({
+      uid,
+      beforeOrder: [...(before.parentOrders.get(uid) || [])],
+      afterOrder: [...(after.parentOrders.get(uid) || [])],
+      beforePath: uid === 'root' ? [] : [...(before.byUid.get(uid)?.path || [])],
+      afterPath: uid === 'root' ? [] : [...(after.byUid.get(uid)?.path || [])]
+    }));
+
+    const allCategories = new Set([...before.categoryOrders.keys(), ...after.categoryOrders.keys()]);
+    const affectedCategories = [...allCategories]
+      .filter(category => JSON.stringify(before.categoryOrders.get(category) || [])
+        !== JSON.stringify(after.categoryOrders.get(category) || []))
+      .map(category => ({
+        category,
+        beforeOrder: [...(before.categoryOrders.get(category) || [])],
+        afterOrder: [...(after.categoryOrders.get(category) || [])]
+      }));
+    const parentShellsCreated = affectedParents
+      .filter(parent => parent.uid !== 'root' && !parent.beforeOrder.length && parent.afterOrder.length)
+      .map(parent => parent.uid);
+    const parentShellsRemoved = affectedParents
+      .filter(parent => parent.uid !== 'root' && parent.beforeOrder.length && !parent.afterOrder.length)
+      .map(parent => parent.uid);
+    removed.filter(item => item.childUids.length).forEach(item => {
+      if (!parentShellsRemoved.includes(item.uid)) parentShellsRemoved.push(item.uid);
+    });
+    const categoryShellsCreated = affectedCategories
+      .filter(category => !category.beforeOrder.length && category.afterOrder.length)
+      .map(category => category.category);
+    const categoryShellsRemoved = affectedCategories
+      .filter(category => category.beforeOrder.length && !category.afterOrder.length)
+      .map(category => category.category);
+
+    const list = Array.isArray(mutation.list)
+      ? mutation.list
+      : (getReusableInventoryAggregateSnapshot()?.list || storeHelper.getCurrentList(store));
+    const economyUids = new Set([
+      ...inserted.map(item => item.uid),
+      ...removed.map(item => item.uid),
+      ...patched.map(change => change.uid)
+    ]);
+    let economyDeltaO = 0;
+    let foodDelta = 0;
+    economyUids.forEach(uid => {
+      const beforeItem = before.byUid.get(uid);
+      const afterItem = after.byUid.get(uid);
+      economyDeltaO += getTopologyRowCostO(afterItem, list) - getTopologyRowCostO(beforeItem, list);
+      foodDelta += getTopologyFoodQuantity(afterItem) - getTopologyFoodQuantity(beforeItem);
+    });
+    const weightUids = new Set([...changedUids]);
+    let carriedWeightDelta = 0;
+    weightUids.forEach(uid => {
+      carriedWeightDelta += getTopologyRootWeight(after.byUid.get(uid), list)
+        - getTopologyRootWeight(before.byUid.get(uid), list);
+    });
+    const parentCapacityDeltas = affectedParents
+      .filter(parent => parent.uid !== 'root')
+      .map(parent => {
+        const beforeWeight = parent.beforeOrder.reduce((sum, uid) => {
+          const item = before.byUid.get(uid);
+          return sum + (item?.row && item?.entry ? calcRowWeight(item.row, list) : 0);
+        }, 0);
+        const afterWeight = parent.afterOrder.reduce((sum, uid) => {
+          const item = after.byUid.get(uid);
+          return sum + (item?.row && item?.entry ? calcRowWeight(item.row, list) : 0);
+        }, 0);
+        return {
+          parentUid: parent.uid,
+          beforeWeight,
+          afterWeight,
+          delta: afterWeight - beforeWeight
+        };
+      });
+    const aggregateSnapshot = getReusableInventoryAggregateSnapshot();
+    let expectedFinalAggregates = null;
+    if (aggregateSnapshot?.allInv === beforeInventory) {
+      const diffO = aggregateSnapshot.diffO - economyDeltaO;
+      const unusedMoney = oToMoney(Math.max(0, diffO));
+      const moneyWeight = calcMoneyWeight(unusedMoney);
+      expectedFinalAggregates = {
+        diffO,
+        foodCount: aggregateSnapshot.foodCount + foodDelta,
+        moneyWeight,
+        usedWeight: aggregateSnapshot.usedWeight
+          + carriedWeightDelta
+          + (moneyWeight - Number(aggregateSnapshot.moneyWeight || 0)),
+        maxCapacity: aggregateSnapshot.maxCapacity
+      };
+    }
+
+    let renderStrategy = 'targeted-patch';
+    if (mutation.surface === 'index') renderStrategy = 'targeted-none';
+    else if (inserted.length) renderStrategy = 'targeted-insert';
+    else if ((moved.length || reordered.length) && removed.length) renderStrategy = 'targeted-topology';
+    else if (moved.length || reordered.length) renderStrategy = 'targeted-move';
+    else if (removed.length) renderStrategy = 'targeted-remove';
+    if (fallbackReasons.length) renderStrategy = 'full-fallback';
+
+    const invalidates = [...new Set(impacts.flatMap(impact => impact.invalidates || []))];
+    return {
+      kind: 'topology-transition',
+      action: String(mutation.action || 'inventory-topology').trim(),
+      direction: String(mutation.direction || '').trim().toLowerCase(),
+      surface: mutation.surface || 'inventory',
+      impactClass: fallbackReasons.length ? 'fallback' : 'declared',
+      fastPath: fallbackReasons.length === 0,
+      fallbackReasons,
+      fallbackReason: fallbackReasons[0] || '',
+      rows: {
+        inserted: inserted.map(item => ({
+          uid: item.uid,
+          path: [...item.path],
+          parentUid: item.parentUid,
+          category: item.category
+        })),
+        removed: removed.map(item => ({
+          uid: item.uid,
+          path: [...item.path],
+          parentUid: item.parentUid,
+          category: item.category
+        })),
+        moved: moved.map(change => ({
+          uid: change.uid,
+          beforePath: [...change.before.path],
+          afterPath: [...change.after.path],
+          beforeParentUid: change.before.parentUid,
+          afterParentUid: change.after.parentUid,
+          beforeCategory: change.before.category,
+          afterCategory: change.after.category
+        })),
+        reordered: reordered.map(change => ({
+          uid: change.uid,
+          beforePath: [...change.before.path],
+          afterPath: [...change.after.path],
+          parentUid: change.after.parentUid
+        })),
+        patched: patched.map(change => ({
+          uid: change.uid,
+          path: [...change.after.path],
+          parentUid: change.after.parentUid,
+          patchKeys: [...change.patchKeys]
+        }))
+      },
+      affectedParents,
+      affectedCategories,
+      shells: {
+        parent: {
+          created: parentShellsCreated,
+          removed: parentShellsRemoved
+        },
+        category: {
+          created: categoryShellsCreated,
+          removed: categoryShellsRemoved
+        }
+      },
+      aggregateEffects: {
+        economyDeltaO,
+        foodDelta,
+        carriedWeightDelta,
+        usedWeightDelta: carriedWeightDelta,
+        parentCapacityDeltas,
+        expectedFinal: expectedFinalAggregates
+      },
+      invalidates,
+      affectedDomains: invalidates,
+      derivedInvalidation: 'none',
+      bumpDerived: false,
+      aggregateStrategy: aggregateSnapshotAvailable ? 'delta' : 'rebuild',
+      renderStrategy,
+      topology: 'inventory-tree',
+      topologyGuarantee: 'declared-before-after-transition',
+      targets: {
+        inventoryRows: [...changedUids],
+        inventoryParents: affectedParents.map(parent => parent.uid).filter(uid => uid !== 'root'),
+        inventoryCategories: affectedCategories.map(category => category.category)
+      },
+      expected: {
+        topLevelUids: [...(after.parentOrders.get('root') || [])],
+        parentOrders: Object.fromEntries(
+          [...after.parentOrders.entries()].map(([uid, order]) => [uid, [...order]])
+        ),
+        categoryOrders: Object.fromEntries(
+          [...after.categoryOrders.entries()].map(([category, order]) => [category, [...order]])
+        ),
+        rowPaths: Object.fromEntries(after.items.map(item => [item.uid, [...item.path]]))
+      },
+      beforeSignature: serializeTopologyState(before),
+      afterSignature: serializeTopologyState(after),
+      afterInventory: cloneInventoryTopologyTree(afterInventory),
+      cardChanges: {
+        insert: inserted.map(item => item.uid),
+        remove: removed.map(item => item.uid),
+        move: moved.map(change => change.uid),
+        refresh: [...new Set([
+          ...patched.map(change => change.uid),
+          ...affectedParents.map(parent => parent.uid).filter(uid => uid !== 'root')
+        ])],
+        preserve: after.items.map(item => item.uid)
+      },
+      refs: {
+        beforeByUid: before.byUid,
+        afterByUid: after.byUid
+      }
+    };
+  }
+
+  function buildLegacyVehicleTopologyCandidate(inventory, legacyPlan) {
+    const candidate = cloneInventoryTopologyTree(inventory);
+    const sourceInfo = readInventoryRowByPath(candidate, legacyPlan.source.path);
+    const parentInfo = readInventoryRowByPath(candidate, legacyPlan.affectedParent.pathBefore);
+    if (!sourceInfo.row || !parentInfo.row) return null;
+    const [moved] = sourceInfo.parentArr.splice(sourceInfo.idx, 1);
+    if (!moved) return null;
+    if (legacyPlan.direction === 'load') {
+      parentInfo.row.contains = Array.isArray(parentInfo.row.contains) ? parentInfo.row.contains : [];
+      parentInfo.row.contains.push(moved);
+      parentInfo.row.contains.sort(sortInvEntry);
+    } else {
+      candidate.push(moved);
+    }
+    const normalized = [
+      ...candidate.filter(row => window.inventoryCapabilities?.resolve?.(getEntry(row.id || row.name))?.topology !== 'vehicle'),
+      ...candidate.filter(row => window.inventoryCapabilities?.resolve?.(getEntry(row.id || row.name))?.topology === 'vehicle')
+    ];
+    candidate.splice(0, candidate.length, ...normalized);
+    return candidate;
+  }
+
+  function planInventoryTopologyMutation(inventory, mutation = {}) {
+    if (Array.isArray(mutation.afterInventory)) {
+      return planGeneralInventoryTopologyTransition(inventory, mutation);
+    }
+    const legacyPlan = planLegacyVehicleTopologyMutation(inventory, mutation);
+    if (!legacyPlan.fastPath) return legacyPlan;
+    const afterInventory = buildLegacyVehicleTopologyCandidate(inventory, legacyPlan);
+    if (!afterInventory) return {
+      ...legacyPlan,
+      fastPath: false,
+      impactClass: 'fallback',
+      fallbackReasons: ['topology-plan-stale'],
+      fallbackReason: 'topology-plan-stale',
+      renderStrategy: 'full-fallback'
+    };
+    const generalPlan = planGeneralInventoryTopologyTransition(inventory, {
+      ...mutation,
+      afterInventory,
+      action: `vehicle-${legacyPlan.direction}`,
+      surface: 'inventory',
+      operationCount: undefined
+    });
+    const sourceAfterPath = generalPlan.expected.rowPaths[legacyPlan.source.uid] || [];
+    const vehicleAfterPath = generalPlan.expected.rowPaths[legacyPlan.affectedParent.uid] || [];
+    return {
+      ...generalPlan,
+      kind: 'move-row',
+      source: {
+        ...legacyPlan.source,
+        path: [...legacyPlan.source.path]
+      },
+      destination: {
+        ...legacyPlan.destination,
+        path: [...sourceAfterPath]
+      },
+      affectedParent: {
+        ...legacyPlan.affectedParent,
+        pathAfter: [...vehicleAfterPath]
+      },
+      aggregateEffects: {
+        ...generalPlan.aggregateEffects,
+        movedWeight: legacyPlan.aggregateEffects.movedWeight,
+        remainingCapacityDelta: -generalPlan.aggregateEffects.usedWeightDelta
+      },
+      parentTransitions: legacyPlan.parentTransitions,
+      topologyGuarantee: legacyPlan.topologyGuarantee,
+      expected: {
+        ...generalPlan.expected,
+        vehicleChildUids: generalPlan.expected.parentOrders[legacyPlan.affectedParent.uid] || [],
+        sourceParentUids: generalPlan.expected.parentOrders[legacyPlan.source.parentUid] || [],
+        destinationParentUids: generalPlan.expected.parentOrders[legacyPlan.destination.parentUid] || [],
+        sourceCategoryUids: generalPlan.expected.categoryOrders[legacyPlan.source.category] || [],
+        sourcePath: [...sourceAfterPath],
+        vehiclePath: [...vehicleAfterPath]
+      },
+      refs: {
+        ...generalPlan.refs,
+        sourceRow: legacyPlan.refs.sourceRow,
+        vehicleRow: legacyPlan.refs.vehicleRow,
+        sourceParent: legacyPlan.refs.sourceParent
       }
     };
   }
@@ -20700,10 +21457,15 @@ function defaultTraits() {
       addFallback('nested-inventory-path');
     }
     if (capabilityAware) {
-      if (capabilities?.topology === 'container') addFallback('container-topology');
-      if (capabilities?.topology === 'vehicle') addFallback('vehicle-topology');
-      if (capabilities?.topology === 'bundle') addFallback('bundle-expansion');
-      if (capabilities?.topology && capabilities.topology !== 'leaf') {
+      const allowedTopologies = new Set(
+        Array.isArray(mutation.allowedTopologies)
+          ? mutation.allowedTopologies
+          : ['leaf']
+      );
+      if (capabilities?.topology && !allowedTopologies.has(capabilities.topology)) {
+        if (capabilities.topology === 'container') addFallback('container-topology');
+        if (capabilities.topology === 'vehicle') addFallback('vehicle-topology');
+        if (capabilities.topology === 'bundle') addFallback('bundle-expansion');
         addFallback(`inventory-topology-${capabilities.topology}`);
       }
     } else {
@@ -20711,7 +21473,10 @@ function defaultTraits() {
       if (types.includes('Färdmedel')) addFallback('vehicle-topology');
       if (isInventoryBundleEntry(entry)) addFallback('bundle-expansion');
     }
-    if (mutation.quantityOnly !== true && mutation.metadataOnly !== true && isIndividualItem(entry)) {
+    if (mutation.quantityOnly !== true
+        && mutation.metadataOnly !== true
+        && mutation.allowIndividualInstance !== true
+        && isIndividualItem(entry)) {
       addFallback('individual-instance');
     }
     if (capabilityAware) {
@@ -24788,12 +25553,32 @@ function defaultTraits() {
 
   function updateInventoryAggregateSnapshotForTopology(plan) {
     const snapshot = getReusableInventoryAggregateSnapshot();
-    const usedWeightDelta = Number(plan?.aggregateEffects?.usedWeightDelta);
-    if (!snapshot || !Number.isFinite(usedWeightDelta)) return null;
+    const carriedWeightDelta = Number(
+      plan?.aggregateEffects?.carriedWeightDelta
+      ?? plan?.aggregateEffects?.usedWeightDelta
+    );
+    const economyDeltaO = Number(plan?.aggregateEffects?.economyDeltaO || 0);
+    const foodDelta = Number(plan?.aggregateEffects?.foodDelta || 0);
+    if (!snapshot
+        || !Number.isFinite(carriedWeightDelta)
+        || !Number.isFinite(economyDeltaO)
+        || !Number.isFinite(foodDelta)) {
+      return null;
+    }
     incrementActiveMutationCounter('aggregateDeltaApplications');
+    const nextDiffO = snapshot.diffO - economyDeltaO;
+    const nextUnusedMoney = oToMoney(Math.max(0, nextDiffO));
+    const nextMoneyWeight = calcMoneyWeight(nextUnusedMoney);
     inventoryAggregateSnapshot = {
       ...snapshot,
-      usedWeight: snapshot.usedWeight + usedWeightDelta
+      allInv: plan?.afterInventory || snapshot.allInv,
+      diffO: nextDiffO,
+      foodCount: snapshot.foodCount + foodDelta,
+      moneyWeight: nextMoneyWeight,
+      unusedMoney: nextUnusedMoney,
+      usedWeight: snapshot.usedWeight
+        + carriedWeightDelta
+        + (nextMoneyWeight - Number(snapshot.moneyWeight || 0))
     };
     return inventoryAggregateSnapshot;
   }
@@ -25117,6 +25902,296 @@ function defaultTraits() {
     return true;
   }
 
+  function patchGeneralInventoryTopologyDatasets(inventory) {
+    const cardMap = new Map();
+    dom.invList?.querySelectorAll('li.entry-card[data-uid]').forEach(card => {
+      const uid = String(card.dataset.uid || '').trim();
+      if (uid && !cardMap.has(uid)) cardMap.set(uid, card);
+    });
+    const visit = (rows, parentPath = []) => {
+      (Array.isArray(rows) ? rows : []).forEach((row, index) => {
+        const uid = String(row?.__uid || '').trim();
+        const card = cardMap.get(uid);
+        if (card) {
+          delete card.dataset.idx;
+          delete card.dataset.parent;
+          delete card.dataset.child;
+          if (!parentPath.length) {
+            card.dataset.idx = String(index);
+          } else {
+            card.dataset.parent = String(parentPath[0]);
+            card.dataset.child = String(index);
+          }
+        }
+        if (Array.isArray(row?.contains)) visit(row.contains, [...parentPath, index]);
+      });
+    };
+    visit(inventory);
+    return true;
+  }
+
+  function getTopologyParentList(parentCard) {
+    if (!parentCard) return null;
+    const shell = parentCard.querySelector('.vehicle-items-shell');
+    return shell?.querySelector('.vehicle-items.entry-card-list') || null;
+  }
+
+  function ensureInventoryTopologyParentList(parentCard, parentRow) {
+    return ensureVehicleTopologyList(parentCard, parentRow);
+  }
+
+  function getGeneralTopologyDomPreflightReasons(plan) {
+    if (plan?.renderStrategy === 'targeted-none') return [];
+    const reasons = [];
+    const add = reason => {
+      if (reason && !reasons.includes(reason)) reasons.push(reason);
+    };
+    if (!dom.invList) add('target-dom-root-missing');
+    const beforeByUid = plan?.refs?.beforeByUid;
+    const afterByUid = plan?.refs?.afterByUid;
+    const existingUids = new Set([
+      ...(plan?.rows?.removed || []).map(change => change.uid),
+      ...(plan?.rows?.moved || []).map(change => change.uid),
+      ...(plan?.rows?.reordered || []).map(change => change.uid),
+      ...(plan?.rows?.patched || []).map(change => change.uid),
+      ...(plan?.affectedParents || [])
+        .map(parent => parent.uid)
+        .filter(uid => uid !== 'root' && afterByUid?.has(uid))
+    ]);
+    existingUids.forEach(uid => {
+      const cards = getInventoryCardsByUid(uid);
+      if (!cards.length) add('target-dom-card-missing');
+      if (cards.length > 1) add('target-dom-card-duplicate');
+      const card = cards[0];
+      const beforeItem = beforeByUid?.get(uid);
+      if (!card || !beforeItem) return;
+      const parentCard = card.parentElement?.closest('li.entry-card[data-uid]');
+      const renderedParentUid = String(parentCard?.dataset?.uid || 'root').trim() || 'root';
+      if (renderedParentUid !== beforeItem.parentUid) add('source-dom-parent-mismatch');
+    });
+    return reasons;
+  }
+
+  function applyGeneralInventoryTopologyTreePlan(inventory, plan) {
+    if (!Array.isArray(inventory) || !Array.isArray(plan?.afterInventory)) return false;
+    const currentState = collectInventoryTopologyState(inventory);
+    if (serializeTopologyState(currentState) !== plan.beforeSignature) return false;
+    const liveByUid = new Map(currentState.items.map(item => [item.uid, item.row]));
+    const materialize = afterRows => (Array.isArray(afterRows) ? afterRows : []).map(afterRow => {
+      const uid = String(afterRow?.__uid || '').trim();
+      const target = liveByUid.get(uid) || cloneInventoryTopologyTree([afterRow])[0];
+      Object.keys(target).forEach(key => {
+        if (key === 'contains') return;
+        if (!Object.prototype.hasOwnProperty.call(afterRow, key)) delete target[key];
+      });
+      Object.keys(afterRow).forEach(key => {
+        if (key === 'contains') return;
+        target[key] = cloneInventoryTopologyTree([{ value: afterRow[key] }])[0].value;
+      });
+      if (Array.isArray(afterRow.contains)) {
+        target.contains = materialize(afterRow.contains);
+      } else {
+        delete target.contains;
+      }
+      return target;
+    });
+    const nextRows = materialize(plan.afterInventory);
+    inventory.splice(0, inventory.length, ...nextRows);
+    const nextState = collectInventoryTopologyState(inventory);
+    return serializeTopologyState(nextState) === plan.afterSignature;
+  }
+
+  function getTopologyDestinationList(plan, change) {
+    const afterItem = plan?.refs?.afterByUid?.get(change.uid);
+    if (!afterItem) return null;
+    if (afterItem.parentUid === 'root') {
+      return createInventoryCategoryGroup(afterItem.category);
+    }
+    const parentCard = getInventoryCardsByUid(afterItem.parentUid)[0];
+    const parentRow = plan.refs.afterByUid.get(afterItem.parentUid)?.row;
+    return ensureInventoryTopologyParentList(parentCard, parentRow);
+  }
+
+  function insertTopologyCardAtExpectedPosition(plan, change, card, destinationList) {
+    if (!card || !destinationList) return false;
+    const afterItem = plan.refs.afterByUid.get(change.uid);
+    const expectedOrder = afterItem.parentUid === 'root'
+      ? (plan.expected.categoryOrders[afterItem.category] || [])
+      : (plan.expected.parentOrders[afterItem.parentUid] || []);
+    const index = expectedOrder.indexOf(change.uid);
+    const nextCard = expectedOrder.slice(index + 1)
+      .map(uid => getInventoryCardsByUid(uid)[0])
+      .find(candidate => candidate?.parentElement === destinationList);
+    destinationList.insertBefore(card, nextCard || null);
+    incrementActiveMutationCounter('domNodesMoved');
+    return true;
+  }
+
+  function reconcileGeneralInventoryTopologyDom(inventory, plan) {
+    if (plan.renderStrategy === 'targeted-none') {
+      refreshInventoryTotals();
+      return true;
+    }
+    const affectedLists = new Set();
+    const moveChanges = [
+      ...(plan.rows?.moved || []),
+      ...(plan.rows?.reordered || [])
+    ];
+    moveChanges.forEach(change => {
+      const card = getInventoryCardsByUid(change.uid)[0];
+      if (!card) return;
+      const sourceList = card.parentElement;
+      const destinationList = getTopologyDestinationList(plan, change);
+      if (!destinationList) return;
+      affectedLists.add(sourceList);
+      affectedLists.add(destinationList);
+      window.daubMotion?.destroyAutoAnimate?.(sourceList);
+      window.daubMotion?.destroyAutoAnimate?.(destinationList);
+      insertTopologyCardAtExpectedPosition(plan, change, card, destinationList);
+    });
+
+    (plan.rows?.removed || []).forEach(change => {
+      const card = getInventoryCardsByUid(change.uid)[0];
+      if (!card?.isConnected) return;
+      const sourceList = card.parentElement;
+      affectedLists.add(sourceList);
+      window.daubMotion?.destroyAutoAnimate?.(sourceList);
+      incrementActiveMutationCounter('domNodesRemoved', card.querySelectorAll('*').length + 1);
+      card.remove();
+    });
+
+    (plan.rows?.patched || []).forEach(change => {
+      const card = getInventoryCardsByUid(change.uid)[0];
+      const afterItem = plan.refs.afterByUid.get(change.uid);
+      if (!card || !afterItem?.row || !afterItem.entry) return;
+      if (change.patchKeys.every(key => ['qty', 'gratis', 'perkGratis'].includes(key))) {
+        patchSimpleQuantityCard(card, afterItem.row, afterItem.entry);
+      }
+    });
+
+    (plan.affectedParents || []).forEach(parent => {
+      if (parent.uid === 'root') return;
+      const parentCard = getInventoryCardsByUid(parent.uid)[0];
+      const parentItem = plan.refs.afterByUid.get(parent.uid);
+      if (!parentItem || !parentCard) return;
+      const list = ensureInventoryTopologyParentList(parentCard, parentItem.row);
+      if (list) affectedLists.add(list);
+      const capabilities = window.inventoryCapabilities?.resolve?.(parentItem.entry);
+      if (capabilities?.topology === 'vehicle') {
+        patchVehicleTopologyCard(parentCard, parentItem.row);
+      }
+    });
+
+    (plan.affectedCategories || []).forEach(category => {
+      const details = [...(dom.invList?.querySelectorAll('.cat-group > details[data-cat]') || [])]
+        .find(candidate => candidate.dataset.cat === category.category);
+      const list = details?.querySelector('ul[data-cat]');
+      if (list && list.childElementCount === 0) {
+        incrementActiveMutationCounter('domNodesRemoved', details.closest('.cat-group')?.querySelectorAll('*').length || 4);
+        details.closest('.cat-group')?.remove();
+      }
+    });
+
+    patchGeneralInventoryTopologyDatasets(inventory);
+    affectedLists.forEach(list => {
+      if (!list?.isConnected) return;
+      incrementActiveMutationCounter('autoAnimateBindings');
+      window.daubMotion?.bindAutoAnimate?.(list, { duration: 100 });
+    });
+    refreshInventoryTotals();
+    window.inventorySyncCats?.();
+    incrementActiveMutationCounter('targetedRenders');
+    return true;
+  }
+
+  function verifyGeneralInventoryTopologyPostconditions(inventory, plan) {
+    const state = collectInventoryTopologyState(inventory);
+    if (serializeTopologyState(state) !== plan.afterSignature) {
+      return { ok: false, reason: 'topology-state-postcondition-failed' };
+    }
+    const expectedAggregates = plan?.aggregateEffects?.expectedFinal;
+    if (expectedAggregates) {
+      const snapshot = getReusableInventoryAggregateSnapshot();
+      const approximatelyEqual = (left, right) => (
+        Number.isFinite(Number(left))
+        && Number.isFinite(Number(right))
+        && Math.abs(Number(left) - Number(right)) < 0.000001
+      );
+      if (!snapshot
+          || !approximatelyEqual(snapshot.diffO, expectedAggregates.diffO)
+          || !approximatelyEqual(snapshot.foodCount, expectedAggregates.foodCount)
+          || !approximatelyEqual(snapshot.moneyWeight, expectedAggregates.moneyWeight)
+          || !approximatelyEqual(snapshot.usedWeight, expectedAggregates.usedWeight)
+          || !approximatelyEqual(snapshot.maxCapacity, expectedAggregates.maxCapacity)) {
+        return { ok: false, reason: 'aggregate-postcondition-failed' };
+      }
+      if (plan.renderStrategy !== 'targeted-none') {
+        if (dom.wtOut && dom.wtOut.textContent !== formatWeight(expectedAggregates.usedWeight)) {
+          return { ok: false, reason: 'aggregate-dom-postcondition-failed' };
+        }
+        if (dom.slOut && dom.slOut.textContent !== formatWeight(expectedAggregates.maxCapacity)) {
+          return { ok: false, reason: 'aggregate-dom-postcondition-failed' };
+        }
+      }
+    }
+    if (plan.renderStrategy === 'targeted-none') return { ok: true, reason: '' };
+
+    for (const change of plan.rows?.removed || []) {
+      if (getInventoryCardsByUid(change.uid).length) {
+        return { ok: false, reason: 'removed-card-present' };
+      }
+    }
+    const expectedExistingUids = new Set([
+      ...(plan.rows?.moved || []).map(change => change.uid),
+      ...(plan.rows?.reordered || []).map(change => change.uid),
+      ...(plan.rows?.patched || []).map(change => change.uid)
+    ]);
+    for (const uid of expectedExistingUids) {
+      const cards = getInventoryCardsByUid(uid);
+      if (cards.length !== 1) return { ok: false, reason: 'moved-card-cardinality-failed' };
+      const expectedItem = plan.refs.afterByUid.get(uid);
+      const parentCard = cards[0].parentElement?.closest('li.entry-card[data-uid]');
+      const renderedParentUid = String(parentCard?.dataset?.uid || 'root').trim() || 'root';
+      if (renderedParentUid !== expectedItem.parentUid) {
+        return { ok: false, reason: 'moved-card-parent-failed' };
+      }
+    }
+
+    for (const parent of plan.affectedParents || []) {
+      if (parent.uid === 'root') continue;
+      const parentCard = getInventoryCardsByUid(parent.uid)[0];
+      if (!plan.refs.afterByUid.has(parent.uid)) continue;
+      if (!parentCard) return { ok: false, reason: 'parent-card-cardinality-failed' };
+      const rendered = [...(getTopologyParentList(parentCard)?.children || [])]
+        .map(card => String(card?.dataset?.uid || '').trim())
+        .filter(Boolean);
+      if (JSON.stringify(rendered) !== JSON.stringify(parent.afterOrder)) {
+        return { ok: false, reason: 'parent-order-failed' };
+      }
+      const hasShell = Boolean(parentCard.querySelector('.vehicle-items-shell'));
+      if (Boolean(parent.afterOrder.length) !== hasShell) {
+        return { ok: false, reason: 'empty-parent-visibility-failed' };
+      }
+    }
+    for (const category of plan.affectedCategories || []) {
+      const details = [...(dom.invList?.querySelectorAll('.cat-group > details[data-cat]') || [])]
+        .find(candidate => candidate.dataset.cat === category.category);
+      const rendered = [...(details?.querySelector('ul[data-cat]')?.children || [])]
+        .map(card => String(card?.dataset?.uid || '').trim())
+        .filter(Boolean);
+      if (JSON.stringify(rendered) !== JSON.stringify(category.afterOrder)) {
+        return { ok: false, reason: 'category-order-failed' };
+      }
+    }
+    const renderedCategoryOrder = [...(dom.invList?.querySelectorAll('.cat-group > details[data-cat]') || [])]
+      .map(details => details.dataset.cat || '');
+    const expectedCategoryOrder = [...renderedCategoryOrder].sort(catComparator);
+    if (JSON.stringify(renderedCategoryOrder) !== JSON.stringify(expectedCategoryOrder)) {
+      return { ok: false, reason: 'category-order-failed' };
+    }
+    return { ok: true, reason: '' };
+  }
+
   function getTopologyDomPreflightReasons(plan) {
     const reasons = [];
     const add = reason => {
@@ -25316,7 +26391,105 @@ function defaultTraits() {
     return { ok: true, reason: '' };
   }
 
+  function commitGeneralInventoryTopologyMutation(inventory, plan, options = {}) {
+    if (!plan?.fastPath || !Array.isArray(inventory) || !Array.isArray(plan.afterInventory)) {
+      return { committed: false, targeted: false, fallbackReasons: plan?.fallbackReasons || [] };
+    }
+    const preflightReasons = getGeneralTopologyDomPreflightReasons(plan);
+    if (preflightReasons.length) {
+      return { committed: false, targeted: false, fallbackReasons: preflightReasons };
+    }
+    if (!applyGeneralInventoryTopologyTreePlan(inventory, plan)) {
+      return { committed: false, targeted: false, fallbackReasons: ['topology-plan-stale'] };
+    }
+    timeActiveMutationStage('topology-aggregate-calculation', () => {
+      queueInventoryAggregateTopologyDelta({
+        ...plan,
+        afterInventory: inventory
+      });
+      applyPendingInventoryAggregateDeltas();
+    }, {
+      surface: plan.surface || 'inventory',
+      action: plan.action,
+      strategy: plan.aggregateStrategy
+    });
+
+    const afterUids = new Set(
+      collectInventoryTopologyRows(inventory)
+        .map(({ row }) => String(row?.__uid || '').trim())
+        .filter(Boolean)
+    );
+    const changedAfterUids = [
+      ...(plan.rows?.inserted || []),
+      ...(plan.rows?.moved || []),
+      ...(plan.rows?.reordered || []),
+      ...(plan.rows?.patched || [])
+    ].map(change => change.uid).filter(uid => afterUids.has(uid));
+    const removedUids = (plan.rows?.removed || []).map(change => change.uid);
+    const source = options.source || plan.action || 'inventory-topology';
+    storeHelper.batchCurrentCharacterMutation(store, {
+      bumpDerived: plan.bumpDerived,
+      invalidates: plan.invalidates,
+      targets: plan.targets,
+      afterCommit: summary => {
+        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+          charId: summary.charId,
+          version: summary.version,
+          invalidates: summary.invalidates,
+          targets: summary.targets,
+          topology: plan.topology,
+          renderStrategy: plan.renderStrategy,
+          source,
+          afterPaint: true
+        });
+      }
+    }, () => {
+      storeHelper.setInventory(store, inventory, {
+        bumpDerived: plan.bumpDerived,
+        fields: ['inventory'],
+        invalidates: plan.invalidates,
+        targets: plan.targets,
+        assumeValidInventoryUids: true,
+        validatedRowUids: changedAfterUids,
+        validatedRemovedRowUids: removedUids
+      });
+    });
+    const reconciled = timeActiveMutationStage('targeted-topology-reconciliation', () => (
+      reconcileGeneralInventoryTopologyDom(inventory, plan)
+    ), {
+      surface: plan.surface || 'inventory',
+      action: plan.action,
+      strategy: plan.renderStrategy
+    });
+    const postcondition = reconciled
+      ? verifyGeneralInventoryTopologyPostconditions(inventory, plan)
+      : { ok: false, reason: 'dom-postcondition-failed' };
+    if (!postcondition.ok) {
+      const reason = postcondition.reason || 'dom-postcondition-failed';
+      recordActiveMutationFallback(reason, {
+        action: plan.action,
+        changedRows: changedAfterUids.length,
+        removedRows: removedUids.length
+      });
+      renderInventoryWithPerf({
+        trigger: reason,
+        fallbackReasons: [reason]
+      });
+      return { committed: true, targeted: false, fallbackReasons: [reason] };
+    }
+    markActiveMutationCheckpoint('inventory-dom-reconciled', {
+      action: plan.action,
+      renderStrategy: plan.renderStrategy,
+      changedRows: changedAfterUids.length,
+      removedRows: removedUids.length
+    });
+    return { committed: true, targeted: true, fallbackReasons: [] };
+  }
+
   function commitInventoryTopologyMutation(inventory, plan, options = {}) {
+    if (Array.isArray(plan?.afterInventory)) {
+      return commitGeneralInventoryTopologyMutation(inventory, plan, options);
+    }
     if (!plan?.fastPath || !Array.isArray(inventory)) return { committed: false, targeted: false };
     const preflightReasons = getTopologyDomPreflightReasons(plan);
     if (preflightReasons.length) {
@@ -27439,26 +28612,71 @@ function defaultTraits() {
           li.classList.add('rm-flash');
           await new Promise(r => setTimeout(r, 100));
           if (isVeh && hasStuff) {
+            const commitContainerTopology = async ({ removeChildren }) => {
+              if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: removeChildren }))) {
+                return true;
+              }
+              const action = removeChildren ? 'container-delete-all' : 'container-unwrap';
+              markActiveMutationCheckpoint('handler-entry', {
+                action,
+                rowKey: row.__uid || row.id || row.name
+              });
+              const afterInventory = createInventoryTopologyCandidate(inv, candidate => {
+                const sourcePath = collectInventoryTopologyRows(candidate)
+                  .find(item => String(item.row?.__uid || '').trim() === String(row.__uid || '').trim());
+                const source = readInventoryRowByPath(candidate, sourcePath?.path || []);
+                if (!source?.row || !Array.isArray(source.parentArr)) return;
+                if (removeChildren) {
+                  source.parentArr.splice(source.idx, 1);
+                } else {
+                  source.parentArr.splice(source.idx, 1, ...(source.row.contains || []));
+                }
+              });
+              const topologyPlan = timeActiveMutationStage('topology-mutation-plan', () => (
+                planInventoryTopologyMutation(inv, {
+                  afterInventory,
+                  action,
+                  surface: 'inventory',
+                  list: storeHelper.getCurrentList(store),
+                  activeFilters: hasActiveInventoryFilters(),
+                  forceSafePath: window.__symbaroumPerfForceSafeInventoryMutations === true,
+                  aggregateSnapshotAvailable: Boolean(getReusableInventoryAggregateSnapshot())
+                })
+              ), {
+                surface: 'inventory',
+                action
+              });
+              markActiveMutationCheckpoint('mutation-plan-complete', {
+                action,
+                impactClass: topologyPlan.impactClass,
+                renderStrategy: topologyPlan.renderStrategy,
+                fallbackReasons: topologyPlan.fallbackReasons
+              });
+              let fallbackReasons = [...topologyPlan.fallbackReasons];
+              if (topologyPlan.fastPath) {
+                const result = commitInventoryTopologyMutation(inv, topologyPlan, {
+                  source: `inventory-${action}`
+                });
+                if (result.committed) return true;
+                fallbackReasons = result.fallbackReasons || fallbackReasons;
+              }
+              runCurrentCharacterMutationBatch(() => {
+                if (removeChildren) parentArr.splice(idx, 1);
+                else parentArr.splice(idx, 1, ...(row.contains || []));
+                saveInventory(inv);
+              });
+              renderInventoryWithPerf({
+                trigger: removeChildren ? 'delete-container-all' : 'delete-container-only',
+                fallbackReasons
+              });
+              return true;
+            };
             openDeleteContainerPopup(
               () => {
-                (async () => {
-                  if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: true }))) return;
-                  runCurrentCharacterMutationBatch(() => {
-                    parentArr.splice(idx, 1);
-                    saveInventory(inv);
-                  });
-                  renderInventoryWithPerf({ trigger: 'delete-container-all' });
-                })();
+                void commitContainerTopology({ removeChildren: true });
               },
               () => {
-                (async () => {
-                  if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
-                  runCurrentCharacterMutationBatch(() => {
-                    parentArr.splice(idx, 1, ...(row.contains || []));
-                    saveInventory(inv);
-                  });
-                  renderInventoryWithPerf({ trigger: 'delete-container-only' });
-                })();
+                void commitContainerTopology({ removeChildren: false });
               },
               {
                 message: 'Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort föremålen i färdmedlet?',
@@ -28183,7 +29401,9 @@ function defaultTraits() {
     mutateInventory,
     classifyInventoryMutation,
     classifyInventoryFilterMutation,
+    createInventoryTopologyCandidate,
     planInventoryTopologyMutation,
+    commitInventoryTopologyMutation,
     calcRowCost,
     calcRowWeight,
     refreshInventoryTotals,
