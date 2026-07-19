@@ -205,10 +205,35 @@
   });
 
   const MAL_REGISTRY = new Map();
+  const MAL_DERIVED_IMPACT_REGISTRY = new Map();
   const MANUAL_ENTRY_ERF_OVERRIDES = new Map();
 
-  function registerMal(mal, handler) {
-    MAL_REGISTRY.set(String(mal), handler);
+  function normalizeDerivedImpactMetadata(raw = {}) {
+    const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    return Object.freeze({
+      domains: Object.freeze([...new Set(
+        (Array.isArray(source.domains) ? source.domains : [])
+          .map(value => String(value || '').trim())
+          .filter(Boolean)
+      )]),
+      worker: source.worker === true
+    });
+  }
+
+  function registerMal(mal, handler, derivedImpact = null) {
+    const key = String(mal);
+    MAL_REGISTRY.set(key, handler);
+    if (derivedImpact && typeof derivedImpact === 'object' && !Array.isArray(derivedImpact)) {
+      MAL_DERIVED_IMPACT_REGISTRY.set(key, normalizeDerivedImpactMetadata(derivedImpact));
+    } else {
+      MAL_DERIVED_IMPACT_REGISTRY.delete(key);
+    }
+  }
+
+  function getRegisteredMalDerivedImpact(mal) {
+    const key = String(mal || '').trim();
+    if (!key || !MAL_REGISTRY.has(key)) return null;
+    return MAL_DERIVED_IMPACT_REGISTRY.get(key) || null;
   }
 
   function resolveTraitValueFromContext(rawMal, context = {}) {
@@ -1027,6 +1052,35 @@
         return ['post', 'foremal', 'pengar'].includes(target)
           && ruleDependsOnListMembership(rule);
       }));
+      });
+    });
+  }
+
+  // Removing a list member cannot create a new static conflict, but it can
+  // activate a conditional conflict whose condition depends on list
+  // membership (for example, "while X is absent"). Keep that proof separate
+  // from requirements, which are checked against the concrete before/after
+  // lists by getRequirementDependents.
+  function requiresRemovalListReconciliation(entries) {
+    return measureMutationRuleWork('removalListWideDependencyChecks', 'removalListWideDependencyMs', () => {
+      const list = Array.isArray(entries) ? entries : [];
+      return list.some(entry => {
+        if (!entry || typeof entry !== 'object') return false;
+        const level = typeof entry.nivå === 'string' ? entry.nivå : '';
+        const sourceEntry = resolveRuleSourceEntry(entry);
+        const rawRuleBlocks = getRawReconciliationRuleBlocks(entry, level);
+        if (sourceEntry && sourceEntry !== entry) {
+          rawRuleBlocks.push(...getRawReconciliationRuleBlocks(sourceEntry, level));
+        }
+        getTypeRuleTemplateEntries(sourceEntry || entry).forEach(templateEntry => {
+          rawRuleBlocks.push(...getRawReconciliationRuleBlocks(templateEntry, level));
+        });
+        if (rawRuleBlocks.some(requestsFullListReconciliation)) return true;
+        const rules = getEntryRules(entry, level ? { level } : {});
+        if (requestsFullListReconciliation(rules)) return true;
+        return ['ger', 'krockar'].some(key => toRuleList(rules?.[key]).some(rule => (
+          requestsFullListReconciliation(rule) || ruleDependsOnListMembership(rule)
+        )));
       });
     });
   }
@@ -2332,6 +2386,10 @@
     MANUAL_ENTRY_ERF_OVERRIDES.clear();
   }
 
+  function hasManualEntryErfOverride(entry, level = '') {
+    return getManualEntryErfOverride(entry, level) !== null;
+  }
+
   function getEntryErfOverrideMapValue(mapLike, level = '') {
     if (!mapLike || typeof mapLike !== 'object' || Array.isArray(mapLike)) return null;
     const wanted = normalizeLevelName(level);
@@ -2382,6 +2440,14 @@
     if (taggedValue !== null) return taggedValue;
 
     return normalizeErfOverrideNumber(entry?.erf ?? entry?.xp);
+  }
+
+  function getStaticEntryErfOverride(entry, level = '') {
+    if (!entry || typeof entry !== 'object') return null;
+    const sourceEntry = resolveRuleSourceEntry(entry);
+    const primary = getEntryStaticErfOverride(sourceEntry, level);
+    if (primary !== null) return primary;
+    return getEntryStaticErfOverride(entry, level);
   }
 
   function getRuleEntryErfOverride(rule, level = '') {
@@ -4316,6 +4382,15 @@
     };
   }
 
+  function hasRequirementRulesForCandidate(candidateEntry, options = {}) {
+    if (!candidateEntry || typeof candidateEntry !== 'object') return false;
+    const level = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
+    const ruleSets = getCandidateRequirementRuleSets(candidateEntry, level);
+    return Boolean(ruleSets.entryRequirements.length || ruleSets.typeRequirements.length);
+  }
+
   function buildRequirementReason(rule, candidate, entries, contextEntries, nameSet) {
     // --- Nested group: grupp contains sub-rules combined with grupp_logik ---
     if (Array.isArray(rule?.grupp) && rule.grupp.length) {
@@ -5878,43 +5953,57 @@
       if (!removedEntry || typeof removedEntry !== 'object') return [];
       const entries = getRuleEntries(list);
       if (!entries.length) return [];
+      const indexedCandidateUids = Array.isArray(options?.candidateUids)
+        ? new Set(options.candidateUids.map(uid => String(uid || '').trim()).filter(Boolean))
+        : null;
 
-    const removedName = normalizeLevelName(removedEntry?.namn || '');
-    if (!removedName) return [];
-    const afterEntries = removeOneMatchingEntry(entries, removedEntry);
-    const afterNameSet = buildNameSet(afterEntries);
-    const out = [];
-    const seen = new Set();
+      const removedName = normalizeLevelName(removedEntry?.namn || '');
+      if (!removedName) return [];
+      const afterEntries = removeOneMatchingEntry(entries, removedEntry);
+      const afterNameSet = buildNameSet(afterEntries);
+      const out = [];
+      const seen = new Set();
 
-    entries.forEach(candidate => {
-      if (!candidate || candidate === removedEntry) return;
-      const candidateLevel = typeof candidate?.nivå === 'string' ? candidate.nivå : '';
-      const beforeMissing = getMissingRequirementReasonsForCandidate(candidate, entries, { level: candidateLevel });
-      if (beforeMissing.length) return;
+      entries.forEach(candidate => {
+        if (!candidate || candidate === removedEntry) return;
+        if (indexedCandidateUids) {
+          const candidateUid = String(candidate?.__uid || '').trim();
+          if (!candidateUid || !indexedCandidateUids.has(candidateUid)) {
+            incrementMutationPerfCounter('requirementCandidatesIndexedOut');
+            return;
+          }
+        }
+        const candidateLevel = typeof candidate?.nivå === 'string' ? candidate.nivå : '';
+        if (!hasRequirementRulesForCandidate(candidate, { level: candidateLevel })) {
+          incrementMutationPerfCounter('requirementCandidatesSkipped');
+          return;
+        }
+        const beforeMissing = getMissingRequirementReasonsForCandidate(candidate, entries, { level: candidateLevel });
+        if (beforeMissing.length) return;
 
-      const afterMissing = getMissingRequirementReasonsForCandidate(candidate, afterEntries, { level: candidateLevel });
-      if (!afterMissing.length) return;
+        const afterMissing = getMissingRequirementReasonsForCandidate(candidate, afterEntries, { level: candidateLevel });
+        if (!afterMissing.length) return;
 
-      const removedStillExists = afterNameSet.has(removedName);
-      const referencesRemoved = afterMissing.some(reason =>
-        (Array.isArray(reason?.requiredNames) ? reason.requiredNames : [])
-          .map(name => normalizeLevelName(name))
-          .includes(removedName)
-        || (Array.isArray(reason?.missingNames) ? reason.missingNames : [])
-          .map(name => normalizeLevelName(name))
-          .includes(removedName)
-        || [...(Array.isArray(reason?.levelRequirements) ? reason.levelRequirements : []), ...(Array.isArray(reason?.missingLevelRequirements) ? reason.missingLevelRequirements : [])]
-          .map(requirement => normalizeLevelName(requirement?.name || ''))
-          .includes(removedName)
-      );
-      if (!referencesRemoved && !removedStillExists) return;
+        const removedStillExists = afterNameSet.has(removedName);
+        const referencesRemoved = afterMissing.some(reason =>
+          (Array.isArray(reason?.requiredNames) ? reason.requiredNames : [])
+            .map(name => normalizeLevelName(name))
+            .includes(removedName)
+          || (Array.isArray(reason?.missingNames) ? reason.missingNames : [])
+            .map(name => normalizeLevelName(name))
+            .includes(removedName)
+          || [...(Array.isArray(reason?.levelRequirements) ? reason.levelRequirements : []), ...(Array.isArray(reason?.missingLevelRequirements) ? reason.missingLevelRequirements : [])]
+            .map(requirement => normalizeLevelName(requirement?.name || ''))
+            .includes(removedName)
+        );
+        if (!referencesRemoved && !removedStillExists) return;
 
-      const candidateName = String(candidate?.namn || '').trim();
-      const dedupeKey = normalizeLevelName(candidateName);
-      if (!candidateName || !dedupeKey || seen.has(dedupeKey)) return;
-      seen.add(dedupeKey);
-      out.push(candidateName);
-    });
+        const candidateName = String(candidate?.namn || '').trim();
+        const dedupeKey = normalizeLevelName(candidateName);
+        if (!candidateName || !dedupeKey || seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+        out.push(candidateName);
+      });
 
       return out;
     });
@@ -6968,55 +7057,232 @@
     };
   }
 
+  function classifyEntryModifyDerivedImpact(entry, options = {}) {
+    const result = {
+      known: true,
+      domains: [],
+      workerDomains: [],
+      targets: [],
+      unknownTargets: [],
+      workerRequired: false,
+      hasListMembershipCondition: false,
+      hasCharacterDependentCondition: false,
+      reason: ''
+    };
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      return {
+        ...result,
+        known: false,
+        reason: 'derived-impact-invalid-entry'
+      };
+    }
+
+    let rules;
+    try {
+      rules = getRuleList(entry, 'andrar', {
+        level: typeof options.level === 'string' && options.level
+          ? options.level
+          : (typeof entry.nivå === 'string' ? entry.nivå : '')
+      });
+    } catch (_) {
+      rules = null;
+    }
+    if (!Array.isArray(rules)) {
+      return {
+        ...result,
+        known: false,
+        reason: 'derived-impact-ambiguous-rule-source'
+      };
+    }
+
+    const domains = new Set();
+    const workerDomains = new Set();
+    const targets = new Set();
+    const unknownTargets = new Set();
+    rules.forEach(rule => {
+      if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
+        result.known = false;
+        result.reason = result.reason || 'derived-impact-ambiguous-rule-source';
+        return;
+      }
+      const target = getRuleTarget(rule);
+      if (!target) {
+        result.known = false;
+        result.reason = result.reason || 'derived-impact-unknown-modify-target';
+        return;
+      }
+      targets.add(target);
+      const metadata = getRegisteredMalDerivedImpact(target);
+      if (!metadata) {
+        result.known = false;
+        unknownTargets.add(target);
+        result.reason = result.reason || 'derived-impact-unknown-modify-target';
+      } else {
+        metadata.domains.forEach(domain => domains.add(domain));
+        if (metadata.worker) {
+          result.workerRequired = true;
+          metadata.domains.forEach(domain => workerDomains.add(domain));
+        }
+      }
+      if (ruleDependsOnListMembership(rule)) {
+        result.hasListMembershipCondition = true;
+      }
+      const condition = getRuleCondition(rule);
+      if (condition || (rule.when && typeof rule.when === 'object')) {
+        result.hasCharacterDependentCondition = true;
+      }
+    });
+
+    return {
+      ...result,
+      domains: [...domains],
+      workerDomains: [...workerDomains],
+      targets: [...targets],
+      unknownTargets: [...unknownTargets]
+    };
+  }
+
+  function entryHasRemovalSensitiveDerivedRules(entry, options = {}) {
+    const impact = classifyEntryModifyDerivedImpact(entry, options);
+    return Boolean(
+      !impact.known
+      || impact.hasListMembershipCondition
+    );
+  }
+
   // --- Mal handler registry (Phase B) ---
   // Numeric mals: handler(list, context) → number
   registerMal('korruptionstroskel', (list, ctx) =>
-    getCorruptionTrackStats(list, ctx).korruptionstroskel);
+    getCorruptionTrackStats(list, ctx).korruptionstroskel, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('styggelsetroskel', (list, ctx) =>
-    getCorruptionTrackStats(list, ctx).styggelsetroskel);
+    getCorruptionTrackStats(list, ctx).styggelsetroskel, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('permanent_korruption', (list, ctx) =>
-    getPermanentCorruptionBreakdown(list, ctx).total);
+    getPermanentCorruptionBreakdown(list, ctx).total, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('permanent_korruption_halvera', (list) =>
-    hasPermanentCorruptionHalving(list));
+    hasPermanentCorruptionHalving(list), {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('permanent_korruption_faktor', (list, ctx) => {
     const rules = getListRules(list, { key: 'andrar', mal: 'permanent_korruption_faktor' });
     return rules.filter(r => evaluateNar(r.nar, { list, ...ctx }))
       .reduce((prod, r) => prod * Number(r.varde ?? 1), 1);
+  }, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
   });
-  registerMal('barkapacitet_stark', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_stark', 0, ctx));
-  registerMal('talighet_bas', (list, ctx) => getToughnessBase(list, ctx));
-  registerMal('talighet_faktor', (list, ctx) => sumAndrarByMal(list, 'talighet_faktor', 1, ctx));
-  registerMal('smartgrans_faktor', (list, ctx) => sumAndrarByMal(list, 'smartgrans_faktor', 1, ctx));
-  registerMal('talighet_tillagg', (list, ctx) => sumAndrarByMal(list, 'talighet_tillagg', 0, ctx));
-  registerMal('smartgrans_tillagg', (list, ctx) => getPainThresholdModifier(list, ctx));
-  registerMal('barkapacitet', (list, ctx) => getCarryCapacityBase(list, ctx));
-  registerMal('barkapacitet_faktor', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_faktor', 1, ctx));
-  registerMal('barkapacitet_tillagg', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_tillagg', 3, ctx));
-  registerMal('barkapacitet_bas', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_bas', 0, ctx));
+  registerMal('barkapacitet_stark', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_stark', 0, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('talighet_bas', (list, ctx) => getToughnessBase(list, ctx), {
+    domains: ['toughness', 'summary.toughness'],
+    worker: true
+  });
+  registerMal('talighet_faktor', (list, ctx) => sumAndrarByMal(list, 'talighet_faktor', 1, ctx), {
+    domains: ['toughness', 'summary.toughness'],
+    worker: true
+  });
+  registerMal('smartgrans_faktor', (list, ctx) => sumAndrarByMal(list, 'smartgrans_faktor', 1, ctx), {
+    domains: ['pain', 'summary.pain'],
+    worker: true
+  });
+  registerMal('talighet_tillagg', (list, ctx) => sumAndrarByMal(list, 'talighet_tillagg', 0, ctx), {
+    domains: ['toughness', 'summary.toughness'],
+    worker: true
+  });
+  registerMal('smartgrans_tillagg', (list, ctx) => getPainThresholdModifier(list, ctx), {
+    domains: ['pain', 'summary.pain'],
+    worker: true
+  });
+  registerMal('barkapacitet', (list, ctx) => getCarryCapacityBase(list, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('barkapacitet_faktor', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_faktor', 1, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('barkapacitet_tillagg', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_tillagg', 3, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('barkapacitet_bas', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_bas', 0, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
   registerMal('forsvar_modifierare', (list, ctx) => {
     const facts = Array.isArray(ctx?.weaponFacts)
       ? ctx.weaponFacts
       : (Array.isArray(ctx?.vapenFakta) ? ctx.vapenFakta : []);
     return getDefenseModifier(list, facts, ctx || {});
+  }, {
+    domains: ['combat', 'summary.combat'],
+    worker: false
   });
   registerMal('traffsaker_modifierare', (list, ctx) => {
     const facts = Array.isArray(ctx?.weaponFacts)
       ? ctx.weaponFacts
       : (Array.isArray(ctx?.vapenFakta) ? ctx.vapenFakta : []);
     return getEquippedAttackModifier(list, facts, ctx || {});
+  }, {
+    domains: ['combat', 'summary.combat'],
+    worker: false
   });
-  registerMal('traffsaker_modifierare_vapen', (list, ctx) => getWeaponAttackBonus(list, ctx));
-  registerMal('karaktarsdrag_max_tillagg', (list, ctx) => sumAndrarByMal(list, 'karaktarsdrag_max_tillagg', 0, ctx));
-  registerMal('begransning_modifierare', (list, ctx) => getArmorRestrictionBonus(ctx?.qualityNames || [], ctx));
-  registerMal('begransning_modifierare_fast', (list, ctx) => getArmorRestrictionBonusFast(ctx?.qualityNames || [], ctx));
-  registerMal('nollstall_begransning_modifierare', (list) => hasArmorRestrictionReset(list));
-  registerMal('tillater_monstruost', () => ({ allowAll: false, allowedNames: new Set() }));
-  registerMal('anfall_karaktarsdrag', (list, ctx) => getAttackTraitRuleNotes(list, ctx));
-  registerMal('forsvar_karaktarsdrag', (list, ctx) => getDefenseTraitRuleCandidates(list, ctx));
-  registerMal('dansande_forsvar_karaktarsdrag', () => []); // deprecated: superseded by separat_forsvar_karaktarsdrag
+  registerMal('traffsaker_modifierare_vapen', (list, ctx) => getWeaponAttackBonus(list, ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('karaktarsdrag_max_tillagg', (list, ctx) => sumAndrarByMal(list, 'karaktarsdrag_max_tillagg', 0, ctx), {
+    domains: ['traits', 'summary.traits'],
+    worker: false
+  });
+  registerMal('begransning_modifierare', (list, ctx) => getArmorRestrictionBonus(ctx?.qualityNames || [], ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('begransning_modifierare_fast', (list, ctx) => getArmorRestrictionBonusFast(ctx?.qualityNames || [], ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('nollstall_begransning_modifierare', (list) => hasArmorRestrictionReset(list), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('tillater_monstruost', () => ({ allowAll: false, allowedNames: new Set() }), {
+    domains: ['requirements'],
+    worker: false
+  });
+  registerMal('anfall_karaktarsdrag', (list, ctx) => getAttackTraitRuleNotes(list, ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('forsvar_karaktarsdrag', (list, ctx) => getDefenseTraitRuleCandidates(list, ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('dansande_forsvar_karaktarsdrag', () => [], {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  }); // deprecated: superseded by separat_forsvar_karaktarsdrag
   registerMal('separat_forsvar_karaktarsdrag', (list, ctx) =>
-    getSeparateDefenseTraitRules(list, ctx).map(r => r.varde).filter(Boolean));
-  registerMal('mystik_karaktarsdrag', (list) => getListRules(list, { key: 'andrar', mal: 'mystik_karaktarsdrag' }));
+    getSeparateDefenseTraitRules(list, ctx).map(r => r.varde).filter(Boolean), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('mystik_karaktarsdrag', (list) => getListRules(list, { key: 'andrar', mal: 'mystik_karaktarsdrag' }), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
   registerMal('post', (list) => getListRules(list, { key: 'ger', mal: 'post' }));
   registerMal('foremal', (list, ctx) => getInventoryGrantItems(list, ctx));
   registerMal('pengar', (list, ctx) => getMoneyGrant(list, ctx));
@@ -7027,10 +7293,19 @@
       evaluateRuleNar(rule, { list: entries, ...(ctx || {}) })
       && isTruthyRuleValue(rule?.varde)
     );
+  }, {
+    domains: ['catalog.structure'],
+    worker: false
   });
   registerMal('skydd_permanent_korruption', (list) => getListRules(list, { key: 'ger', mal: 'skydd_permanent_korruption' }));
-  registerMal('vikt_faktor', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).faktor);
-  registerMal('vikt_tillagg', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).tillagg);
+  registerMal('vikt_faktor', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).faktor, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
+  });
+  registerMal('vikt_tillagg', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).tillagg, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
+  });
   registerMal('pris_faktor', (list, ctx) => {
     const entries = getRuleEntries(list);
     if (!entries.length) return 1;
@@ -7044,6 +7319,9 @@
       foremal: buildItemRuleTargetContext(targetEntry, qualityNames, details)
     };
     return toPositiveFiniteNumber(getPriceRuleEffectsForEntries(entries, targetContext).factor, 1);
+  }, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
   });
   registerMal('kvalitet_gratisbar', (list, ctx) => {
     const entries = getRuleEntries(list);
@@ -7066,6 +7344,9 @@
       latest = Boolean(value.gratisbar);
     });
     return hasExplicit ? latest : false;
+  }, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
   });
 
   window.rulesHelper = {
@@ -7073,8 +7354,12 @@
     CHOICE_FIELDS,
     CHOICE_DUPLICATE_POLICIES,
     MAL_REGISTRY,
+    MAL_DERIVED_IMPACT_REGISTRY,
     registerMal,
     queryMal,
+    getRegisteredMalDerivedImpact,
+    classifyEntryModifyDerivedImpact,
+    entryHasRemovalSensitiveDerivedRules,
     normalizeRuleBlock,
     mergeRuleBlocks,
     mergeRuleBlocksByHierarchy,
@@ -7084,6 +7369,7 @@
     getEntryRules,
     getRuleList,
     requiresFullListReconciliation,
+    requiresRemovalListReconciliation,
     getEntryChoiceRule,
     getEntryChoiceDisplay,
     formatEntryDisplayName,
@@ -7104,6 +7390,7 @@
     getConflictResolutionForCandidate,
     getMissingRequirementReasonsForCandidate,
     getRequirementEffectsForCandidate,
+    hasRequirementRulesForCandidate,
     shouldSkipRequirementPopup,
     getLevelData,
     getRequirementAssistOptions,
@@ -7119,6 +7406,8 @@
     getPartialGrantInfo,
     getGrantedLevelRestriction,
     getEntryErfOverride,
+    getStaticEntryErfOverride,
+    hasManualEntryErfOverride,
     setEntryErfOverride,
     clearEntryErfOverride,
     clearAllEntryErfOverrides,

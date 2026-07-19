@@ -1244,6 +1244,28 @@
         window.symbaroumViewBridge?.refreshCurrent({ ...refreshOptions, strict: true });
       }
     };
+    const getSelectedRemovalRefreshOptions = (summary, source) => {
+      const impact = summary?.reconciliationMode === 'incremental-remove'
+        ? summary?.derivedImpact
+        : null;
+      if (!impact || impact.status === 'unknown') {
+        return {
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source,
+          afterPaint: true
+        };
+      }
+      const domains = Array.isArray(impact.domains) ? impact.domains : [];
+      return {
+        xp: impact.workerRequired === true,
+        invalidates: domains,
+        source,
+        afterPaint: true
+      };
+    };
     const waitForCharacterMutationRefresh = () => (
       window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
     );
@@ -4433,6 +4455,8 @@
           }
           const bundleCount = getBundleCountForEntry(inv, p);
           let topologyResult = null;
+          let sharedRemovalResult = null;
+          let sharedRemovalPlan = null;
           if (bundleCount !== null) {
             const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
             if (removeCnt > 0) {
@@ -4444,7 +4468,60 @@
               });
             }
           }
-          if (!topologyResult?.committed) {
+          if (bundleCount === null && (act === 'del' || act === 'rem')) {
+            const matchingRows = inv.filter(row => String(row?.id || '') === String(p.id || ''));
+            const row = matchingRows[0] || null;
+            if (row && Math.max(1, Number(row.qty) || 1) === 1
+                && typeof invUtil.planInventoryMutation === 'function'
+                && typeof invUtil.commitInventoryMutation === 'function') {
+              sharedRemovalPlan = invUtil.planInventoryMutation({
+                kind: 'remove',
+                row,
+                entry: p,
+                inv,
+                parentArr: inv,
+                surface: 'index',
+                requireFinalOwnedCopy: true
+              });
+              sharedRemovalResult = invUtil.commitInventoryMutation(sharedRemovalPlan, {
+                source: 'index-inventory-final-copy-remove',
+                reconcileDom: () => {
+                  if (!updateEntryCardUI(p)) {
+                    return { ok: false, reason: 'index-card-postcondition-failed' };
+                  }
+                  const currentRows = storeHelper.getInventory(store)
+                    .filter(candidate => String(candidate?.id || '') === String(p.id || ''));
+                  const currentCards = findEntryCards(p);
+                  const cardStateValid = currentCards.every(card => {
+                    const actions = [...card.querySelectorAll('.entry-action-group-standard button[data-act]')]
+                      .map(button => String(button.dataset.act || '').trim());
+                    const badge = card.querySelector('.entry-title-suffix .count-badge');
+                    return !badge
+                      && !actions.includes('del')
+                      && !actions.includes('rem')
+                      && !actions.includes('sub')
+                      && actions.includes('add');
+                  });
+                  return currentRows.length === 0 && cardStateValid
+                    ? { ok: true, reason: '' }
+                    : { ok: false, reason: 'index-card-postcondition-failed' };
+                },
+                onDomFallback: reason => {
+                  invUtil.renderInventory({
+                    trigger: reason || 'index-removal-postcondition-failed',
+                    fallbackReasons: [reason || 'index-removal-postcondition-failed']
+                  });
+                  needsFullRefresh = true;
+                }
+              });
+              if (sharedRemovalResult?.committed) {
+                skipIndexRerender = true;
+                affectedIndexCardsPatched = sharedRemovalResult.targeted === true;
+                if (!sharedRemovalResult.targeted) needsFullRefresh = true;
+              }
+            }
+          }
+          if (!topologyResult?.committed && !sharedRemovalResult?.committed) {
             await runCurrentCharacterMutationBatch(() => {
               if (bundleCount !== null) {
                 const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
@@ -4473,7 +4550,12 @@
             timeActiveAddStage('inventory-render', () => {
               invUtil.renderInventory({
                 trigger: bundleCount !== null ? 'bundle-remove' : 'index-inventory-remove',
-                fallbackReasons: topologyResult?.fallbackReasons
+                fallbackReasons: topologyResult?.fallbackReasons?.length
+                  ? topologyResult.fallbackReasons
+                  : (sharedRemovalPlan?.fallbackReasons?.length
+                      ? sharedRemovalPlan.fallbackReasons
+                      : ['unplanned-index-inventory-removal']),
+                entryId: p.id || ''
               });
             }, {
               surface: 'index',
@@ -4525,7 +4607,12 @@
           const removed = matchedForRemoval
             || before.find(it => matchesListEntryWithOptions(it, removalRef, cardChoiceOptions));
           if (removed && !(await handleSnapshotEntryRemoval(removed))) return;
-          const remDeps = storeHelper.getDependents(before, removed);
+          let removalPlan = typeof storeHelper.planCurrentListRemoval === 'function'
+            ? storeHelper.planCurrentListRemoval(store, list)
+            : null;
+          const remDeps = removalPlan?.dependentsProven && Array.isArray(removalPlan?.dependents)
+            ? removalPlan.dependents
+            : storeHelper.getDependents(before, removed);
           if (p.namn === 'Mörkt blod' && remDeps.length) {
             if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
               list = list.filter(x => !remDeps.includes(x.namn));
@@ -4545,23 +4632,29 @@
               return;
           }
           if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
-            const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+            const toClean = removalPlan?.grantCleanupProven && Array.isArray(removalPlan?.grantCleanup)
+              ? removalPlan.grantCleanup
+              : storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
             if (toClean.length > 0) {
               const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
               if (await confirmPopup(`Att ta bort "${p.namn}" tar även bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
                 toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+                removalPlan = typeof storeHelper.planCurrentListRemoval === 'function'
+                  ? storeHelper.planCurrentListRemoval(store, list)
+                  : null;
               }
             }
           }
+          let listMutationSummary = null;
           const applyListRemoval = async () => {
-            const mutationSummary = timeActiveAddStage('store-mutation', () => (
-              storeHelper.setCurrentList(store, list)
+            listMutationSummary = timeActiveAddStage('store-mutation', () => (
+              storeHelper.setCurrentList(store, list, { removalPlan })
             ), {
               branch: 'list',
               mode: 'remove',
               surface: 'index'
             });
-            await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
+            await resolvePendingChoiceEntries(listMutationSummary?.grantedEntriesAdded);
           };
           if (p.namn !== 'Besittning') {
             await runCurrentCharacterMutationBatch(applyListRemoval);
@@ -4633,14 +4726,10 @@
             });
             skipImmediateDerivedRefresh = true;
           } else {
-            scheduleCharacterMutationRefresh({
-              xp: true,
-              traits: true,
-              summary: true,
-              effects: true,
-              source: 'index-list-remove',
-              afterPaint: true
-            });
+            scheduleCharacterMutationRefresh(getSelectedRemovalRefreshOptions(
+              listMutationSummary,
+              'index-list-remove'
+            ));
             skipImmediateDerivedRefresh = true;
           }
         }

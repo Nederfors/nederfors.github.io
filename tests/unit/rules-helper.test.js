@@ -194,6 +194,92 @@ describe('rules-helper unit coverage', () => {
     expect(rulesHelper.requiresFullListReconciliation([typeFlag])).toBe(true);
   });
 
+  it('distinguishes removal-sensitive conditional conflicts from static conflicts', () => {
+    const rulesHelper = loadRulesHelper();
+    const staticConflict = {
+      id: 'static-conflict',
+      namn: 'Static conflict',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          krockar: [{ namn: ['Spärr'] }]
+        }
+      }
+    };
+    const conditionalConflict = {
+      id: 'conditional-conflict',
+      namn: 'Conditional conflict',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          krockar: [{
+            namn: ['Spärr'],
+            nar: { saknar_namn: ['Nyckel'] }
+          }]
+        }
+      }
+    };
+
+    expect(rulesHelper.requiresRemovalListReconciliation([staticConflict])).toBe(false);
+    expect(rulesHelper.requiresRemovalListReconciliation([conditionalConflict])).toBe(true);
+  });
+
+  it('classifies modify targets through registered derived-impact metadata', () => {
+    const rulesHelper = loadRulesHelper();
+    const combatRule = {
+      id: 'combat-impact',
+      namn: 'Combat impact',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Kvalitet'],
+        regler: {
+          andrar: [{
+            mal: 'forsvar_modifierare',
+            varde: 1,
+            nar: { har_namn: ['Sköld'] }
+          }]
+        }
+      }
+    };
+    const workerRule = {
+      id: 'worker-impact',
+      namn: 'Worker impact',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Särdrag'],
+        regler: {
+          andrar: [{ mal: 'talighet_tillagg', varde: 2 }]
+        }
+      }
+    };
+    const unknownRule = {
+      id: 'unknown-impact',
+      namn: 'Unknown impact',
+      taggar: {
+        typ: ['Kvalitet'],
+        regler: {
+          andrar: [{ mal: 'custom_unregistered_target', varde: 1 }]
+        }
+      }
+    };
+
+    const combat = rulesHelper.classifyEntryModifyDerivedImpact(combatRule);
+    expect(combat.known).toBe(true);
+    expect(combat.workerRequired).toBe(false);
+    expect(combat.domains).toEqual(expect.arrayContaining(['combat', 'summary.combat']));
+    expect(combat.hasListMembershipCondition).toBe(true);
+
+    const worker = rulesHelper.classifyEntryModifyDerivedImpact(workerRule);
+    expect(worker.known).toBe(true);
+    expect(worker.workerRequired).toBe(true);
+    expect(worker.workerDomains).toEqual(expect.arrayContaining(['toughness', 'summary.toughness']));
+
+    const unknown = rulesHelper.classifyEntryModifyDerivedImpact(unknownRule);
+    expect(unknown.known).toBe(false);
+    expect(unknown.reason).toBe('derived-impact-unknown-modify-target');
+    expect(unknown.unknownTargets).toEqual(['custom_unregistered_target']);
+  });
+
   it('supports nested requirement groups with mixed and/or logic', () => {
     const rulesHelper = loadRulesHelper();
     const getMissingReasons = rulesHelper.getMissingRequirementReasonsForCandidate;
@@ -228,6 +314,41 @@ describe('rules-helper unit coverage', () => {
     expect(getMissingReasons(entry, [{ namn: 'Andebesvarjare' }])).toHaveLength(0);
     expect(getMissingReasons(entry, [{ namn: 'Monster' }]).length).toBeGreaterThan(0);
     expect(getMissingReasons(entry, [{ namn: 'Andeform' }]).length).toBeGreaterThan(0);
+  });
+
+  it('discovers removal dependents while ignoring entries without requirement rules', () => {
+    const rulesHelper = loadRulesHelper();
+    const source = {
+      id: 'requirement-source',
+      __uid: 'requirement-source-uid',
+      namn: 'Kravkälla',
+      taggar: { typ: ['Förmåga'] }
+    };
+    const unrelated = {
+      id: 'rule-free-entry',
+      __uid: 'rule-free-entry-uid',
+      namn: 'Fristående',
+      taggar: { typ: ['Förmåga'] }
+    };
+    const dependent = {
+      id: 'requirement-dependent',
+      __uid: 'requirement-dependent-uid',
+      namn: 'Beroende',
+      taggar: {
+        typ: ['Förmåga'],
+        regler: {
+          kraver: [{ namn: ['Kravkälla'] }]
+        }
+      }
+    };
+
+    expect(rulesHelper.getRequirementDependents([source, unrelated, dependent], source)).toEqual(['Beroende']);
+    expect(rulesHelper.getRequirementDependents(
+      [source, unrelated, dependent],
+      source,
+      { candidateUids: ['requirement-dependent-uid'] }
+    )).toEqual(['Beroende']);
+    expect(rulesHelper.getRequirementDependents([source, unrelated, dependent], unrelated)).toEqual([]);
   });
 
   it('normalizes legacy handling into canonical levels actions', () => {

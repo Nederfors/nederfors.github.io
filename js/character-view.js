@@ -347,6 +347,40 @@
         window.symbaroumViewBridge?.refreshCurrent({ ...refreshOptions, strict: true });
       }
     };
+    const getSelectedRemovalRefreshOptions = (summary, source) => {
+      const impact = summary?.reconciliationMode === 'incremental-remove'
+        ? summary?.derivedImpact
+        : null;
+      if (!impact || impact.status === 'unknown') {
+        return {
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source,
+          afterPaint: true
+        };
+      }
+      const domains = Array.isArray(impact.domains) ? impact.domains : [];
+      const workerDomains = Array.isArray(impact.workerDomains) ? impact.workerDomains : [];
+      const needsTraits = domains.some(domain => (
+        domain === 'traits'
+        || domain.startsWith('traits.')
+        || domain === 'corruption'
+        || domain === 'capacity'
+        || domain === 'toughness'
+        || domain === 'pain'
+      ));
+      return {
+        xp: workerDomains.includes('xp'),
+        traits: needsTraits,
+        summary: true,
+        effects: true,
+        invalidates: domains,
+        source,
+        afterPaint: true
+      };
+    };
     const waitForCharacterMutationRefresh = () => (
       window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
     );
@@ -3037,6 +3071,7 @@
       const multi = getEntryMaxCount(p) > 1 && !p.trait;
       let list;
       let mutationSummary = null;
+      let removalPlan = null;
       let choiceResolution = null;
       let requirementAffectedEntries = [];
       let removeRenderMode = 'targeted';
@@ -3178,7 +3213,12 @@
           abortRemoveScenario({ cancelled: true, reason: 'snapshot-removal-confirm' });
           return;
         }
-        const remDeps = storeHelper.getDependents(before, removed);
+        removalPlan = typeof storeHelper.planCurrentListRemoval === 'function'
+          ? storeHelper.planCurrentListRemoval(store, list)
+          : null;
+        const remDeps = removalPlan?.dependentsProven && Array.isArray(removalPlan?.dependents)
+          ? removalPlan.dependents
+          : storeHelper.getDependents(before, removed);
         if (name === 'Mörkt blod' && remDeps.length) {
           if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
             list = list.filter(x => !remDeps.includes(x.namn));
@@ -3202,25 +3242,32 @@
             return;
           }
         }
-        flashRemoved(liEl);
-        await new Promise(r => setTimeout(r, 100));
       } else {
         return;
       }
       if ((act === 'sub' || act === 'del' || act === 'rem') && typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
-        const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+        const toClean = removalPlan?.grantCleanupProven && Array.isArray(removalPlan?.grantCleanup)
+          ? removalPlan.grantCleanup
+          : storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
         if (toClean.length > 0) {
           const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
           if (await confirmPopup(`Att ta bort "${name}" tar även bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
             toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+            removalPlan = typeof storeHelper.planCurrentListRemoval === 'function'
+              ? storeHelper.planCurrentListRemoval(store, list)
+              : null;
           }
         }
       }
       const isRemoveAction = act === 'sub' || act === 'del' || act === 'rem';
       if (isRemoveAction) {
+        flashRemoved(liEl);
+        if (removalPlan?.mode !== 'incremental-remove') {
+          await new Promise(r => setTimeout(r, 100));
+        }
         await runCurrentCharacterMutationBatch(async () => {
           mutationSummary = timeActiveRemoveStage('store-mutation', () => {
-            return storeHelper.setCurrentList(store, list);
+            return storeHelper.setCurrentList(store, list, { removalPlan });
           }, {
             surface: 'character',
             branch: 'list'
@@ -3289,6 +3336,9 @@
         storeHelper.removeRevealedArtifact(store, p.id);
       }
       if (isRemoveAction) {
+        const targetedNodeCount = liEl?.isConnected
+          ? liEl.querySelectorAll('*').length + 1
+          : 0;
         const patchedInPlace = timeActiveRemoveStage('targeted-ui-refresh', () => {
           if (mutationSummary?.topologyChanged) {
             return patchCharacterSelectionStructuralMutation([mutationSummary], null, null);
@@ -3300,7 +3350,10 @@
         });
         if (!patchedInPlace) {
           removeRenderMode = 'full';
-          window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'fallbackActivations');
+          window.symbaroumPerf?.recordFallback?.(removeScenarioId, 'target-postcondition', {
+            surface: 'character',
+            branch: 'list'
+          });
           timeActiveRemoveStage('selection-render', () => {
             renderSkills(filtered());
           }, {
@@ -3310,15 +3363,13 @@
           });
         } else {
           window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'targetedRenders');
+          window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'cardsReconciled');
+          window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'domNodesReplaced', targetedNodeCount);
         }
-        scheduleCharacterMutationRefresh({
-          xp: true,
-          traits: true,
-          summary: true,
-          effects: true,
-          source: 'character-list-remove',
-          afterPaint: true
-        });
+        scheduleCharacterMutationRefresh(getSelectedRemovalRefreshOptions(
+          mutationSummary,
+          'character-list-remove'
+        ));
         updateSearchDatalist();
       } else {
         scheduleCharacterMutationRefresh({
@@ -3359,7 +3410,9 @@
           scope: 'character',
           entry: name,
           branch: 'list',
-          renderMode: removeRenderMode
+          renderMode: removeRenderMode,
+          reconciliationMode: mutationSummary?.reconciliationMode || 'full',
+          reconciliationReason: mutationSummary?.reconciliationReason || ''
         });
       }
 
