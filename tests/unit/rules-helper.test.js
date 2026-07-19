@@ -224,6 +224,62 @@ describe('rules-helper unit coverage', () => {
     expect(rulesHelper.requiresRemovalListReconciliation([conditionalConflict])).toBe(true);
   });
 
+  it('classifies modify targets through registered derived-impact metadata', () => {
+    const rulesHelper = loadRulesHelper();
+    const combatRule = {
+      id: 'combat-impact',
+      namn: 'Combat impact',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Kvalitet'],
+        regler: {
+          andrar: [{
+            mal: 'forsvar_modifierare',
+            varde: 1,
+            nar: { har_namn: ['Sköld'] }
+          }]
+        }
+      }
+    };
+    const workerRule = {
+      id: 'worker-impact',
+      namn: 'Worker impact',
+      nivå: 'Novis',
+      taggar: {
+        typ: ['Särdrag'],
+        regler: {
+          andrar: [{ mal: 'talighet_tillagg', varde: 2 }]
+        }
+      }
+    };
+    const unknownRule = {
+      id: 'unknown-impact',
+      namn: 'Unknown impact',
+      taggar: {
+        typ: ['Kvalitet'],
+        regler: {
+          andrar: [{ mal: 'custom_unregistered_target', varde: 1 }]
+        }
+      }
+    };
+
+    const combat = rulesHelper.classifyEntryModifyDerivedImpact(combatRule);
+    expect(combat.known).toBe(true);
+    expect(combat.workerRequired).toBe(false);
+    expect(combat.domains).toEqual(expect.arrayContaining(['combat', 'summary.combat']));
+    expect(combat.hasListMembershipCondition).toBe(true);
+
+    const worker = rulesHelper.classifyEntryModifyDerivedImpact(workerRule);
+    expect(worker.known).toBe(true);
+    expect(worker.workerRequired).toBe(true);
+    expect(worker.workerDomains).toEqual(expect.arrayContaining(['toughness', 'summary.toughness']));
+
+    const unknown = rulesHelper.classifyEntryModifyDerivedImpact(unknownRule);
+    expect(unknown.known).toBe(false);
+    expect(unknown.reason).toBe('derived-impact-unknown-modify-target');
+    expect(unknown.unknownTargets).toEqual(['custom_unregistered_target']);
+  });
+
   it('supports nested requirement groups with mixed and/or logic', () => {
     const rulesHelper = loadRulesHelper();
     const getMissingReasons = rulesHelper.getMissingRequirementReasonsForCandidate;

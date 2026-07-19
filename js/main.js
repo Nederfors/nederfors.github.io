@@ -8187,6 +8187,7 @@ function runDerivedRequest(pending) {
       version: request.version,
       value: summary
     });
+    perf?.incrementScenarioCounter?.(pending.scenarioId || null, 'workerApplications');
     finishDerivedStage({
       applied: true,
       mode: rulesWorker.mode || 'worker',

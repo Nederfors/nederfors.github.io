@@ -467,6 +467,40 @@
         window.symbaroumViewBridge?.refreshCurrent({ ...refreshOptions, strict: true });
       }
     };
+    const getSelectedRemovalRefreshOptions = (summary, source) => {
+      const impact = summary?.reconciliationMode === 'incremental-remove'
+        ? summary?.derivedImpact
+        : null;
+      if (!impact || impact.status === 'unknown') {
+        return {
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source,
+          afterPaint: true
+        };
+      }
+      const domains = Array.isArray(impact.domains) ? impact.domains : [];
+      const workerDomains = Array.isArray(impact.workerDomains) ? impact.workerDomains : [];
+      const needsTraits = domains.some(domain => (
+        domain === 'traits'
+        || domain.startsWith('traits.')
+        || domain === 'corruption'
+        || domain === 'capacity'
+        || domain === 'toughness'
+        || domain === 'pain'
+      ));
+      return {
+        xp: workerDomains.includes('xp'),
+        traits: needsTraits,
+        summary: true,
+        effects: true,
+        invalidates: domains,
+        source,
+        afterPaint: true
+      };
+    };
     const waitForCharacterMutationRefresh = () => (
       window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
     );
@@ -3452,14 +3486,10 @@
           window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'cardsReconciled');
           window.symbaroumPerf?.incrementScenarioCounter?.(removeScenarioId, 'domNodesReplaced', targetedNodeCount);
         }
-        scheduleCharacterMutationRefresh({
-          xp: true,
-          traits: true,
-          summary: true,
-          effects: true,
-          source: 'character-list-remove',
-          afterPaint: true
-        });
+        scheduleCharacterMutationRefresh(getSelectedRemovalRefreshOptions(
+          mutationSummary,
+          'character-list-remove'
+        ));
         updateSearchDatalist();
       } else {
         scheduleCharacterMutationRefresh({

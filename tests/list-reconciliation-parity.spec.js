@@ -172,6 +172,7 @@ test('incremental and forced-full list reconciliation produce identical public s
             '__appliedDigest',
             '__dbPinnedDigest',
             'requirementCandidateUids',
+            'removalDerivedRuleDependencyUids',
             'lastCurrentListMutationSummary'
           ].includes(childKey)) return;
           if (childKey === 'sourceKey') return;

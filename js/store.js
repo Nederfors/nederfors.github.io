@@ -28,7 +28,7 @@
   const CURRENT_LIST_RECONCILIATION_STATE_KEY = 'currentListReconciliationState';
   // Bump whenever the full reconciliation invariants change. Characters from
   // an older build take one full pass before single-add increments are trusted.
-  const CURRENT_LIST_RECONCILIATION_VERSION = 3;
+  const CURRENT_LIST_RECONCILIATION_VERSION = 4;
 
   const normalizeEntrySort = (mode) => {
     if (typeof global.normalizeEntrySortMode === 'function') {
@@ -1025,11 +1025,15 @@
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
     if (typeof raw.hasListWideRules !== 'boolean') return null;
     if (typeof raw.hasRemovalListWideRules !== 'boolean') return null;
+    if (!Array.isArray(raw.removalDerivedRuleDependencyUids)) return null;
     if (!Array.isArray(raw.requirementCandidateUids)) return null;
     if (!raw.moneyGrant || typeof raw.moneyGrant !== 'object') return null;
     return {
       hasListWideRules: raw.hasListWideRules,
       hasRemovalListWideRules: raw.hasRemovalListWideRules,
+      removalDerivedRuleDependencyUids: [...new Set(raw.removalDerivedRuleDependencyUids
+        .map(uid => String(uid || '').trim())
+        .filter(Boolean))],
       requirementCandidateUids: [...new Set(raw.requirementCandidateUids
         .map(uid => String(uid || '').trim())
         .filter(Boolean))],
@@ -1142,6 +1146,16 @@
       dependentsProven: detail.dependentsProven === true,
       grantCleanup: Array.isArray(detail.grantCleanup) ? detail.grantCleanup : [],
       grantCleanupProven: detail.grantCleanupProven === true,
+      derivedImpact: detail.derivedImpact && typeof detail.derivedImpact === 'object'
+        ? detail.derivedImpact
+        : {
+            status: 'unknown',
+            domains: [],
+            workerDomains: [],
+            workerRequired: true,
+            targets: [],
+            reasons: ['derived-impact-not-proven']
+          },
       previousLength: prev.length,
       charId: String(store?.current || ''),
       beforeToken: currentListRemovalPlanToken(prev),
@@ -1199,6 +1213,9 @@
     if (typeof hasRequirementRules !== 'function') {
       return {
         hasRemovalListWideRules: true,
+        removalDerivedRuleDependencyUids: list
+          .map(entry => String(entry?.__uid || '').trim())
+          .filter(Boolean),
         requirementCandidateUids: list
           .map(entry => String(entry?.__uid || '').trim())
           .filter(Boolean)
@@ -1206,8 +1223,23 @@
     }
     const requirementCandidateUids = [];
     let requirementSourcesKnown = true;
+    const removalDerivedRuleDependencyUids = [];
     list.forEach(entry => {
       if (!entry || typeof entry !== 'object') return;
+      try {
+        if (typeof global.rulesHelper?.entryHasRemovalSensitiveDerivedRules !== 'function'
+            || global.rulesHelper.entryHasRemovalSensitiveDerivedRules(entry, {
+              level: typeof entry.nivå === 'string' ? entry.nivå : ''
+            })) {
+          const uid = String(entry.__uid || '').trim();
+          if (uid) removalDerivedRuleDependencyUids.push(uid);
+          else requirementSourcesKnown = false;
+        }
+      } catch (_) {
+        const uid = String(entry.__uid || '').trim();
+        if (uid) removalDerivedRuleDependencyUids.push(uid);
+        else requirementSourcesKnown = false;
+      }
       try {
         if (!hasRequirementRules(entry, {
           level: typeof entry.nivå === 'string' ? entry.nivå : ''
@@ -1225,6 +1257,7 @@
     return {
       hasRemovalListWideRules: !requirementSourcesKnown
         || currentListRemovalRequiresBroadRulePass(list),
+      removalDerivedRuleDependencyUids: [...new Set(removalDerivedRuleDependencyUids)],
       requirementCandidateUids: requirementSourcesKnown
         ? [...new Set(requirementCandidateUids)]
         : list.map(entry => String(entry?.__uid || '').trim()).filter(Boolean)
@@ -1237,10 +1270,182 @@
     const appended = buildCurrentListRemovalRuleState(appendedEntries);
     return {
       hasRemovalListWideRules: prior.hasRemovalListWideRules || appended.hasRemovalListWideRules,
+      removalDerivedRuleDependencyUids: [...new Set([
+        ...prior.removalDerivedRuleDependencyUids,
+        ...appended.removalDerivedRuleDependencyUids
+      ])],
       requirementCandidateUids: [...new Set([
         ...prior.requirementCandidateUids,
         ...appended.requirementCandidateUids
       ])]
+    };
+  }
+
+  function normalizeCurrentListEntryTests(entry) {
+    try {
+      if (typeof global.getEntryTestTags === 'function') {
+        const tests = global.getEntryTestTags(entry, {
+          level: typeof entry?.nivå === 'string' ? entry.nivå : ''
+        });
+        if (Array.isArray(tests)) {
+          return [...new Set(tests.map(value => String(value || '').trim()).filter(Boolean))];
+        }
+      }
+    } catch (_) {}
+    const tests = Array.isArray(entry?.taggar?.test) ? entry.taggar.test : [];
+    return [...new Set(tests.map(value => String(value || '').trim()).filter(Boolean))];
+  }
+
+  function analyzeCurrentListRemovalDerivedImpact(
+    store,
+    prevList,
+    nextList,
+    removedEntry,
+    reconciliationState
+  ) {
+    incrementCurrentListMutationCounter('derivedImpactProofs');
+    const domains = new Set();
+    const workerDomains = new Set();
+    const targets = new Set();
+    const reasons = new Set();
+    let known = true;
+    let workerRequired = false;
+    let operations = 1;
+    const addWorkerDomain = domain => {
+      const value = String(domain || '').trim();
+      if (!value) return;
+      domains.add(value);
+      workerDomains.add(value);
+      workerRequired = true;
+    };
+
+    const removedUid = String(removedEntry?.__uid || '').trim();
+    const retainedSensitiveUids = (reconciliationState?.removalDerivedRuleDependencyUids || [])
+      .filter(uid => String(uid || '').trim() !== removedUid);
+    operations += retainedSensitiveUids.length;
+    if (retainedSensitiveUids.length) {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-retained-list-rule-dependency');
+    }
+    const retainedRequirementUids = (reconciliationState?.requirementCandidateUids || [])
+      .filter(uid => String(uid || '').trim() !== removedUid);
+    operations += retainedRequirementUids.length;
+    if (retainedRequirementUids.length) {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-retained-requirement-dependency');
+    }
+
+    const types = entryTypeNames(removedEntry);
+    operations += types.length;
+    const normalizedTypes = types.map(normalizeErfTypeName);
+    const staticErfHelper = global.rulesHelper?.getStaticEntryErfOverride;
+    const manualErfHelper = global.rulesHelper?.hasManualEntryErfOverride;
+    const level = typeof removedEntry?.nivå === 'string' ? removedEntry.nivå : '';
+    let staticErfOverride = null;
+    if (typeof staticErfHelper === 'function') {
+      try {
+        staticErfOverride = normalizeErfOverrideNumber(staticErfHelper(removedEntry, level));
+      } catch (_) {
+        known = false;
+        workerRequired = true;
+        reasons.add('derived-impact-ambiguous-erf-source');
+      }
+    } else if (isLevelCostType(types)) {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-erf-helper-missing');
+    }
+    if (typeof manualErfHelper !== 'function') {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-manual-erf-state-unknown');
+    } else {
+      try {
+        if (manualErfHelper(removedEntry, level)) {
+          known = false;
+          workerRequired = true;
+          reasons.add('derived-impact-manual-erf-override');
+        }
+      } catch (_) {
+        known = false;
+        workerRequired = true;
+        reasons.add('derived-impact-manual-erf-state-unknown');
+      }
+    }
+
+    const levelCostImpact = isLevelCostType(types) && staticErfOverride !== 0;
+    const advantageImpact = normalizedTypes.includes(normalizeErfTypeName('Fördel'));
+    const disadvantageImpact = normalizedTypes.includes(normalizeErfTypeName('Nackdel'));
+    const ritualImpact = normalizedTypes.includes(normalizeErfTypeName('Ritual'));
+    if (levelCostImpact || advantageImpact || disadvantageImpact || ritualImpact) {
+      addWorkerDomain('xp');
+    }
+
+    const mysticPowerImpact = normalizedTypes.includes(normalizeErfTypeName('Mystisk kraft'));
+    if (mysticPowerImpact || ritualImpact) {
+      addWorkerDomain('corruption');
+      addWorkerDomain('summary.corruption');
+    }
+
+    if (removedEntry?.trait !== undefined && removedEntry?.trait !== null
+        && String(removedEntry.trait).trim()) {
+      domains.add('traits');
+      domains.add('combat');
+      domains.add('summary.traits');
+      domains.add('summary.combat');
+    }
+
+    const tests = normalizeCurrentListEntryTests(removedEntry);
+    operations += tests.length;
+    if (tests.length) domains.add('traits.counts');
+
+    const modifyClassifier = global.rulesHelper?.classifyEntryModifyDerivedImpact;
+    if (typeof modifyClassifier !== 'function') {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-modify-classifier-missing');
+    } else {
+      let modifyImpact = null;
+      try {
+        modifyImpact = modifyClassifier(removedEntry, { level });
+      } catch (_) {
+        modifyImpact = null;
+      }
+      if (!modifyImpact || modifyImpact.known !== true) {
+        known = false;
+        workerRequired = true;
+        reasons.add(modifyImpact?.reason || 'derived-impact-ambiguous-rule-source');
+        (modifyImpact?.unknownTargets || []).forEach(target => targets.add(target));
+      }
+      (modifyImpact?.domains || []).forEach(domain => domains.add(domain));
+      (modifyImpact?.workerDomains || []).forEach(domain => workerDomains.add(domain));
+      (modifyImpact?.targets || []).forEach(target => targets.add(target));
+      operations += Math.max(1, Number(modifyImpact?.targets?.length || 0));
+      if (modifyImpact?.workerRequired) workerRequired = true;
+      if (modifyImpact?.hasCharacterDependentCondition && modifyImpact?.workerRequired) {
+        reasons.add('derived-impact-character-dependent-rule-unproven');
+      }
+    }
+
+    incrementCurrentListMutationCounter('derivedImpactProofOperations', operations);
+    incrementCurrentListMutationCounter('derivedImpactRuleTargets', targets.size);
+    const status = known ? (domains.size ? 'bounded' : 'none') : 'unknown';
+    if (status === 'none') incrementCurrentListMutationCounter('derivedImpactNoChangeProofs');
+    else if (status === 'bounded') incrementCurrentListMutationCounter('derivedImpactBoundedProofs');
+    else incrementCurrentListMutationCounter('derivedImpactUnknownProofs');
+    if (!workerRequired) incrementCurrentListMutationCounter('derivedWorkerSkips');
+
+    return {
+      status,
+      domains: [...domains],
+      workerDomains: [...workerDomains],
+      workerRequired: workerRequired || !known,
+      targets: [...targets],
+      reasons: [...reasons],
+      beforeListLength: Array.isArray(prevList) ? prevList.length : 0,
+      afterListLength: Array.isArray(nextList) ? nextList.length : 0
     };
   }
 
@@ -1337,6 +1542,18 @@
     }
     detail.grantCleanupProven = true;
 
+    detail.derivedImpact = timeCurrentListMutationStage('derived-impact-proof', () => (
+      analyzeCurrentListRemovalDerivedImpact(
+        store,
+        prev,
+        next,
+        removedEntry,
+        reconciliationState
+      )
+    ), {
+      removedUid: String(removedEntry?.__uid || '').trim()
+    });
+
     if (global.__symbaroumPerfForceSafeListMutations === true) {
       return full('forced-safe-path', detail);
     }
@@ -1376,6 +1593,21 @@
     incrementCurrentListMutationCounter('listRemovalFallbacks');
   }
 
+  function recordCurrentListDerivedImpactFallback(impact) {
+    if (!impact || !Array.isArray(impact.reasons) || !impact.reasons.length) return;
+    const perf = global.symbaroumPerf;
+    const scenarioId = getCurrentListMutationScenarioId();
+    impact.reasons.forEach(reason => {
+      const canonicalReason = String(reason || '').trim();
+      if (!canonicalReason) return;
+      perf?.recordFallback?.(scenarioId, canonicalReason, {
+        surface: 'store',
+        planner: 'current-list-derived-impact'
+      });
+      incrementCurrentListMutationCounter('derivedImpactFallbacks');
+    });
+  }
+
   function validateIncrementalCurrentListRemoval(store, next, plan, beforeState, afterState) {
     if (!store?.current || !plan?.removedEntry) return false;
     const live = store.data?.[store.current]?.list;
@@ -1395,7 +1627,7 @@
       && beforeState.possessionMoney === afterState.possessionMoney
       && beforeState.bonusMoney === afterState.bonusMoney
       && beforeState.reconciliationVersion === afterState.reconciliationVersion
-      && beforeState.reconciliationState === afterState.reconciliationState
+      && afterState.reconciliationState === plan.expectedReconciliationStateToken
     );
   }
 
@@ -1564,6 +1796,31 @@
       inventoryChanged,
       moneyChanged,
       revealedChanged,
+      derivedImpact: options.derivedImpact && typeof options.derivedImpact === 'object'
+        ? {
+            status: String(options.derivedImpact.status || 'unknown'),
+            domains: Array.isArray(options.derivedImpact.domains)
+              ? [...options.derivedImpact.domains]
+              : [],
+            workerDomains: Array.isArray(options.derivedImpact.workerDomains)
+              ? [...options.derivedImpact.workerDomains]
+              : [],
+            workerRequired: options.derivedImpact.workerRequired !== false,
+            targets: Array.isArray(options.derivedImpact.targets)
+              ? [...options.derivedImpact.targets]
+              : [],
+            reasons: Array.isArray(options.derivedImpact.reasons)
+              ? [...options.derivedImpact.reasons]
+              : []
+          }
+        : {
+            status: 'unknown',
+            domains: [],
+            workerDomains: [],
+            workerRequired: true,
+            targets: [],
+            reasons: ['derived-impact-not-proven']
+          },
       reconciliationMode: ['incremental', 'incremental-remove'].includes(options.reconciliationMode)
         ? options.reconciliationMode
         : 'full',
@@ -3783,6 +4040,18 @@
     if (reconciliation.mode === 'incremental-remove') {
       incrementCurrentListMutationCounter('listRemovalPlans');
       store.data[store.current].list = next;
+      const removedUid = String(reconciliation.removedEntry?.__uid || '').trim();
+      const nextReconciliationState = {
+        ...priorReconciliationState,
+        requirementCandidateUids: priorReconciliationState.requirementCandidateUids
+          .filter(uid => uid !== removedUid),
+        removalDerivedRuleDependencyUids: priorReconciliationState.removalDerivedRuleDependencyUids
+          .filter(uid => uid !== removedUid)
+      };
+      store.data[store.current][CURRENT_LIST_RECONCILIATION_STATE_KEY] = nextReconciliationState;
+      reconciliation.expectedReconciliationStateToken = stableSignature(
+        normalizeCurrentListReconciliationState(nextReconciliationState)
+      );
       const removalAfterState = timeCurrentListMutationStage('mutation-after-snapshot', () => (
         snapshotCurrentListMutationState(store)
       ), {
@@ -3803,16 +4072,18 @@
         const summary = timeCurrentListMutationStage('mutation-summary', () => (
           buildCurrentListMutationSummary(beforeState, removalAfterState, {
             reconciliationMode: reconciliation.mode,
-            reconciliationReason: reconciliation.reason
+            reconciliationReason: reconciliation.reason,
+            derivedImpact: reconciliation.derivedImpact
           })
         ), {
           reconciliationMode: reconciliation.mode
         });
         store.data[store.current].lastCurrentListMutationSummary = summary;
         incrementCurrentListMutationCounter('listRemovalFastPaths');
+        recordCurrentListDerivedImpactFallback(reconciliation.derivedImpact);
         timeCurrentListMutationStage('mutation-persistence-schedule', () => {
           commitCurrentCharacterMutation(store, {
-            bumpDerived: true,
+            bumpDerived: reconciliation.derivedImpact?.workerRequired !== false,
             fields: summary.changedFields
           });
         }, {
@@ -3823,6 +4094,7 @@
       }
 
       store.data[store.current].list = prev;
+      store.data[store.current][CURRENT_LIST_RECONCILIATION_STATE_KEY] = priorReconciliationState;
       reconciliation = {
         ...reconciliation,
         mode: 'full',
@@ -3985,7 +4257,8 @@
         revealedChanged: hiddenRevealChanged,
         snapshotRulesChanged,
         reconciliationMode: reconciliation.mode,
-        reconciliationReason: reconciliation.reason
+        reconciliationReason: reconciliation.reason,
+        derivedImpact: reconciliation.derivedImpact
       })
     ), {
       reconciliationMode: reconciliation.mode

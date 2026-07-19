@@ -8737,8 +8737,82 @@
     };
   }
 
+  function collectInventoryRemovalProof(inv, targetRow, entry) {
+    incrementActiveMutationCounter('inventoryRemovalProofScans');
+    const targetUid = String(targetRow?.__uid || '').trim();
+    const baseIdentity = getInventoryBaseIdentity(targetRow, entry);
+    const uidCounts = new Map();
+    let targetReferenceCount = 0;
+    let ownedBaseQuantity = 0;
+    let invalidRowIdentity = false;
+    const visit = rows => {
+      (Array.isArray(rows) ? rows : []).forEach(row => {
+        if (!row || typeof row !== 'object') {
+          invalidRowIdentity = true;
+          return;
+        }
+        const uid = String(row.__uid || '').trim();
+        if (!uid) invalidRowIdentity = true;
+        else uidCounts.set(uid, (uidCounts.get(uid) || 0) + 1);
+        if (row === targetRow) targetReferenceCount += 1;
+        const rowEntry = row === targetRow ? entry : getEntry(row.id || row.name);
+        if (baseIdentity && getInventoryBaseIdentity(row, rowEntry) === baseIdentity) {
+          ownedBaseQuantity += Math.max(0, Number(row.qty) || 0);
+        }
+        if (Array.isArray(row.contains)) visit(row.contains);
+      });
+    };
+    visit(inv);
+    const targetIndex = Array.isArray(inv) ? inv.indexOf(targetRow) : -1;
+    return {
+      targetUid,
+      targetIndex,
+      targetReferenceCount,
+      ownedBaseQuantity,
+      invalidRowIdentity,
+      duplicateUid: [...uidCounts.values()].some(count => count !== 1),
+      expectedTopLevelRows: targetIndex >= 0
+        ? inv.filter((_, index) => index !== targetIndex)
+        : []
+    };
+  }
+
+  function getRemovalFilterImpact({ row, entry, surface }) {
+    if (surface !== 'inventory') return makeInactiveInventoryFilterImpact();
+    const filterState = getActiveInventoryFilterState();
+    const beforeMatches = row && entry
+      ? inventoryRowPassesActiveFilters(row, entry, filterState)
+      : null;
+    if (!filterState.active) {
+      return {
+        active: false,
+        provable: true,
+        beforeMatches: true,
+        afterMatches: false,
+        membership: 'leave',
+        positionChanged: false,
+        requiredRenderStrategy: 'targeted-remove',
+        targetedPatchSafe: true,
+        fallbackReason: ''
+      };
+    }
+    return {
+      active: true,
+      provable: beforeMatches !== null,
+      beforeMatches,
+      afterMatches: false,
+      membership: beforeMatches ? 'leave' : 'outside',
+      positionChanged: false,
+      requiredRenderStrategy: beforeMatches ? 'targeted-remove' : 'targeted-none',
+      targetedPatchSafe: beforeMatches === true,
+      fallbackReason: beforeMatches === true ? '' : 'active-filter-outside-unoptimized'
+    };
+  }
+
   function planInventoryMutation(options = {}) {
-    const kind = options.kind === 'add' ? 'add' : 'quantity';
+    const kind = options.kind === 'add'
+      ? 'add'
+      : (options.kind === 'remove' ? 'remove' : 'quantity');
     const inv = Array.isArray(options.inv) ? options.inv : [];
     const surface = options.surface || 'inventory';
     const requestedOperations = kind === 'add'
@@ -8751,6 +8825,17 @@
           created: true,
           paymentHandled: options.paymentHandled === true
         }]
+      : kind === 'remove'
+        ? [{
+            row: options.row,
+            entry: options.entry,
+            delta: options.delta,
+            parentArr: options.parentArr || inv,
+            card: options.card || null,
+            created: false,
+            paymentHandled: true,
+            requireFinalOwnedCopy: options.requireFinalOwnedCopy === true
+          }]
       : (Array.isArray(options.operations) ? options.operations : [{
           row: options.row,
           entry: options.entry,
@@ -8792,7 +8877,9 @@
       let created = requested?.created === true;
       let parentArr = requested?.parentArr || inv;
       let currentQty = Math.max(0, Number(row?.qty) || 0);
-      let delta = Number(requested?.delta);
+      let delta = kind === 'remove' && !Number.isFinite(Number(requested?.delta))
+        ? -currentQty
+        : Number(requested?.delta);
       if (!row || !entry || !Number.isInteger(delta) || delta === 0) addFallback('invalid-mutation-intent');
 
       if (kind === 'add' && row && capabilities.quantityMode === 'stack') {
@@ -8811,7 +8898,11 @@
       }
 
       const nextQty = currentQty + delta;
-      if (nextQty < 1) addFallback('quantity-removal-unoptimized');
+      if (kind === 'remove') {
+        if (nextQty !== 0) addFallback('partial-stack-removal-unproven');
+      } else if (nextQty < 1) {
+        addFallback('quantity-removal-unoptimized');
+      }
       if (parentArr !== inv) addFallback('nested-inventory-path');
       if (!created && !String(row?.__uid || '').trim()) addFallback('missing-row-uid');
       if (row?.typ === 'currency' || row?.money) addFallback('currency-row');
@@ -8822,7 +8913,23 @@
       const liveMode = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
       if (liveMode && requested?.paymentHandled !== true) addFallback('live-payment-required');
 
-      const previousOwnedQty = countInventoryBaseQuantity(inv, entry);
+      const removalProof = kind === 'remove'
+        ? collectInventoryRemovalProof(inv, row, entry)
+        : null;
+      if (removalProof) {
+        if (removalProof.targetIndex < 0 || removalProof.targetReferenceCount !== 1) {
+          addFallback('inventory-row-not-found');
+        }
+        if (removalProof.invalidRowIdentity) addFallback('missing-row-uid');
+        if (removalProof.duplicateUid) addFallback('duplicate-row-uid');
+        if (requested?.requireFinalOwnedCopy
+            && removalProof.ownedBaseQuantity !== currentQty) {
+          addFallback('duplicate-base-identity');
+        }
+      }
+      const previousOwnedQty = removalProof
+        ? removalProof.ownedBaseQuantity
+        : countInventoryBaseQuantity(inv, entry);
       const nextOwnedQty = Math.max(0, previousOwnedQty + delta);
       const stateTransitions = getInventoryStateTransitions(
         capabilities,
@@ -8830,23 +8937,26 @@
         nextOwnedQty > 0
       );
       const rowIndex = created ? inv.length : inv.indexOf(row);
-      const filterImpact = surface === 'inventory'
-        ? classifyInventoryFilterMutation({
+      const filterImpact = kind === 'remove'
+        ? getRemovalFilterImpact({ row, entry, surface })
+        : surface === 'inventory'
+          ? classifyInventoryFilterMutation({
             previousRow: created ? null : row,
             row: { ...row, qty: nextQty },
             previousEntry: created ? null : entry,
             entry,
             previousIndex: created ? -1 : rowIndex,
             nextIndex: rowIndex
-          })
-        : makeInactiveInventoryFilterImpact();
+            })
+          : makeInactiveInventoryFilterImpact();
       if (surface === 'inventory' && created) addFallback('target-dom-insert-unoptimized');
       if (!filterImpact.targetedPatchSafe) addFallback(filterImpact.fallbackReason);
 
       const impact = classifyInventoryMutation(entry, row, {
         capabilityAware: true,
         created,
-        quantityOnly: kind !== 'add',
+        removed: kind === 'remove',
+        quantityOnly: kind === 'quantity',
         requiresStableRowUid: !created,
         inventory: inv,
         parentArr,
@@ -8854,6 +8964,38 @@
         activeFilterMembershipUncertain: !filterImpact.targetedPatchSafe,
         stateTransitions
       });
+      if (kind === 'remove') {
+        if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
+        if (row?.snapshotSourceKey) addFallback('snapshot-sync');
+        if (row?.artifactEffect) addFallback('artifact-list-sync');
+        if (stateTransitions.some(transition => (
+          transition.changed && transition.link === 'catalog-reveal-while-owned'
+        ))) {
+          addFallback('hidden-revealed-state');
+        }
+        let snapshotImpacts = [];
+        try {
+          snapshotImpacts = window.snapshotHelper?.getRowRemovalImpacts?.(
+            store,
+            row,
+            { includeChildren: false }
+          ) || [];
+        } catch (_) {
+          snapshotImpacts = [{ unknown: true }];
+        }
+        if (snapshotImpacts.length) addFallback('snapshot-sync');
+        impact.invalidates = [...new Set([
+          ...(impact.invalidates || []),
+          'inventory.structure',
+          'inventory.totals',
+          'summary.economy',
+          'persistence'
+        ])];
+        impact.affectedDomains = [...impact.invalidates];
+        impact.topologyGuarantee = 'known-top-level-row-removal';
+        impact.topology = 'row';
+        impact.aggregateStrategy = getReusableInventoryAggregateSnapshot() ? 'delta' : 'rebuild';
+      }
       const ownershipChanged = (previousOwnedQty > 0) !== (nextOwnedQty > 0);
       if (ownershipChanged && capabilities.derivedDomains.length) {
         impact.invalidates = [...new Set([
@@ -8866,7 +9008,9 @@
       }
       impact.fallbackReasons.forEach(addFallback);
       impact.filterMembership = filterImpact;
-      impact.renderStrategy = surface === 'inventory' ? 'targeted-patch' : 'targeted-none';
+      impact.renderStrategy = surface === 'inventory'
+        ? (kind === 'remove' ? 'targeted-remove' : 'targeted-patch')
+        : 'targeted-none';
       planned.push({
         entry,
         capabilities,
@@ -8881,7 +9025,8 @@
         nextOwnedQty,
         stateTransitions,
         filterImpact,
-        impact
+        impact,
+        removalProof
       });
     });
 
@@ -8911,6 +9056,7 @@
       fastPath: fallbackReasons.length === 0,
       impactClass: fallbackReasons.length ? 'fallback' : 'declared',
       fallbackReasons,
+      fallbackReason: fallbackReasons[0] || '',
       invalidates: uniqueInvalidates,
       affectedDomains: uniqueInvalidates,
       targets,
@@ -8919,9 +9065,16 @@
       topology: 'row',
       topologyGuarantee: planned.some(operation => operation.created)
         ? 'top-level-row-insertion'
-        : 'unchanged-top-level-row',
-      aggregateStrategy: planned.some(operation => operation.created) ? 'rebuild' : 'delta',
-      renderStrategy: surface === 'inventory' ? 'targeted-patch' : 'targeted-none'
+        : (kind === 'remove' ? 'known-top-level-row-removal' : 'unchanged-top-level-row'),
+      aggregateStrategy: planned.some(operation => operation.created)
+        ? 'rebuild'
+        : (kind === 'remove' && !getReusableInventoryAggregateSnapshot() ? 'rebuild' : 'delta'),
+      renderStrategy: fallbackReasons.length
+        ? 'full'
+        : surface === 'inventory'
+          ? (kind === 'remove' ? 'targeted-remove' : 'targeted-patch')
+          : 'targeted-none',
+      filterMembership: planned.length === 1 ? planned[0].filterImpact : null
     };
   }
 
@@ -9275,12 +9428,194 @@
     return { committed: true, impact };
   }
 
+  function inventoryContainsExactUid(rows, targetUid) {
+    const uid = String(targetUid || '').trim();
+    if (!uid) return false;
+    return (Array.isArray(rows) ? rows : []).some(row => (
+      String(row?.__uid || '').trim() === uid
+      || inventoryContainsExactUid(row?.contains, uid)
+    ));
+  }
+
+  function verifyRemovalPlanState(plan, operation) {
+    const proof = operation?.removalProof;
+    if (!proof || proof.targetIndex < 0) return { ok: false, reason: 'removal-proof-missing' };
+    if (inventoryContainsExactUid(plan.inv, proof.targetUid)) {
+      return { ok: false, reason: 'removed-row-still-present' };
+    }
+    if (plan.inv.length !== proof.expectedTopLevelRows.length) {
+      return { ok: false, reason: 'inventory-topology-postcondition-failed' };
+    }
+    const unchanged = proof.expectedTopLevelRows.every((row, index) => plan.inv[index] === row);
+    return unchanged
+      ? { ok: true, reason: '' }
+      : { ok: false, reason: 'inventory-topology-postcondition-failed' };
+  }
+
+  function captureUnaffectedInventoryCardNodes(targetCard) {
+    if (!dom.invList) return [];
+    return [...dom.invList.querySelectorAll('li.entry-card[data-uid], li.card[data-uid]')]
+      .filter(card => card !== targetCard)
+      .map(card => ({
+        uid: String(card.dataset.uid || '').trim(),
+        card
+      }));
+  }
+
+  function verifyRemovalDomPostconditions(operation, unaffectedCards) {
+    const targetUid = String(operation?.removalProof?.targetUid || '').trim();
+    if (operation?.card?.isConnected) return { ok: false, reason: 'target-card-not-removed' };
+    if (targetUid && dom.invList?.querySelector(`[data-uid="${CSS.escape(targetUid)}"]`)) {
+      return { ok: false, reason: 'target-card-not-removed' };
+    }
+    const changed = (Array.isArray(unaffectedCards) ? unaffectedCards : []).some(({ uid, card }) => (
+      !card?.isConnected
+      || !dom.invList?.contains(card)
+      || String(card.dataset.uid || '').trim() !== uid
+    ));
+    return changed
+      ? { ok: false, reason: 'unaffected-card-identity-changed' }
+      : { ok: true, reason: '' };
+  }
+
+  function commitInventoryRemovalMutation(plan, options = {}) {
+    const operation = plan?.operations?.[0];
+    if (!operation || plan.operations.length !== 1) {
+      return { committed: false, plan, impact: plan, mutation: null };
+    }
+    const index = operation.parentArr.indexOf(operation.row);
+    if (index < 0 || index !== operation.removalProof?.targetIndex) {
+      if (!plan.fallbackReasons.includes('removal-plan-stale')) {
+        plan.fallbackReasons.push('removal-plan-stale');
+      }
+      plan.fallbackReason = plan.fallbackReasons[0] || 'removal-plan-stale';
+      recordActiveMutationFallback('removal-plan-stale', { action: 'inventory-row-remove' });
+      return { committed: false, plan, impact: plan, mutation: null };
+    }
+    const action = 'inventory-row-remove';
+    const source = options.source || action;
+    const unaffectedCards = plan.surface === 'inventory'
+      ? captureUnaffectedInventoryCardNodes(operation.card)
+      : [];
+    markActiveMutationCheckpoint('handler-entry', {
+      action,
+      rowKey: operation.row.__uid || operation.row.id || operation.row.name
+    });
+    markActiveMutationCheckpoint('mutation-plan-complete', {
+      action,
+      impactClass: plan.impactClass,
+      aggregateStrategy: plan.aggregateStrategy,
+      topologyGuarantee: plan.topologyGuarantee,
+      stateTransitions: plan.stateTransitions,
+      filterMembership: operation.filterImpact
+    });
+    queueInventoryAggregateQuantityDelta(
+      operation.row,
+      operation.entry,
+      operation.previousQty,
+      0
+    );
+    operation.parentArr.splice(index, 1);
+    storeHelper.batchCurrentCharacterMutation(store, {
+      bumpDerived: plan.bumpDerived,
+      invalidates: plan.invalidates,
+      targets: plan.targets,
+      afterCommit: summary => {
+        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+          charId: summary.charId,
+          version: summary.version,
+          invalidates: summary.invalidates,
+          targets: summary.targets,
+          topology: plan.topology,
+          renderStrategy: plan.renderStrategy,
+          source,
+          afterPaint: true
+        });
+      }
+    }, () => {
+      storeHelper.setInventory(store, plan.inv, {
+        bumpDerived: plan.bumpDerived,
+        fields: Array.isArray(options.fields) && options.fields.length ? options.fields : ['inventory'],
+        invalidates: plan.invalidates,
+        targets: plan.targets,
+        assumeValidInventoryUids: true,
+        validatedRemovedRowUids: [operation.row.__uid]
+      });
+    });
+    markActiveMutationCheckpoint('store-mutation-complete', { action });
+
+    let reconciliation = { ok: true, reason: '' };
+    if (plan.surface === 'inventory') {
+      if (!patchRemovedInventoryCard(operation.card)) {
+        reconciliation = { ok: false, reason: 'dom-postcondition-failed' };
+      } else {
+        reconciliation = verifyRemovalDomPostconditions(operation, unaffectedCards);
+      }
+    } else if (typeof options.reconcileDom === 'function') {
+      const result = options.reconcileDom({ plan, operation });
+      reconciliation = result && typeof result === 'object'
+        ? { ok: result.ok === true, reason: result.reason || '' }
+        : { ok: result === true, reason: result === true ? '' : 'dom-postcondition-failed' };
+      if (reconciliation.ok) incrementActiveMutationCounter('targetedRenders');
+    }
+    const statePostcondition = verifyRemovalPlanState(plan, operation);
+    if (!statePostcondition.ok && reconciliation.ok) reconciliation = statePostcondition;
+
+    const fallbackReasons = [];
+    if (!reconciliation.ok) {
+      const reason = reconciliation.reason || 'dom-postcondition-failed';
+      fallbackReasons.push(reason);
+      recordActiveMutationFallback(reason, {
+        action,
+        rowKey: operation.row.__uid || operation.row.id || operation.row.name
+      });
+      if (plan.surface === 'inventory') {
+        renderInventoryWithPerf({ trigger: reason, fallbackReasons: [reason] });
+      } else if (typeof options.onDomFallback === 'function') {
+        options.onDomFallback(reason);
+      }
+    } else {
+      markActiveMutationCheckpoint('inventory-dom-reconciled', {
+        action,
+        rowKey: operation.row.__uid || operation.row.id || operation.row.name,
+        renderStrategy: plan.renderStrategy
+      });
+    }
+    markActiveMutationCheckpoint('first-feedback-dom', {
+      action,
+      rowKey: operation.row.__uid || operation.row.id || operation.row.name,
+      renderStrategy: plan.renderStrategy
+    });
+    return {
+      committed: true,
+      targeted: reconciliation.ok,
+      fallbackReasons,
+      plan,
+      impact: plan,
+      mutation: {
+        entry: operation.entry,
+        row: operation.row,
+        index: -1,
+        created: false,
+        createdCount: 0,
+        quantityDelta: -operation.previousQty,
+        topology: plan.topology,
+        changes: [{ prev: operation.row, next: null, index, created: false }],
+        baseIdentity: getInventoryBaseIdentity(operation.row, operation.entry),
+        variantIdentity: getInventoryVariantIdentity(operation.row, operation.entry)
+      }
+    };
+  }
+
   function commitInventoryMutation(plan, options = {}) {
     if (!plan?.fastPath || !Array.isArray(plan.operations) || !plan.operations.length) {
       (plan?.fallbackReasons || []).forEach(reason => recordActiveMutationFallback(reason, {
         action: plan?.kind || 'inventory-mutation'
       }));
       return { committed: false, plan, impact: plan, mutation: null };
+    }
+    if (plan.kind === 'remove') {
+      return commitInventoryRemovalMutation(plan, options);
     }
     const source = options.source || `inventory-${plan.kind}`;
     const action = plan.operations.length > 1
@@ -9461,69 +9796,16 @@
     return getActiveInventoryFilterState().active;
   }
 
-  function getTargetedInventoryRowRemovalImpact({ row, entry, inv, parentArr }) {
-    const filterState = getActiveInventoryFilterState();
-    const beforeMatches = row && entry
-      ? inventoryRowPassesActiveFilters(row, entry, filterState)
-      : null;
-    const filterImpact = filterState.active
-      ? {
-          active: true,
-          provable: beforeMatches !== null,
-          beforeMatches,
-          afterMatches: false,
-          membership: beforeMatches ? 'leave' : 'outside',
-          positionChanged: false,
-          requiredRenderStrategy: beforeMatches ? 'targeted-remove' : 'targeted-none',
-          targetedPatchSafe: beforeMatches === true,
-          fallbackReason: beforeMatches === true ? '' : 'active-filter-outside-unoptimized'
-        }
-      : {
-          active: false,
-          provable: true,
-          beforeMatches: true,
-          afterMatches: false,
-          membership: 'leave',
-          positionChanged: false,
-          requiredRenderStrategy: 'targeted-remove',
-          targetedPatchSafe: true,
-          fallbackReason: ''
-        };
-    const impact = classifyInventoryMutation(entry, row, {
-      created: false,
-      removed: true,
-      requiresStableRowUid: true,
-      inventory: inv,
+  function getTargetedInventoryRowRemovalImpact({ row, entry, inv, parentArr, card }) {
+    return planInventoryMutation({
+      kind: 'remove',
+      row,
+      entry,
+      inv,
       parentArr,
-      activeFilterMembershipUncertain: false
+      card,
+      surface: 'inventory'
     });
-    const fallbackReasons = [...impact.fallbackReasons];
-    const addFallback = reason => {
-      if (reason && !fallbackReasons.includes(reason)) fallbackReasons.push(reason);
-    };
-    if (window.__symbaroumPerfForceSafeInventoryMutations === true) addFallback('forced-safe-path');
-    if (!row || !entry) addFallback('legacy-metadata');
-    if (row?.typ === 'currency' || row?.money) addFallback('manual-override');
-    if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
-    if (!filterImpact.targetedPatchSafe) addFallback(filterImpact.fallbackReason);
-    return {
-      ...impact,
-      impactClass: fallbackReasons.length ? 'fallback' : impact.impactClass,
-      fastPath: fallbackReasons.length === 0 && impact.fastPath,
-      fallbackReasons,
-      invalidates: [...new Set([
-        ...impact.invalidates,
-        'inventory.structure',
-        'inventory.totals',
-        'summary.economy',
-        'persistence'
-      ])],
-      topologyGuarantee: 'known-top-level-row-removal',
-      topology: 'row',
-      aggregateStrategy: getReusableInventoryAggregateSnapshot() ? 'delta' : 'rebuild',
-      renderStrategy: fallbackReasons.length ? 'full' : 'targeted-remove',
-      filterMembership: filterImpact
-    };
   }
 
   function patchRemovedInventoryCard(card) {
@@ -9550,53 +9832,10 @@
   }
 
   function commitTargetedInventoryRowRemoval({ row, entry, inv, parentArr, card, impact, source = 'inventory-row-remove' }) {
-    const index = parentArr.indexOf(row);
-    if (index < 0 || !impact?.fastPath) return false;
-    if (!card?.isConnected) {
-      if (!impact.fallbackReasons.includes('target-dom-card-missing')) {
-        impact.fallbackReasons.push('target-dom-card-missing');
-      }
-      recordActiveMutationFallback('target-dom-card-missing', {
-        action: 'inventory-row-remove',
-        rowKey: row.__uid || row.id || row.name
-      });
-      return false;
-    }
-    const previousQty = Math.max(1, Number(row.qty) || 1);
-    queueInventoryAggregateQuantityDelta(row, entry, previousQty, 0);
-    parentArr.splice(index, 1);
-    storeHelper.batchCurrentCharacterMutation(store, {
-      bumpDerived: impact.bumpDerived,
-      invalidates: impact.invalidates,
-      targets: impact.targets,
-      afterCommit: summary => {
-        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
-          charId: summary.charId,
-          version: summary.version,
-          invalidates: summary.invalidates,
-          targets: summary.targets,
-          topology: impact.topology,
-          renderStrategy: impact.renderStrategy,
-          source,
-          afterPaint: true
-        });
-      }
-    }, () => {
-      storeHelper.setInventory(store, inv, {
-        bumpDerived: impact.bumpDerived,
-        fields: ['inventory'],
-        invalidates: impact.invalidates,
-        targets: impact.targets,
-        assumeValidInventoryUids: true,
-        validatedRemovedRowUids: [row.__uid]
-      });
-    });
-    patchRemovedInventoryCard(card);
-    markActiveMutationCheckpoint('first-feedback-dom', {
-      action: 'inventory-row-remove',
-      rowKey: row.__uid || row.id || row.name
-    });
-    return true;
+    if (!impact?.fastPath) return false;
+    const operation = impact.operations?.[0];
+    if (operation) operation.card = card;
+    return commitInventoryMutation(impact, { source }).committed === true;
   }
 
   function getFullInventoryFallbackReasons(renderDetail = {}) {
@@ -10828,7 +11067,8 @@
               row,
               entry,
               inv,
-              parentArr
+              parentArr,
+              card: li
             });
             markActiveMutationCheckpoint('mutation-plan-complete', {
               action: 'inventory-row-remove',

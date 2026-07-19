@@ -3340,10 +3340,35 @@
   });
 
   const MAL_REGISTRY = new Map();
+  const MAL_DERIVED_IMPACT_REGISTRY = new Map();
   const MANUAL_ENTRY_ERF_OVERRIDES = new Map();
 
-  function registerMal(mal, handler) {
-    MAL_REGISTRY.set(String(mal), handler);
+  function normalizeDerivedImpactMetadata(raw = {}) {
+    const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    return Object.freeze({
+      domains: Object.freeze([...new Set(
+        (Array.isArray(source.domains) ? source.domains : [])
+          .map(value => String(value || '').trim())
+          .filter(Boolean)
+      )]),
+      worker: source.worker === true
+    });
+  }
+
+  function registerMal(mal, handler, derivedImpact = null) {
+    const key = String(mal);
+    MAL_REGISTRY.set(key, handler);
+    if (derivedImpact && typeof derivedImpact === 'object' && !Array.isArray(derivedImpact)) {
+      MAL_DERIVED_IMPACT_REGISTRY.set(key, normalizeDerivedImpactMetadata(derivedImpact));
+    } else {
+      MAL_DERIVED_IMPACT_REGISTRY.delete(key);
+    }
+  }
+
+  function getRegisteredMalDerivedImpact(mal) {
+    const key = String(mal || '').trim();
+    if (!key || !MAL_REGISTRY.has(key)) return null;
+    return MAL_DERIVED_IMPACT_REGISTRY.get(key) || null;
   }
 
   function resolveTraitValueFromContext(rawMal, context = {}) {
@@ -5496,6 +5521,10 @@
     MANUAL_ENTRY_ERF_OVERRIDES.clear();
   }
 
+  function hasManualEntryErfOverride(entry, level = '') {
+    return getManualEntryErfOverride(entry, level) !== null;
+  }
+
   function getEntryErfOverrideMapValue(mapLike, level = '') {
     if (!mapLike || typeof mapLike !== 'object' || Array.isArray(mapLike)) return null;
     const wanted = normalizeLevelName(level);
@@ -5546,6 +5575,14 @@
     if (taggedValue !== null) return taggedValue;
 
     return normalizeErfOverrideNumber(entry?.erf ?? entry?.xp);
+  }
+
+  function getStaticEntryErfOverride(entry, level = '') {
+    if (!entry || typeof entry !== 'object') return null;
+    const sourceEntry = resolveRuleSourceEntry(entry);
+    const primary = getEntryStaticErfOverride(sourceEntry, level);
+    if (primary !== null) return primary;
+    return getEntryStaticErfOverride(entry, level);
   }
 
   function getRuleEntryErfOverride(rule, level = '') {
@@ -10155,55 +10192,232 @@
     };
   }
 
+  function classifyEntryModifyDerivedImpact(entry, options = {}) {
+    const result = {
+      known: true,
+      domains: [],
+      workerDomains: [],
+      targets: [],
+      unknownTargets: [],
+      workerRequired: false,
+      hasListMembershipCondition: false,
+      hasCharacterDependentCondition: false,
+      reason: ''
+    };
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      return {
+        ...result,
+        known: false,
+        reason: 'derived-impact-invalid-entry'
+      };
+    }
+
+    let rules;
+    try {
+      rules = getRuleList(entry, 'andrar', {
+        level: typeof options.level === 'string' && options.level
+          ? options.level
+          : (typeof entry.nivå === 'string' ? entry.nivå : '')
+      });
+    } catch (_) {
+      rules = null;
+    }
+    if (!Array.isArray(rules)) {
+      return {
+        ...result,
+        known: false,
+        reason: 'derived-impact-ambiguous-rule-source'
+      };
+    }
+
+    const domains = new Set();
+    const workerDomains = new Set();
+    const targets = new Set();
+    const unknownTargets = new Set();
+    rules.forEach(rule => {
+      if (!rule || typeof rule !== 'object' || Array.isArray(rule)) {
+        result.known = false;
+        result.reason = result.reason || 'derived-impact-ambiguous-rule-source';
+        return;
+      }
+      const target = getRuleTarget(rule);
+      if (!target) {
+        result.known = false;
+        result.reason = result.reason || 'derived-impact-unknown-modify-target';
+        return;
+      }
+      targets.add(target);
+      const metadata = getRegisteredMalDerivedImpact(target);
+      if (!metadata) {
+        result.known = false;
+        unknownTargets.add(target);
+        result.reason = result.reason || 'derived-impact-unknown-modify-target';
+      } else {
+        metadata.domains.forEach(domain => domains.add(domain));
+        if (metadata.worker) {
+          result.workerRequired = true;
+          metadata.domains.forEach(domain => workerDomains.add(domain));
+        }
+      }
+      if (ruleDependsOnListMembership(rule)) {
+        result.hasListMembershipCondition = true;
+      }
+      const condition = getRuleCondition(rule);
+      if (condition || (rule.when && typeof rule.when === 'object')) {
+        result.hasCharacterDependentCondition = true;
+      }
+    });
+
+    return {
+      ...result,
+      domains: [...domains],
+      workerDomains: [...workerDomains],
+      targets: [...targets],
+      unknownTargets: [...unknownTargets]
+    };
+  }
+
+  function entryHasRemovalSensitiveDerivedRules(entry, options = {}) {
+    const impact = classifyEntryModifyDerivedImpact(entry, options);
+    return Boolean(
+      !impact.known
+      || impact.hasListMembershipCondition
+    );
+  }
+
   // --- Mal handler registry (Phase B) ---
   // Numeric mals: handler(list, context) → number
   registerMal('korruptionstroskel', (list, ctx) =>
-    getCorruptionTrackStats(list, ctx).korruptionstroskel);
+    getCorruptionTrackStats(list, ctx).korruptionstroskel, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('styggelsetroskel', (list, ctx) =>
-    getCorruptionTrackStats(list, ctx).styggelsetroskel);
+    getCorruptionTrackStats(list, ctx).styggelsetroskel, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('permanent_korruption', (list, ctx) =>
-    getPermanentCorruptionBreakdown(list, ctx).total);
+    getPermanentCorruptionBreakdown(list, ctx).total, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('permanent_korruption_halvera', (list) =>
-    hasPermanentCorruptionHalving(list));
+    hasPermanentCorruptionHalving(list), {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
+  });
   registerMal('permanent_korruption_faktor', (list, ctx) => {
     const rules = getListRules(list, { key: 'andrar', mal: 'permanent_korruption_faktor' });
     return rules.filter(r => evaluateNar(r.nar, { list, ...ctx }))
       .reduce((prod, r) => prod * Number(r.varde ?? 1), 1);
+  }, {
+    domains: ['corruption', 'summary.corruption'],
+    worker: true
   });
-  registerMal('barkapacitet_stark', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_stark', 0, ctx));
-  registerMal('talighet_bas', (list, ctx) => getToughnessBase(list, ctx));
-  registerMal('talighet_faktor', (list, ctx) => sumAndrarByMal(list, 'talighet_faktor', 1, ctx));
-  registerMal('smartgrans_faktor', (list, ctx) => sumAndrarByMal(list, 'smartgrans_faktor', 1, ctx));
-  registerMal('talighet_tillagg', (list, ctx) => sumAndrarByMal(list, 'talighet_tillagg', 0, ctx));
-  registerMal('smartgrans_tillagg', (list, ctx) => getPainThresholdModifier(list, ctx));
-  registerMal('barkapacitet', (list, ctx) => getCarryCapacityBase(list, ctx));
-  registerMal('barkapacitet_faktor', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_faktor', 1, ctx));
-  registerMal('barkapacitet_tillagg', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_tillagg', 3, ctx));
-  registerMal('barkapacitet_bas', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_bas', 0, ctx));
+  registerMal('barkapacitet_stark', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_stark', 0, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('talighet_bas', (list, ctx) => getToughnessBase(list, ctx), {
+    domains: ['toughness', 'summary.toughness'],
+    worker: true
+  });
+  registerMal('talighet_faktor', (list, ctx) => sumAndrarByMal(list, 'talighet_faktor', 1, ctx), {
+    domains: ['toughness', 'summary.toughness'],
+    worker: true
+  });
+  registerMal('smartgrans_faktor', (list, ctx) => sumAndrarByMal(list, 'smartgrans_faktor', 1, ctx), {
+    domains: ['pain', 'summary.pain'],
+    worker: true
+  });
+  registerMal('talighet_tillagg', (list, ctx) => sumAndrarByMal(list, 'talighet_tillagg', 0, ctx), {
+    domains: ['toughness', 'summary.toughness'],
+    worker: true
+  });
+  registerMal('smartgrans_tillagg', (list, ctx) => getPainThresholdModifier(list, ctx), {
+    domains: ['pain', 'summary.pain'],
+    worker: true
+  });
+  registerMal('barkapacitet', (list, ctx) => getCarryCapacityBase(list, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('barkapacitet_faktor', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_faktor', 1, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('barkapacitet_tillagg', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_tillagg', 3, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
+  registerMal('barkapacitet_bas', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_bas', 0, ctx), {
+    domains: ['capacity', 'inventory.totals', 'summary.capacity'],
+    worker: true
+  });
   registerMal('forsvar_modifierare', (list, ctx) => {
     const facts = Array.isArray(ctx?.weaponFacts)
       ? ctx.weaponFacts
       : (Array.isArray(ctx?.vapenFakta) ? ctx.vapenFakta : []);
     return getDefenseModifier(list, facts, ctx || {});
+  }, {
+    domains: ['combat', 'summary.combat'],
+    worker: false
   });
   registerMal('traffsaker_modifierare', (list, ctx) => {
     const facts = Array.isArray(ctx?.weaponFacts)
       ? ctx.weaponFacts
       : (Array.isArray(ctx?.vapenFakta) ? ctx.vapenFakta : []);
     return getEquippedAttackModifier(list, facts, ctx || {});
+  }, {
+    domains: ['combat', 'summary.combat'],
+    worker: false
   });
-  registerMal('traffsaker_modifierare_vapen', (list, ctx) => getWeaponAttackBonus(list, ctx));
-  registerMal('karaktarsdrag_max_tillagg', (list, ctx) => sumAndrarByMal(list, 'karaktarsdrag_max_tillagg', 0, ctx));
-  registerMal('begransning_modifierare', (list, ctx) => getArmorRestrictionBonus(ctx?.qualityNames || [], ctx));
-  registerMal('begransning_modifierare_fast', (list, ctx) => getArmorRestrictionBonusFast(ctx?.qualityNames || [], ctx));
-  registerMal('nollstall_begransning_modifierare', (list) => hasArmorRestrictionReset(list));
-  registerMal('tillater_monstruost', () => ({ allowAll: false, allowedNames: new Set() }));
-  registerMal('anfall_karaktarsdrag', (list, ctx) => getAttackTraitRuleNotes(list, ctx));
-  registerMal('forsvar_karaktarsdrag', (list, ctx) => getDefenseTraitRuleCandidates(list, ctx));
-  registerMal('dansande_forsvar_karaktarsdrag', () => []); // deprecated: superseded by separat_forsvar_karaktarsdrag
+  registerMal('traffsaker_modifierare_vapen', (list, ctx) => getWeaponAttackBonus(list, ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('karaktarsdrag_max_tillagg', (list, ctx) => sumAndrarByMal(list, 'karaktarsdrag_max_tillagg', 0, ctx), {
+    domains: ['traits', 'summary.traits'],
+    worker: false
+  });
+  registerMal('begransning_modifierare', (list, ctx) => getArmorRestrictionBonus(ctx?.qualityNames || [], ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('begransning_modifierare_fast', (list, ctx) => getArmorRestrictionBonusFast(ctx?.qualityNames || [], ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('nollstall_begransning_modifierare', (list) => hasArmorRestrictionReset(list), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('tillater_monstruost', () => ({ allowAll: false, allowedNames: new Set() }), {
+    domains: ['requirements'],
+    worker: false
+  });
+  registerMal('anfall_karaktarsdrag', (list, ctx) => getAttackTraitRuleNotes(list, ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('forsvar_karaktarsdrag', (list, ctx) => getDefenseTraitRuleCandidates(list, ctx), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('dansande_forsvar_karaktarsdrag', () => [], {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  }); // deprecated: superseded by separat_forsvar_karaktarsdrag
   registerMal('separat_forsvar_karaktarsdrag', (list, ctx) =>
-    getSeparateDefenseTraitRules(list, ctx).map(r => r.varde).filter(Boolean));
-  registerMal('mystik_karaktarsdrag', (list) => getListRules(list, { key: 'andrar', mal: 'mystik_karaktarsdrag' }));
+    getSeparateDefenseTraitRules(list, ctx).map(r => r.varde).filter(Boolean), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
+  registerMal('mystik_karaktarsdrag', (list) => getListRules(list, { key: 'andrar', mal: 'mystik_karaktarsdrag' }), {
+    domains: ['combat', 'summary.combat'],
+    worker: false
+  });
   registerMal('post', (list) => getListRules(list, { key: 'ger', mal: 'post' }));
   registerMal('foremal', (list, ctx) => getInventoryGrantItems(list, ctx));
   registerMal('pengar', (list, ctx) => getMoneyGrant(list, ctx));
@@ -10214,10 +10428,19 @@
       evaluateRuleNar(rule, { list: entries, ...(ctx || {}) })
       && isTruthyRuleValue(rule?.varde)
     );
+  }, {
+    domains: ['catalog.structure'],
+    worker: false
   });
   registerMal('skydd_permanent_korruption', (list) => getListRules(list, { key: 'ger', mal: 'skydd_permanent_korruption' }));
-  registerMal('vikt_faktor', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).faktor);
-  registerMal('vikt_tillagg', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).tillagg);
+  registerMal('vikt_faktor', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).faktor, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
+  });
+  registerMal('vikt_tillagg', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).tillagg, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
+  });
   registerMal('pris_faktor', (list, ctx) => {
     const entries = getRuleEntries(list);
     if (!entries.length) return 1;
@@ -10231,6 +10454,9 @@
       foremal: buildItemRuleTargetContext(targetEntry, qualityNames, details)
     };
     return toPositiveFiniteNumber(getPriceRuleEffectsForEntries(entries, targetContext).factor, 1);
+  }, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
   });
   registerMal('kvalitet_gratisbar', (list, ctx) => {
     const entries = getRuleEntries(list);
@@ -10253,6 +10479,9 @@
       latest = Boolean(value.gratisbar);
     });
     return hasExplicit ? latest : false;
+  }, {
+    domains: ['inventory.totals', 'summary.economy'],
+    worker: false
   });
 
   window.rulesHelper = {
@@ -10260,8 +10489,12 @@
     CHOICE_FIELDS,
     CHOICE_DUPLICATE_POLICIES,
     MAL_REGISTRY,
+    MAL_DERIVED_IMPACT_REGISTRY,
     registerMal,
     queryMal,
+    getRegisteredMalDerivedImpact,
+    classifyEntryModifyDerivedImpact,
+    entryHasRemovalSensitiveDerivedRules,
     normalizeRuleBlock,
     mergeRuleBlocks,
     mergeRuleBlocksByHierarchy,
@@ -10308,6 +10541,8 @@
     getPartialGrantInfo,
     getGrantedLevelRestriction,
     getEntryErfOverride,
+    getStaticEntryErfOverride,
+    hasManualEntryErfOverride,
     setEntryErfOverride,
     clearEntryErfOverride,
     clearAllEntryErfOverrides,
@@ -10578,7 +10813,7 @@
   const CURRENT_LIST_RECONCILIATION_STATE_KEY = 'currentListReconciliationState';
   // Bump whenever the full reconciliation invariants change. Characters from
   // an older build take one full pass before single-add increments are trusted.
-  const CURRENT_LIST_RECONCILIATION_VERSION = 3;
+  const CURRENT_LIST_RECONCILIATION_VERSION = 4;
 
   const normalizeEntrySort = (mode) => {
     if (typeof global.normalizeEntrySortMode === 'function') {
@@ -11575,11 +11810,15 @@
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
     if (typeof raw.hasListWideRules !== 'boolean') return null;
     if (typeof raw.hasRemovalListWideRules !== 'boolean') return null;
+    if (!Array.isArray(raw.removalDerivedRuleDependencyUids)) return null;
     if (!Array.isArray(raw.requirementCandidateUids)) return null;
     if (!raw.moneyGrant || typeof raw.moneyGrant !== 'object') return null;
     return {
       hasListWideRules: raw.hasListWideRules,
       hasRemovalListWideRules: raw.hasRemovalListWideRules,
+      removalDerivedRuleDependencyUids: [...new Set(raw.removalDerivedRuleDependencyUids
+        .map(uid => String(uid || '').trim())
+        .filter(Boolean))],
       requirementCandidateUids: [...new Set(raw.requirementCandidateUids
         .map(uid => String(uid || '').trim())
         .filter(Boolean))],
@@ -11692,6 +11931,16 @@
       dependentsProven: detail.dependentsProven === true,
       grantCleanup: Array.isArray(detail.grantCleanup) ? detail.grantCleanup : [],
       grantCleanupProven: detail.grantCleanupProven === true,
+      derivedImpact: detail.derivedImpact && typeof detail.derivedImpact === 'object'
+        ? detail.derivedImpact
+        : {
+            status: 'unknown',
+            domains: [],
+            workerDomains: [],
+            workerRequired: true,
+            targets: [],
+            reasons: ['derived-impact-not-proven']
+          },
       previousLength: prev.length,
       charId: String(store?.current || ''),
       beforeToken: currentListRemovalPlanToken(prev),
@@ -11749,6 +11998,9 @@
     if (typeof hasRequirementRules !== 'function') {
       return {
         hasRemovalListWideRules: true,
+        removalDerivedRuleDependencyUids: list
+          .map(entry => String(entry?.__uid || '').trim())
+          .filter(Boolean),
         requirementCandidateUids: list
           .map(entry => String(entry?.__uid || '').trim())
           .filter(Boolean)
@@ -11756,8 +12008,23 @@
     }
     const requirementCandidateUids = [];
     let requirementSourcesKnown = true;
+    const removalDerivedRuleDependencyUids = [];
     list.forEach(entry => {
       if (!entry || typeof entry !== 'object') return;
+      try {
+        if (typeof global.rulesHelper?.entryHasRemovalSensitiveDerivedRules !== 'function'
+            || global.rulesHelper.entryHasRemovalSensitiveDerivedRules(entry, {
+              level: typeof entry.nivå === 'string' ? entry.nivå : ''
+            })) {
+          const uid = String(entry.__uid || '').trim();
+          if (uid) removalDerivedRuleDependencyUids.push(uid);
+          else requirementSourcesKnown = false;
+        }
+      } catch (_) {
+        const uid = String(entry.__uid || '').trim();
+        if (uid) removalDerivedRuleDependencyUids.push(uid);
+        else requirementSourcesKnown = false;
+      }
       try {
         if (!hasRequirementRules(entry, {
           level: typeof entry.nivå === 'string' ? entry.nivå : ''
@@ -11775,6 +12042,7 @@
     return {
       hasRemovalListWideRules: !requirementSourcesKnown
         || currentListRemovalRequiresBroadRulePass(list),
+      removalDerivedRuleDependencyUids: [...new Set(removalDerivedRuleDependencyUids)],
       requirementCandidateUids: requirementSourcesKnown
         ? [...new Set(requirementCandidateUids)]
         : list.map(entry => String(entry?.__uid || '').trim()).filter(Boolean)
@@ -11787,10 +12055,182 @@
     const appended = buildCurrentListRemovalRuleState(appendedEntries);
     return {
       hasRemovalListWideRules: prior.hasRemovalListWideRules || appended.hasRemovalListWideRules,
+      removalDerivedRuleDependencyUids: [...new Set([
+        ...prior.removalDerivedRuleDependencyUids,
+        ...appended.removalDerivedRuleDependencyUids
+      ])],
       requirementCandidateUids: [...new Set([
         ...prior.requirementCandidateUids,
         ...appended.requirementCandidateUids
       ])]
+    };
+  }
+
+  function normalizeCurrentListEntryTests(entry) {
+    try {
+      if (typeof global.getEntryTestTags === 'function') {
+        const tests = global.getEntryTestTags(entry, {
+          level: typeof entry?.nivå === 'string' ? entry.nivå : ''
+        });
+        if (Array.isArray(tests)) {
+          return [...new Set(tests.map(value => String(value || '').trim()).filter(Boolean))];
+        }
+      }
+    } catch (_) {}
+    const tests = Array.isArray(entry?.taggar?.test) ? entry.taggar.test : [];
+    return [...new Set(tests.map(value => String(value || '').trim()).filter(Boolean))];
+  }
+
+  function analyzeCurrentListRemovalDerivedImpact(
+    store,
+    prevList,
+    nextList,
+    removedEntry,
+    reconciliationState
+  ) {
+    incrementCurrentListMutationCounter('derivedImpactProofs');
+    const domains = new Set();
+    const workerDomains = new Set();
+    const targets = new Set();
+    const reasons = new Set();
+    let known = true;
+    let workerRequired = false;
+    let operations = 1;
+    const addWorkerDomain = domain => {
+      const value = String(domain || '').trim();
+      if (!value) return;
+      domains.add(value);
+      workerDomains.add(value);
+      workerRequired = true;
+    };
+
+    const removedUid = String(removedEntry?.__uid || '').trim();
+    const retainedSensitiveUids = (reconciliationState?.removalDerivedRuleDependencyUids || [])
+      .filter(uid => String(uid || '').trim() !== removedUid);
+    operations += retainedSensitiveUids.length;
+    if (retainedSensitiveUids.length) {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-retained-list-rule-dependency');
+    }
+    const retainedRequirementUids = (reconciliationState?.requirementCandidateUids || [])
+      .filter(uid => String(uid || '').trim() !== removedUid);
+    operations += retainedRequirementUids.length;
+    if (retainedRequirementUids.length) {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-retained-requirement-dependency');
+    }
+
+    const types = entryTypeNames(removedEntry);
+    operations += types.length;
+    const normalizedTypes = types.map(normalizeErfTypeName);
+    const staticErfHelper = global.rulesHelper?.getStaticEntryErfOverride;
+    const manualErfHelper = global.rulesHelper?.hasManualEntryErfOverride;
+    const level = typeof removedEntry?.nivå === 'string' ? removedEntry.nivå : '';
+    let staticErfOverride = null;
+    if (typeof staticErfHelper === 'function') {
+      try {
+        staticErfOverride = normalizeErfOverrideNumber(staticErfHelper(removedEntry, level));
+      } catch (_) {
+        known = false;
+        workerRequired = true;
+        reasons.add('derived-impact-ambiguous-erf-source');
+      }
+    } else if (isLevelCostType(types)) {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-erf-helper-missing');
+    }
+    if (typeof manualErfHelper !== 'function') {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-manual-erf-state-unknown');
+    } else {
+      try {
+        if (manualErfHelper(removedEntry, level)) {
+          known = false;
+          workerRequired = true;
+          reasons.add('derived-impact-manual-erf-override');
+        }
+      } catch (_) {
+        known = false;
+        workerRequired = true;
+        reasons.add('derived-impact-manual-erf-state-unknown');
+      }
+    }
+
+    const levelCostImpact = isLevelCostType(types) && staticErfOverride !== 0;
+    const advantageImpact = normalizedTypes.includes(normalizeErfTypeName('Fördel'));
+    const disadvantageImpact = normalizedTypes.includes(normalizeErfTypeName('Nackdel'));
+    const ritualImpact = normalizedTypes.includes(normalizeErfTypeName('Ritual'));
+    if (levelCostImpact || advantageImpact || disadvantageImpact || ritualImpact) {
+      addWorkerDomain('xp');
+    }
+
+    const mysticPowerImpact = normalizedTypes.includes(normalizeErfTypeName('Mystisk kraft'));
+    if (mysticPowerImpact || ritualImpact) {
+      addWorkerDomain('corruption');
+      addWorkerDomain('summary.corruption');
+    }
+
+    if (removedEntry?.trait !== undefined && removedEntry?.trait !== null
+        && String(removedEntry.trait).trim()) {
+      domains.add('traits');
+      domains.add('combat');
+      domains.add('summary.traits');
+      domains.add('summary.combat');
+    }
+
+    const tests = normalizeCurrentListEntryTests(removedEntry);
+    operations += tests.length;
+    if (tests.length) domains.add('traits.counts');
+
+    const modifyClassifier = global.rulesHelper?.classifyEntryModifyDerivedImpact;
+    if (typeof modifyClassifier !== 'function') {
+      known = false;
+      workerRequired = true;
+      reasons.add('derived-impact-modify-classifier-missing');
+    } else {
+      let modifyImpact = null;
+      try {
+        modifyImpact = modifyClassifier(removedEntry, { level });
+      } catch (_) {
+        modifyImpact = null;
+      }
+      if (!modifyImpact || modifyImpact.known !== true) {
+        known = false;
+        workerRequired = true;
+        reasons.add(modifyImpact?.reason || 'derived-impact-ambiguous-rule-source');
+        (modifyImpact?.unknownTargets || []).forEach(target => targets.add(target));
+      }
+      (modifyImpact?.domains || []).forEach(domain => domains.add(domain));
+      (modifyImpact?.workerDomains || []).forEach(domain => workerDomains.add(domain));
+      (modifyImpact?.targets || []).forEach(target => targets.add(target));
+      operations += Math.max(1, Number(modifyImpact?.targets?.length || 0));
+      if (modifyImpact?.workerRequired) workerRequired = true;
+      if (modifyImpact?.hasCharacterDependentCondition && modifyImpact?.workerRequired) {
+        reasons.add('derived-impact-character-dependent-rule-unproven');
+      }
+    }
+
+    incrementCurrentListMutationCounter('derivedImpactProofOperations', operations);
+    incrementCurrentListMutationCounter('derivedImpactRuleTargets', targets.size);
+    const status = known ? (domains.size ? 'bounded' : 'none') : 'unknown';
+    if (status === 'none') incrementCurrentListMutationCounter('derivedImpactNoChangeProofs');
+    else if (status === 'bounded') incrementCurrentListMutationCounter('derivedImpactBoundedProofs');
+    else incrementCurrentListMutationCounter('derivedImpactUnknownProofs');
+    if (!workerRequired) incrementCurrentListMutationCounter('derivedWorkerSkips');
+
+    return {
+      status,
+      domains: [...domains],
+      workerDomains: [...workerDomains],
+      workerRequired: workerRequired || !known,
+      targets: [...targets],
+      reasons: [...reasons],
+      beforeListLength: Array.isArray(prevList) ? prevList.length : 0,
+      afterListLength: Array.isArray(nextList) ? nextList.length : 0
     };
   }
 
@@ -11887,6 +12327,18 @@
     }
     detail.grantCleanupProven = true;
 
+    detail.derivedImpact = timeCurrentListMutationStage('derived-impact-proof', () => (
+      analyzeCurrentListRemovalDerivedImpact(
+        store,
+        prev,
+        next,
+        removedEntry,
+        reconciliationState
+      )
+    ), {
+      removedUid: String(removedEntry?.__uid || '').trim()
+    });
+
     if (global.__symbaroumPerfForceSafeListMutations === true) {
       return full('forced-safe-path', detail);
     }
@@ -11926,6 +12378,21 @@
     incrementCurrentListMutationCounter('listRemovalFallbacks');
   }
 
+  function recordCurrentListDerivedImpactFallback(impact) {
+    if (!impact || !Array.isArray(impact.reasons) || !impact.reasons.length) return;
+    const perf = global.symbaroumPerf;
+    const scenarioId = getCurrentListMutationScenarioId();
+    impact.reasons.forEach(reason => {
+      const canonicalReason = String(reason || '').trim();
+      if (!canonicalReason) return;
+      perf?.recordFallback?.(scenarioId, canonicalReason, {
+        surface: 'store',
+        planner: 'current-list-derived-impact'
+      });
+      incrementCurrentListMutationCounter('derivedImpactFallbacks');
+    });
+  }
+
   function validateIncrementalCurrentListRemoval(store, next, plan, beforeState, afterState) {
     if (!store?.current || !plan?.removedEntry) return false;
     const live = store.data?.[store.current]?.list;
@@ -11945,7 +12412,7 @@
       && beforeState.possessionMoney === afterState.possessionMoney
       && beforeState.bonusMoney === afterState.bonusMoney
       && beforeState.reconciliationVersion === afterState.reconciliationVersion
-      && beforeState.reconciliationState === afterState.reconciliationState
+      && afterState.reconciliationState === plan.expectedReconciliationStateToken
     );
   }
 
@@ -12114,6 +12581,31 @@
       inventoryChanged,
       moneyChanged,
       revealedChanged,
+      derivedImpact: options.derivedImpact && typeof options.derivedImpact === 'object'
+        ? {
+            status: String(options.derivedImpact.status || 'unknown'),
+            domains: Array.isArray(options.derivedImpact.domains)
+              ? [...options.derivedImpact.domains]
+              : [],
+            workerDomains: Array.isArray(options.derivedImpact.workerDomains)
+              ? [...options.derivedImpact.workerDomains]
+              : [],
+            workerRequired: options.derivedImpact.workerRequired !== false,
+            targets: Array.isArray(options.derivedImpact.targets)
+              ? [...options.derivedImpact.targets]
+              : [],
+            reasons: Array.isArray(options.derivedImpact.reasons)
+              ? [...options.derivedImpact.reasons]
+              : []
+          }
+        : {
+            status: 'unknown',
+            domains: [],
+            workerDomains: [],
+            workerRequired: true,
+            targets: [],
+            reasons: ['derived-impact-not-proven']
+          },
       reconciliationMode: ['incremental', 'incremental-remove'].includes(options.reconciliationMode)
         ? options.reconciliationMode
         : 'full',
@@ -14333,6 +14825,18 @@
     if (reconciliation.mode === 'incremental-remove') {
       incrementCurrentListMutationCounter('listRemovalPlans');
       store.data[store.current].list = next;
+      const removedUid = String(reconciliation.removedEntry?.__uid || '').trim();
+      const nextReconciliationState = {
+        ...priorReconciliationState,
+        requirementCandidateUids: priorReconciliationState.requirementCandidateUids
+          .filter(uid => uid !== removedUid),
+        removalDerivedRuleDependencyUids: priorReconciliationState.removalDerivedRuleDependencyUids
+          .filter(uid => uid !== removedUid)
+      };
+      store.data[store.current][CURRENT_LIST_RECONCILIATION_STATE_KEY] = nextReconciliationState;
+      reconciliation.expectedReconciliationStateToken = stableSignature(
+        normalizeCurrentListReconciliationState(nextReconciliationState)
+      );
       const removalAfterState = timeCurrentListMutationStage('mutation-after-snapshot', () => (
         snapshotCurrentListMutationState(store)
       ), {
@@ -14353,16 +14857,18 @@
         const summary = timeCurrentListMutationStage('mutation-summary', () => (
           buildCurrentListMutationSummary(beforeState, removalAfterState, {
             reconciliationMode: reconciliation.mode,
-            reconciliationReason: reconciliation.reason
+            reconciliationReason: reconciliation.reason,
+            derivedImpact: reconciliation.derivedImpact
           })
         ), {
           reconciliationMode: reconciliation.mode
         });
         store.data[store.current].lastCurrentListMutationSummary = summary;
         incrementCurrentListMutationCounter('listRemovalFastPaths');
+        recordCurrentListDerivedImpactFallback(reconciliation.derivedImpact);
         timeCurrentListMutationStage('mutation-persistence-schedule', () => {
           commitCurrentCharacterMutation(store, {
-            bumpDerived: true,
+            bumpDerived: reconciliation.derivedImpact?.workerRequired !== false,
             fields: summary.changedFields
           });
         }, {
@@ -14373,6 +14879,7 @@
       }
 
       store.data[store.current].list = prev;
+      store.data[store.current][CURRENT_LIST_RECONCILIATION_STATE_KEY] = priorReconciliationState;
       reconciliation = {
         ...reconciliation,
         mode: 'full',
@@ -14535,7 +15042,8 @@
         revealedChanged: hiddenRevealChanged,
         snapshotRulesChanged,
         reconciliationMode: reconciliation.mode,
-        reconciliationReason: reconciliation.reason
+        reconciliationReason: reconciliation.reason,
+        derivedImpact: reconciliation.derivedImpact
       })
     ), {
       reconciliationMode: reconciliation.mode
@@ -27005,8 +27513,82 @@ function defaultTraits() {
     };
   }
 
+  function collectInventoryRemovalProof(inv, targetRow, entry) {
+    incrementActiveMutationCounter('inventoryRemovalProofScans');
+    const targetUid = String(targetRow?.__uid || '').trim();
+    const baseIdentity = getInventoryBaseIdentity(targetRow, entry);
+    const uidCounts = new Map();
+    let targetReferenceCount = 0;
+    let ownedBaseQuantity = 0;
+    let invalidRowIdentity = false;
+    const visit = rows => {
+      (Array.isArray(rows) ? rows : []).forEach(row => {
+        if (!row || typeof row !== 'object') {
+          invalidRowIdentity = true;
+          return;
+        }
+        const uid = String(row.__uid || '').trim();
+        if (!uid) invalidRowIdentity = true;
+        else uidCounts.set(uid, (uidCounts.get(uid) || 0) + 1);
+        if (row === targetRow) targetReferenceCount += 1;
+        const rowEntry = row === targetRow ? entry : getEntry(row.id || row.name);
+        if (baseIdentity && getInventoryBaseIdentity(row, rowEntry) === baseIdentity) {
+          ownedBaseQuantity += Math.max(0, Number(row.qty) || 0);
+        }
+        if (Array.isArray(row.contains)) visit(row.contains);
+      });
+    };
+    visit(inv);
+    const targetIndex = Array.isArray(inv) ? inv.indexOf(targetRow) : -1;
+    return {
+      targetUid,
+      targetIndex,
+      targetReferenceCount,
+      ownedBaseQuantity,
+      invalidRowIdentity,
+      duplicateUid: [...uidCounts.values()].some(count => count !== 1),
+      expectedTopLevelRows: targetIndex >= 0
+        ? inv.filter((_, index) => index !== targetIndex)
+        : []
+    };
+  }
+
+  function getRemovalFilterImpact({ row, entry, surface }) {
+    if (surface !== 'inventory') return makeInactiveInventoryFilterImpact();
+    const filterState = getActiveInventoryFilterState();
+    const beforeMatches = row && entry
+      ? inventoryRowPassesActiveFilters(row, entry, filterState)
+      : null;
+    if (!filterState.active) {
+      return {
+        active: false,
+        provable: true,
+        beforeMatches: true,
+        afterMatches: false,
+        membership: 'leave',
+        positionChanged: false,
+        requiredRenderStrategy: 'targeted-remove',
+        targetedPatchSafe: true,
+        fallbackReason: ''
+      };
+    }
+    return {
+      active: true,
+      provable: beforeMatches !== null,
+      beforeMatches,
+      afterMatches: false,
+      membership: beforeMatches ? 'leave' : 'outside',
+      positionChanged: false,
+      requiredRenderStrategy: beforeMatches ? 'targeted-remove' : 'targeted-none',
+      targetedPatchSafe: beforeMatches === true,
+      fallbackReason: beforeMatches === true ? '' : 'active-filter-outside-unoptimized'
+    };
+  }
+
   function planInventoryMutation(options = {}) {
-    const kind = options.kind === 'add' ? 'add' : 'quantity';
+    const kind = options.kind === 'add'
+      ? 'add'
+      : (options.kind === 'remove' ? 'remove' : 'quantity');
     const inv = Array.isArray(options.inv) ? options.inv : [];
     const surface = options.surface || 'inventory';
     const requestedOperations = kind === 'add'
@@ -27019,6 +27601,17 @@ function defaultTraits() {
           created: true,
           paymentHandled: options.paymentHandled === true
         }]
+      : kind === 'remove'
+        ? [{
+            row: options.row,
+            entry: options.entry,
+            delta: options.delta,
+            parentArr: options.parentArr || inv,
+            card: options.card || null,
+            created: false,
+            paymentHandled: true,
+            requireFinalOwnedCopy: options.requireFinalOwnedCopy === true
+          }]
       : (Array.isArray(options.operations) ? options.operations : [{
           row: options.row,
           entry: options.entry,
@@ -27060,7 +27653,9 @@ function defaultTraits() {
       let created = requested?.created === true;
       let parentArr = requested?.parentArr || inv;
       let currentQty = Math.max(0, Number(row?.qty) || 0);
-      let delta = Number(requested?.delta);
+      let delta = kind === 'remove' && !Number.isFinite(Number(requested?.delta))
+        ? -currentQty
+        : Number(requested?.delta);
       if (!row || !entry || !Number.isInteger(delta) || delta === 0) addFallback('invalid-mutation-intent');
 
       if (kind === 'add' && row && capabilities.quantityMode === 'stack') {
@@ -27079,7 +27674,11 @@ function defaultTraits() {
       }
 
       const nextQty = currentQty + delta;
-      if (nextQty < 1) addFallback('quantity-removal-unoptimized');
+      if (kind === 'remove') {
+        if (nextQty !== 0) addFallback('partial-stack-removal-unproven');
+      } else if (nextQty < 1) {
+        addFallback('quantity-removal-unoptimized');
+      }
       if (parentArr !== inv) addFallback('nested-inventory-path');
       if (!created && !String(row?.__uid || '').trim()) addFallback('missing-row-uid');
       if (row?.typ === 'currency' || row?.money) addFallback('currency-row');
@@ -27090,7 +27689,23 @@ function defaultTraits() {
       const liveMode = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
       if (liveMode && requested?.paymentHandled !== true) addFallback('live-payment-required');
 
-      const previousOwnedQty = countInventoryBaseQuantity(inv, entry);
+      const removalProof = kind === 'remove'
+        ? collectInventoryRemovalProof(inv, row, entry)
+        : null;
+      if (removalProof) {
+        if (removalProof.targetIndex < 0 || removalProof.targetReferenceCount !== 1) {
+          addFallback('inventory-row-not-found');
+        }
+        if (removalProof.invalidRowIdentity) addFallback('missing-row-uid');
+        if (removalProof.duplicateUid) addFallback('duplicate-row-uid');
+        if (requested?.requireFinalOwnedCopy
+            && removalProof.ownedBaseQuantity !== currentQty) {
+          addFallback('duplicate-base-identity');
+        }
+      }
+      const previousOwnedQty = removalProof
+        ? removalProof.ownedBaseQuantity
+        : countInventoryBaseQuantity(inv, entry);
       const nextOwnedQty = Math.max(0, previousOwnedQty + delta);
       const stateTransitions = getInventoryStateTransitions(
         capabilities,
@@ -27098,23 +27713,26 @@ function defaultTraits() {
         nextOwnedQty > 0
       );
       const rowIndex = created ? inv.length : inv.indexOf(row);
-      const filterImpact = surface === 'inventory'
-        ? classifyInventoryFilterMutation({
+      const filterImpact = kind === 'remove'
+        ? getRemovalFilterImpact({ row, entry, surface })
+        : surface === 'inventory'
+          ? classifyInventoryFilterMutation({
             previousRow: created ? null : row,
             row: { ...row, qty: nextQty },
             previousEntry: created ? null : entry,
             entry,
             previousIndex: created ? -1 : rowIndex,
             nextIndex: rowIndex
-          })
-        : makeInactiveInventoryFilterImpact();
+            })
+          : makeInactiveInventoryFilterImpact();
       if (surface === 'inventory' && created) addFallback('target-dom-insert-unoptimized');
       if (!filterImpact.targetedPatchSafe) addFallback(filterImpact.fallbackReason);
 
       const impact = classifyInventoryMutation(entry, row, {
         capabilityAware: true,
         created,
-        quantityOnly: kind !== 'add',
+        removed: kind === 'remove',
+        quantityOnly: kind === 'quantity',
         requiresStableRowUid: !created,
         inventory: inv,
         parentArr,
@@ -27122,6 +27740,38 @@ function defaultTraits() {
         activeFilterMembershipUncertain: !filterImpact.targetedPatchSafe,
         stateTransitions
       });
+      if (kind === 'remove') {
+        if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
+        if (row?.snapshotSourceKey) addFallback('snapshot-sync');
+        if (row?.artifactEffect) addFallback('artifact-list-sync');
+        if (stateTransitions.some(transition => (
+          transition.changed && transition.link === 'catalog-reveal-while-owned'
+        ))) {
+          addFallback('hidden-revealed-state');
+        }
+        let snapshotImpacts = [];
+        try {
+          snapshotImpacts = window.snapshotHelper?.getRowRemovalImpacts?.(
+            store,
+            row,
+            { includeChildren: false }
+          ) || [];
+        } catch (_) {
+          snapshotImpacts = [{ unknown: true }];
+        }
+        if (snapshotImpacts.length) addFallback('snapshot-sync');
+        impact.invalidates = [...new Set([
+          ...(impact.invalidates || []),
+          'inventory.structure',
+          'inventory.totals',
+          'summary.economy',
+          'persistence'
+        ])];
+        impact.affectedDomains = [...impact.invalidates];
+        impact.topologyGuarantee = 'known-top-level-row-removal';
+        impact.topology = 'row';
+        impact.aggregateStrategy = getReusableInventoryAggregateSnapshot() ? 'delta' : 'rebuild';
+      }
       const ownershipChanged = (previousOwnedQty > 0) !== (nextOwnedQty > 0);
       if (ownershipChanged && capabilities.derivedDomains.length) {
         impact.invalidates = [...new Set([
@@ -27134,7 +27784,9 @@ function defaultTraits() {
       }
       impact.fallbackReasons.forEach(addFallback);
       impact.filterMembership = filterImpact;
-      impact.renderStrategy = surface === 'inventory' ? 'targeted-patch' : 'targeted-none';
+      impact.renderStrategy = surface === 'inventory'
+        ? (kind === 'remove' ? 'targeted-remove' : 'targeted-patch')
+        : 'targeted-none';
       planned.push({
         entry,
         capabilities,
@@ -27149,7 +27801,8 @@ function defaultTraits() {
         nextOwnedQty,
         stateTransitions,
         filterImpact,
-        impact
+        impact,
+        removalProof
       });
     });
 
@@ -27179,6 +27832,7 @@ function defaultTraits() {
       fastPath: fallbackReasons.length === 0,
       impactClass: fallbackReasons.length ? 'fallback' : 'declared',
       fallbackReasons,
+      fallbackReason: fallbackReasons[0] || '',
       invalidates: uniqueInvalidates,
       affectedDomains: uniqueInvalidates,
       targets,
@@ -27187,9 +27841,16 @@ function defaultTraits() {
       topology: 'row',
       topologyGuarantee: planned.some(operation => operation.created)
         ? 'top-level-row-insertion'
-        : 'unchanged-top-level-row',
-      aggregateStrategy: planned.some(operation => operation.created) ? 'rebuild' : 'delta',
-      renderStrategy: surface === 'inventory' ? 'targeted-patch' : 'targeted-none'
+        : (kind === 'remove' ? 'known-top-level-row-removal' : 'unchanged-top-level-row'),
+      aggregateStrategy: planned.some(operation => operation.created)
+        ? 'rebuild'
+        : (kind === 'remove' && !getReusableInventoryAggregateSnapshot() ? 'rebuild' : 'delta'),
+      renderStrategy: fallbackReasons.length
+        ? 'full'
+        : surface === 'inventory'
+          ? (kind === 'remove' ? 'targeted-remove' : 'targeted-patch')
+          : 'targeted-none',
+      filterMembership: planned.length === 1 ? planned[0].filterImpact : null
     };
   }
 
@@ -27543,12 +28204,194 @@ function defaultTraits() {
     return { committed: true, impact };
   }
 
+  function inventoryContainsExactUid(rows, targetUid) {
+    const uid = String(targetUid || '').trim();
+    if (!uid) return false;
+    return (Array.isArray(rows) ? rows : []).some(row => (
+      String(row?.__uid || '').trim() === uid
+      || inventoryContainsExactUid(row?.contains, uid)
+    ));
+  }
+
+  function verifyRemovalPlanState(plan, operation) {
+    const proof = operation?.removalProof;
+    if (!proof || proof.targetIndex < 0) return { ok: false, reason: 'removal-proof-missing' };
+    if (inventoryContainsExactUid(plan.inv, proof.targetUid)) {
+      return { ok: false, reason: 'removed-row-still-present' };
+    }
+    if (plan.inv.length !== proof.expectedTopLevelRows.length) {
+      return { ok: false, reason: 'inventory-topology-postcondition-failed' };
+    }
+    const unchanged = proof.expectedTopLevelRows.every((row, index) => plan.inv[index] === row);
+    return unchanged
+      ? { ok: true, reason: '' }
+      : { ok: false, reason: 'inventory-topology-postcondition-failed' };
+  }
+
+  function captureUnaffectedInventoryCardNodes(targetCard) {
+    if (!dom.invList) return [];
+    return [...dom.invList.querySelectorAll('li.entry-card[data-uid], li.card[data-uid]')]
+      .filter(card => card !== targetCard)
+      .map(card => ({
+        uid: String(card.dataset.uid || '').trim(),
+        card
+      }));
+  }
+
+  function verifyRemovalDomPostconditions(operation, unaffectedCards) {
+    const targetUid = String(operation?.removalProof?.targetUid || '').trim();
+    if (operation?.card?.isConnected) return { ok: false, reason: 'target-card-not-removed' };
+    if (targetUid && dom.invList?.querySelector(`[data-uid="${CSS.escape(targetUid)}"]`)) {
+      return { ok: false, reason: 'target-card-not-removed' };
+    }
+    const changed = (Array.isArray(unaffectedCards) ? unaffectedCards : []).some(({ uid, card }) => (
+      !card?.isConnected
+      || !dom.invList?.contains(card)
+      || String(card.dataset.uid || '').trim() !== uid
+    ));
+    return changed
+      ? { ok: false, reason: 'unaffected-card-identity-changed' }
+      : { ok: true, reason: '' };
+  }
+
+  function commitInventoryRemovalMutation(plan, options = {}) {
+    const operation = plan?.operations?.[0];
+    if (!operation || plan.operations.length !== 1) {
+      return { committed: false, plan, impact: plan, mutation: null };
+    }
+    const index = operation.parentArr.indexOf(operation.row);
+    if (index < 0 || index !== operation.removalProof?.targetIndex) {
+      if (!plan.fallbackReasons.includes('removal-plan-stale')) {
+        plan.fallbackReasons.push('removal-plan-stale');
+      }
+      plan.fallbackReason = plan.fallbackReasons[0] || 'removal-plan-stale';
+      recordActiveMutationFallback('removal-plan-stale', { action: 'inventory-row-remove' });
+      return { committed: false, plan, impact: plan, mutation: null };
+    }
+    const action = 'inventory-row-remove';
+    const source = options.source || action;
+    const unaffectedCards = plan.surface === 'inventory'
+      ? captureUnaffectedInventoryCardNodes(operation.card)
+      : [];
+    markActiveMutationCheckpoint('handler-entry', {
+      action,
+      rowKey: operation.row.__uid || operation.row.id || operation.row.name
+    });
+    markActiveMutationCheckpoint('mutation-plan-complete', {
+      action,
+      impactClass: plan.impactClass,
+      aggregateStrategy: plan.aggregateStrategy,
+      topologyGuarantee: plan.topologyGuarantee,
+      stateTransitions: plan.stateTransitions,
+      filterMembership: operation.filterImpact
+    });
+    queueInventoryAggregateQuantityDelta(
+      operation.row,
+      operation.entry,
+      operation.previousQty,
+      0
+    );
+    operation.parentArr.splice(index, 1);
+    storeHelper.batchCurrentCharacterMutation(store, {
+      bumpDerived: plan.bumpDerived,
+      invalidates: plan.invalidates,
+      targets: plan.targets,
+      afterCommit: summary => {
+        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
+          charId: summary.charId,
+          version: summary.version,
+          invalidates: summary.invalidates,
+          targets: summary.targets,
+          topology: plan.topology,
+          renderStrategy: plan.renderStrategy,
+          source,
+          afterPaint: true
+        });
+      }
+    }, () => {
+      storeHelper.setInventory(store, plan.inv, {
+        bumpDerived: plan.bumpDerived,
+        fields: Array.isArray(options.fields) && options.fields.length ? options.fields : ['inventory'],
+        invalidates: plan.invalidates,
+        targets: plan.targets,
+        assumeValidInventoryUids: true,
+        validatedRemovedRowUids: [operation.row.__uid]
+      });
+    });
+    markActiveMutationCheckpoint('store-mutation-complete', { action });
+
+    let reconciliation = { ok: true, reason: '' };
+    if (plan.surface === 'inventory') {
+      if (!patchRemovedInventoryCard(operation.card)) {
+        reconciliation = { ok: false, reason: 'dom-postcondition-failed' };
+      } else {
+        reconciliation = verifyRemovalDomPostconditions(operation, unaffectedCards);
+      }
+    } else if (typeof options.reconcileDom === 'function') {
+      const result = options.reconcileDom({ plan, operation });
+      reconciliation = result && typeof result === 'object'
+        ? { ok: result.ok === true, reason: result.reason || '' }
+        : { ok: result === true, reason: result === true ? '' : 'dom-postcondition-failed' };
+      if (reconciliation.ok) incrementActiveMutationCounter('targetedRenders');
+    }
+    const statePostcondition = verifyRemovalPlanState(plan, operation);
+    if (!statePostcondition.ok && reconciliation.ok) reconciliation = statePostcondition;
+
+    const fallbackReasons = [];
+    if (!reconciliation.ok) {
+      const reason = reconciliation.reason || 'dom-postcondition-failed';
+      fallbackReasons.push(reason);
+      recordActiveMutationFallback(reason, {
+        action,
+        rowKey: operation.row.__uid || operation.row.id || operation.row.name
+      });
+      if (plan.surface === 'inventory') {
+        renderInventoryWithPerf({ trigger: reason, fallbackReasons: [reason] });
+      } else if (typeof options.onDomFallback === 'function') {
+        options.onDomFallback(reason);
+      }
+    } else {
+      markActiveMutationCheckpoint('inventory-dom-reconciled', {
+        action,
+        rowKey: operation.row.__uid || operation.row.id || operation.row.name,
+        renderStrategy: plan.renderStrategy
+      });
+    }
+    markActiveMutationCheckpoint('first-feedback-dom', {
+      action,
+      rowKey: operation.row.__uid || operation.row.id || operation.row.name,
+      renderStrategy: plan.renderStrategy
+    });
+    return {
+      committed: true,
+      targeted: reconciliation.ok,
+      fallbackReasons,
+      plan,
+      impact: plan,
+      mutation: {
+        entry: operation.entry,
+        row: operation.row,
+        index: -1,
+        created: false,
+        createdCount: 0,
+        quantityDelta: -operation.previousQty,
+        topology: plan.topology,
+        changes: [{ prev: operation.row, next: null, index, created: false }],
+        baseIdentity: getInventoryBaseIdentity(operation.row, operation.entry),
+        variantIdentity: getInventoryVariantIdentity(operation.row, operation.entry)
+      }
+    };
+  }
+
   function commitInventoryMutation(plan, options = {}) {
     if (!plan?.fastPath || !Array.isArray(plan.operations) || !plan.operations.length) {
       (plan?.fallbackReasons || []).forEach(reason => recordActiveMutationFallback(reason, {
         action: plan?.kind || 'inventory-mutation'
       }));
       return { committed: false, plan, impact: plan, mutation: null };
+    }
+    if (plan.kind === 'remove') {
+      return commitInventoryRemovalMutation(plan, options);
     }
     const source = options.source || `inventory-${plan.kind}`;
     const action = plan.operations.length > 1
@@ -27729,69 +28572,16 @@ function defaultTraits() {
     return getActiveInventoryFilterState().active;
   }
 
-  function getTargetedInventoryRowRemovalImpact({ row, entry, inv, parentArr }) {
-    const filterState = getActiveInventoryFilterState();
-    const beforeMatches = row && entry
-      ? inventoryRowPassesActiveFilters(row, entry, filterState)
-      : null;
-    const filterImpact = filterState.active
-      ? {
-          active: true,
-          provable: beforeMatches !== null,
-          beforeMatches,
-          afterMatches: false,
-          membership: beforeMatches ? 'leave' : 'outside',
-          positionChanged: false,
-          requiredRenderStrategy: beforeMatches ? 'targeted-remove' : 'targeted-none',
-          targetedPatchSafe: beforeMatches === true,
-          fallbackReason: beforeMatches === true ? '' : 'active-filter-outside-unoptimized'
-        }
-      : {
-          active: false,
-          provable: true,
-          beforeMatches: true,
-          afterMatches: false,
-          membership: 'leave',
-          positionChanged: false,
-          requiredRenderStrategy: 'targeted-remove',
-          targetedPatchSafe: true,
-          fallbackReason: ''
-        };
-    const impact = classifyInventoryMutation(entry, row, {
-      created: false,
-      removed: true,
-      requiresStableRowUid: true,
-      inventory: inv,
+  function getTargetedInventoryRowRemovalImpact({ row, entry, inv, parentArr, card }) {
+    return planInventoryMutation({
+      kind: 'remove',
+      row,
+      entry,
+      inv,
       parentArr,
-      activeFilterMembershipUncertain: false
+      card,
+      surface: 'inventory'
     });
-    const fallbackReasons = [...impact.fallbackReasons];
-    const addFallback = reason => {
-      if (reason && !fallbackReasons.includes(reason)) fallbackReasons.push(reason);
-    };
-    if (window.__symbaroumPerfForceSafeInventoryMutations === true) addFallback('forced-safe-path');
-    if (!row || !entry) addFallback('legacy-metadata');
-    if (row?.typ === 'currency' || row?.money) addFallback('manual-override');
-    if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
-    if (!filterImpact.targetedPatchSafe) addFallback(filterImpact.fallbackReason);
-    return {
-      ...impact,
-      impactClass: fallbackReasons.length ? 'fallback' : impact.impactClass,
-      fastPath: fallbackReasons.length === 0 && impact.fastPath,
-      fallbackReasons,
-      invalidates: [...new Set([
-        ...impact.invalidates,
-        'inventory.structure',
-        'inventory.totals',
-        'summary.economy',
-        'persistence'
-      ])],
-      topologyGuarantee: 'known-top-level-row-removal',
-      topology: 'row',
-      aggregateStrategy: getReusableInventoryAggregateSnapshot() ? 'delta' : 'rebuild',
-      renderStrategy: fallbackReasons.length ? 'full' : 'targeted-remove',
-      filterMembership: filterImpact
-    };
   }
 
   function patchRemovedInventoryCard(card) {
@@ -27818,53 +28608,10 @@ function defaultTraits() {
   }
 
   function commitTargetedInventoryRowRemoval({ row, entry, inv, parentArr, card, impact, source = 'inventory-row-remove' }) {
-    const index = parentArr.indexOf(row);
-    if (index < 0 || !impact?.fastPath) return false;
-    if (!card?.isConnected) {
-      if (!impact.fallbackReasons.includes('target-dom-card-missing')) {
-        impact.fallbackReasons.push('target-dom-card-missing');
-      }
-      recordActiveMutationFallback('target-dom-card-missing', {
-        action: 'inventory-row-remove',
-        rowKey: row.__uid || row.id || row.name
-      });
-      return false;
-    }
-    const previousQty = Math.max(1, Number(row.qty) || 1);
-    queueInventoryAggregateQuantityDelta(row, entry, previousQty, 0);
-    parentArr.splice(index, 1);
-    storeHelper.batchCurrentCharacterMutation(store, {
-      bumpDerived: impact.bumpDerived,
-      invalidates: impact.invalidates,
-      targets: impact.targets,
-      afterCommit: summary => {
-        window.symbaroumMutationPipeline?.scheduleCharacterRefresh?.({
-          charId: summary.charId,
-          version: summary.version,
-          invalidates: summary.invalidates,
-          targets: summary.targets,
-          topology: impact.topology,
-          renderStrategy: impact.renderStrategy,
-          source,
-          afterPaint: true
-        });
-      }
-    }, () => {
-      storeHelper.setInventory(store, inv, {
-        bumpDerived: impact.bumpDerived,
-        fields: ['inventory'],
-        invalidates: impact.invalidates,
-        targets: impact.targets,
-        assumeValidInventoryUids: true,
-        validatedRemovedRowUids: [row.__uid]
-      });
-    });
-    patchRemovedInventoryCard(card);
-    markActiveMutationCheckpoint('first-feedback-dom', {
-      action: 'inventory-row-remove',
-      rowKey: row.__uid || row.id || row.name
-    });
-    return true;
+    if (!impact?.fastPath) return false;
+    const operation = impact.operations?.[0];
+    if (operation) operation.card = card;
+    return commitInventoryMutation(impact, { source }).committed === true;
   }
 
   function getFullInventoryFallbackReasons(renderDetail = {}) {
@@ -29096,7 +29843,8 @@ function defaultTraits() {
               row,
               entry,
               inv,
-              parentArr
+              parentArr,
+              card: li
             });
             markActiveMutationCheckpoint('mutation-plan-complete', {
               action: 'inventory-row-remove',

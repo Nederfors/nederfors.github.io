@@ -827,10 +827,12 @@ async function prepareCharacterListEntry(page, options = {}) {
     onlySelected = false
   }) => {
     const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
-    const entry = window.lookupEntry?.({ name: entryName })
+    await window.catalogLoader?.ensureFullDatabase?.();
+    let entry = window.lookupEntry?.({ name: entryName })
       || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
       || null;
     if (!entry) throw new Error(`Missing entry: ${entryName}`);
+    entry = await window.catalogLoader?.ensureEntryData?.(entry) || entry;
     const levels = Object.keys(entry.nivåer || {});
     const level = levels[0] || entry.nivå || 'Novis';
     const targetEntries = Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => ({
@@ -998,8 +1000,9 @@ async function prepareIndexListEntry(page, options = {}) {
 
 async function prepareIndexInventoryEntry(page, options = {}) {
   return page.evaluate(async ({
-    entryName = 'Dubbel ringbrynja',
+    entryName = 'Bandage',
     qty = 1,
+    unrelatedCount = 0,
     useArtifactCandidate = false,
     useHiddenCandidate = false,
     onlySelected = false
@@ -1075,6 +1078,24 @@ async function prepareIndexInventoryEntry(page, options = {}) {
       individual: window.invUtil?.isIndividualItem?.(entry)
     });
     if (!inventoryMutation) throw new Error('Unable to construct canonical inventory fixture.');
+    const fillers = (window.DB || [])
+      .filter(candidate => {
+        if (!candidate || String(candidate.id || '') === String(entry.id || '')) return false;
+        const types = candidate?.taggar?.typ || [];
+        return window.isInv?.(candidate)
+          && !window.storeHelper?.isSearchHiddenEntry?.(candidate)
+          && !types.some(type => ['Artefakt', 'Lägre Artefakt', 'Färdmedel', 'Förvaring'].includes(type));
+      })
+      .slice(0, Math.max(0, Number(unrelatedCount) || 0))
+      .map(candidate => ({
+        id: candidate.id,
+        name: candidate.namn,
+        qty: 1,
+        gratis: 0,
+        gratisKval: [],
+        removedKval: []
+      }));
+    inventory.push(...fillers);
     window.invUtil.saveInventory(inventory, {
       source: 'prepare-index-inventory',
       skipCharacterRefresh: true
@@ -1108,6 +1129,7 @@ async function prepareIndexInventoryEntry(page, options = {}) {
       qty: row.qty,
       useArtifactCandidate,
       useHiddenCandidate,
+      stateSize: inventory.length,
       rowUid: inventoryMutation.row?.__uid || '',
       snapshotSourceKey: inventoryMutation.row?.snapshotSourceKey || ''
     };
@@ -2753,11 +2775,17 @@ async function runCharacterClearNonInv(browser, iterations) {
 }
 
 async function runIndexListRemove(browser, iterations, options = {}) {
-  const scenarioName = options.onlySelected ? 'index-list-remove-full-rerender' : 'index-list-remove';
+  const forceSafePath = options.forceSafePath === true;
+  const baseScenarioName = String(
+    options.scenarioName
+    || (options.onlySelected ? 'index-list-remove-full-rerender' : 'index-list-remove')
+  );
+  const scenarioName = forceSafePath ? `${baseScenarioName}-safe` : baseScenarioName;
+  const entryName = String(options.entryName || 'Akrobatik');
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
       const target = await prepareIndexListEntry(page, {
-        entryName: 'Akrobatik',
+        entryName,
         count: 1,
         onlySelected: Boolean(options.onlySelected)
       });
@@ -2767,13 +2795,17 @@ async function runIndexListRemove(browser, iterations, options = {}) {
         actionSelector: 'button[data-act="rem"], button[data-act="sub"], button[data-act="del"]'
       });
       await enableRemoveProfiling(page);
+      await page.evaluate(useSafePath => {
+        window.__symbaroumPerfForceSafeListMutations = useSafePath;
+      }, forceSafePath);
       await clickCardAction(page, { rootSelector: '#lista', name: target.name, act: 'rem' });
       const scenario = await waitForRemoveScenario(page);
       return {
         ...scenario,
         detail: {
           ...(scenario?.detail || {}),
-          target
+          target,
+          pathMode: forceSafePath ? 'safe' : 'optimized'
         }
       };
     })
@@ -2782,14 +2814,18 @@ async function runIndexListRemove(browser, iterations, options = {}) {
 }
 
 async function runIndexInventoryRemove(browser, iterations, options = {}) {
-  const scenarioName = options.useArtifactCandidate
+  const forceSafePath = options.forceSafePath === true;
+  const baseScenarioName = options.useArtifactCandidate
     ? 'index-artifact-remove'
     : (options.useHiddenCandidate ? 'index-hidden-inventory-remove' : 'index-inventory-remove');
+  const scenarioName = forceSafePath ? `${baseScenarioName}-safe` : baseScenarioName;
+  const requestedSize = Math.max(1, Number(process.env.PERF_STATE_SIZE || 20) || 20);
   const runs = await collectRuns(browser, iterations, async () => (
     withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
       const target = await prepareIndexInventoryEntry(page, {
-        entryName: 'Dubbel ringbrynja',
+        entryName: 'Bandage',
         qty: 1,
+        unrelatedCount: requestedSize - 1,
         useArtifactCandidate: Boolean(options.useArtifactCandidate),
         useHiddenCandidate: Boolean(options.useHiddenCandidate)
       });
@@ -2799,17 +2835,66 @@ async function runIndexInventoryRemove(browser, iterations, options = {}) {
         actionSelector: 'button[data-act="rem"], button[data-act="sub"], button[data-act="del"]'
       });
       await enableRemoveProfiling(page);
-      await clickCardAction(page, {
+      await page.evaluate(({ useSafePath, targetName }) => {
+        window.__symbaroumPerfForceSafeInventoryMutations = useSafePath;
+        const root = document.getElementById('lista');
+        const cards = [...(root?.querySelectorAll('li.entry-card, li.card') || [])];
+        const targetCard = cards.find(card => card.dataset.name === targetName) || null;
+        window.__indexInventoryRemovalDomCapture = {
+          cards,
+          descendants: [...(root?.querySelectorAll('*') || [])],
+          targetCard,
+          targetDescendants: [...(targetCard?.querySelectorAll('*') || [])],
+          unaffectedCards: cards.filter(card => card !== targetCard)
+        };
+      }, { useSafePath: forceSafePath, targetName: target.name });
+      const browserCapture = await startBrowserWorkCapture(page);
+      const clicked = await clickCardAction(page, {
         rootSelector: '#lista',
         name: target.name,
         act: ['rem', 'del', 'sub']
       });
+      if (!['rem', 'del'].includes(clicked.act)) {
+        throw new Error(`Index final-copy benchmark used ${clicked.act} instead of whole-row removal.`);
+      }
       const scenario = await waitForRemoveScenario(page);
+      const browserWork = await finishBrowserWorkCapture(browserCapture);
+      const domReplacement = await page.evaluate(() => {
+        const capture = window.__indexInventoryRemovalDomCapture || {};
+        const disconnected = nodes => (nodes || []).filter(node => node?.isConnected !== true).length;
+        return {
+          cardsReplaced: disconnected(capture.cards),
+          domDescendantsReplaced: disconnected(capture.descendants),
+          targetDescendantsReplaced: disconnected(capture.targetDescendants),
+          unaffectedCardsReplaced: disconnected(capture.unaffectedCards),
+          targetCardPreserved: capture.targetCard?.isConnected === true
+        };
+      });
+      await page.evaluate(() => window.symbaroumPersistence?.flushPendingWrites?.({
+        reason: 'index-inventory-final-copy-parity'
+      }));
+      const beforeReload = await readCanonicalInventory(page);
+      await page.reload();
+      await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted)
+        && Boolean(window.symbaroumPersistence?.ready));
+      const afterReload = await readCanonicalInventory(page);
       return {
         ...scenario,
         detail: {
           ...(scenario?.detail || {}),
-          target
+          target,
+          behaviorSignature: 'stable-catalog-top-level-final-copy-removal',
+          pathMode: forceSafePath ? 'safe' : 'optimized',
+          stateSize: target.stateSize,
+          browserWork,
+          uiStability: {
+            inventorySurfaceMounted: false,
+            removedRowUid: target.rowUid,
+            action: clicked.act,
+            trueFinalCopy: target.qty === 1,
+            persistenceReloadParity: beforeReload === afterReload,
+            ...domReplacement
+          }
         }
       };
     })
@@ -3759,6 +3844,10 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'characterLevelChangeStructural', name: 'character-level-change-structural', aliases: ['character level change'], run: () => runCharacterLevelChange(browser, iterations, 'structural') },
       { key: 'characterListRemoveSingle', name: 'character-list-remove-single', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations) },
       { key: 'characterListRemoveSingleSafe', name: 'character-list-remove-single-safe', aliases: ['character remove safe'], run: () => runCharacterRemoveSingle(browser, iterations, { forceSafePath: true }) },
+      { key: 'characterNoDerivedRemove', name: 'character-no-derived-remove', aliases: ['character no derived remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-no-derived-remove', entryName: 'Kortlivad' }) },
+      { key: 'characterNoDerivedRemoveSafe', name: 'character-no-derived-remove-safe', aliases: ['character no derived remove safe'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-no-derived-remove', entryName: 'Kortlivad', forceSafePath: true }) },
+      { key: 'characterBoundedRuleRemove', name: 'character-bounded-rule-remove', aliases: ['character bounded rule remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-bounded-rule-remove', entryName: 'Balanserat' }) },
+      { key: 'characterBoundedRuleRemoveSafe', name: 'character-bounded-rule-remove-safe', aliases: ['character bounded rule remove safe'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-bounded-rule-remove', entryName: 'Balanserat', forceSafePath: true }) },
       { key: 'characterBoonRemove', name: 'character-boon-remove', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-boon-remove', entryName: 'Arkivarie' }) },
       { key: 'characterBurdenRemove', name: 'character-burden-remove', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-burden-remove', entryName: 'Impulsiv' }) },
       { key: 'characterTraitRemove', name: 'character-trait-remove', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations, { scenarioName: 'character-trait-remove', entryName: 'Robust' }) },
@@ -3768,7 +3857,10 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'characterGrantCascadeRemove', name: 'character-grant-cascade-remove', aliases: ['remove', 'character remove', 'cascade remove'], run: () => runCharacterGrantCascadeRemove(browser, iterations) },
       { key: 'characterClearNonInventory', name: 'character-clear-non-inventory', aliases: ['remove', 'character remove'], run: () => runCharacterClearNonInv(browser, iterations) },
       { key: 'indexListRemove', name: 'index-list-remove', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations) },
+      { key: 'indexNoDerivedRemove', name: 'index-no-derived-remove', aliases: ['index no derived remove'], run: () => runIndexListRemove(browser, iterations, { scenarioName: 'index-no-derived-remove', entryName: 'Kortlivad' }) },
+      { key: 'indexNoDerivedRemoveSafe', name: 'index-no-derived-remove-safe', aliases: ['index no derived remove safe'], run: () => runIndexListRemove(browser, iterations, { scenarioName: 'index-no-derived-remove', entryName: 'Kortlivad', forceSafePath: true }) },
       { key: 'indexInventoryRemove', name: 'index-inventory-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations) },
+      { key: 'indexInventoryRemoveSafe', name: 'index-inventory-remove-safe', aliases: ['index inventory remove safe'], run: () => runIndexInventoryRemove(browser, iterations, { forceSafePath: true }) },
       { key: 'indexInventoryBundleAdd', name: 'index-inventory-bundle-add', aliases: ['bundle insertion'], run: () => runIndexBundleAdd(browser, iterations) },
       { key: 'indexInventoryBundleAddSafe', name: 'index-inventory-bundle-add-safe', aliases: ['bundle insertion safe'], run: () => runIndexBundleAdd(browser, iterations, { forceSafePath: true }) },
       { key: 'indexInventoryBundleRemove', name: 'index-inventory-bundle-remove', aliases: ['bundle removal'], run: () => runIndexBundleRemove(browser, iterations) },
