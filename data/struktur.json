@@ -42,7 +42,7 @@
         "data/avstandsvapen.json",
         "data/narstridsvapen.json"
       ],
-      "genererad": "2026-07-17T12:17:10.446364+00:00"
+      "genererad": "2026-07-20T13:46:48.470203+00:00"
     },
     "Allmän kvalitet": {
       "antal": 2,
@@ -528,7 +528,7 @@
       ]
     },
     "Basförmåga": {
-      "antal": 17,
+      "antal": 19,
       "källfiler": [
         "data/basformagor.json"
       ],
@@ -2687,7 +2687,7 @@
       ]
     },
     "Kvalitet": {
-      "antal": 63,
+      "antal": 64,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",
@@ -5723,7 +5723,7 @@
       ]
     },
     "Vapenkvalitet": {
-      "antal": 48,
+      "antal": 49,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",

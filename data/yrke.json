@@ -577,8 +577,10 @@
         "dvärgar"
       ],
       "suggested_abilities": [
+        "Elixirslukare",
         "Fintstepp",
         "Repmästare",
+        "Snabbhantering",
         "Stavsprång",
         "Stärkande Måltid",
         "Akrobatik",
@@ -700,6 +702,8 @@
         "vandöd"
       ],
       "suggested_abilities": [
+        "Elixirslukare",
+        "Snabbhantering",
         "Stavsprång",
         "Stärkande Måltid",
         "Akrobatik",
@@ -1138,8 +1142,10 @@
         "vandöd"
       ],
       "suggested_abilities": [
+        "Elixirslukare",
         "Fintstepp",
         "Repmästare",
+        "Snabbhantering",
         "Stavsprång",
         "Akrobatik",
         "Alkemist",

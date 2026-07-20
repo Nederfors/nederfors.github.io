@@ -389,6 +389,62 @@
           "damage_type": ""
         }
       }
+    },
+    {
+      "id": "bas18",
+      "name": "Snabbhantering",
+      "description": "Handling: Fri. Rollpersonen har tränat upp en närmast reflexmässig förmåga att hantera sin utrustning under strid. Med ett lyckat slag mot Kvick kan rollpersonen som en fri handling exempelvis plocka upp ett tappat föremål från marken inom räckhåll, stoppa undan ett vapen och dra ett annat, eller hämta fram ett föremål ur sin packning. Förmågan gör endast själva hanteringen av föremålet till en fri handling. Att därefter använda, aktivera eller konsumera föremålet kräver de handlingar som normalt gäller.",
+      "tags": {
+        "types": [
+          "Basförmåga"
+        ],
+        "traditions": [
+          "Krigare",
+          "Tjuv",
+          "Jägare"
+        ],
+        "tests": [
+          "Kvick"
+        ]
+      },
+      "levels": {
+        "Enkel": {
+          "actions": [
+            "Fri"
+          ],
+          "tests": [
+            "Kvick"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bas19",
+      "name": "Elixirslukare",
+      "description": "Handling: Fri. Rollpersonen är en vältränad elixirslukare och kan med ett lyckat slag mot Kvick hälla i sig själv eller någon annan ett elixir som en fri handling. Förmågan kan inte användas för att applicera gifter på vapen, ammunition eller andra föremål.",
+      "tags": {
+        "types": [
+          "Basförmåga"
+        ],
+        "traditions": [
+          "Krigare",
+          "Tjuv",
+          "Jägare"
+        ],
+        "tests": [
+          "Kvick"
+        ]
+      },
+      "levels": {
+        "Enkel": {
+          "actions": [
+            "Fri"
+          ],
+          "tests": [
+            "Kvick"
+          ]
+        }
+      }
     }
   ]
 }

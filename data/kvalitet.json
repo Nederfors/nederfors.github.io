@@ -315,6 +315,36 @@
       },
       "levels": {},
       "effect": "Dra eller byta till vapnet är en fri handling."
+    },
+    {
+      "id": "kv20",
+      "name": "Snabbladdning",
+      "description": "Armborstet är konstruerat eller modifierat för att kunna spännas och laddas med exceptionell hastighet. Bäraren kan med ett lyckat slag mot Kvick eller Stark ladda om vapnet som en fri handling.",
+      "tags": {
+        "types": [
+          "Kvalitet",
+          "Vapenkvalitet"
+        ],
+        "tests": [
+          "Kvick",
+          "Stark"
+        ]
+      },
+      "levels": {},
+      "rules": {
+        "require": [
+          {
+            "rule_id": "entry__kv20__top__require__0",
+            "message": "Kvaliteten kan endast appliceras på ett armborst.",
+            "when": {
+              "field": "item.types",
+              "op": "includes",
+              "value": "Armborst"
+            }
+          }
+        ]
+      },
+      "effect": "Med ett lyckat slag mot Kvick eller Stark laddas armborstet om som en fri handling."
     }
   ]
 }
