@@ -606,8 +606,8 @@
     },
     {
       "id": "sp29",
-      "name": "Kamouflagenkit",
-      "description": "Matt vävt nät med fästöglor och insydda flikar, burkar med jordpigment och pinnar för att bryta konturer. På några minuter förvandlar rollpersonen packning, ställning eller till och med en liten vagn till ett oroligt mönster av skugga och jordtoner som blicken glider över. Stillastående föremål upp till vagnsstorlek kan döljas så väl att den som saknar tydlig målbild måste slå mot Vaksam med en andra chans att misslyckas för att upptäcka gömstället, medan den som vet vad som söks slår som vanligt.",
+      "name": "Kamouflagekit",
+      "description": "Matt vävt nät med fästöglor och insydda flikar, burkar med jordpigment och pinnar för att bryta konturer. På några minuter förvandlar rollpersonen packning, ställning eller till och med en liten vagn till ett oroligt mönster av skugga och jordtoner som blicken glider över. Rollpersonen får +1 i slag som avser att dölja stillastående föremål upp till vagnsstorlek och kan dessutom lägga en timmes förberedelse på att ge sig själv och allierade +1 i Diskret när det kommer till att smyga i den aktuella miljön.",
       "tags": {
         "types": [
           "Specialverktyg"
@@ -623,7 +623,7 @@
         "skilling": 0,
         "örtegar": 0
       },
-      "effect": "Stillastående föremål upp till vagnsstorlek kan döljas så väl att den som saknar tydlig målbild måste slå mot Vaksam med en andra chans att misslyckas för att upptäcka gömstället, medan den som vet vad som söks slår som vanligt."
+      "effect": "Rollpersonen får +1 i slag som avser att dölja stillastående föremål upp till vagnsstorlek och kan dessutom lägga en timmes förberedelse på att ge sig själv och allierade +1 i Diskret när det kommer till att smyga i den aktuella miljön."
     },
     {
       "id": "sp30",

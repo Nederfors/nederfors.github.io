@@ -908,7 +908,7 @@
     {
       "id": "ford51",
       "name": "Råstyrka",
-      "description": "(Endast tillgänglig för karaktärer med särdraget Robust) Som dom giganterna dom är, kommer därtill oftast och en styrka som om hämtad direkt ur svartekarnas växtkraft i Davokars djup. Karaktären får i alla slag mot Stark utanför strid lägga till +2 för varje nivå i Robust som denne besitter.",
+      "description": "(Endast tillgänglig för karaktärer med särdraget Robust) Som dom giganterna dom är, kommer därtill oftast och en styrka som om hämtad direkt ur svartekarnas växtkraft i Davokars djup. Karaktären får i alla slag mot Stark som inte avser användandet av förmågor, artefakter eller dylikt utanför strid lägga till +2 för varje nivå i Robust som denne besitter.",
       "tags": {
         "types": [
           "Fördel"

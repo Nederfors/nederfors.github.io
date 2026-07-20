@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "7642a3597996b46b0d40df4682776f34828634763806c96f61c9c99dea8a4d4c",
+  "revision": "8216ecce8dfea9e28ec6418fd9641828419bbb884c316fb78c731a578d4e7a6d",
   "resources": [
     {
       "url": "data/diverse.json",
@@ -24,23 +24,23 @@
     },
     {
       "url": "data/fordel.json",
-      "revision": "sha256-b55d35bcd8b33d697fdd2ac17fab0f03483d327c4103858b060a17c379d42310",
-      "bytes": 75354
+      "revision": "sha256-22b84ac1be866e722ce305fabf5b936b4ea745eac5d79d68424530c112fdc5a5",
+      "bytes": 75421
     },
     {
       "url": "data/formaga.json",
-      "revision": "sha256-d53d15ec3d19c52b55695c6d7b2a43f04a9315e8451d38c749b82ec87f54d915",
-      "bytes": 209029
+      "revision": "sha256-6a5e47308223b79003a7d1c77a3a329c83d49de3084b9369bc1e0c0d5c00eefa",
+      "bytes": 209053
     },
     {
       "url": "data/basformagor.json",
-      "revision": "sha256-991becc9d7236a7117859cc2ac371613e3ecda2345e61c483095b7a4b31ca5d6",
-      "bytes": 16554
+      "revision": "sha256-f445a7e5e466573c4e0e32b1b6b3e55a7b207b6a006283b8bcfaca89e29e6b8c",
+      "bytes": 18305
     },
     {
       "url": "data/kvalitet.json",
-      "revision": "sha256-d1606cfa61ab3e8ab45946bd74982433216b2f4dfe4bf3ce4dd19605b1b18f28",
-      "bytes": 13028
+      "revision": "sha256-b56ee5d02d667f764878b0fb1b0d7852232fc6f6d0077527e44ddb4a079f82cc",
+      "bytes": 13958
     },
     {
       "url": "data/mystisk-kraft.json",
@@ -79,8 +79,8 @@
     },
     {
       "url": "data/yrke.json",
-      "revision": "sha256-5715bb3411c35d89f7dda59d0741c75d77448d096eaaabcbc8cf9b57e620458b",
-      "bytes": 50521
+      "revision": "sha256-ca75b7e87977515cba8a72fb68c1a420d43437d5dfc6d9b9807c86211784db41",
+      "bytes": 50674
     },
     {
       "url": "data/ras.json",
@@ -119,8 +119,8 @@
     },
     {
       "url": "data/specialverktyg.json",
-      "revision": "sha256-8687d74ca39536fc37e9210410657485b0869acaaa16ae19260a270da4646bd2",
-      "bytes": 25589
+      "revision": "sha256-5c0dcf2c9ab6239f27c351099af62b4aa8415da9733cc862bfc91a99bba96836",
+      "bytes": 25596
     },
     {
       "url": "data/tjanster.json",
@@ -188,5 +188,5 @@
       "bytes": 56874
     }
   ],
-  "totalBytes": 1790446
+  "totalBytes": 1793378
 }
