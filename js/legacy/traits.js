@@ -1232,7 +1232,7 @@
     render();
   };
 
-  const initUnifiedTraitsPage = () => {
+  const initUnifiedTraitsPage = async () => {
     window.DAUB?.init?.();
     window.symbaroumViewBridge?.registerViewHooks('traits', {
       refreshTraits: () => {
@@ -1243,9 +1243,9 @@
       },
       refreshTraitTargets: options => window.refreshTraitTargets?.(options)
     });
-    if (typeof window.renderTraits === 'function') {
-      window.renderTraits();
-    }
+      if (typeof window.renderTraits === 'function') {
+        await window.renderTraits();
+     }
     if (typeof window.bindTraits === 'function') {
       window.bindTraits();
     }
