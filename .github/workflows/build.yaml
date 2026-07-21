@@ -12,9 +12,10 @@ on:
 permissions:
   contents: read
 
+# Do not interrupt an ongoing deployment if another push arrives.
 concurrency:
-  group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -52,6 +53,7 @@ jobs:
       - name: Verify generated source is committed
         run: |
           changes="$(git status --porcelain --untracked-files=all)"
+
           if [ -n "$changes" ]; then
             echo "The production build changed committed source or generated files:"
             echo "$changes"
@@ -60,8 +62,12 @@ jobs:
           fi
 
       - name: Stamp deployment revision
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         run: printf '%s\n' "$GITHUB_SHA" > dist/deploy-revision.txt
+
+      # ------------------------------------------------------------
+      # GitHub Pages
+      # ------------------------------------------------------------
 
       - name: Configure GitHub Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -73,9 +79,32 @@ jobs:
         with:
           path: dist
 
-  deploy:
+      # ------------------------------------------------------------
+      # STRATO deployment artifact
+      #
+      # This contains the same finished dist/ website.
+      # ------------------------------------------------------------
+
+      - name: Save STRATO deployment artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: strato-site
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
+
+
+  # ==============================================================
+  # Deploy to GitHub Pages
+  # ==============================================================
+
+  deploy-pages:
     name: Deploy to GitHub Pages
+
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     needs: build
     runs-on: ubuntu-latest
 
@@ -91,3 +120,89 @@ jobs:
       - name: Deploy GitHub Pages artifact
         id: deployment
         uses: actions/deploy-pages@v4
+
+
+  # ==============================================================
+  # Deploy the SAME build to STRATO
+  # ==============================================================
+
+  deploy-strato:
+    name: Deploy to STRATO
+
+    if: >
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check STRATO configuration
+        env:
+          STRATO_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          STRATO_USER: ${{ secrets.STRATO_SFTP_USER }}
+          STRATO_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          missing=0
+
+          if [ -z "$STRATO_HOST" ]; then
+            echo "::error::STRATO_SFTP_HOST is not configured"
+            missing=1
+          fi
+
+          if [ -z "$STRATO_USER" ]; then
+            echo "::error::STRATO_SFTP_USER is not configured"
+            missing=1
+          fi
+
+          if [ -z "$STRATO_PASSWORD" ]; then
+            echo "::error::STRATO_SFTP_PASSWORD is not configured"
+            missing=1
+          fi
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "STRATO deployment configuration is present."
+
+      - name: Download tested website
+        uses: actions/download-artifact@v5
+        with:
+          name: strato-site
+          path: dist
+
+      - name: Install SFTP client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lftp
+
+      - name: Add STRATO host key
+        env:
+          STRATO_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+        run: |
+          mkdir -p "$HOME/.ssh"
+          ssh-keyscan -p 22 "$STRATO_HOST" >> "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Deploy website to STRATO
+        env:
+          STRATO_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          STRATO_USER: ${{ secrets.STRATO_SFTP_USER }}
+          STRATO_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp -u "$STRATO_USER","$STRATO_PASSWORD" "sftp://$STRATO_HOST" <<'LFTP'
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 30
+          set sftp:connect-program "ssh -a -x -p 22 -o StrictHostKeyChecking=yes"
+
+          mirror \
+            --reverse \
+            --delete \
+            --verbose \
+            --parallel=4 \
+            dist/ .
+
+          bye
+          LFTP
