@@ -1,4 +1,4 @@
-import Dexie from './vendor/dexie.mjs';
+import Dexie from 'dexie';
 
 const DB_NAME = 'symbapedia-app';
 const DB_VERSION = 2;
@@ -862,36 +862,35 @@ function getUiPref(key) {
 }
 
 function setUiPref(key, value) {
-  if (!key) return;
+  if (!key) return Promise.resolve();
   const storedValue = value === null || value === undefined ? null : String(value);
 
   if (state.mode === 'dexie' && db) {
     if (storedValue === null) {
       state.uiPrefs.delete(key);
-      db.uiPrefs.delete(key).catch((error) => {
+      return db.uiPrefs.delete(key).catch((error) => {
         console.error(`Failed to remove UI preference "${key}"`, error);
       });
-      return;
     }
 
     state.uiPrefs.set(key, storedValue);
-    db.uiPrefs.put({ key, value: storedValue }).catch((error) => {
+    return db.uiPrefs.put({ key, value: storedValue }).catch((error) => {
       console.error(`Failed to save UI preference "${key}"`, error);
     });
-    return;
   }
 
   try {
     if (storedValue === null) {
       window.localStorage?.removeItem(key);
-      return;
+      return Promise.resolve();
     }
     window.localStorage?.setItem(key, storedValue);
   } catch {}
+  return Promise.resolve();
 }
 
 function removeUiPref(key) {
-  setUiPref(key, null);
+  return setUiPref(key, null);
 }
 
 const persistenceApi = {
@@ -915,10 +914,10 @@ const uiPrefApi = {
     return getUiPref(key);
   },
   setItem(key, value) {
-    setUiPref(key, value);
+    return setUiPref(key, value);
   },
   removeItem(key) {
-    removeUiPref(key);
+    return removeUiPref(key);
   }
 };
 
