@@ -64,14 +64,15 @@ const sharedRules = {
 export default [
   {
     ignores: [
-      '.generated-public/**',
-      'dist/**',
-      'node_modules/**',
-      'swiper-master/**',
-      'js/jszip.min.js',
-      'js/pdf-library.js',
-      'js/vendor/**'
-    ]
+  '.generated-public/**',
+  'dist/**',
+  'node_modules/**',
+  'swiper-master/**',
+  'js/jszip.min.js',
+  'js/pdf-library.js',
+  'js/vendor/**',
+  'tests/fixtures/legacy/**'
+]
   },
   {
     files: [

@@ -39,7 +39,6 @@
     "narstridsvapen.json"
   ],
   "specialDataFiles": [
-    "ai-plugin.json",
     "legacy-import-map.json",
     "pdf-list.json",
     "tabeller.json"

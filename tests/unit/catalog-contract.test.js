@@ -30,7 +30,6 @@ describe('catalog file contract', () => {
       'index-catalog.json',
       'offline-manifest.json',
       'struktur.json',
-      'ai-plugin.json',
       'legacy-import-map.json',
       'pdf-list.json',
       'tabeller.json'
