@@ -20,7 +20,6 @@ JS_FILES = (
     "js/tabell-popup.js",
 )
 CSS_FILES = ("css/toolbar-shadow.css", "css/popup-shell.css")
-JS_DIRS = ("js/legacy",)
 STATIC_DIRS = ("data", "icons", "pdf")
 
 
@@ -55,19 +54,10 @@ def copy_file(name: str) -> None:
     shutil.copy2(source, destination)
 
 
-def copy_optional_tree(name: str) -> None:
-    source = ROOT_DIR / name
-    if not source.is_dir():
-        return
-    copy_tree(name)
-
-
 def main() -> None:
     reset_staging_dir()
     for name in STATIC_DIRS:
         copy_tree(name)
-    for name in JS_DIRS:
-        copy_optional_tree(name)
     for name in JS_FILES:
         copy_file(name)
     for name in CSS_FILES:

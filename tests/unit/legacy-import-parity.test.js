@@ -8,6 +8,7 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 const legacyFixtureDir = path.join(
   repoRoot,
+  'tests',
   'fixtures',
   'legacy'
 );

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT_DIR = path.join(ROOT_DIR, 'js', 'legacy');
+const OUT_DIR = path.join(ROOT_DIR, '.generated-public', 'js', 'legacy');
 
 const PRELOAD_SCRIPTS = [
   'js/auto-resize.js',

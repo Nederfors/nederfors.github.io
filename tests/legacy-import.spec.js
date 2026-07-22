@@ -14,6 +14,7 @@ const ROOT_DIR = path.resolve(
 
 const CHARACTER_DIR = path.join(
   ROOT_DIR,
+  'tests',
   'fixtures',
   'legacy'
 );
