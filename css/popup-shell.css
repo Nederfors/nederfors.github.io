@@ -22,6 +22,12 @@
 }
 
 .popup[data-popup-unified='true'] :is(.popup-inner.popup-shell--daub, .db-modal.popup-shell--daub) {
+  /* The normalizer owns these direct children in header → body → footer
+     order. Establish that stack here as well as on phones so DAUB or legacy
+     display rules cannot turn the shell into horizontal columns. */
+  display: flex !important;
+  min-height: 0;
+  flex-direction: column !important;
   width: var(--popup-shell-width) !important;
   max-width: var(--popup-shell-max-width) !important;
   max-height: var(--popup-shell-max-height) !important;

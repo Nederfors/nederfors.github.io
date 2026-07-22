@@ -7,6 +7,65 @@ async function waitForApp(page, route = '/#/index') {
   await expect(page.locator('shared-toolbar')).toHaveCount(1);
 }
 
+test('shared popup shells keep header, scrolling body, and actions in a vertical stack', async ({ page }, testInfo) => {
+  await waitForApp(page);
+
+  await page.evaluate(() => {
+    const popup = document.createElement('div');
+    popup.id = 'popupShellStackFixture';
+    popup.className = 'db-modal-overlay popup';
+    popup.setAttribute('aria-hidden', 'true');
+    popup.innerHTML = `
+      <div class="db-modal popup-inner">
+        <header class="db-modal__header"><h2>Delad popupstruktur</h2></header>
+        <div class="db-modal__body">${'<p>Rullbart innehåll</p>'.repeat(120)}</div>
+        <footer class="db-modal__footer"><button type="button">Spara</button></footer>
+      </div>
+    `;
+    document.body.appendChild(popup);
+    window.popupUi.normalizeModal(popup, { type: 'form' });
+    window.popupManager.register(popup, { type: 'form' });
+    window.popupManager.open(popup, { type: 'form' });
+  });
+
+  const geometry = await page.locator('#popupShellStackFixture').evaluate(popup => {
+    const modal = popup.querySelector('.db-modal');
+    const header = popup.querySelector('.popup-modal-header');
+    const body = popup.querySelector('.popup-modal-body');
+    const footer = popup.querySelector('.popup-modal-footer');
+    const rect = element => element?.getBoundingClientRect();
+    const modalRect = rect(modal);
+    const headerRect = rect(header);
+    const bodyRect = rect(body);
+    const footerRect = rect(footer);
+    const modalStyle = modal ? window.getComputedStyle(modal) : null;
+    const bodyStyle = body ? window.getComputedStyle(body) : null;
+    return {
+      flexDirection: modalStyle?.flexDirection || '',
+      bodyOverflowY: bodyStyle?.overflowY || '',
+      bodyScrollable: Boolean(body && body.scrollHeight > body.clientHeight),
+      headerBottom: headerRect?.bottom || 0,
+      bodyTop: bodyRect?.top || 0,
+      bodyBottom: bodyRect?.bottom || 0,
+      footerTop: footerRect?.top || 0,
+      footerBottom: footerRect?.bottom || 0,
+      modalBottom: modalRect?.bottom || 0,
+      modalHeight: modalRect?.height || 0,
+      viewportHeight: window.innerHeight
+    };
+  });
+
+  expect(geometry.flexDirection).toBe('column');
+  expect(['auto', 'scroll']).toContain(geometry.bodyOverflowY);
+  expect(geometry.bodyScrollable).toBe(true);
+  expect(geometry.headerBottom).toBeLessThanOrEqual(geometry.bodyTop + 1);
+  expect(geometry.bodyBottom).toBeLessThanOrEqual(geometry.footerTop + 1);
+  expect(Math.abs(geometry.footerBottom - geometry.modalBottom)).toBeLessThanOrEqual(1);
+  if (['Mobile Chrome', 'Mobile Safari'].includes(testInfo.project.name)) {
+    expect(geometry.modalHeight).toBeGreaterThanOrEqual(geometry.viewportHeight - 1);
+  }
+});
+
 async function seedInventoryFixtures(page) {
   await page.waitForFunction(() => Array.isArray(window.DB) && window.DB.length > 0);
   await page.evaluate(() => {
@@ -324,7 +383,9 @@ test('shadow-root drawers and choice controls keep their complete component layo
       actionDisplay: rowStyle?.display || '',
       actionColumns: rowStyle?.gridTemplateColumns.split(/\s+/).filter(Boolean).length || 0,
       surfacePosition: panelStyle?.position || '',
-      surfaceOverflowY: panelStyle?.overflowY || ''
+      surfaceOverflowY: panelStyle?.overflowY || '',
+      surfaceFlexDirection: panelStyle?.flexDirection || '',
+      surfaceTransform: panelStyle?.transform || ''
     };
   });
 
@@ -332,6 +393,8 @@ test('shadow-root drawers and choice controls keep their complete component layo
   expect(drawerGeometry.actionColumns).toBeGreaterThanOrEqual(1);
   expect(drawerGeometry.surfacePosition).toBe('absolute');
   expect(['auto', 'scroll']).toContain(drawerGeometry.surfaceOverflowY);
+  expect(drawerGeometry.surfaceFlexDirection).toBe('column');
+  expect(drawerGeometry.surfaceTransform).not.toBe('none');
 
   const settingsCard = toolbar.locator('#filterSettingsCard');
   if (await settingsCard.evaluate(card => card.classList.contains('compact'))) {
