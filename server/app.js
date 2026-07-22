@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import { createAuth } from './auth/auth.js';
 import { authRoutes } from './auth/routes.js';
+import { characterRoutes } from './characters/routes.js';
 import { createDatabaseClient } from './db/client.js';
 import { healthRoutes } from './routes/health.js';
 
@@ -15,7 +16,15 @@ export function buildApp({ config, database, logger, auth } = {}) {
 
   app.decorate('database', ownedDatabase);
   app.decorate('auth', appAuth);
+  app.addHook('onRequest', (request, reply, done) => {
+    const requestPath = request.raw.url.split('?', 1)[0];
+    if (requestPath === '/api/v1/characters' || requestPath.startsWith('/api/v1/characters/')) {
+      reply.header('cache-control', 'no-store');
+    }
+    done();
+  });
   app.register(authRoutes, { auth: appAuth, config });
+  app.register(characterRoutes, { auth: appAuth, database: ownedDatabase });
   app.register(healthRoutes, { database: ownedDatabase, config });
 
   app.setErrorHandler((error, _request, reply) => {
