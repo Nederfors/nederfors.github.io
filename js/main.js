@@ -614,7 +614,7 @@ async function pickJsonFilesWithInput() {
   return await new Promise((resolve, reject) => {
     const inp = document.createElement('input');
     inp.type = 'file';
-   inp.accept = '.json,application/json';
+    inp.accept = '.json,application/json';
     inp.multiple = true;
     inp.style.position = 'fixed';
     inp.style.left = '-9999px';
@@ -622,10 +622,12 @@ async function pickJsonFilesWithInput() {
     inp.style.pointerEvents = 'none';
     inp.tabIndex = -1;
     let settled = false;
+    let focusTimer = null;
     const cleanup = () => {
       inp.removeEventListener('change', onChange);
       inp.removeEventListener('cancel', abort);
       window.removeEventListener('focus', onFocus, true);
+      if (focusTimer) clearTimeout(focusTimer);
       if (inp.parentNode) inp.parentNode.removeChild(inp);
       settled = true;
     };
@@ -642,8 +644,20 @@ async function pickJsonFilesWithInput() {
       else abort();
     };
     const onFocus = () => {
-      // If the dialog closes without a selection, treat it as an abort so callers can bail cleanly.
-      setTimeout(() => abort(), 50);
+      // Mobile Safari can restore window focus before it dispatches the input's
+      // change event. Give that event time to arrive before treating the picker
+      // as cancelled on browsers that do not dispatch a dedicated cancel event.
+      if (focusTimer) clearTimeout(focusTimer);
+      focusTimer = setTimeout(() => {
+        if (settled) return;
+        const list = (inp.files && inp.files.length) ? Array.from(inp.files) : null;
+        if (list) {
+          cleanup();
+          resolve(list);
+        } else {
+          abort();
+        }
+      }, 1000);
     };
     inp.addEventListener('change', onChange, { once: true });
     inp.addEventListener('cancel', abort, { once: true });
@@ -5801,6 +5815,29 @@ async function runLegacyCharacterTransfer(options = {}) {
   }
 }
 
+async function runLegacyCharacterFileImport(options = {}) {
+  const marker = getMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey) || '';
+  if (!options.fromPrompt && marker === 'completed') {
+    const repeat = await openDialog(
+      'Rollpersoner har redan importerats. Om du fortsätter skapas nya kopior och ingenting skrivs över.',
+      { cancel: true, okText: 'Importera igen', cancelText: 'Avbryt' }
+    );
+    if (repeat !== true) return { imported: 0, cancelled: true };
+  }
+
+  const result = await importCharactersFromLocal({
+    mode: 'fromFile',
+    makeActive: false,
+    preserveCurrent: true,
+    showSummary: false
+  });
+  if (result?.imported > 0) {
+    await setMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey, 'completed');
+    window.toast?.(`Importerade ${result.imported} rollpersoner som nya kopior.`);
+  }
+  return result || { imported: 0 };
+}
+
 async function maybePromptLegacyCharacterTransfer() {
   const { destinationOrigin } = getLegacyCharacterTransferOrigins();
   if (location.origin !== destinationOrigin || isLegacyTransferSourceRequest()) return false;
@@ -5809,9 +5846,18 @@ async function maybePromptLegacyCharacterTransfer() {
   if (typeof window.openDialog !== 'function') return false;
 
   const accepted = await openDialog(
-    'Har du rollpersoner sparade på nederfors.github.io? Du kan hämta dem till Symbapedia nu utan att skriva över något.',
-    { cancel: true, okText: 'Hämta rollpersoner', cancelText: 'Inte nu' }
+    'Har du rollpersoner sparade på nederfors.github.io? Hämta dem från den gamla sidan eller välj exporterade JSON-filer på enheten. Allt importeras som nya kopior.',
+    {
+      cancel: true,
+      okText: 'Hämta från gamla sidan',
+      extraText: 'Välj JSON-filer',
+      cancelText: 'Inte nu'
+    }
   );
+  if (accepted === 'extra') {
+    await runLegacyCharacterFileImport({ fromPrompt: true });
+    return true;
+  }
   if (accepted !== true) {
     await setMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey, 'dismissed');
     return false;
@@ -5928,7 +5974,7 @@ async function driveImportFiles(fileIds) {
 }
 
 async function importCharactersFromLocal(settings) {
-  if (!settings) return;
+  if (!settings) return { imported: 0, cancelled: true };
   try {
     let files;
     if (window.showDirectoryPicker) {
@@ -5943,13 +5989,14 @@ async function importCharactersFromLocal(settings) {
       } else if (pick === true) {
         files = await pickJsonFilesWithFallback();
       } else {
-        return;
+        return { imported: 0, cancelled: true };
       }
     } else {
       files = await pickJsonFilesWithFallback();
     }
 
     const importCharacterJSON = await createFullDatabaseCharacterImporter();
+    const previousCurrent = store.current || '';
     const override = settings.mode === 'choose';
     let targetFolderId = '';
     let targetFolderName = '';
@@ -6060,6 +6107,12 @@ async function importCharactersFromLocal(settings) {
     }
 
     if (imported > 0) {
+      if (settings.preserveCurrent
+        && previousCurrent
+        && (store.characters || []).some(char => char?.id === previousCurrent)) {
+        store.current = previousCurrent;
+        storeHelper.persistMeta(store);
+      }
       if (override && settings.makeActive && targetFolderId) {
         try { storeHelper.setActiveFolder(store, targetFolderId); } catch {}
       } else if (!override && settings.makeActive) {
@@ -6072,13 +6125,20 @@ async function importCharactersFromLocal(settings) {
       }
       applyCharacterChange();
       await flushPersistenceNow('import');
+      if (settings.showSummary === true) {
+        window.toast?.(`Importerade ${imported} rollpersoner som nya kopior.`);
+      }
+      return { imported };
     } else {
       await alertPopup('Felaktig fil.');
+      return { imported: 0, invalid: true };
     }
   } catch (err) {
     if (err && err.name !== 'AbortError') {
       await alertPopup('Felaktig fil.');
+      return { imported: 0, error: String(err?.message || 'import-failed') };
     }
+    return { imported: 0, cancelled: true };
   }
 }
 
@@ -6612,9 +6672,15 @@ function openDriveStoragePopup(initialTab = 'drive') {
         legacySection.appendChild(make(
           'p',
           'drive-section-intro',
-          'Hämta lokalt sparade rollpersoner från nederfors.github.io. Befintliga rollpersoner skrivs inte över.'
+          'På mobil: välj JSON-filer som du har exporterat till enheten. De importeras som nya kopior och befintliga rollpersoner skrivs inte över.'
         ));
-        const legacyButton = make('button', 'db-btn db-btn--primary drive-primary-action', 'Importera från nederfors.github.io');
+        const deviceButton = make('button', 'db-btn db-btn--primary drive-primary-action', 'Välj JSON-filer på enheten');
+        deviceButton.type = 'button';
+        deviceButton.dataset.action = 'legacy-device-import';
+        deviceButton.addEventListener('click', () => choose({ mode: 'legacy-device-import' }));
+        legacySection.appendChild(deviceButton);
+
+        const legacyButton = make('button', 'db-btn db-btn--secondary drive-secondary-action', 'Hämta direkt från nederfors.github.io');
         legacyButton.type = 'button';
         legacyButton.dataset.action = 'legacy-site-import';
         legacyButton.addEventListener('click', () => choose({ mode: 'legacy-site-import' }));
@@ -6786,6 +6852,11 @@ function openDriveStoragePopup(initialTab = 'drive') {
 
     if (choice.mode === 'legacy-site-import') {
       await runLegacyCharacterTransfer();
+      return;
+    }
+
+    if (choice.mode === 'legacy-device-import') {
+      await runLegacyCharacterFileImport();
       return;
     }
 
