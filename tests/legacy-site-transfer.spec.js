@@ -47,8 +47,35 @@ const destinationCharacter = {
   notes: { background: 'Created on symbapedia.se' }
 };
 
+const exportedDeviceCharacter = {
+  format: 'symbapedia-character',
+  formatVersion: 1,
+  name: 'Device JSON Hero',
+  folder: 'Mobile exports',
+  data: {
+    list: [],
+    inventory: [
+      { n: 'Fältkök', q: 1, k: [] }
+    ],
+    notes: { background: 'Imported from a JSON file on the device' }
+  }
+};
+
 async function installTransferOrigins(context, { seedDestination = true, seedLegacy = true } = {}) {
   await context.addInitScript(({ destinationOrigin, legacyOrigin, seedDestination, seedLegacy, legacyMeta, legacyCharacter, destinationMeta, destinationCharacter }) => {
+    // Exercise the input[type=file] path used by iOS and Android browsers.
+    for (const pickerName of ['showOpenFilePicker', 'showDirectoryPicker']) {
+      try {
+        Object.defineProperty(window, pickerName, {
+          configurable: true,
+          writable: true,
+          value: undefined
+        });
+      } catch {
+        try { window[pickerName] = undefined; } catch {}
+      }
+    }
+
     window.__symbaroumCharacterTransferTestOrigins = {
       destinationOrigin,
       legacyOrigin
@@ -165,6 +192,82 @@ test('merges legacy-origin characters without replacing the destination characte
   const repeatResult = await page.evaluate(() => window.__repeatLegacyTransfer);
   expect(repeatResult).toEqual({ imported: 0, cancelled: true });
   expect(await page.evaluate(() => window.storeHelper.load().characters.length)).toBe(2);
+});
+
+test('imports device JSON files as copies on mobile and preserves the current character', async ({ page, context }) => {
+  await installTransferOrigins(context);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${DESTINATION_ORIGIN}/#/index`);
+  await waitForApp(page);
+
+  let storagePopup = await openStorageImport(page);
+  const deviceImportButton = storagePopup.locator('[data-action="legacy-device-import"]');
+  await expect(deviceImportButton).toBeVisible();
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await deviceImportButton.click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({
+    name: 'nederfors-character.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(exportedDeviceCharacter))
+  });
+
+  await expect.poll(() => page.evaluate(() => window.storeHelper.load().characters.length)).toBe(2);
+  await expect.poll(() => page.evaluate(() => window.symbaroumLegacyCharacterTransfer?.getStatus?.())).toBe('completed');
+  const imported = await page.evaluate(() => {
+    const activeStore = window.storeHelper.load();
+    const deviceCharacter = activeStore.characters.find(char => char.name === 'Device JSON Hero');
+    return {
+      current: activeStore.current,
+      importedId: deviceCharacter?.id || '',
+      folder: activeStore.folders.find(folder => folder.id === deviceCharacter?.folderId)?.name || '',
+      notes: activeStore.data[deviceCharacter?.id]?.notes?.background || '',
+      inventory: (activeStore.data[deviceCharacter?.id]?.inventory || []).map(row => row.name)
+    };
+  });
+  expect(imported.current).toBe('destination-hero');
+  expect(imported.importedId).not.toBe('');
+  expect(imported.importedId).not.toBe('destination-hero');
+  expect(imported.folder).toBe('Mobile exports');
+  expect(imported.notes).toBe('Imported from a JSON file on the device');
+  expect(imported.inventory).toEqual(['Fältkök']);
+
+  await page.reload();
+  await waitForApp(page);
+  expect(await page.evaluate(() => window.storeHelper.load().current)).toBe('destination-hero');
+
+  storagePopup = await openStorageImport(page);
+  await storagePopup.locator('[data-action="legacy-device-import"]').click();
+  const repeatDialog = page.locator('#daub-dialog-modal');
+  await expect(repeatDialog).toContainText('skapas nya kopior');
+  await repeatDialog.locator('[data-dialog-action="cancel"]').click();
+  expect(await page.evaluate(() => window.storeHelper.load().characters.length)).toBe(2);
+});
+
+test('offers device JSON selection from the empty mobile migration prompt', async ({ page, context }) => {
+  await installTransferOrigins(context, { seedDestination: false, seedLegacy: false });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${DESTINATION_ORIGIN}/#/index`);
+  await waitForApp(page);
+
+  const dialog = page.locator('#daub-dialog-modal');
+  await expect(dialog).toContainText('välj exporterade JSON-filer på enheten');
+  const chooserPromise = page.waitForEvent('filechooser');
+  await dialog.locator('[data-dialog-action="extra"]').click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({
+    name: 'nederfors-character.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(exportedDeviceCharacter))
+  });
+
+  await expect.poll(() => page.evaluate(() => window.storeHelper.load().characters.length)).toBe(1);
+  await expect.poll(() => page.evaluate(() => window.symbaroumLegacyCharacterTransfer?.getStatus?.())).toBe('completed');
+  expect(await page.evaluate(() => {
+    const activeStore = window.storeHelper.load();
+    return activeStore.characters.find(char => char.id === activeStore.current)?.name || '';
+  })).toBe('Device JSON Hero');
 });
 
 test('offers the one-time prompt on an empty destination and activates the imported character', async ({ page, context }) => {
