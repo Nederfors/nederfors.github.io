@@ -419,8 +419,6 @@ class SharedToolbar extends HTMLElement {
     this.bindPopupManager();
     this.bindOfflineControls();
     this.bindAccessibilityState();
-    this._overlayKeyHandler = event => this.handleOverlayKeydown(event);
-    this.shadowRoot.addEventListener('keydown', this._overlayKeyHandler);
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
@@ -661,8 +659,6 @@ class SharedToolbar extends HTMLElement {
     }
     this._searchKeyTarget = null;
     this._searchKeyHandler = null;
-    if (this._overlayKeyHandler) this.shadowRoot?.removeEventListener('keydown', this._overlayKeyHandler);
-    this._overlayKeyHandler = null;
     this._toolbarResizeObserver?.disconnect();
     this._toolbarResizeObserver = null;
     this._vvCleanup?.forEach(cleanup => cleanup());
@@ -839,39 +835,6 @@ class SharedToolbar extends HTMLElement {
     event.stopImmediatePropagation?.();
     search.focus?.({ preventScroll: true });
     return true;
-  }
-
-  handleOverlayKeydown(event) {
-    if (event.key !== 'Tab') return;
-    const historyTop = window.peekTopOverlay?.();
-    const top = historyTop instanceof HTMLElement && this.shadowRoot.contains(historyTop)
-      ? historyTop
-      : Array.from(this.shadowRoot.querySelectorAll('.popup.open, .offcanvas.open')).at(-1);
-    if (!(top instanceof HTMLElement)) return;
-    const surface = top.querySelector('.popup-inner, .db-modal, .db-drawer__panel') || top;
-    const focusable = Array.from(surface.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
-    )).filter(element => (
-      !element.closest('[inert]')
-      && element.getAttribute('aria-hidden') !== 'true'
-      && window.getComputedStyle(element).visibility !== 'hidden'
-      && window.getComputedStyle(element).display !== 'none'
-      && element.getClientRects().length > 0
-    ));
-    if (!focusable.length) return;
-    const active = this.shadowRoot.activeElement;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (!active || !top.contains(active)) {
-      event.preventDefault();
-      (event.shiftKey ? last : first).focus({ preventScroll: true });
-    } else if (event.shiftKey && active === first) {
-      event.preventDefault();
-      last.focus({ preventScroll: true });
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus({ preventScroll: true });
-    }
   }
 
   /* ------------------------------------------------------- */
@@ -2699,98 +2662,71 @@ class SharedToolbar extends HTMLElement {
       }
     }
 
-    // Ignore clicks inside any overlay so panels stay open.
-    const hasOverlayInPath = path.some(el =>
-      el instanceof Element &&
-      (el.classList?.contains('popup') || el.classList?.contains('offcanvas'))
-    );
-    if (hasOverlayInPath) return;
-
-    const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
-    if (openPanel && !containsInPath(openPanel)) {
-      this.setPanelState(openPanel, false);
-    }
   }
 
   setPanelState(panel, isOpen, trigger = null) {
     if (!panel) return;
     const surface = panel.querySelector('.db-drawer__panel') || panel;
-    const wasOpen = panel.classList.contains('open') || panel.getAttribute('aria-hidden') === 'false';
-    panel.classList.toggle('open', isOpen);
-    panel.classList.toggle('db-drawer--open', isOpen);
-    panel.setAttribute('aria-hidden', String(!isOpen));
-
-    if (isOpen) {
-      panel.removeAttribute('inert');
-      panel._restoreFocus = trigger || this.shadowRoot.activeElement || null;
-      panel._restoreFocus?.setAttribute?.('aria-expanded', 'true');
-      window.registerOverlayCleanup?.(panel, () => this.setPanelState(panel, false));
-      surface.scrollTop = 0;
-      requestAnimationFrame(() => {
-        const focusTarget = surface.querySelector(
-          'button[data-close], [autofocus], button:not([disabled]), [href], input:not([disabled]), select:not([disabled])'
-        );
-        try { focusTarget?.focus?.({ preventScroll: true }); } catch { focusTarget?.focus?.(); }
+    const manager = window.popupManager;
+    const syncExpanded = open => {
+      this.shadowRoot.querySelectorAll(`[aria-controls="${panel.id}"]`).forEach(control => {
+        control.setAttribute('aria-expanded', String(open));
       });
+    };
+    if (isOpen) {
+      surface.scrollTop = 0;
+      syncExpanded(true);
+      if (manager?.open) {
+        manager.open(panel, {
+          type: 'form',
+          touchProfile: panel.dataset.touchProfile || 'panel-right',
+          trigger: trigger || this.shadowRoot.activeElement || null,
+          onClose: () => syncExpanded(false)
+        });
+        return;
+      }
+      // Boot fallback only: popup-manager normally loads before the toolbar.
+      panel.classList.add('open', 'db-drawer--open');
+      panel.removeAttribute('inert');
+      panel.setAttribute('aria-hidden', 'false');
       return;
     }
-
-    panel.setAttribute('inert', '');
-    window.registerOverlayCleanup?.(panel, null);
-    const restoreFocus = panel._restoreFocus;
-    panel._restoreFocus = null;
-    this.shadowRoot.querySelectorAll(`[aria-controls="${panel.id}"]`).forEach(control => {
-      control.setAttribute('aria-expanded', 'false');
-    });
-    if (wasOpen && restoreFocus?.isConnected) {
-      requestAnimationFrame(() => {
-        try { restoreFocus.focus?.({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
-      });
+    syncExpanded(false);
+    if (manager?.close) {
+      manager.close(panel, 'programmatic');
+      return;
     }
+    panel.classList.remove('open', 'db-drawer--open');
+    panel.setAttribute('aria-hidden', 'true');
+    panel.setAttribute('inert', '');
   }
 
   toggle(id, trigger = null) {
     const panel = this.panels[id];
     if (!panel) return;
-
-    // 1. 🛡️ DEBOUNCE: Ignore rapid-fire clicks (Ghost Clicks)
-    // If we just toggled this panel <300ms ago, ignore this click.
-    const now = Date.now();
-    if (this._lastToggle && (now - this._lastToggle < 300)) {
-      console.log("🚫 Ghost click blocked.");
+    const isOpen = window.popupManager?.isOpen?.(panel)
+      ?? (panel.getAttribute('aria-hidden') === 'false');
+    Object.entries(this.panels).forEach(([panelId, other]) => {
+      if (panelId !== id) this.setPanelState(other, false);
+    });
+    if (isOpen) {
+      this.setPanelState(panel, false);
       return;
     }
-    this._lastToggle = now;
-
-    // 2. CHECK STATE
-    const isOpen = panel.classList.contains('open');
-
-    // 3. SYNCHRONOUS CLOSE
-    // Always close other panels immediately.
-    Object.values(this.panels).forEach(p => this.setPanelState(p, false));
-
-    // 4. ASYNC OPEN
-    // If we need to open, we WAIT 50ms.
-    // This allows the 'click' event to finish bubbling up to the document
-    // and for 'handleOutsideClick' to run and finish BEFORE the menu actually opens.
-    if (!isOpen) {
-      if (id === 'filterPanel') {
-        this.collapseNonPersistentCards();
-        if (!this._filterFirstOpenHandled) {
-          this.restoreFilterCollapse();
-          this._filterFirstOpenHandled = true;
-        }
-        this.updateFilterCollapseBtn();
+    if (id === 'filterPanel') {
+      this.collapseNonPersistentCards();
+      if (!this._filterFirstOpenHandled) {
+        this.restoreFilterCollapse();
+        this._filterFirstOpenHandled = true;
       }
-
-      // The Magic Delay
-      setTimeout(() => {
-        this.setPanelState(panel, true, trigger);
-      }, 50);
+      this.updateFilterCollapseBtn();
     }
+    this.setPanelState(panel, true, trigger);
   }
   open(id, trigger = null) {
-    Object.values(this.panels).forEach(p => this.setPanelState(p, false));
+    Object.entries(this.panels).forEach(([panelId, panel]) => {
+      if (panelId !== id) this.setPanelState(panel, false);
+    });
     const panel = this.panels[id];
     if (panel) {
       if (id === 'filterPanel') {

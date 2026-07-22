@@ -199,6 +199,10 @@ export function createViewRuntime() {
     const targetScrollPosition = viewScrollPositions[normalizedRole];
     const sameRole = currentRole === normalizedRole;
 
+    // Route transitions own the timing of teardown; popupManager owns every
+    // overlay state mutation and cleanup performed by that teardown.
+    window.popupManager?.closeAll?.('route-change', { suppressFocus: true });
+
     // Tab-only change within same role (e.g. traits ↔ summary ↔ effects)
     if (sameRole) {
       syncDocumentTitle(normalizedRole, tab);
@@ -298,14 +302,6 @@ export function createViewRuntime() {
       toolbar.updateToolbarLinks();
     }
 
-    // 9. Re-register overlay observers for new DOM elements
-    if (typeof window.registerOverlayElement === 'function') {
-      const viewRoot = getViewRoot();
-      viewRoot?.querySelectorAll?.('.popup, .offcanvas')?.forEach(el => {
-        window.registerOverlayElement(el);
-      });
-    }
-
     resolveNavigationPerf(normalizedRole);
     setViewBusy(false);
   }
@@ -332,6 +328,7 @@ export function createViewRuntime() {
     },
 
     destroyCurrentView() {
+      window.popupManager?.closeAll?.('view-destroy', { suppressFocus: true });
       rememberScrollPosition();
       window.removeEventListener('scroll', observeCurrentScroll);
       if (scrollObservationFrame) window.cancelAnimationFrame(scrollObservationFrame);

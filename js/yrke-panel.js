@@ -1,5 +1,4 @@
 (function(window){
-  let outsideHandler = null;
   let conflictHandler = null;
 
   function activateTab(container, tabName) {
@@ -66,39 +65,22 @@
       ? options.conflict.onClick
       : null;
 
-    // Ensure any previous listener is removed to avoid duplicates
-    if(outsideHandler){
-      document.removeEventListener('click', outsideHandler);
-    }
-
-    panel.classList.add('open');
     panel.scrollTop = 0;
-    window.registerOverlayCleanup?.(panel, close);
+    window.popupManager?.open?.(panel, {
+      type: 'form',
+      touchProfile: 'panel-right',
+      onClose: () => { conflictHandler = null; }
+    });
     if (options.initialTab) {
       activateTab(panel, options.initialTab);
       requestAnimationFrame(() => activateTab(panel, options.initialTab));
     }
-    window.updateScrollLock?.();
-    outsideHandler = e => {
-      if(!panel.contains(e.target)){
-        close();
-      }
-    };
-    setTimeout(() => document.addEventListener('click', outsideHandler));
   }
 
   function close(){
     const p = document.getElementById('yrkePanel');
-    if(p) {
-      p.classList.remove('open');
-      window.updateScrollLock?.();
-      window.registerOverlayCleanup?.(p, null);
-    }
+    if (p) window.popupManager?.close?.(p, 'programmatic');
     conflictHandler = null;
-    if(outsideHandler){
-      document.removeEventListener('click', outsideHandler);
-      outsideHandler = null;
-    }
   }
 
   window.yrkePanel = { open, close };

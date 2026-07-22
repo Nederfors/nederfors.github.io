@@ -45,6 +45,24 @@ async function revealBandage(page) {
       .find(candidate => candidate.dataset.name === 'Bandage');
     return Boolean(card?.querySelector('button[data-act="del"]'));
   });
+  await page.evaluate(() => new Promise(resolve => {
+    const root = document.getElementById('lista');
+    if (!root) {
+      resolve();
+      return;
+    }
+    let timer = 0;
+    const observer = new MutationObserver(() => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(finish, 150);
+    });
+    const finish = () => {
+      observer.disconnect();
+      resolve();
+    };
+    observer.observe(root, { childList: true, subtree: true });
+    timer = window.setTimeout(finish, 150);
+  }));
 }
 
 async function captureState(page, reason) {
@@ -205,8 +223,8 @@ test('real index final-copy removal matches forced-safe state, DOM, persistence,
       .filter(entry => entry.id !== 'di1'
         && window.isInv?.(entry)
         && !window.storeHelper?.isSearchHiddenEntry?.(entry))
-      .slice(0, 24);
-    if (!bandage || fillers.length < 20) throw new Error('Missing stable inventory parity fixtures.');
+      .slice(0, 249);
+    if (!bandage || fillers.length < 249) throw new Error('Missing large stable inventory parity fixtures.');
     const inventory = [
       {
         id: bandage.id,
@@ -265,8 +283,10 @@ test('real index final-copy removal matches forced-safe state, DOM, persistence,
     refreshGenerations: 1,
     persistenceSchedules: 1,
     inventoryUidTargetValidations: 1,
-    inventoryRemovalProofScans: 1
+    inventoryRemovalProofEvidenceLookups: 1
   });
+  expect(optimizedProfile.counters.inventoryRemovalProofScans || 0).toBe(0);
+  expect(optimizedProfile.counters.inventoryRemovalProofFallbackScans || 0).toBe(0);
   expect(optimizedProfile.counters.fullInventoryRenders || 0).toBe(0);
   expect(optimizedProfile.counters.inventoryNormalizations || 0).toBe(0);
   expect(optimizedProfile.counters.inventoryScans || 0).toBe(0);
@@ -394,4 +414,91 @@ test('shared index removal planner keeps unsupported identity, topology, rule, l
   expect(plans.container.fallbackReasons).toContain('container-topology');
   expect(plans.custom.fastPath).toBe(false);
   expect(plans.forcedSafe.fallbackReasons).toContain('forced-safe-path');
+});
+
+test('stale removal evidence and failed postconditions stay conservative', async ({ page }) => {
+  await seedStore(page);
+  await waitForApp(page, '/#/index', '#lista');
+  const result = await page.evaluate(async () => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    let entry = window.lookupEntry?.({ name: 'Bandage' })
+      || (window.DB || []).find(candidate => String(candidate?.id || '') === 'di1');
+    entry = await window.catalogLoader?.ensureEntryData?.(entry) || entry;
+    const fillerEntry = (window.DB || []).find(candidate => (
+      candidate?.id !== entry?.id && window.isInv?.(candidate)
+    ));
+    const makeInventory = suffix => [{
+      id: entry.id,
+      name: entry.namn,
+      qty: 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: [],
+      __uid: `proof-target-${suffix}`
+    }, {
+      id: fillerEntry.id,
+      name: fillerEntry.namn,
+      qty: 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: [],
+      __uid: `proof-filler-${suffix}`
+    }];
+    const planRemoval = inventory => window.invUtil.planInventoryMutation({
+      kind: 'remove',
+      row: inventory[0],
+      entry,
+      inv: inventory,
+      parentArr: inventory,
+      surface: 'index',
+      requireFinalOwnedCopy: true
+    });
+
+    const staleInventory = makeInventory('stale');
+    window.storeHelper.setInventory(activeStore, staleInventory, { bumpDerived: false });
+    window.invUtil.renderInventory({ trigger: 'stale-removal-proof-setup' });
+    const stalePlan = planRemoval(staleInventory);
+    window.storeHelper.setInventory(activeStore, [...staleInventory], { bumpDerived: false });
+    const staleCommit = window.invUtil.commitInventoryMutation(stalePlan);
+
+    const postconditionInventory = makeInventory('postcondition');
+    window.storeHelper.setInventory(activeStore, postconditionInventory, { bumpDerived: false });
+    window.invUtil.renderInventory({ trigger: 'postcondition-removal-proof-setup' });
+    const postconditionPlan = planRemoval(postconditionInventory);
+    let fallbackReason = '';
+    const postconditionCommit = window.invUtil.commitInventoryMutation(postconditionPlan, {
+      reconcileDom: () => {
+        postconditionInventory[0] = { ...postconditionInventory[0] };
+        return { ok: true, reason: '' };
+      },
+      onDomFallback: reason => { fallbackReason = reason; }
+    });
+    return {
+      stale: {
+        committed: staleCommit.committed,
+        reasons: staleCommit.plan.fallbackReasons,
+        targetStillPresent: staleInventory.includes(staleInventory[0])
+      },
+      postcondition: {
+        committed: postconditionCommit.committed,
+        targeted: postconditionCommit.targeted,
+        reasons: postconditionCommit.fallbackReasons,
+        fallbackReason,
+        targetStillPresent: postconditionInventory.some(row => row.id === entry.id)
+      }
+    };
+  });
+
+  expect(result.stale).toMatchObject({
+    committed: false,
+    targetStillPresent: true
+  });
+  expect(result.stale.reasons).toContain('removal-plan-stale');
+  expect(result.postcondition).toEqual({
+    committed: true,
+    targeted: false,
+    reasons: ['inventory-topology-postcondition-failed'],
+    fallbackReason: 'inventory-topology-postcondition-failed',
+    targetStillPresent: false
+  });
 });

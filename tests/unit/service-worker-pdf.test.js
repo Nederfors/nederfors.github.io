@@ -114,11 +114,30 @@ function loadWorker(fetchImplementation, options = {}) {
     });
     return response;
   };
+  const dispatchFetch = async request => {
+    let response;
+    let handled = false;
+    const lifetimes = [];
+    listeners.get('fetch')?.({
+      request,
+      respondWith(promise) {
+        handled = true;
+        response = Promise.resolve(promise);
+      },
+      waitUntil(promise) {
+        lifetimes.push(Promise.resolve(promise));
+      }
+    });
+    const result = { handled, response: response ? await response : null };
+    await Promise.all(lifetimes);
+    return result;
+  };
   return {
     api: self.__test,
     caches,
     claim,
     dispatchExtendable,
+    dispatchFetch,
     listeners,
     requestVersion,
     skipWaiting
@@ -160,6 +179,43 @@ function manifestResponse(manifest) {
 }
 
 describe('service-worker PDF routing', () => {
+  it('bypasses all same-scope API requests before JSON/runtime caching', async () => {
+    const fetchImplementation = vi.fn(async () => new FetchResponse('{"unexpected":true}', {
+      status: 200,
+      headers: { 'content-type': 'application/json' }
+    }));
+    const { caches, dispatchFetch } = loadWorker(fetchImplementation, { buildId: 'api-bypass' });
+    const requests = [
+      new FetchRequest('https://example.test/app/api/v1/health', { headers: { accept: 'application/json' } }),
+      new FetchRequest('https://example.test/app/api/v1/characters', { headers: { accept: 'application/json' } }),
+      new FetchRequest('https://example.test/app/api/auth/session', { headers: { accept: 'application/json' } })
+    ];
+
+    for (const request of requests) {
+      const outcome = await dispatchFetch(request);
+      expect(outcome).toEqual({ handled: false, response: null });
+    }
+
+    expect(fetchImplementation).not.toHaveBeenCalled();
+    expect(await caches.keys()).toEqual([]);
+  });
+
+  it('continues to cache rule data JSON while API paths bypass caching', async () => {
+    const { api, caches, dispatchFetch } = loadWorker(async () => new FetchResponse('{"rule":true}', {
+      status: 200,
+      headers: { 'content-type': 'application/json' }
+    }), { buildId: 'rule-data-cache' });
+    const ruleRequest = new FetchRequest('https://example.test/app/data/formaga.json', {
+      headers: { accept: 'application/json' }
+    });
+
+    const outcome = await dispatchFetch(ruleRequest);
+    expect(outcome.handled).toBe(true);
+    expect(outcome.response?.status).toBe(200);
+    const jsonCache = await caches.open(`${api.SW_VERSION}-json`);
+    expect(await jsonCache.match(ruleRequest)).not.toBeNull();
+  });
+
   it('uses a build-specific cache/version identity with a stable development fallback', () => {
     const first = loadWorker(async () => new FetchResponse('unused'), { buildId: 'build-100' });
     const second = loadWorker(async () => new FetchResponse('unused'), { buildId: 'build-101' });

@@ -22,6 +22,21 @@ jobs:
     name: Test and build
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: symbapedia_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d symbapedia_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Check out source
         uses: actions/checkout@v6
@@ -29,7 +44,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.18.0
           cache: npm
 
       - name: Install dependencies
@@ -46,6 +61,14 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:unit
+
+      - name: Validate Drizzle migration metadata
+        run: npm run db:check
+
+      - name: Run disposable PostgreSQL migration integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/symbapedia_test
+        run: npm run test:server:integration
 
       - name: Build production site
         run: python3 scripts/master_sync.py

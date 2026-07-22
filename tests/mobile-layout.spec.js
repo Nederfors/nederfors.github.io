@@ -199,6 +199,64 @@ for (const viewport of PHONE_VIEWPORTS) {
   });
 }
 
+for (const viewport of PHONE_VIEWPORTS) {
+  test(`active Index filters use a contained chip scroll lane at ${viewport.name} (${viewport.width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await loadRoute(page, '/#/index');
+
+    await page.evaluate(() => {
+      const activeFilters = document.getElementById('activeFilters');
+      const labels = [
+        'Akrobatik med extra långt filtervärde',
+        'Bärsärk med ytterligare ett långt filtervärde',
+        'Järnnäve med ett tredje aktivt filtervärde',
+        'Skuggdans med ett fjärde aktivt filtervärde',
+        'Ogenomtränglig rustning med ett femte aktivt filtervärde',
+        'Vildsint med ett sjätte aktivt filtervärde'
+      ];
+      activeFilters.innerHTML = labels.map((label, index) => (
+        `<span class="db-chip removable ${index === 0 ? 'tag-search-chip' : 'tag-filter-chip'}" data-type="search" data-val="${index}"><span class="db-chip__label">${label}</span><button class="db-chip__close" type="button" aria-label="Ta bort ${label}">✕</button></span>`
+      )).join('');
+    });
+    await expect.poll(() => page.locator('#activeFilters .db-chip.removable').count()).toBe(6);
+
+    const metrics = await page.evaluate(() => {
+      const filters = document.getElementById('activeFilters');
+      const chips = [...(filters?.querySelectorAll('.db-chip.removable') || [])];
+      const closes = [...(filters?.querySelectorAll('.db-chip__close') || [])];
+      return {
+        pageWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        filters: filters ? {
+          scrollWidth: filters.scrollWidth,
+          clientWidth: filters.clientWidth,
+          overflowX: window.getComputedStyle(filters).overflowX,
+          flexWrap: window.getComputedStyle(filters).flexWrap
+        } : null,
+        chips: chips.map(chip => ({
+          width: chip.getBoundingClientRect().width,
+          labelWidth: chip.querySelector('.db-chip__label')?.scrollWidth || 0,
+          labelClientWidth: chip.querySelector('.db-chip__label')?.clientWidth || 0
+        })),
+        closes: closes.map(close => ({
+          width: close.getBoundingClientRect().width,
+          height: close.getBoundingClientRect().height,
+          label: close.getAttribute('aria-label')
+        }))
+      };
+    });
+
+    expect(metrics.pageWidth).toBe(metrics.viewportWidth);
+    expect(metrics.filters?.overflowX).toBe('auto');
+    expect(metrics.filters?.flexWrap).toBe('nowrap');
+    expect(metrics.filters?.scrollWidth).toBeGreaterThan(metrics.filters?.clientWidth || 0);
+    expect(metrics.chips.every(chip => chip.width <= viewport.width)).toBe(true);
+    expect(metrics.closes.every(close => (
+      close.width >= 44 && close.height >= 44 && String(close.label).startsWith('Ta bort ')
+    ))).toBe(true);
+  });
+}
+
 for (const viewport of COARSE_TABLET_VIEWPORTS) {
   test(`coarse-pointer controls remain usable at ${viewport.name} (${viewport.width}px)`, async ({ page }) => {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });

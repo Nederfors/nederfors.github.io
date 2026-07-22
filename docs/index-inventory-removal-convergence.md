@@ -60,7 +60,11 @@ Partially superseded:
 - ordinary index `del`/`rem` for the enabled final-copy signature no longer
   uses the direct splice plus `saveInventory()` and full inventory render;
 - the inventory-view final-row handler's former private classifier and commit
-  now delegate to the same public planner and removal commit.
+  now delegate to the same public planner and removal commit;
+- the enabled signature no longer recursively rescans every inventory row for
+  each removal proof or repeats the same target-UID scan inside `setInventory()`.
+  Those scans remain available only for conservative fallback diagnostics and
+  unproven store writes.
 
 Still required:
 
@@ -125,12 +129,12 @@ the same:
 - persistence result and post-reload semantic topology.
 
 The optimized index run used one root batch, store mutation, common commit,
-refresh generation, persistence schedule, UID validation, proof scan, and
-aggregate delta. It recorded no fallback. The target catalog card stayed
+refresh generation, persistence schedule, UID validation, removal-evidence
+lookup, and aggregate delta. It recorded no fallback. The target catalog card stayed
 connected, all unrelated cards stayed connected, and only the six target
 action descendants were replaced.
 
-## Real-UI benchmark
+## Batch 2 real-UI benchmark baseline
 
 Five samples per cell. Values are median/p95 milliseconds. “Visible” is first
 presented feedback; “consistent” is all-view consistency; “persisted” is the
@@ -151,7 +155,7 @@ persistence-flush checkpoint. Mobile Chromium uses 4× CPU throttling.
 | Mobile Chromium (4×) | 250 | forced-safe | 711.3/2055.1 | 778.4/2173.0 | 777.6/2172.7 |
 | Mobile Chromium (4×) | 250 | shared planner | 26.1/46.3 | 38.5/67.1 | 59.5/90.9 |
 
-Pipeline counters per click are invariant across 20/100/250 rows:
+The Batch 2 pipeline counters per click were invariant across 20/100/250 rows:
 
 | Counter | Forced-safe | Shared planner | Inventory-view control |
 |---|---:|---:|---:|
@@ -176,11 +180,81 @@ counter shape. Its absolute scenario duration is not directly comparable
 because that harness starts timing before Playwright actionability and ends
 after two additional paints; it remains a pipeline-shape control.
 
-## Next step
+## Batch 3: bounded exact-removal validation
 
-The next removal-specific task should be cheaper exact removal-proof
-validation. The optimized 250-row throttled-mobile run spends a median 8.6 ms
-before the common commit, while the post-commit refresh/persistence stages
-remain the larger general latency components. Linked-state Projection Core +
-No-change Acceptance would unlock more signatures, but is deliberately outside
-this convergence change.
+The measured exact proof was expensive because it recursively walked every
+inventory row, resolved each unrelated row and base identity, rebuilt UID and
+owned-quantity maps, and then `setInventory()` recursively scanned the target
+UID again. Normalization, flattening, rendering, refresh, and persistence were
+not part of that proof stage. The retained final state postcondition separately
+checks that the target UID is absent and that every unaffected top-level row is
+still the same object.
+
+The full inventory/aggregate pass now builds narrowly scoped removal evidence
+while it already has each flattened row and resolved entry available. The
+evidence contains the inventory reference and version, top-level row/index
+mapping, row-reference and UID cardinalities, and owned base quantities. The
+planner reuses the already-resolved capabilities and accepts the optimized
+signature only when that evidence exactly matches the active character,
+inventory object, version, target row/UID/index, unique identities, and final
+owned quantity. It then mints a module-private, single-use store-validation
+token. The common commit rechecks token freshness before the splice;
+`setInventory()` consumes it only for that exact resulting array and advances
+the inventory version. Nothing is cached across mutations.
+
+Missing evidence retains `removal-proof-missing`; changed inventory/version or
+a reused/invalid token retains `removal-plan-stale`. Unsupported topology,
+linked or rule/list-wide dependencies, incomplete capabilities, unstable or
+duplicate identity, and all existing state/DOM postcondition failures keep
+their existing reasons and conservative paths. A diagnostic full proof scan is
+allowed only after the optimized proof has already failed closed, so it can
+preserve the existing fallback-reason vocabulary without authorizing a fast
+commit. The final state and DOM postconditions remain mandatory.
+
+Five-sample, 250-row measurements used the same `index-inventory-remove`
+scenario, fixtures, warm-up, Chromium runtimes, and mutation ledger before and
+after. Values are median/p95 milliseconds; mobile uses the existing Pixel 7
+profile and 4x CPU throttle.
+
+| Runtime | Stage | Before | After |
+|---|---|---:|---:|
+| Desktop Chromium | removal proof | 0.20/0.30 | 0.10/0.30 |
+| Desktop Chromium | duplicate store UID proof | 0.10/0.10 | 0.00/0.10 |
+| Desktop Chromium | exact proof + store UID proof | 0.30/0.40 | 0.10/0.40 |
+| Desktop Chromium | retained state postcondition | 0.10/0.20 | 0.10/0.20 |
+| Mobile Chromium (4x) | removal proof | 1.30/2.00 | 0.40/0.80 |
+| Mobile Chromium (4x) | duplicate store UID proof | 0.40/0.70 | 0.00/0.10 |
+| Mobile Chromium (4x) | exact proof + store UID proof | 1.70/2.70 | 0.40/0.90 |
+| Mobile Chromium (4x) | retained state postcondition | 0.20/0.50 | 0.80/0.90 |
+
+The targeted pre-commit proof median fell 67% on desktop and 76% on throttled
+mobile. The mobile planner checkpoint stayed effectively flat at 7.4/11.0 to
+7.5/8.6 ms and the store checkpoint moved from 9.7/14.7 to 9.3/10.8 ms, so the
+removed scan was not shifted into another measured pre-commit stage. Desktop
+planner/store checkpoints were 1.6/1.6 and 2.0/2.0 before versus 2.1/3.9 and
+2.6/4.6 after; at sub-millisecond proof scale that five-sample checkpoint
+variation is not evidence of an end-to-end improvement.
+
+Visible/consistent/persisted latency was 54.3/55.2, 55.9/57.0, and 57.6/58.7
+before versus 29.5/42.6, 32.0/46.3, and 34.3/49.1 after on desktop. On mobile it
+was 19.3/30.5, 30.4/42.0, and 46.5/65.0 before versus 22.0/26.0, 35.8/38.0, and
+54.5/59.7 after. These absolute samples move with unrelated derived-refresh
+work (desktop refresh median 52.9 to 27.7 ms; mobile 14.2 to 17.5 ms), so no
+visible, consistent, or persisted latency improvement is attributed to Batch 3.
+
+The supported scenario changed from one removal-proof scan to one bounded
+evidence lookup, with zero fallback diagnostic scans and zero fallbacks. Root,
+store, common-commit, refresh, and persistence counters remain one per click;
+targeted renders remain two and full renders remain zero. Reusing planner
+capabilities also reduced rule-helper/cache lookups from 15/16 to 11/12.
+
+## Next decision gate
+
+Do not extend removal mutation architecture at this gate. Start the
+hosting/backend decision at the persistence adapter boundary in
+`js/persistence.js`: preserve the current `saveCharacterFields()` contract and
+evaluate the queued `flushPendingWrites()` -> `commitPendingWrites()` sink as
+the replaceable local-Dexie/backend seam. Mutation planners, proof tokens, store
+semantics, and postconditions should remain frontend invariants while that
+decision is made. Linked-state Projection Core, No-change Acceptance, and new
+mutation signatures remain separate later work.

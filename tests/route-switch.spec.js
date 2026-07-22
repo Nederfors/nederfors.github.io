@@ -1,5 +1,36 @@
 import { expect, test } from '@playwright/test';
 
+async function expectOverlayLifecycleClean(page) {
+  await expect.poll(() => page.evaluate(() => {
+    const roots = [document, document.querySelector('shared-toolbar')?.shadowRoot].filter(Boolean);
+    const stale = roots.flatMap(root => Array.from(root.querySelectorAll(
+      '.popup, .offcanvas, .db-modal-overlay, .db-drawer'
+    )).filter(element => (
+      element.classList.contains('open')
+      || element.classList.contains('db-modal--open')
+      || element.classList.contains('db-drawer--open')
+      || element.getAttribute('aria-hidden') === 'false'
+    )).map(element => element.id || element.className));
+    return {
+      stale,
+      managerTop: window.popupManager?.peekTop?.()?.id || '',
+      bodyLocked: document.body.classList.contains('no-scroll'),
+      bodyTop: document.body.style.top,
+      bodyOverflow: document.body.style.overflow,
+      viewInert: document.getElementById('view-root')?.hasAttribute('inert') || false,
+      toolbarInert: document.querySelector('shared-toolbar')?.hasAttribute('inert') || false
+    };
+  })).toEqual({
+    stale: [],
+    managerTop: '',
+    bodyLocked: false,
+    bodyTop: '',
+    bodyOverflow: '',
+    viewInert: false,
+    toolbarInert: false
+  });
+}
+
 test('inventory and traits render after in-app route changes', async ({ page }) => {
   const metaState = {
     current: 'route-char',
@@ -63,6 +94,41 @@ test('inventory and traits render after in-app route changes', async ({ page }) 
     page.locator('#traits .trait').count()
   )).toBe(8);
   await expect(page.locator('#charName')).toContainText('Route Hero');
+});
+
+test('rapid drawer changes and stacked route teardown leave no blocking overlay state', async ({ page }) => {
+  await page.goto('/#/index');
+  await page.waitForFunction(() => (
+    Boolean(window.__symbaroumBootCompleted)
+    && Boolean(window.symbaroumPersistence?.ready)
+    && Boolean(document.querySelector('shared-toolbar')?.shadowRoot)
+  ));
+
+  await page.evaluate(() => {
+    const toggle = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('filterToggle');
+    toggle?.click();
+    toggle?.click();
+    toggle?.click();
+    window.location.hash = '#/inventory';
+  });
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'inventory'
+    && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+  ));
+  await expectOverlayLifecycleClean(page);
+
+  await page.locator('#overviewToggle').click();
+  await expect(page.locator('#invDashPanel')).toBeVisible();
+  await page.evaluate(() => { void window.alertPopup?.('Route teardown fixture'); });
+  await expect(page.locator('#daub-dialog-modal')).toBeVisible();
+
+  await page.evaluate(() => { window.location.hash = '#/traits'; });
+  await page.waitForFunction(() => (
+    document.body.dataset.role === 'traits'
+    && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+  ));
+  await expectOverlayLifecycleClean(page);
+  await expect(page.locator('.trait[data-key="Diskret"] .trait-btn[data-d="1"]')).toBeEnabled();
 });
 
 test('trait controls apply each increment once after traits view initialization', async ({ page }) => {

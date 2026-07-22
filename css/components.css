@@ -96,23 +96,23 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
                padding: .15rem .7rem; border-radius: .55rem;
                font-size: .85rem; white-space: nowrap; }
 .tag.removable, .db-chip.removable { cursor: pointer; }
-.tag.removable.tag-search-chip,
-.tag.removable.tag-filter-chip {
+.db-chip.removable.tag-search-chip,
+.db-chip.removable.tag-filter-chip {
   display: inline-flex;
   align-items: center;
   border: 1px solid rgba(255, 255, 255, .14);
 }
-.tag.removable.tag-search-chip {
+.db-chip.removable.tag-search-chip {
   border-style: dashed;
 }
-.tag.removable.tag-search-chip::before {
+.db-chip.removable.tag-search-chip::before {
   display: inline-block;
   margin-right: .34rem;
   font-size: .76rem;
   line-height: 1;
   opacity: .68;
 }
-.tag.removable.tag-search-chip::before {
+.db-chip.removable.tag-search-chip::before {
   content: '⌕';
 }
 .filter-tag { cursor: pointer; }
@@ -8907,6 +8907,12 @@ h3 {
   width: var(--shell-width);
   max-width: var(--shell-width);
   margin-bottom: 0.6rem;
+}
+
+.db-chip.removable .db-chip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
