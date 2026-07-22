@@ -12,6 +12,7 @@ const PRELOAD_SCRIPTS = [
   'js/utils.js',
   'js/rules-helper.js',
   'js/inventory-capabilities.js',
+  'js/projection-core.js',
   'js/store.js'
 ];
 

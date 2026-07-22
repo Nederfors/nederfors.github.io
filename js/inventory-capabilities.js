@@ -109,9 +109,11 @@
     const explicitlyVersioned = Number.isInteger(version) && version === CAPABILITY_VERSION;
     const isCustom = getTypes(entry).some(type => normalizeToken(type) === 'hemmagjort');
     const known = explicitlyVersioned && Boolean(catalogEntry || isCustom);
-    const stateLinks = new Set(toArray(config.state_links ?? config.stateLinks)
+    const declaredStateLinks = [...new Set(toArray(config.state_links ?? config.stateLinks)
       .map(value => String(value || '').trim())
-      .filter(value => STATE_LINKS.has(value)));
+      .filter(Boolean))];
+    const stateLinks = new Set(declaredStateLinks.filter(value => STATE_LINKS.has(value)));
+    const unknownStateLinks = declaredStateLinks.filter(value => !STATE_LINKS.has(value));
     if (hasHiddenRule(entry)) stateLinks.add('catalog-reveal-while-owned');
 
     const rawQuantityMode = String((config.quantity_mode ?? config.quantityMode) || '').trim();
@@ -145,6 +147,7 @@
       quantityMode,
       topology,
       stateLinks: Object.freeze([...stateLinks]),
+      unknownStateLinks: Object.freeze(unknownStateLinks),
       derivedDomains: Object.freeze(derivedDomains)
     });
   }

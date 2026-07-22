@@ -498,6 +498,8 @@ test('declared inventory capabilities compose through one mutation planner', asy
       });
       return {
         fastPath: plan.fastPath,
+        noChangeAccepted: plan.linkedStateNoChangeAccepted,
+        projectionStatus: plan.linkedStateProjections?.[0]?.status || '',
         changedStateLinks: plan.stateTransitions.map(transition => transition.link),
         invalidates: plan.invalidates
       };
@@ -570,6 +572,25 @@ test('declared inventory capabilities compose through one mutation planner', asy
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'capability-first-hidden-purchase' });
     perf?.clearFlowContext?.('inventory-mutation', scenarioId);
     const committedScenario = perf?.endScenario?.(scenarioId);
+    const ownedRow = window.storeHelper.getInventory(activeStore)
+      .find(row => String(row?.id || '') === String(treasure.id));
+    const stalePlan = window.invUtil.planInventoryMutation({
+      kind: 'quantity',
+      row: ownedRow,
+      entry: treasure,
+      inv: window.storeHelper.getInventory(activeStore),
+      parentArr: window.storeHelper.getInventory(activeStore),
+      delta: 1,
+      surface: 'index'
+    });
+    window.storeHelper.removeRevealedArtifact(activeStore, treasure.id);
+    const staleResult = window.invUtil.commitInventoryMutation(stalePlan, {
+      source: 'test-stale-linked-state-projection'
+    });
+    window.storeHelper.addRevealedArtifact(activeStore, treasure.id);
+    await window.symbaroumPersistence?.flushPendingWrites?.({
+      reason: 'capability-stale-projection-restore'
+    });
 
     return {
       capabilities: {
@@ -604,6 +625,13 @@ test('declared inventory capabilities compose through one mutation planner', asy
         invalidates: committedPlan.invalidates,
         counters: committedScenario?.detail?.profile?.counters || {},
         fallbacks: committedScenario?.detail?.profile?.fallbacks || []
+      },
+      staleNoChangeProjection: {
+        committed: staleResult.committed,
+        fastPath: staleResult.plan.fastPath,
+        fallbackReasons: staleResult.plan.fallbackReasons,
+        quantity: Number(ownedRow?.qty || 0),
+        revealed: window.storeHelper.getRevealedArtifacts(activeStore)
       }
     };
   });
@@ -646,6 +674,8 @@ test('declared inventory capabilities compose through one mutation planner', asy
 
   Object.values(result.hiddenOwnedQuantity).forEach(plan => {
     expect(plan.fastPath).toBe(true);
+    expect(plan.noChangeAccepted).toBe(true);
+    expect(plan.projectionStatus).toBe('unchanged');
     expect(plan.changedStateLinks).toEqual([]);
     expect(plan.invalidates).not.toContain('catalog.structure');
   });
@@ -685,6 +715,13 @@ test('declared inventory capabilities compose through one mutation planner', asy
   expect(result.committedFirstHiddenPurchase.counters.persistenceSchedules).toBe(1);
   expect(result.committedFirstHiddenPurchase.counters.fullInventoryRenders || 0).toBe(0);
   expect(result.committedFirstHiddenPurchase.counters.artifactEffectScans || 0).toBe(0);
+  expect(result.staleNoChangeProjection).toMatchObject({
+    committed: false,
+    fastPath: false,
+    fallbackReasons: expect.arrayContaining(['linked-state-projection-stale']),
+    quantity: 1,
+    revealed: expect.arrayContaining([result.committedFirstHiddenPurchase.entryId])
+  });
 });
 
 test('a normal ability can be added, levelled, observed, and reloaded through user controls', async ({ page }) => {
