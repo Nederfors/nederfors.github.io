@@ -602,6 +602,32 @@ test(
         'shared-toolbar'
       );
 
+    // Reproduce the conditional path: use an overlay, navigate while it is
+    // open, then return before opening storage/import.
+    await page.locator('#overviewToggle').click();
+    await expect(page.locator('#summarySlidePanel')).toBeVisible();
+    await page.evaluate(() => {
+      window.location.hash = '#/inventory';
+    });
+    await page.waitForFunction(() => (
+      document.body.dataset.role === 'inventory'
+      && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+    ));
+    await expect(page.locator('#summarySlidePanel')).toBeHidden();
+    await page.evaluate(() => {
+      window.location.hash = '#/index';
+    });
+    await page.waitForFunction(() => (
+      document.body.dataset.role === 'index'
+      && document.getElementById('view-root')?.getAttribute('aria-busy') === 'false'
+    ));
+    await expect.poll(() => page.evaluate(() => ({
+      top: window.popupManager?.peekTop?.()?.id || '',
+      locked: document.body.classList.contains('no-scroll'),
+      viewInert: document.getElementById('view-root')?.hasAttribute('inert') || false,
+      toolbarInert: document.querySelector('shared-toolbar')?.hasAttribute('inert') || false
+    }))).toEqual({ top: '', locked: false, viewInert: false, toolbarInert: false });
+
     await toolbar
       .locator('#filterToggle')
       .click();

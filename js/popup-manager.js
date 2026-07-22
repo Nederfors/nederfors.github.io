@@ -18,10 +18,15 @@
   const managedBackgroundInert = new Map();
   const managedAriaModal = new Map();
   const managedZIndex = new Map();
+  const overlayTouchState = new WeakMap();
   const POPUP_Z_BASE = 4000;
   const RESTORE_TARGET_MAX_AGE_MS = 1500;
+  const HISTORY_STATE_KEY = '__symbaroumOverlay';
   let lastInteractionTarget = null;
   let lastInteractionAt = 0;
+  let historyTokenSequence = 0;
+  let scrollLocked = false;
+  let lockedScrollY = 0;
   const FOCUSABLE_SELECTOR = [
     'a[href]',
     'button:not([disabled])',
@@ -73,6 +78,16 @@
     return normalizeType(type) === 'dialog' ? 'none' : 'sheet-down';
   }
 
+  function resolveActiveTouchProfile(element, type, touchProfile) {
+    if (
+      element?.matches?.('.popup[data-popup-unified="true"]')
+      && window.matchMedia?.('(max-width: 640px), (max-height: 500px) and (pointer: coarse)')?.matches
+    ) {
+      return 'sheet-down';
+    }
+    return normalizeTouchProfile(type, touchProfile);
+  }
+
   function resolveId(target) {
     if (typeof target === 'string') return target.trim();
     if (target && typeof target === 'object' && typeof target.id === 'string') return target.id.trim();
@@ -93,6 +108,79 @@
       || el?.classList?.contains('db-modal-overlay')
       || isDrawerOverlay(el)
     );
+  }
+
+  function getHistoryMarker(state = history.state) {
+    const marker = state && typeof state === 'object' ? state[HISTORY_STATE_KEY] : null;
+    return marker && typeof marker === 'object' ? marker : null;
+  }
+
+  function pushOverlayHistory(id) {
+    const token = `${Date.now().toString(36)}-${(++historyTokenSequence).toString(36)}`;
+    const currentState = history.state && typeof history.state === 'object' ? history.state : {};
+    try {
+      history.pushState({ ...currentState, [HISTORY_STATE_KEY]: { id, token } }, '');
+      return token;
+    } catch {
+      return '';
+    }
+  }
+
+  function clearCurrentOverlayHistory(token) {
+    const marker = getHistoryMarker();
+    if (!token || marker?.token !== token) return;
+    const currentState = history.state && typeof history.state === 'object' ? { ...history.state } : {};
+    delete currentState[HISTORY_STATE_KEY];
+    try { history.replaceState(currentState, ''); } catch {}
+  }
+
+  function clearStaleOverlayHistory(state = history.state) {
+    if (!getHistoryMarker(state)) return;
+    const currentState = state && typeof state === 'object' ? { ...state } : {};
+    delete currentState[HISTORY_STATE_KEY];
+    try { history.replaceState(currentState, ''); } catch {}
+  }
+
+  function setComponentOpen(element, trigger = null) {
+    if (!(element instanceof HTMLElement)) return;
+    if (isDaubOverlay(element) && typeof window.DAUB?.openModal === 'function') {
+      window.DAUB.openModal(element, trigger);
+    } else if (element.classList.contains('db-drawer') && typeof window.DAUB?.openDrawer === 'function') {
+      window.DAUB.openDrawer(element.id);
+    }
+    element.classList.add('open');
+    if (isDrawerOverlay(element)) element.classList.add('db-drawer--open');
+    element.removeAttribute('inert');
+    element.setAttribute('aria-hidden', 'false');
+  }
+
+  function setComponentClosed(element) {
+    if (!(element instanceof HTMLElement)) return;
+    if (isDaubOverlay(element) && typeof window.DAUB?.closeModal === 'function') {
+      window.DAUB.closeModal(element);
+    } else if (element.classList.contains('db-drawer') && typeof window.DAUB?.closeDrawer === 'function') {
+      window.DAUB.closeDrawer(element.id);
+    }
+    element.classList.remove('open', 'db-modal--open', 'db-drawer--open');
+    element.setAttribute('aria-hidden', 'true');
+    if (isDrawerOverlay(element)) element.setAttribute('inert', '');
+  }
+
+  function syncScrollLock(hasOpenOverlay = stack.some(isPopupOpen)) {
+    if (hasOpenOverlay && !scrollLocked) {
+      lockedScrollY = window.scrollY || window.pageYOffset || 0;
+      document.body.style.top = `-${lockedScrollY}px`;
+      document.body.classList.add('no-scroll');
+      document.body.style.overflow = 'hidden';
+      scrollLocked = true;
+      return;
+    }
+    if (hasOpenOverlay || !scrollLocked) return;
+    document.body.classList.remove('no-scroll');
+    document.body.style.removeProperty('top');
+    document.body.style.removeProperty('overflow');
+    scrollLocked = false;
+    window.scrollTo(0, lockedScrollY);
   }
 
   function collectPopupElements(root) {
@@ -172,6 +260,103 @@
       if (target === surface && !surface.hasAttribute('tabindex')) surface.setAttribute('tabindex', '-1');
       try { target.focus({ preventScroll: true }); } catch { target.focus?.(); }
     });
+  }
+
+  function getGestureTarget(element, profile) {
+    if (profile === 'panel-right') return element.querySelector('.db-drawer__panel') || element;
+    if (profile === 'sheet-down') {
+      return element.querySelector('.db-modal, .popup-inner, .inventory-hub-ui') || element;
+    }
+    return element;
+  }
+
+  function resetOverlayGesture(element, dismissed = false) {
+    const state = overlayTouchState.get(element);
+    if (!state) return;
+    overlayTouchState.delete(element);
+    const moving = state.movingEl;
+    if (!(moving instanceof HTMLElement)) return;
+    moving.style.removeProperty('transition');
+    moving.style.removeProperty('transform');
+    moving.style.removeProperty('will-change');
+    if (dismissed) close(element, 'gesture');
+  }
+
+  function bindOverlayTouch(element) {
+    if (!(element instanceof HTMLElement) || element.dataset.popupTouchBound === 'true') return;
+    element.dataset.popupTouchBound = 'true';
+
+    const startedFromSheetHeader = event => event.composedPath().some(node => (
+      node instanceof Element
+      && node.matches('.popup-modal-header, .db-modal__header')
+      && element.contains(node)
+    ));
+    const ignoreTarget = target => Boolean(
+      target?.closest?.('input, textarea, select, option, [contenteditable="true"]')
+    );
+
+    element.addEventListener('touchstart', event => {
+      if (!window.daubMotion?.isTouchUi?.() || !isPopupOpen(element.id)) return;
+      if (getTopPopupId() !== element.id || event.touches.length !== 1 || ignoreTarget(event.target)) return;
+      const session = sessions.get(element.id);
+      const entry = entries.get(element.id);
+      const profile = resolveActiveTouchProfile(
+        element,
+        session?.type || entry?.type,
+        session?.touchProfile || entry?.touchProfile
+      );
+      if (profile === 'none' || (profile === 'sheet-down' && !startedFromSheetHeader(event))) return;
+      const movingEl = getGestureTarget(element, profile);
+      if (!(movingEl instanceof HTMLElement)) return;
+      const touch = event.touches[0];
+      overlayTouchState.set(element, {
+        profile,
+        movingEl,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        translate: 0,
+        active: false
+      });
+      movingEl.style.setProperty('will-change', 'transform');
+    }, { passive: true });
+
+    element.addEventListener('touchmove', event => {
+      const state = overlayTouchState.get(element);
+      if (!state || event.touches.length !== 1) return;
+      if (getTopPopupId() !== element.id) {
+        resetOverlayGesture(element);
+        return;
+      }
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - state.startX;
+      const deltaY = touch.clientY - state.startY;
+      if (!state.active) {
+        const startsHorizontal = state.profile === 'panel-right'
+          && deltaX > 0 && Math.abs(deltaX) >= 10 && Math.abs(deltaX) > Math.abs(deltaY);
+        const startsVertical = state.profile === 'sheet-down'
+          && deltaY > 0 && Math.abs(deltaY) >= 10 && Math.abs(deltaY) > Math.abs(deltaX);
+        if (!startsHorizontal && !startsVertical) return;
+        state.active = true;
+        state.movingEl.style.transition = 'none';
+      }
+      state.translate = state.profile === 'panel-right' ? Math.max(0, deltaX) : Math.max(0, deltaY);
+      state.movingEl.style.transform = state.profile === 'panel-right'
+        ? `translate3d(${state.translate}px, 0, 0)`
+        : `translate3d(0, ${state.translate}px, 0)`;
+      event.preventDefault();
+    }, { passive: false });
+
+    const finishGesture = () => {
+      const state = overlayTouchState.get(element);
+      if (!state) return;
+      const thresholdBase = state.profile === 'panel-right'
+        ? element.offsetWidth || state.movingEl.offsetWidth || 0
+        : state.movingEl.offsetHeight || element.offsetHeight || 0;
+      const threshold = Math.min(160, Math.max(72, thresholdBase * 0.24));
+      resetOverlayGesture(element, state.active && state.translate >= threshold);
+    };
+    element.addEventListener('touchend', finishGesture, { passive: true });
+    element.addEventListener('touchcancel', () => resetOverlayGesture(element), { passive: true });
   }
 
   function forEachKnownElement(selector, callback) {
@@ -306,6 +491,7 @@
     });
 
     const top = openPopups[openPopups.length - 1];
+    syncScrollLock(Boolean(top));
     if (!top) return;
 
     openPopups.slice(0, -1).forEach(coverWithTopOverlay);
@@ -433,9 +619,7 @@
       if (existing.mobileMode) existing.element.dataset.popupMobileMode = existing.mobileMode;
     }
 
-    if (existing.element && typeof window.registerOverlayElement === 'function') {
-      try { window.registerOverlayElement(existing.element); } catch {}
-    }
+    if (existing.element) bindOverlayTouch(existing.element);
 
     if (!openStateById.has(id)) {
       openStateById.set(id, Boolean(existing.element && isPopupOpen(id)));
@@ -453,26 +637,11 @@
 
     const el = entry?.element || findElementById(id);
     const restoreFocus = session?.restoreFocus || null;
-    if (isDrawerOverlay(el) && restoreFocus?.isConnected) {
-      el._overlayReturnFocus = restoreFocus;
-    }
-    if (el && !options.skipClassRemoval) {
+    const historyToken = session?.historyToken || '';
+    if (el) {
       internalCloseIds.add(id);
-      if (isDaubOverlay(el)) {
-        if (el.getAttribute('aria-hidden') === 'false') {
-          el.setAttribute('aria-hidden', 'true');
-        }
-      }
-      if (el.classList.contains('open')) {
-        el.classList.remove('open');
-      }
-      if (el.classList.contains('db-drawer--open')) {
-        el.classList.remove('db-drawer--open');
-      }
-      if (isDrawerOverlay(el)) {
-        el.setAttribute('aria-hidden', 'true');
-        el.setAttribute('inert', '');
-      }
+      resetOverlayGesture(el);
+      setComponentClosed(el);
       setTimeout(() => internalCloseIds.delete(id), 0);
     }
 
@@ -483,11 +652,8 @@
     }
     syncOverlayStack();
 
-    if (el && typeof window.registerOverlayCleanup === 'function') {
-      try { window.registerOverlayCleanup(el, null); } catch {}
-    }
-
     sessions.delete(id);
+    if (!options.preserveHistory) clearCurrentOverlayHistory(historyToken);
 
     const callbacks = [session?.onClose, session?.cleanup, entry?.cleanup];
     callbacks.forEach(fn => {
@@ -495,18 +661,20 @@
       try { fn(reason || 'programmatic'); } catch (error) { console.error(error); }
     });
 
-    window.requestAnimationFrame(() => {
-      const nextTop = getInteractiveTopOverlay();
-      if (nextTop && (!restoreFocus || !nextTop.contains(restoreFocus))) {
-        focusOverlay(nextTop);
-        return;
-      }
-      if (restoreFocus?.isConnected) {
-        try { restoreFocus.focus({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
-      } else if (nextTop) {
-        focusOverlay(nextTop);
-      }
-    });
+    if (!options.suppressFocus) {
+      window.requestAnimationFrame(() => {
+        const nextTop = getInteractiveTopOverlay();
+        if (nextTop && (!restoreFocus || !nextTop.contains(restoreFocus))) {
+          focusOverlay(nextTop);
+          return;
+        }
+        if (restoreFocus?.isConnected) {
+          try { restoreFocus.focus({ preventScroll: true }); } catch { restoreFocus.focus?.(); }
+        } else if (nextTop) {
+          focusOverlay(nextTop);
+        }
+      });
+    }
 
     return true;
   }
@@ -548,6 +716,7 @@
     const touchProfile = normalizeTouchProfile(type, options.touchProfile ?? entry.touchProfile);
     entry.touchProfile = touchProfile;
     const policy = normalizePolicy(type, options.dismissPolicy ?? entry.dismissPolicy);
+    const wasOpen = isPopupOpen(id);
 
     const prev = sessions.get(id) || {};
     sessions.set(id, {
@@ -557,32 +726,13 @@
       policy,
       onClose: typeof options.onClose === 'function' ? options.onClose : prev.onClose || null,
       cleanup: typeof options.cleanup === 'function' ? options.cleanup : prev.cleanup || null,
-      restoreFocus: prev.restoreFocus || resolveRestoreFocus(el),
+      restoreFocus: prev.restoreFocus || options.trigger || resolveRestoreFocus(el),
+      historyToken: prev.historyToken || (!wasOpen && options.history !== false ? pushOverlayHistory(id) : ''),
       isClosing: false
     });
 
-    if (typeof window.registerOverlayElement === 'function') {
-      try { window.registerOverlayElement(el); } catch {}
-    }
-    if (typeof window.registerOverlayCleanup === 'function') {
-      try { window.registerOverlayCleanup(el, () => close(id, 'history')); } catch {}
-    }
-
-    if (isDaubOverlay(el)) {
-      if (el.getAttribute('aria-hidden') !== 'false') {
-        el.setAttribute('aria-hidden', 'false');
-      }
-    }
-    if (!el.classList.contains('open')) {
-      el.classList.add('open');
-    }
-    if (isDrawerOverlay(el) && !el.classList.contains('db-drawer--open')) {
-      el.classList.add('db-drawer--open');
-    }
-    if (isDrawerOverlay(el)) {
-      el.removeAttribute('inert');
-      el.setAttribute('aria-hidden', 'false');
-    }
+    bindOverlayTouch(el);
+    if (!wasOpen) setComponentOpen(el, options.trigger || null);
     el.dataset.touchProfile = touchProfile;
 
     pushToStack(id);
@@ -601,6 +751,7 @@
     const id = resolveId(target);
     if (!id) return false;
     ensureEntry(id);
+    if (!sessions.has(id) && !isPopupOpen(id)) return false;
     return runSessionClose(id, reason);
   }
 
@@ -608,6 +759,48 @@
     const id = getTopPopupId();
     if (!id) return false;
     return close(id, reason);
+  }
+
+  function closeAll(reason = 'programmatic', options = {}) {
+    const ids = [...stack].reverse();
+    ids.forEach(id => runSessionClose(id, reason, {
+      preserveHistory: Boolean(options.preserveHistory),
+      suppressFocus: options.suppressFocus !== false
+    }));
+    // Reconcile externally-opened overlays that were discovered without a
+    // session before teardown began.
+    getAllKnownRoots().forEach(root => {
+      collectPopupElements(root).forEach(element => {
+        if (!element.id || !isPopupOpen(element.id)) return;
+        ensureEntry(element);
+        if (!sessions.has(element.id)) {
+          sessions.set(element.id, {
+            id: element.id,
+            restoreFocus: null,
+            historyToken: '',
+            isClosing: false
+          });
+        }
+        runSessionClose(element.id, reason, {
+          preserveHistory: Boolean(options.preserveHistory),
+          suppressFocus: true
+        });
+      });
+    });
+    syncOverlayStack();
+    return ids.length;
+  }
+
+  function isOpen(target) {
+    const id = resolveId(target);
+    return Boolean(id && isPopupOpen(id));
+  }
+
+  function setCleanup(target, cleanup) {
+    const entry = ensureEntry(target);
+    if (!entry) return false;
+    entry.cleanup = typeof cleanup === 'function' ? cleanup : null;
+    return true;
   }
 
   function getTopSession() {
@@ -628,8 +821,6 @@
   }
 
   function getInteractiveTopOverlay() {
-    const historyTop = typeof window.peekTopOverlay === 'function' ? window.peekTopOverlay() : null;
-    if (historyTop instanceof HTMLElement && historyTop.classList.contains('open')) return historyTop;
     const popupId = getTopPopupId();
     return popupId ? entries.get(popupId)?.element || findElementById(popupId) : null;
   }
@@ -698,6 +889,10 @@
       close(top.id, 'close-button');
       return;
     }
+    const currentTrigger = Array.isArray(path)
+      ? path.find(node => node instanceof Element && node.getAttribute?.('aria-controls') === top.id)
+      : null;
+    if (currentTrigger) return;
     const inner = pop.querySelector('.popup-inner') || pop.querySelector('.db-modal') || pop.querySelector('.db-drawer__panel');
     const clickedInner = inner
       ? (pathContains(path, inner) || (event.target instanceof Node && inner.contains(event.target)))
@@ -761,6 +956,10 @@
     openStateById.set(id, isOpen);
 
     if (isOpen && !wasOpen) {
+      el.classList.add('open');
+      if (isDrawerOverlay(el)) el.classList.add('db-drawer--open');
+      el.removeAttribute('inert');
+      el.setAttribute('aria-hidden', 'false');
       if (!sessions.has(id)) {
         const entry = entries.get(id);
         const type = normalizeType(entry?.type);
@@ -772,6 +971,7 @@
           onClose: null,
           cleanup: null,
           restoreFocus: resolveRestoreFocus(el),
+          historyToken: pushOverlayHistory(id),
           isClosing: false
         });
       }
@@ -841,14 +1041,35 @@
     open,
     close,
     closeTop,
+    closeAll,
+    isOpen,
     peekTop: getTopSession,
     observeRoot,
-    unobserveRoot
+    unobserveRoot,
+    setCleanup
   };
+
+  // Compatibility entry points remain as thin aliases. They no longer own
+  // stack, history, focus, inertness, gestures, or scroll state.
+  window.registerOverlayElement = element => register(element);
+  window.registerOverlayCleanup = (element, cleanup) => setCleanup(element, cleanup);
+  window.peekTopOverlay = () => getInteractiveTopOverlay();
+  window.closeOverlayElement = (element, reason = 'programmatic') => close(element, reason);
+  window.updateScrollLock = () => syncOverlayStack();
 
   document.addEventListener('keydown', onGlobalKeydown, true);
   document.addEventListener('pointerdown', rememberInteractionTarget, true);
   document.addEventListener('click', onGlobalClick, true);
+  window.addEventListener('popstate', event => {
+    const top = getTopSession();
+    if (!top?.session?.historyToken) {
+      clearStaleOverlayHistory(event.state);
+      return;
+    }
+    const marker = getHistoryMarker(event.state);
+    if (marker?.token === top.session.historyToken) return;
+    runSessionClose(top.id, 'history', { preserveHistory: true });
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => observeRoot(document), { once: true });
