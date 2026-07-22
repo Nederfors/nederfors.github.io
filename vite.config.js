@@ -146,7 +146,13 @@ export default defineConfig(async ({ mode }) => {
     },
     server: {
       host: '127.0.0.1',
-      port: 4175
+      port: 4175,
+      proxy: {
+        '/api': {
+          target: process.env.API_PROXY_TARGET || 'http://127.0.0.1:3000',
+          changeOrigin: false
+        }
+      }
     },
     preview: {
       host: '127.0.0.1',

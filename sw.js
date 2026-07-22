@@ -30,6 +30,7 @@ const INDEX_PATH = toScopedPath('index.html');
 const WEBAPP_PATH = toScopedPath('webapp.html');
 const PDF_DIR_PATH = toScopedPath('pdf/');
 const DATA_DIR_PATH = toScopedPath('data/');
+const API_DIR_PATH = toScopedPath('api/');
 const OFFLINE_STATUS_URL = toScopedUrl(`${OFFLINE_STATUS_KEY}-${PWA_BUILD_ID}`);
 const LEGACY_OFFLINE_STATUS_URL = toScopedUrl(OFFLINE_STATUS_KEY);
 const ACTIVE_GENERATION_URL = toScopedUrl(ACTIVE_GENERATION_KEY);
@@ -909,6 +910,10 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
   if (!isSameScope(url)) return;
+
+  // API state is never Cache Storage authority. Dexie owns offline character
+  // state; this also protects future JSON/auth routes from the JSON branch.
+  if (url.pathname.startsWith(API_DIR_PATH)) return;
 
   if (isPdfRequest(url)) {
     const pdfPromise = handlePdfRequest(request);

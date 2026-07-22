@@ -39,46 +39,62 @@ selected application architecture.
 
 ## Batch 4: server foundation
 
-### Resolve and install
+### Completed in Batch 4A
 
-Resolve current stable, mutually supported releases from primary documentation
-at implementation time and commit the resulting lockfile:
+Primary documentation was rechecked at implementation time. Node 24.18.0 is
+the current accepted Node 24 LTS patch; the committed lockfile resolves
+Fastify 5.10.0, Drizzle ORM 0.45.2, `pg` 8.22.0, and Drizzle Kit 0.31.10.
+No Better Auth package or adapter was installed.
 
-- `fastify`
-- `drizzle-orm`
-- `pg`
-- `drizzle-kit` as development tooling
+- `server/app.js` creates Fastify without binding a port; `server/start.js`
+  binds it and owns bounded signal shutdown. `server/routes/health.js` defines
+  the only Batch 4 route, `GET /api/v1/health`.
+- `server/config.js` validates environment, host, port, proxy trust, shutdown
+  timing, PostgreSQL URL, pool/timeouts, and production TLS/private-network
+  policy without including connection values in validation errors.
+  The runtime contract is `NODE_ENV`, optional `HOST`/`PORT`/`TRUST_PROXY`,
+  required `DATABASE_URL`, optional `DATABASE_POOL_MAX`,
+  `DATABASE_IDLE_TIMEOUT_MS`, `DATABASE_CONNECTION_TIMEOUT_MS`,
+  `DATABASE_STATEMENT_TIMEOUT_MS`, `DATABASE_HEALTHCHECK_TIMEOUT_MS`,
+  `DATABASE_SSL_MODE`, `DATABASE_PRIVATE_NETWORK`, and `DATABASE_SSL_CA`.
+  `DATABASE_URL` must not carry SSL switches: TLS/private-network policy has
+  one explicit configuration boundary and is never a `VITE_*` value.
+- `server/db/client.js` owns one bounded `pg` pool and Drizzle client. It uses
+  verified TLS when configured, supports an explicitly declared private-network
+  production connection, applies bounded query/connect timeouts, and closes the
+  pool exactly once.
+- `drizzle.config.js`, `drizzle/0000_baseline.sql`, and the journal establish a
+  committed SQL migration path. `npm run db:migrate` uses Drizzle's PostgreSQL
+  migrator and is repeatable; the no-domain `SELECT 1` baseline exists solely
+  to prove migrator history. It creates only Drizzle's migration journal table,
+  never application, auth, or character tables. `db:generate` and `db:check`
+  remain the Drizzle Kit authoring/validation commands; schema push is not a
+  release mechanism.
+- Vite proxies local `/api` traffic to `API_PROXY_TARGET` (default loopback
+  Fastify), preserving same-origin relative client URLs. Production CORS was
+  not added and static builds remain independent of server secrets.
+- The service worker returns before `respondWith()` for every same-scope
+  `/api/*` request. Unit coverage proves health, future character, and auth
+  JSON requests do not reach Cache Storage while `/data/*.json` still caches.
+- CI now runs Node 24.18.0, existing static validation, Drizzle metadata
+  validation, server/config tests, and repeatable migration checks against an
+  ephemeral PostgreSQL 16 service, including Fastify health success against
+  that real disposable database. It contains no production database secret.
+- `ops/README.md` is a portable operations handoff: loopback/private Fastify,
+  HTTPS before the app, never-static/never-cached API paths, runtime-only
+  secrets, migration-before-promotion, health readiness, and graceful restart.
+  It intentionally contains no provider-specific deployment configuration.
 
-Do not install `better-auth` or `@better-auth/drizzle-adapter` (or its
-then-current replacement) until Batch 6.
+### Batch 4B entry point and blocker
 
-### Implement
-
-- A testable Fastify application factory and a separate production bootstrap.
-- Validated runtime configuration with fail-fast handling for bind address,
-  port, proxy trust, environment, and PostgreSQL connection settings.
-- A bounded `pg` pool and Drizzle connection. Production PostgreSQL uses
-  a private network, or certificate-verified TLS plus a network allowlist.
-- Drizzle Kit configuration, committed repeatable migrations, and a one-shot
-  deployment migration command. The Batch 4 baseline contains no application
-  domain tables; if the migrator needs a committed baseline to prove execution,
-  it is a no-domain migration plus the migration journal.
-- `GET /api/v1/health` as a non-sensitive readiness probe with a bounded
-  PostgreSQL check and `503` on failure.
-- Structured logging, common error handling, graceful shutdown, and pool close.
-- Production release/reverse-proxy configuration for the one selected runtime:
-  HTTPS, static `dist/`, `/api/*` proxying, supervision/restart, secret
-  injection, logs, external readiness monitoring, and application rollback.
-- A Vite development proxy for `/api` so application code remains same-origin
-  and production CORS is unnecessary.
-- The early `/api/` service-worker bypass and tests proving neither
-  `/api/v1/*` nor `/api/auth/*` enters Cache Storage; preserve `/data` rule
-  caching and existing PWA/offline tests.
-- CI/deployment validation for the pinned Node LTS, configuration failure,
-  migration execution, PostgreSQL connectivity, health success/failure,
-  reverse-proxy routing, and post-deploy readiness.
-- Deployment documentation covering migration ordering, immutable release
-  rollback, PostgreSQL backup retention/PITR, and a restore drill.
+The external prerequisite remains unresolved: verify or provision the selected
+application-capable Linux runtime and managed PostgreSQL, including its
+TLS/private-network decision, secret facility, backup/restore proof, and
+monitoring. Once that is complete, start Batch 4B from `ops/README.md` and the
+architecture gate: add the verified concrete reverse proxy, process supervisor,
+release switch, one-shot migration execution, readiness monitor, and rollback
+runbook. Do not infer any of those production details from the static GitHub
+Pages/STRATO deployment.
 
 No hosted-character table or auth/user table is needed to prove Batch 4. The
 health query, migration runner/journal, and deployment checks prove the

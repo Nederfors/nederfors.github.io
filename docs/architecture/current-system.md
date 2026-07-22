@@ -52,10 +52,19 @@ and the mutation planning and exact-removal behavior above them, remain client
 concerns.
 
 The service worker owns the static application shell, versioned/offline rule
-JSON, images, and opt-in PDF caching. It currently treats any same-scope GET
-whose `Accept` header contains `application/json` as cacheable rule JSON. A
-future API therefore requires an explicit `/api/` bypass before any JSON or
-runtime-cache branch.
+JSON, images, and opt-in PDF caching. Same-scope `/api/*` requests now return
+from the fetch handler before navigation, JSON, or runtime-cache handling.
+They are therefore never made Cache Storage authority, including JSON-accepting
+future `/api/v1/*` and `/api/auth/*` requests. Rule data under `/data/*.json`
+retains its existing rule/offline caching behavior.
+
+Batch 4A adds a server-only Fastify/Drizzle/`pg` foundation under `server/`.
+`server/app.js` builds a testable app without listening; `server/start.js` owns
+process startup and signal shutdown; `server/config.js` is the validated
+runtime boundary; and `server/db/client.js` owns one bounded PostgreSQL pool.
+The frontend still uses only relative `/api/...` URLs: Vite proxies those paths
+to a configurable local Fastify target during development, while static
+production builds need no database configuration or server secret.
 
 `.github/workflows/build.yaml` currently creates one static `dist/` artifact.
 That same artifact is deployed to GitHub Pages and uploaded to STRATO webspace

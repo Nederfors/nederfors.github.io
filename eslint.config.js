@@ -80,6 +80,8 @@ export default [
       'playwright.release.config.js',
       'vite.config.js',
       'vitest.config.js',
+      'drizzle.config.js',
+      'server/**/*.js',
       'eslint.config.js',
       'js/app-bootstrap.js',
       'js/webapp-bootstrap.js',
