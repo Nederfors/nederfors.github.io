@@ -1,0 +1,2450 @@
+[
+  {
+    "name": "Briost",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "artifactEffects": {
+        "xp": 0,
+        "corruption": 1
+      },
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": true,
+        "trait": "",
+        "armor": {
+          "path": [
+            0
+          ],
+          "id": "ru18",
+          "name": "Templárpansar"
+        },
+        "weapons": [
+          {
+            "path": [
+              2
+            ],
+            "id": "v14",
+            "name": "Sköld"
+          },
+          {
+            "path": [
+              6
+            ],
+            "id": "ar84",
+            "name": "Solkross"
+          }
+        ],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "liveMode": false,
+      "baseXp": 260,
+      "inventory": [
+        {
+          "i": "ru18",
+          "n": "Templárpansar"
+        },
+        {
+          "i": "forv12",
+          "n": "Säck"
+        },
+        {
+          "i": "v14",
+          "n": "Sköld"
+        },
+        {
+          "i": "kl13",
+          "n": "Mantel"
+        },
+        {
+          "i": "kl18",
+          "n": "Särk"
+        },
+        {
+          "i": "di5",
+          "n": "Fackla"
+        },
+        {
+          "i": "ar84",
+          "n": "Solkross",
+          "e": "corruption"
+        },
+        {
+          "i": "di10",
+          "n": "Flinta & stål"
+        },
+        {
+          "i": "di11",
+          "n": "Kokkärl"
+        },
+        {
+          "i": "di12",
+          "n": "Rep, 10 meter"
+        },
+        {
+          "i": "di13",
+          "n": "Sovfäll"
+        },
+        {
+          "i": "di14",
+          "n": "Tändved"
+        },
+        {
+          "i": "di15",
+          "n": "Vattenskinn"
+        },
+        {
+          "i": "far7",
+          "n": "Mulåsna"
+        }
+      ],
+      "entryOrderCounter": 25,
+      "list": [
+        {
+          "i": "mystiskkr17",
+          "l": "Mästare",
+          "u": "ent-mku490nr-2",
+          "o": 2
+        },
+        {
+          "i": "form20",
+          "l": "Gesäll",
+          "u": "ent-mku490nr-3",
+          "o": 3
+        },
+        {
+          "i": "form35",
+          "l": "Mästare",
+          "u": "ent-mku490nr-4",
+          "o": 4
+        },
+        {
+          "i": "elit2",
+          "u": "ent-mku490nt-5",
+          "o": 5
+        },
+        {
+          "i": "y8",
+          "f": "normal",
+          "u": "ent-mku4bevn-6",
+          "o": 6
+        },
+        {
+          "i": "ra6",
+          "f": "normal",
+          "u": "ent-mku4cqoh-7",
+          "o": 7
+        },
+        {
+          "i": "form41",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mku4ixgh-1",
+          "o": 8
+        },
+        {
+          "i": "mystiskkr19",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mku4n2yb-2",
+          "o": 9
+        },
+        {
+          "i": "form5",
+          "l": "Gesäll",
+          "t": "Viljestark",
+          "u": "ent-mku4t60h-1",
+          "o": 10
+        },
+        {
+          "i": "ri13",
+          "f": "normal",
+          "u": "ent-mku5b3kk-1",
+          "o": 12
+        },
+        {
+          "i": "mystiskkr44",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-ml43oyqz-1",
+          "o": 14
+        },
+        {
+          "i": "na49",
+          "f": "normal",
+          "u": "ent-ml43rixz-1",
+          "o": 15
+        },
+        {
+          "i": "na41",
+          "f": "normal",
+          "u": "ent-ml43w3go-2",
+          "o": 16
+        },
+        {
+          "i": "na51",
+          "f": "normal",
+          "u": "ent-ml43x5lb-3",
+          "o": 17
+        },
+        {
+          "i": "na44",
+          "f": "normal",
+          "u": "ent-ml440wsw-4",
+          "o": 18
+        },
+        {
+          "i": "na66",
+          "f": "normal",
+          "u": "ent-ml445o01-1",
+          "o": 19
+        },
+        {
+          "i": "ford15",
+          "f": "normal",
+          "u": "ent-ml44coyf-2",
+          "o": 20
+        },
+        {
+          "i": "ford63",
+          "f": "normal",
+          "u": "ent-ml44d8bk-3",
+          "o": 21
+        },
+        {
+          "i": "ford62",
+          "f": "normal",
+          "u": "ent-ml44fs1f-5",
+          "o": 23
+        },
+        {
+          "i": "ar84",
+          "u": "ent-mlht3tqo-1",
+          "o": 24
+        },
+        {
+          "i": "form23",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlhuc6nn-1",
+          "o": 25
+        }
+      ],
+      "traits": {
+        "Diskret": 5,
+        "Kvick": 14,
+        "Listig": 8,
+        "Stark": 14,
+        "Träffsäker": 5,
+        "Vaksam": 8,
+        "Viljestark": 15,
+        "Övertygande": 11
+      },
+      "revealedArtifacts": [
+        "ar84",
+        "ar93"
+      ],
+      "money": {
+        "örtegar": 0,
+        "skilling": 0,
+        "daler": 300,
+        "d": 300,
+        "s": 0,
+        "o": 0
+      }
+    }
+  },
+  {
+    "name": "Brumhildemei",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": true,
+        "trait": "",
+        "armor": {
+          "path": [
+            2
+          ],
+          "id": "ru9",
+          "name": "Lackerad silkeskyrass"
+        },
+        "weapons": [
+          {
+            "path": [
+              0
+            ],
+            "id": "v10",
+            "name": "Pik"
+          },
+          {
+            "path": [
+              1
+            ],
+            "id": "v16",
+            "name": "Stålsköld"
+          }
+        ],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "liveMode": false,
+      "baseXp": 300,
+      "inventory": [
+        {
+          "i": "v10",
+          "n": "Pik"
+        },
+        {
+          "i": "v16",
+          "n": "Stålsköld"
+        },
+        {
+          "i": "ru9",
+          "n": "Lackerad silkeskyrass"
+        }
+      ],
+      "entryOrderCounter": 21,
+      "list": [
+        {
+          "i": "form87",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mlj1wdhr-2e",
+          "o": 2
+        },
+        {
+          "i": "form23",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlj1yicg-2f",
+          "o": 3
+        },
+        {
+          "i": "form86",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlj23b5y-2g",
+          "o": 4
+        },
+        {
+          "i": "form4",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlj2a11n-2h",
+          "o": 5
+        },
+        {
+          "i": "form11",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlj2c319-2i",
+          "o": 6
+        },
+        {
+          "i": "form85",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mlj2di0o-2j",
+          "o": 7
+        },
+        {
+          "i": "ra6",
+          "f": "normal",
+          "u": "ent-mlj2e39m-2k",
+          "o": 8
+        },
+        {
+          "i": "y3",
+          "f": "normal",
+          "u": "ent-mlj2ilxv-2l",
+          "o": 9
+        },
+        {
+          "i": "form31",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mlj2k01q-2m",
+          "o": 10
+        },
+        {
+          "i": "form74",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlj2ll1t-2n",
+          "o": 11
+        },
+        {
+          "i": "form84",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mlj2ly6a-2o",
+          "o": 12
+        },
+        {
+          "i": "form5",
+          "l": "Gesäll",
+          "t": "Övertygande",
+          "u": "ent-mlj3mluh-1l",
+          "o": 13
+        },
+        {
+          "i": "na78",
+          "f": "normal",
+          "u": "ent-mlj7mm03-1l",
+          "o": 14
+        },
+        {
+          "i": "na56",
+          "f": "normal",
+          "u": "ent-mlj85wdu-1m",
+          "o": 15
+        },
+        {
+          "i": "na52",
+          "f": "normal",
+          "u": "ent-mlj867d9-1n",
+          "o": 16
+        },
+        {
+          "i": "na19",
+          "f": "normal",
+          "u": "ent-mlj88zha-1o",
+          "o": 17
+        },
+        {
+          "i": "form20",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mljiiiod-1m",
+          "o": 19
+        },
+        {
+          "i": "ford63",
+          "f": "normal",
+          "u": "ent-mljimoq5-1n",
+          "o": 20
+        },
+        {
+          "i": "ford62",
+          "f": "normal",
+          "u": "ent-mljimpq2-1o",
+          "o": 21
+        }
+      ],
+      "traits": {
+        "Diskret": 8,
+        "Listig": 7,
+        "Stark": 14,
+        "Träffsäker": 11,
+        "Vaksam": 5,
+        "Övertygande": 15
+      },
+      "revealedArtifacts": [
+        "ar09",
+        "ar63"
+      ]
+    }
+  },
+  {
+    "name": "Hurley",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": true,
+        "trait": "",
+        "armor": null,
+        "weapons": [
+          {
+            "path": [
+              0
+            ],
+            "id": "art101",
+            "name": "Stormbågen Ivelios"
+          },
+          {
+            "path": [
+              13
+            ],
+            "id": "v15",
+            "name": "Bucklare"
+          }
+        ],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "liveMode": false,
+      "baseXp": 261,
+      "inventory": [
+        {
+          "i": "art101",
+          "n": "Stormbågen Ivelios",
+          "k": [
+            "Vindkraft"
+          ],
+          "rk": [
+            "Vindkraft"
+          ]
+        },
+        {
+          "i": "di10",
+          "n": "Flinta & stål"
+        },
+        {
+          "i": "di11",
+          "n": "Kokkärl"
+        },
+        {
+          "i": "di12",
+          "n": "Rep, 10 meter"
+        },
+        {
+          "i": "di13",
+          "n": "Sovfäll"
+        },
+        {
+          "i": "di14",
+          "n": "Tändved"
+        },
+        {
+          "i": "di15",
+          "n": "Vattenskinn"
+        },
+        {
+          "i": "v62",
+          "n": "Hammarpil",
+          "q": 11,
+          "pm": 2
+        },
+        {
+          "i": "v58",
+          "n": "Vanlig pil/lod",
+          "q": 74,
+          "pm": 2
+        },
+        {
+          "i": "v67",
+          "n": "Änterhakespil",
+          "q": 2,
+          "pm": 2
+        },
+        {
+          "i": "v64",
+          "n": "Repklyvare",
+          "q": 2,
+          "pm": 2
+        },
+        {
+          "i": "sp19",
+          "n": "Förberedelsesäck"
+        },
+        {
+          "i": "ru1",
+          "n": "Flätat silke",
+          "k": [
+            "Förstärkt",
+            "Skottfast"
+          ],
+          "pm": 2
+        },
+        {
+          "i": "v15",
+          "n": "Bucklare",
+          "k": [
+            "Balanserat"
+          ],
+          "pm": 2
+        },
+        {
+          "i": "l47",
+          "n": "Blått vaxljus"
+        },
+        {
+          "i": "l47",
+          "n": "Blått vaxljus"
+        },
+        {
+          "i": "l47",
+          "n": "Blått vaxljus"
+        },
+        {
+          "i": "l49",
+          "n": "Bärnstensinsekt"
+        },
+        {
+          "i": "l48",
+          "n": "Åskskärva"
+        },
+        {
+          "i": "l43",
+          "n": "Tungstensspira"
+        },
+        {
+          "i": "sp11",
+          "n": "Klättringsutrustning"
+        }
+      ],
+      "entryOrderCounter": 20,
+      "list": [
+        {
+          "i": "ra10",
+          "f": "normal",
+          "u": "ent-mlhzcmu8-1",
+          "o": 1
+        },
+        {
+          "i": "sa2",
+          "u": "ent-mlhzcmu9-2",
+          "o": 2
+        },
+        {
+          "i": "form46",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mlhzddvy-3",
+          "o": 3
+        },
+        {
+          "i": "form5",
+          "l": "Gesäll",
+          "t": "Träffsäker",
+          "u": "ent-mlhzdn4b-4",
+          "o": 4
+        },
+        {
+          "i": "form19",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlhze7y4-5",
+          "o": 5
+        },
+        {
+          "i": "form73",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mlhzfc4v-6",
+          "o": 6
+        },
+        {
+          "i": "form78",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mlhzg9fa-7",
+          "o": 7
+        },
+        {
+          "i": "sa5",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mlhzh9rc-8",
+          "o": 8
+        },
+        {
+          "i": "form1",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlhzi5qs-9",
+          "o": 9
+        },
+        {
+          "i": "form54",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mlhzm1ct-a",
+          "o": 10
+        },
+        {
+          "i": "art101",
+          "u": "ent-mli07hlr-2",
+          "o": 12
+        },
+        {
+          "i": "ford24",
+          "f": "normal",
+          "u": "ent-mli0jt6a-3",
+          "o": 13
+        },
+        {
+          "i": "na8",
+          "f": "normal",
+          "u": "ent-mli0pfos-4",
+          "o": 14
+        },
+        {
+          "i": "na69",
+          "f": "normal",
+          "u": "ent-mli0qewt-5",
+          "o": 15
+        },
+        {
+          "i": "na40",
+          "f": "normal",
+          "u": "ent-mli0rj1a-6",
+          "o": 16
+        },
+        {
+          "i": "ford33",
+          "f": "normal",
+          "u": "ent-mli0vol1-7",
+          "o": 17
+        },
+        {
+          "i": "form20",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mlpdkr86-2",
+          "o": 19
+        },
+        {
+          "i": "na3",
+          "f": "normal",
+          "u": "ent-mlpdn6au-3",
+          "o": 20
+        }
+      ],
+      "revealedArtifacts": [
+        "art101",
+        "ar84",
+        "ar93",
+        "ar111"
+      ],
+      "traits": {
+        "Diskret": 6,
+        "Kvick": 14,
+        "Listig": 5,
+        "Stark": 14,
+        "Träffsäker": 15,
+        "Vaksam": 8,
+        "Viljestark": 13,
+        "Övertygande": 5
+      }
+    }
+  },
+  {
+    "name": "Clemens",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": true,
+        "trait": "Kvick",
+        "armor": {
+          "path": [
+            1
+          ],
+          "id": "ru12",
+          "name": "Helrustning"
+        },
+        "weapons": [
+          {
+            "path": [
+              0
+            ],
+            "id": "v18",
+            "name": "Bastardsvärd"
+          }
+        ],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "liveMode": false,
+      "baseXp": 300,
+      "inventory": [
+        {
+          "i": "di12",
+          "n": "Rep, 10 meter",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "di23",
+          "n": "Papper",
+          "g": 1,
+          "pk": "Välutrustad",
+          "pg": 1
+        },
+        {
+          "i": "di18",
+          "n": "Kritor",
+          "g": 1,
+          "pk": "Välutrustad",
+          "pg": 1
+        },
+        {
+          "i": "di5",
+          "n": "Fackla",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "i11",
+          "n": "Signalhorn",
+          "g": 1,
+          "pk": "Välutrustad",
+          "pg": 1
+        },
+        {
+          "i": "elix34",
+          "n": "Långfärdsbröd",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "elix43",
+          "n": "Örtkur",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        }
+      ],
+      "entryOrderCounter": 28,
+      "list": [
+        {
+          "i": "ra6",
+          "f": "normal",
+          "u": "ent-mir2buuj-2d",
+          "o": 1
+        },
+        {
+          "i": "y19",
+          "f": "normal",
+          "u": "ent-mir2drqb-2f",
+          "o": 3
+        },
+        {
+          "i": "form71",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mir2gbjp-2g",
+          "o": 4
+        },
+        {
+          "i": "form69",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mir2h9ry-2h",
+          "o": 5
+        },
+        {
+          "i": "form49",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mir2n5k7-2i",
+          "o": 6
+        },
+        {
+          "i": "form37",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mir2obqg-2l",
+          "o": 9
+        },
+        {
+          "i": "form30",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mir6pkq9-2m",
+          "o": 10
+        },
+        {
+          "i": "form27",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mir6t3be-2n",
+          "o": 11
+        },
+        {
+          "i": "form20",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mir6u9jv-2o",
+          "o": 12
+        },
+        {
+          "i": "form1",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mir6wglk-2s",
+          "o": 16
+        },
+        {
+          "i": "na90",
+          "f": "normal",
+          "u": "ent-mit55g6a-1l",
+          "o": 17
+        },
+        {
+          "i": "na83",
+          "f": "normal",
+          "u": "ent-mit56rid-1m",
+          "o": 18
+        },
+        {
+          "i": "na60",
+          "f": "normal",
+          "u": "ent-mit5951o-1n",
+          "o": 19
+        },
+        {
+          "i": "na8",
+          "f": "normal",
+          "u": "ent-mit61euo-1o",
+          "o": 20
+        },
+        {
+          "i": "na1",
+          "f": "normal",
+          "u": "ent-mit622ua-1p",
+          "o": 21
+        },
+        {
+          "i": "ford98",
+          "f": "normal",
+          "u": "ent-mit63hsp-1q",
+          "o": 22
+        },
+        {
+          "i": "ford94",
+          "f": "normal",
+          "u": "ent-mit64o4x-1r",
+          "o": 23
+        },
+        {
+          "i": "ford85",
+          "f": "normal",
+          "u": "ent-mit652pp-1s",
+          "o": 24
+        },
+        {
+          "i": "ford63",
+          "f": "normal",
+          "u": "ent-mit69ngp-1t",
+          "o": 25
+        },
+        {
+          "i": "ford62",
+          "f": "normal",
+          "u": "ent-mit69u4r-1u",
+          "o": 26
+        },
+        {
+          "i": "form5",
+          "l": "Novis",
+          "t": "Träffsäker",
+          "u": "ent-mit8tvnh-1l",
+          "o": 27
+        },
+        {
+          "i": "ford50",
+          "f": "normal",
+          "u": "ent-mmamtcpp-1",
+          "o": 28
+        }
+      ],
+      "traits": {
+        "Diskret": 6,
+        "Kvick": 14,
+        "Listig": 5,
+        "Stark": 12,
+        "Träffsäker": 15,
+        "Vaksam": 8
+      },
+      "money": {
+        "örtegar": 0,
+        "skilling": 0,
+        "daler": 1000,
+        "d": 1000,
+        "s": 0,
+        "o": 0
+      },
+      "revealedArtifacts": [
+        "ar84",
+        "ar28",
+        "ar122"
+      ]
+    }
+  },
+  {
+    "name": "Testperson",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": false,
+        "trait": "",
+        "armor": null,
+        "weapons": [],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "liveMode": false,
+      "baseXp": 250,
+      "inventory": [
+        {
+          "i": "di12",
+          "n": "Rep, 10 meter",
+          "q": 4,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "di23",
+          "n": "Papper",
+          "g": 1,
+          "pk": "Välutrustad",
+          "pg": 1
+        },
+        {
+          "i": "di18",
+          "n": "Kritor",
+          "g": 1,
+          "pk": "Välutrustad",
+          "pg": 1
+        },
+        {
+          "i": "di5",
+          "n": "Fackla",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "i11",
+          "n": "Signalhorn",
+          "g": 1,
+          "pk": "Välutrustad",
+          "pg": 1
+        },
+        {
+          "i": "elix34",
+          "n": "Långfärdsbröd",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "elix43",
+          "n": "Örtkur",
+          "q": 3,
+          "g": 3,
+          "pk": "Välutrustad",
+          "pg": 3
+        },
+        {
+          "i": "di10",
+          "n": "Flinta & stål"
+        },
+        {
+          "i": "di11",
+          "n": "Kokkärl"
+        },
+        {
+          "i": "di13",
+          "n": "Sovfäll"
+        },
+        {
+          "i": "di14",
+          "n": "Tändved"
+        },
+        {
+          "i": "di15",
+          "n": "Vattenskinn"
+        },
+        {
+          "i": "l9",
+          "n": "Djurmask",
+          "t": "Kvick",
+          "pm": 10
+        }
+      ],
+      "entryOrderCounter": 27,
+      "list": [
+        {
+          "i": "mystiskkr56",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mmhuapog-1",
+          "o": 26
+        }
+      ],
+      "traits": {
+        "Viljestark": 18
+      }
+    }
+  },
+  {
+    "name": "Rex",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "custom": [
+        {
+          "id": "868c18b8-29db-48a4-b2f7-5375831de9e2",
+          "namn": "Strävarens band",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Artefakt"
+            ]
+          },
+          "grundpris": {
+            "daler": 100,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "Ett tunt läderband som knyts runt handtaget på ett vapen för att kunna använda artifakten. Skulle bäraren inte använda vapen utan sina bara händer, knyts bandet runt handleden.",
+          "artifactEffect": "",
+          "vikt": 0.2,
+          "nivåer": {
+            "Målfinnare": "Aktiv. Rollpersonens vapen har nästan ett eget liv och guidar rörelsen i attacken mot sitt mål. Ett glapp i rustningen, en dåligt sammanfogad ring i brynjan osv. Rollpersonen får plus 1 i skada mot bepansrade varelser och rustning. Aktivering kostar 1 temp per scen.",
+            "Desarmerande sving": "Reaktiv. Vid ett lyckat försvar från rollpersonen slå kvick<~kvick. Lyckas det skickas vapnet rakt mot den attackerandes vapenhand och attackeraren tappar vapnet. Aktivering kostar 1t4 temporär korruption.",
+            "Förblindande träff": "Om rollpersonen väljer att göra en precis träff mot huvudet och lyckas, gör hen en träff rätt i pannan och drar ett långt sår som låter blodet på på motståndaren rinna ner i ögonen. Resterande attacker mot samma mål får motsåndaren -3 i försvar. \nAktivering kostar 1t4 i temporär korruption."
+          }
+        }
+      ],
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": false,
+        "trait": "",
+        "armor": null,
+        "weapons": [],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "notes": {
+        "shadow": "Vit, som en liten kritstump",
+        "age": "2",
+        "appearance": "Kort mörk rock med luva, stora hängande öron, en liten mörk hatt fastklämd mellan öronen. Flera knivar hängades i bältet. Tveksam blick.",
+        "manner": "Sökande, gärna i bakgrunden.",
+        "faction": "Moggulens indrivare, Karabbadokk",
+        "quote": "En dold egg är bättre än tio synliga ägg.",
+        "goal": "Att ses som en jämlike med långbenen. ",
+        "drives": "Daler och rykte.",
+        "loyalties": "Moggulen, samt svartalfer över lag.",
+        "likes": "Knivar och daler",
+        "hates": "Orättvisa, i viss mån långbeningar.",
+        "background": "Karabbadokk. Rex hem som liten svartalfyngling. Tidigt i hans liv såg han hur svartalfernas slit ledde till. Tja, ingenting alls. Svartalferna utnyttjades som billig arbetskraft knappt värda kläderna på deras kroppar. Att svabba långbenens latriner var inget för Rex. En dag sittandes vid paddans torg såg Rex ännu ett skattletargäng tillbaks från Davokar. Plötsligt knuffades han omkull. ”Efter honom!” Hördes från en kvinna i mörk läderrock. Rex var snabbt upp på benen och lyckades efter att ha hoppat genom ett stånd säljandes allehanda utrustning överaska den jagade och greppa runt hans hals. I ett stort tumult ramlade de två ner på marken. \nKvinnan kom fram till den båda och med ett blixtsnappt ryck slog hon handtaget av sin kniv rätt i plytet på mannen. Hans huvud slungades bak och låg stilla, en tunn strimma blod sipprade långsamt från hans panna och ut längs med rännstenen. \n”tack unge herr svartalf. Mitt namn är Tyrlinda”, vad går kan en så snabb rackare som du under för namn? \n”Rex, från Karabbadokk”. \nTyrlinda gav fram sin hand och Rex tog den. Väl uppe på sina fötter märkte han att han hade ett silvermynt i handen. \n”Som tack för hjälpen”. \n”Vem är han?” Frågade Rex. \nEtt skumrask som var skyldig pengar till fel person, eller ah, svartalf faktiskt. Sade Tyrlinda och tittade Rex upp och ner. \n”Behöver du jobb?”\nRex, som fortfarande var tagen av hela situationen kunde bara nicka till svar. \n”Moggulen har alltid nytta av någon med ett kvickt sinne. Följ med”. "
+      },
+      "liveMode": false,
+      "baseXp": 256,
+      "list": [
+        {
+          "i": "y17",
+          "f": "normal",
+          "u": "ent-mghvlaao-3x",
+          "o": 1
+        },
+        {
+          "i": "ford24",
+          "f": "normal",
+          "u": "ent-mghvlaao-41",
+          "o": 5
+        },
+        {
+          "i": "ford43",
+          "f": "normal",
+          "u": "ent-mghvlaao-42",
+          "o": 6
+        },
+        {
+          "i": "ford43",
+          "f": "normal",
+          "u": "ent-mghvlaao-43",
+          "o": 7
+        },
+        {
+          "i": "ford43",
+          "f": "normal",
+          "u": "ent-mghvlaao-44",
+          "o": 8
+        },
+        {
+          "i": "ford74",
+          "f": "normal",
+          "u": "ent-mghvlaao-45",
+          "o": 9
+        },
+        {
+          "i": "ford74",
+          "f": "normal",
+          "u": "ent-mghvlaao-46",
+          "o": 10
+        },
+        {
+          "i": "form1",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mghvlaao-49",
+          "o": 13
+        },
+        {
+          "i": "form48",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mghvlaao-4a",
+          "o": 14
+        },
+        {
+          "i": "form6",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mghvlaao-4b",
+          "o": 15
+        },
+        {
+          "i": "na73",
+          "f": "normal",
+          "u": "ent-mghvlaao-4c",
+          "o": 16
+        },
+        {
+          "i": "na11",
+          "f": "normal",
+          "u": "ent-mghvlaao-4d",
+          "o": 17
+        },
+        {
+          "i": "ra10",
+          "f": "normal",
+          "u": "ent-mghvlaao-4f",
+          "o": 19
+        },
+        {
+          "i": "sa2",
+          "u": "ent-mghvlaao-4g",
+          "o": 20
+        },
+        {
+          "i": "sa5",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mghvlaao-4h",
+          "o": 21
+        },
+        {
+          "i": "na52",
+          "f": "normal",
+          "u": "ent-mghvlaao-4i",
+          "o": 22
+        },
+        {
+          "i": "na40",
+          "f": "normal",
+          "u": "ent-mghvlaao-4j",
+          "o": 23
+        },
+        {
+          "i": "form14",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mghvlaao-4l",
+          "o": 25
+        },
+        {
+          "i": "ford36",
+          "f": "normal",
+          "u": "ent-mghvlaao-4m",
+          "o": 26
+        },
+        {
+          "i": "ford35",
+          "f": "normal",
+          "u": "ent-mh8rggxx-3p",
+          "o": 27
+        },
+        {
+          "i": "ford26",
+          "f": "normal",
+          "u": "ent-mh8rh21i-3q",
+          "o": 28
+        },
+        {
+          "i": "ford14",
+          "f": "normal",
+          "u": "ent-mh8rh8qw-3r",
+          "o": 29
+        },
+        {
+          "i": "ford35",
+          "f": "normal",
+          "u": "ent-mh8rggxx-3p",
+          "o": 27
+        },
+        {
+          "i": "ford35",
+          "f": "normal",
+          "u": "ent-mh8rggxx-3p",
+          "o": 27
+        },
+        {
+          "i": "ford7",
+          "f": "normal",
+          "u": "ent-mghvlaao-3z",
+          "o": 3
+        },
+        {
+          "i": "ford14",
+          "f": "normal",
+          "u": "ent-mh8rh8qw-3r",
+          "o": 29
+        },
+        {
+          "i": "ford14",
+          "f": "normal",
+          "u": "ent-mh8rh8qw-3r",
+          "o": 29
+        },
+        {
+          "i": "ford61",
+          "f": "normal",
+          "u": "ent-mhaqygqw-3p",
+          "o": 31
+        },
+        {
+          "i": "ford61",
+          "f": "normal",
+          "u": "ent-mhaqyig6-3q",
+          "o": 32
+        },
+        {
+          "i": "na8",
+          "f": "normal",
+          "u": "ent-mhda5dt7-3p",
+          "o": 33
+        }
+      ],
+      "traits": {
+        "Diskret": 15,
+        "Kvick": 13,
+        "Listig": 8,
+        "Träffsäker": 6,
+        "Vaksam": 14,
+        "Viljestark": 9,
+        "Övertygande": 5
+      },
+      "revealedArtifacts": [
+        "ar21",
+        "ar74",
+        "ar40",
+        "ar115",
+        "ar120"
+      ],
+      "inventory": [
+        {
+          "i": "l18",
+          "n": "Lyckomynt"
+        },
+        {
+          "i": "l19",
+          "n": "Marlitmantel"
+        },
+        {
+          "i": "ru6",
+          "n": "Härdat läder",
+          "g": 1,
+          "k": [
+            "Smidigt"
+          ]
+        },
+        {
+          "i": "v33",
+          "n": "Bladdolk",
+          "k": [
+            "Banevapen",
+            "Snabbhölster"
+          ]
+        },
+        {
+          "i": "v6",
+          "n": "Parerdolk",
+          "k": [
+            "Snabbhölster"
+          ]
+        },
+        {
+          "i": "sp18",
+          "n": "Detektiv-kit"
+        },
+        {
+          "i": "sp10",
+          "n": "Kartografverktyg"
+        },
+        {
+          "i": "i11",
+          "n": "Signalhorn"
+        },
+        {
+          "i": "di37",
+          "n": "Vissla"
+        },
+        {
+          "i": "forv8",
+          "n": "Penningpung"
+        },
+        {
+          "i": "868c18b8-29db-48a4-b2f7-5375831de9e2",
+          "n": "Strävarens band"
+        },
+        {
+          "i": "kl20",
+          "n": "Vinterkläder"
+        },
+        {
+          "i": "sp16",
+          "n": "Dyrksats"
+        },
+        {
+          "i": "sp28",
+          "n": "Dämpningskit"
+        },
+        {
+          "i": "v15",
+          "n": "Bucklare"
+        },
+        {
+          "i": "b1",
+          "n": "Torp"
+        },
+        {
+          "i": "v1",
+          "n": "Enhandsvapen",
+          "k": [
+            "Brinnande"
+          ]
+        },
+        {
+          "i": "far7",
+          "n": "Mulåsna",
+          "c": [
+            {
+              "n": "Flinta och stål"
+            },
+            {
+              "i": "di4",
+              "n": "Dyrkar"
+            },
+            {
+              "i": "di4",
+              "n": "Dyrkar",
+              "q": 5
+            },
+            {
+              "i": "di5",
+              "n": "Fackla",
+              "q": 3
+            },
+            {
+              "i": "di8",
+              "n": "Fiskelina och krok"
+            },
+            {
+              "i": "di11",
+              "n": "Kokkärl"
+            },
+            {
+              "i": "di12",
+              "n": "Rep, 10 meter"
+            },
+            {
+              "i": "di13",
+              "n": "Sovfäll"
+            },
+            {
+              "i": "di34",
+              "n": "Tält"
+            },
+            {
+              "i": "di14",
+              "n": "Tändved"
+            },
+            {
+              "i": "di15",
+              "n": "Vattenskinn"
+            },
+            {
+              "i": "forv13",
+              "n": "Tunna"
+            },
+            {
+              "i": "l2",
+              "n": "Golpadda"
+            },
+            {
+              "i": "l7",
+              "n": "Sårläkande spindel"
+            },
+            {
+              "i": "ma55",
+              "n": "Rökt kött",
+              "q": 14
+            },
+            {
+              "i": "ma54",
+              "n": "Saltat kött",
+              "q": 14
+            },
+            {
+              "i": "sp15",
+              "n": "Ruinmästarkit"
+            }
+          ]
+        },
+        {
+          "i": "far5",
+          "n": "Ridhäst, lätt"
+        }
+      ],
+      "money": {
+        "örtegar": 6,
+        "skilling": 3,
+        "daler": 799,
+        "d": 799,
+        "s": 3,
+        "o": 6
+      },
+      "entryOrderCounter": 34
+    }
+  },
+  {
+    "name": "Magnum",
+    "folderId": "fd-standard-237911",
+    "data": {
+      "custom": [
+        {
+          "namn": "Titanernas fot",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Vapen"
+            ]
+          },
+          "vikt": 0,
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "En tvåhandhammare smidd för att rämna berg men likväl anpassad för att mosa motståndare.",
+          "artifactEffect": "corruption",
+          "id": "76a2fca9-4394-46e0-bf9f-bfd754db85e2",
+          "_normName": "titanernas fot",
+          "_normSearchSource": "Titanernas fot En tvåhandhammare smidd för att rämna berg men likväl anpassad för att mosa motståndare.",
+          "_normSearchText": "titanernas fot en tvåhandhammare smidd för att rämna berg men likväl anpassad för att mosa motståndare.",
+          "_normTags": {
+            "typ": [
+              "Hemmagjort",
+              "Vapen"
+            ],
+            "ark": [],
+            "test": [],
+            "all": [
+              "Hemmagjort",
+              "Vapen"
+            ]
+          },
+          "_normTagSet": {}
+        },
+        {
+          "namn": "Tätvävd läderbrynja",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Rustning"
+            ]
+          },
+          "vikt": 4,
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "En brynja vävd så strängt tät att inget släpper genom den förutom de vassaste och mest hårt forcerade spetsarna.",
+          "artifactEffect": "corruption",
+          "id": "f01a5695-835a-4b08-920a-305eec02ac97",
+          "_normName": "tätvävd läderbrynja",
+          "_normSearchSource": "Tätvävd läderbrynja En brynja vävd så strängt tät att inget släpper genom den förutom de vassaste och mest hårt forcerade spetsarna.",
+          "_normSearchText": "tätvävd läderbrynja en brynja vävd så strängt tät att inget släpper genom den förutom de vassaste och mest hårt forcerade spetsarna.",
+          "_normTags": {
+            "typ": [
+              "Hemmagjort",
+              "Rustning"
+            ],
+            "ark": [],
+            "test": [],
+            "all": [
+              "Hemmagjort",
+              "Rustning"
+            ]
+          },
+          "_normTagSet": {}
+        },
+        {
+          "id": "b882c621-55dd-4938-8c69-d34186d0e999",
+          "namn": "Skuldmynt",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Artefakt"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "Skuldmynt från Lunskross",
+          "artifactEffect": "corruption",
+          "vikt": 0.02
+        },
+        {
+          "id": "40591774-f9d6-4d9f-8ebd-69c7d733cd55",
+          "namn": "Ölrunda",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Dryck"
+            ]
+          },
+          "grundpris": {
+            "daler": 3,
+            "skilling": 2,
+            "örtegar": 0
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 1
+        },
+        {
+          "id": "3a4032f3-3914-46d5-bac1-9ac9e4e83aa1",
+          "namn": "Stop stut",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Dryck"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 3
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 0
+        },
+        {
+          "id": "1fe3419f-52e3-4202-9ee8-82e9a87d032f",
+          "namn": "Skattletarlicens",
+          "taggar": {
+            "typ": [
+              "Hemmagjort"
+            ]
+          },
+          "grundpris": {
+            "daler": 258,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "Min andel",
+          "artifactEffect": "",
+          "vikt": 0
+        },
+        {
+          "id": "fe0c989e-1218-46a3-abc4-91c1a76c58a5",
+          "namn": "Rubin",
+          "taggar": {
+            "typ": [
+              "Hemmagjort"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "Värd 10-20 D",
+          "artifactEffect": "",
+          "vikt": 0
+        },
+        {
+          "id": "b7962a60-d324-4910-8ef5-16e48b52768d",
+          "namn": "Ruinen",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Färdmedel"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 0,
+          "stat": {
+            "bärkapacitet": 50
+          }
+        },
+        {
+          "id": "812d8166-e2fa-46f2-8623-d7092a5d6f89",
+          "namn": "Ruinen",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Färdmedel"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 0,
+          "stat": {
+            "bärkapacitet": 1000
+          }
+        },
+        {
+          "id": "d7dc219a-0419-4be1-90ee-100e886d8d58",
+          "namn": "Mulåsnan 2",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Färdmedel"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 0,
+          "stat": {
+            "bärkapacitet": 50
+          }
+        },
+        {
+          "id": "4f280447-f9d7-4741-8d3c-1e1f4f996b55",
+          "namn": "Ruinen",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Färdmedel"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 0,
+          "stat": {
+            "bärkapacitet": 50
+          }
+        },
+        {
+          "id": "27670c9e-126d-48d7-8029-05d0f31d5994",
+          "namn": "Vatten",
+          "taggar": {
+            "typ": [
+              "Hemmagjort"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "",
+          "artifactEffect": "",
+          "vikt": 36
+        },
+        {
+          "id": "377ddcca-08d2-4d8d-acce-55f9ada2ff17",
+          "namn": "Grabbens första tärning",
+          "taggar": {
+            "typ": [
+              "Hemmagjort",
+              "Artefakt"
+            ]
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "beskrivning": "En dålig tärning. Som om Davokars mörker haft en egen ande och anden smitt in sitt mest lömska spel i en tärning har tärningen en förmåga att aldrig ge det spelaren önskar.",
+          "artifactEffect": "xp",
+          "vikt": 0.2,
+          "nivåer": {
+            "Dåligt kast": "När helst spelaren önskar kan han slå ett andra slag och välja det sämsta utfallet av slagen."
+          }
+        }
+      ],
+      "artifactEffects": {
+        "xp": 1,
+        "corruption": 1
+      },
+      "bonusMoney": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "savedUnusedMoney": {
+        "örtegar": 0,
+        "skilling": 0,
+        "daler": 0,
+        "d": 0,
+        "s": 0,
+        "o": 0
+      },
+      "forcedDefense": "",
+      "defenseSetup": {
+        "enabled": true,
+        "trait": "Kvick",
+        "armor": {
+          "path": [
+            0
+          ],
+          "id": "ru7",
+          "name": "Nitläderpansar"
+        },
+        "weapons": [],
+        "dancingTrait": "",
+        "dancingWeapon": null
+      },
+      "notes": {
+        "shadow": "Guldigt gyllenröd ",
+        "age": "42",
+        "appearance": "Magnum reser sig likt ett torn långt över i princip alla. Hans gestalt och siluett känns därför skräckinjagande. Den som tar sig en närmre titt under ett förutsättningar noterar dock ett par ganska avskräckande glasögon och ett mjukt varmt leende. Trots sin jättelika konstruktion lyckas Magnus se tämligen snäll och välkomnande ut. ",
+        "manner": "Talar långsamt och i korta fraser. Gestikulerar mycket. ",
+        "faction": "",
+        "quote": "”Så”",
+        "goal": "Att erhålla Tarragons vrede",
+        "drives": "Det som stör god ro behöver stävjas. ",
+        "loyalties": "De goda vännerna i De Arvslösa",
+        "likes": "Öl, snus och goda skratt",
+        "hates": "De som ska hålla på och bråka. ",
+        "background": "Som ung bosatte sig magnum i en liten bosättning i södra Yndarien nära Titanerna. Bland herrskapet i byn lärde han sig om livets enkelhet: att utföra sitt arbete för att sedan kunna koppla av och roa sig. Det ansågs aldrig fel att vidta dryck och tobak för detta ändamål. \n\nMagnum skulle efter några år vidta en färd för att försöka hitta sig själv så som ofta är fallet bland de som ännu endast levt unga. Hann fann inte mer än att det han lärt sig i byn stämde. Men han fann också, längs vandringen i Titanerna, en hammare så väldig att det var den första att passa hans hand. \n\nDet enkla livet har kommit att erbjuda lite med åren och efter att ett gäng banditer rånat några goda vänner till honom, och därtill skadat dem allvarligt, började han i blint raseri jaga dessa norrut. Han fann dem aldrig men har sedan dess alltid haft ett vakande öga efter dem. Han kan dock inte med gott samvete vända hem utan att ha hämnats de goda vännerna. \n\nÖnskelista karaktärsutveckling:\nStridsraseri fördel\nTvåhandskraft gesäll, sedermera mästare\nHammarrytm mästare\nExceptionellt karaktärsdrag stark\nSmittsam optimist? Fördel "
+      },
+      "nilasPopupShown": true,
+      "liveMode": false,
+      "baseXp": 268,
+      "list": [
+        {
+          "i": "ra9",
+          "f": "normal",
+          "u": "ent-mgj624kk-1",
+          "o": 1
+        },
+        {
+          "i": "sa3",
+          "u": "ent-mgj624kk-2",
+          "o": 2
+        },
+        {
+          "i": "y1",
+          "f": "normal",
+          "u": "ent-mgj624kk-3",
+          "o": 3
+        },
+        {
+          "i": "sa4",
+          "l": "Mästare",
+          "f": "normal",
+          "u": "ent-mgj624kk-4",
+          "o": 4
+        },
+        {
+          "i": "na32",
+          "f": "normal",
+          "u": "ent-mgj624kk-5",
+          "o": 5
+        },
+        {
+          "i": "na31",
+          "f": "normal",
+          "u": "ent-mgj624kk-6",
+          "o": 6
+        },
+        {
+          "i": "ford63",
+          "f": "normal",
+          "u": "ent-mgj624kk-7",
+          "o": 7
+        },
+        {
+          "i": "ford23",
+          "f": "normal",
+          "u": "ent-mgj624kk-8",
+          "o": 8
+        },
+        {
+          "i": "ford51",
+          "f": "normal",
+          "u": "ent-mgj624kk-9",
+          "o": 9
+        },
+        {
+          "i": "ford31",
+          "f": "normal",
+          "u": "ent-mgj624kk-a",
+          "o": 10
+        },
+        {
+          "i": "ford62",
+          "f": "normal",
+          "u": "ent-mgj624kk-b",
+          "o": 11
+        },
+        {
+          "i": "ford62",
+          "f": "normal",
+          "u": "ent-mgj624kk-c",
+          "o": 12
+        },
+        {
+          "i": "ford62",
+          "f": "normal",
+          "u": "ent-mgj624kk-d",
+          "o": 13
+        },
+        {
+          "i": "mo14",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mgj624kk-e",
+          "o": 14
+        },
+        {
+          "i": "form3",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mgj624kk-f",
+          "o": 15
+        },
+        {
+          "i": "form45",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mgj624kk-g",
+          "o": 16
+        },
+        {
+          "i": "form10",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mgj624kk-h",
+          "o": 17
+        },
+        {
+          "i": "form37",
+          "l": "Novis",
+          "f": "normal",
+          "u": "ent-mgj624kk-i",
+          "o": 18
+        },
+        {
+          "i": "ford2",
+          "f": "normal",
+          "u": "ent-mgj624kk-j",
+          "o": 19
+        },
+        {
+          "i": "mo13",
+          "l": "Gesäll",
+          "f": "normal",
+          "u": "ent-mgj624kk-k",
+          "o": 20
+        },
+        {
+          "i": "ford11",
+          "f": "normal",
+          "u": "ent-mgj624kk-l",
+          "o": 21
+        },
+        {
+          "i": "na25",
+          "f": "normal",
+          "u": "ent-mgj624kk-m",
+          "o": 22
+        },
+        {
+          "i": "na28",
+          "f": "normal",
+          "u": "ent-mgj624kk-n",
+          "o": 23
+        },
+        {
+          "i": "na2",
+          "u": "ent-mgj624kk-o",
+          "o": 24
+        },
+        {
+          "i": "ar93",
+          "u": "ent-mgj624kk-p",
+          "o": 25
+        },
+        {
+          "i": "na3",
+          "f": "normal",
+          "u": "ent-mgj624kk-q",
+          "o": 26
+        },
+        {
+          "i": "ford24",
+          "f": "normal",
+          "u": "ent-mgj624kk-r",
+          "o": 27
+        },
+        {
+          "i": "ford3",
+          "f": "normal",
+          "u": "ent-mgj624kk-s",
+          "o": 28
+        },
+        {
+          "i": "ar93",
+          "u": "ent-mhkuvqgv-29",
+          "o": 29
+        }
+      ],
+      "traits": {
+        "Diskret": 5,
+        "Kvick": 6,
+        "Stark": 15,
+        "Träffsäker": 5,
+        "Vaksam": 12,
+        "Viljestark": 14,
+        "Övertygande": 13
+      },
+      "inventory": [
+        {
+          "i": "ru7",
+          "n": "Nitläderpansar",
+          "g": 1,
+          "k": [
+            "Förstärkt",
+            "Skottfast"
+          ],
+          "gk": [
+            "Förstärkt",
+            "Skottfast"
+          ],
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "di3",
+          "n": "Dryckeshorn",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "b882c621-55dd-4938-8c69-d34186d0e999",
+          "n": "Skuldmynt",
+          "g": 1,
+          "e": "corruption",
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "1fe3419f-52e3-4202-9ee8-82e9a87d032f",
+          "n": "Skattletarlicens",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "fe0c989e-1218-46a3-abc4-91c1a76c58a5",
+          "n": "Rubin",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "kl20",
+          "n": "Vinterkläder",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "dr15",
+          "n": "Stop Adersel",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "dr4",
+          "n": "Kungöl",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "di10",
+          "n": "Flinta & stål",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "di72",
+          "n": "Tuggtobak, en portion",
+          "q": 5,
+          "g": 5,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "ar93",
+          "n": "Titanernas Fot",
+          "g": 1,
+          "gk": [
+            "Massivt",
+            "Banevapen"
+          ],
+          "e": "xp",
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "sp15",
+          "n": "Ruinmästarkit",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "l44",
+          "n": "Pilflätade skosnören",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "Ku31",
+          "n": "Runristad svartbenssked",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "sk17",
+          "n": "Rökfärgad kristallstav",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix33",
+          "n": "Livselixir",
+          "q": 3,
+          "g": 3,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix30",
+          "n": "Gift (medelstarkt)",
+          "q": 3,
+          "g": 3,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix62",
+          "n": "Häxblocka",
+          "q": 2,
+          "g": 2,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix51",
+          "n": "Ljungeld (svag)",
+          "q": 2,
+          "g": 2,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix48",
+          "n": "Dimglob (svag)",
+          "q": 2,
+          "g": 2,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix15",
+          "n": "Purpursav (medelstark)",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix14",
+          "n": "Purpursav (svag)",
+          "q": 2,
+          "g": 2,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual"
+        },
+        {
+          "i": "elix34",
+          "n": "Långfärdsbröd",
+          "q": 40
+        },
+        {
+          "i": "b7962a60-d324-4910-8ef5-16e48b52768d",
+          "n": "Ruinen",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual",
+          "c": [
+            {
+              "i": "dr4",
+              "n": "Kungöl",
+              "q": 50,
+              "g": 50,
+              "bp": {
+                "daler": 0,
+                "skilling": 0,
+                "örtegar": 0
+              },
+              "bps": "manual"
+            }
+          ]
+        },
+        {
+          "i": "far7",
+          "n": "Mulåsna",
+          "g": 1,
+          "bp": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "bps": "manual",
+          "c": [
+            {
+              "i": "dr19",
+              "n": "Stop Urtal",
+              "q": 10
+            },
+            {
+              "i": "elix34",
+              "n": "Långfärdsbröd",
+              "q": 114,
+              "g": 114,
+              "bp": {
+                "daler": 0,
+                "skilling": 0,
+                "örtegar": 0
+              },
+              "bps": "manual"
+            },
+            {
+              "i": "elix34",
+              "n": "Långfärdsbröd",
+              "q": 28,
+              "g": 28,
+              "bp": {
+                "daler": 0,
+                "skilling": 0,
+                "örtegar": 0
+              },
+              "bps": "manual"
+            }
+          ]
+        }
+      ],
+      "revealedArtifacts": [
+        "ar93",
+        "Ku31",
+        "sk17"
+      ],
+      "money": {
+        "örtegar": 0,
+        "skilling": 6,
+        "daler": 8,
+        "d": 8,
+        "s": 6,
+        "o": 0
+      },
+      "entryOrderCounter": 30,
+      "manualAdjustments": {
+        "xp": 0,
+        "corruption": -2,
+        "toughness": 0,
+        "pain": 0,
+        "capacity": 0
+      }
+    }
+  }
+]

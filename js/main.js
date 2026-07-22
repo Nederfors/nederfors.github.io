@@ -32,14 +32,25 @@ const getMainUiPref = (key) => {
 };
 const setMainUiPref = (key, value) => {
   try {
-    mainUiPrefsStorage?.setItem?.(key, value);
+    return mainUiPrefsStorage?.setItem?.(key, value);
   } catch {}
+  return undefined;
 };
 const removeMainUiPref = (key) => {
   try {
     mainUiPrefsStorage?.removeItem?.(key);
   } catch {}
 };
+const LEGACY_CHARACTER_TRANSFER = Object.freeze({
+  type: 'symbapedia-character-transfer',
+  version: 1,
+  queryKey: 'symbapedia-transfer',
+  nonceKey: 'transfer-nonce',
+  preferenceKey: 'legacyCharacterTransfer:v1',
+  legacyOrigin: 'https://nederfors.github.io',
+  destinationOrigin: 'https://symbapedia.se',
+  timeoutMs: 20000
+});
 const flushPersistenceNow = async (reason = 'manual') => {
   try {
     await window.symbaroumPersistence?.flushPendingWrites?.({ reason });
@@ -2809,6 +2820,7 @@ async function boot() {
   try {
     window.dispatchEvent(new CustomEvent('symbaroum-view-boot', { detail: { role: ROLE } }));
   } catch {}
+  scheduleLegacyCharacterTransferStartup();
 }
 
 function mountLegacyViewByRole(role = ROLE) {
@@ -5901,6 +5913,307 @@ async function createFullDatabaseCharacterImporter() {
   };
 }
 
+function normalizeTransferOrigin(value) {
+  try {
+    const parsed = new URL(String(value || ''));
+    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+    return parsed.origin;
+  } catch {
+    return '';
+  }
+}
+
+function getLegacyCharacterTransferOrigins() {
+  let legacyOrigin = LEGACY_CHARACTER_TRANSFER.legacyOrigin;
+  let destinationOrigin = LEGACY_CHARACTER_TRANSFER.destinationOrigin;
+  const localHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if (localHost) {
+    const override = window.__symbaroumCharacterTransferTestOrigins;
+    const overriddenLegacy = normalizeTransferOrigin(override?.legacyOrigin);
+    const overriddenDestination = normalizeTransferOrigin(override?.destinationOrigin);
+    const overrideHostsAreLocal = [overriddenLegacy, overriddenDestination].every(origin => {
+      try {
+        const hostname = new URL(origin).hostname;
+        return hostname === 'localhost' || hostname === '127.0.0.1';
+      } catch {
+        return false;
+      }
+    });
+    if (overriddenLegacy && overriddenDestination && overrideHostsAreLocal) {
+      legacyOrigin = overriddenLegacy;
+      destinationOrigin = overriddenDestination;
+    }
+  }
+  return { legacyOrigin, destinationOrigin };
+}
+
+function makeLegacyCharacterTransferNonce() {
+  try {
+    if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  }
+}
+
+function makeLegacyCharacterTransferMessage(kind, nonce, extra = {}) {
+  return {
+    type: LEGACY_CHARACTER_TRANSFER.type,
+    version: LEGACY_CHARACTER_TRANSFER.version,
+    kind,
+    nonce,
+    ...extra
+  };
+}
+
+function isLegacyCharacterTransferMessage(value, kind, nonce) {
+  return Boolean(
+    value
+    && typeof value === 'object'
+    && value.type === LEGACY_CHARACTER_TRANSFER.type
+    && value.version === LEGACY_CHARACTER_TRANSFER.version
+    && value.kind === kind
+    && value.nonce === nonce
+  );
+}
+
+function isTransferCharacterPayload(value) {
+  return Boolean(
+    value
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && typeof value.name === 'string'
+    && value.data
+    && typeof value.data === 'object'
+    && !Array.isArray(value.data)
+  );
+}
+
+function isLegacyTransferSourceRequest() {
+  try {
+    const params = new URLSearchParams(location.search);
+    return params.get(LEGACY_CHARACTER_TRANSFER.queryKey) === 'source'
+      && Boolean(params.get(LEGACY_CHARACTER_TRANSFER.nonceKey));
+  } catch {
+    return false;
+  }
+}
+
+async function serveLegacyCharacterTransferPopup() {
+  const { legacyOrigin, destinationOrigin } = getLegacyCharacterTransferOrigins();
+  if (location.origin !== legacyOrigin || !isLegacyTransferSourceRequest() || !window.opener) return false;
+
+  const params = new URLSearchParams(location.search);
+  const nonce = params.get(LEGACY_CHARACTER_TRANSFER.nonceKey) || '';
+  if (!nonce || nonce.length > 200) return false;
+  const opener = window.opener;
+  let served = false;
+
+  const onMessage = async event => {
+    if (served || event.origin !== destinationOrigin || event.source !== opener) return;
+    if (!isLegacyCharacterTransferMessage(event.data, 'request', nonce)) return;
+    served = true;
+    window.removeEventListener('message', onMessage);
+
+    try {
+      await flushPersistenceNow('legacy-transfer-export');
+      const sourceStore = storeHelper.load();
+      const characters = (sourceStore.characters || [])
+        .map(char => storeHelper.exportCharacterJSON(sourceStore, char?.id, true))
+        .filter(Boolean);
+      opener.postMessage(makeLegacyCharacterTransferMessage('payload', nonce, {
+        sourceOrigin: legacyOrigin,
+        characters
+      }), destinationOrigin);
+    } catch (error) {
+      console.error('Legacy character transfer export failed', error);
+      opener.postMessage(makeLegacyCharacterTransferMessage('error', nonce, {
+        sourceOrigin: legacyOrigin,
+        code: 'export-failed'
+      }), destinationOrigin);
+    }
+  };
+
+  window.addEventListener('message', onMessage);
+  opener.postMessage(makeLegacyCharacterTransferMessage('ready', nonce, {
+    sourceOrigin: legacyOrigin
+  }), destinationOrigin);
+  return true;
+}
+
+async function importLegacyCharacterTransferPayload(characters) {
+  if (!Array.isArray(characters) || !characters.every(isTransferCharacterPayload)) {
+    throw new Error('invalid-payload');
+  }
+  if (!characters.length) return { imported: 0 };
+
+  const importCharacterJSON = await createFullDatabaseCharacterImporter();
+  const previousCurrent = store.current || '';
+  let imported = 0;
+
+  for (const character of characters) {
+    const id = importCharacterJSON(character);
+    if (id) imported++;
+  }
+
+  if (!imported) throw new Error('invalid-payload');
+  if (previousCurrent && (store.characters || []).some(char => char?.id === previousCurrent)) {
+    store.current = previousCurrent;
+    storeHelper.persistMeta(store);
+  }
+  applyCharacterChange();
+  await flushPersistenceNow('legacy-transfer-import');
+  return { imported };
+}
+
+function requestLegacyCharacterTransferPayload() {
+  const { legacyOrigin, destinationOrigin } = getLegacyCharacterTransferOrigins();
+  if (location.origin !== destinationOrigin) {
+    return Promise.reject(new Error('wrong-destination'));
+  }
+
+  const nonce = makeLegacyCharacterTransferNonce();
+  const sourceUrl = new URL('/', legacyOrigin);
+  sourceUrl.searchParams.set(LEGACY_CHARACTER_TRANSFER.queryKey, 'source');
+  sourceUrl.searchParams.set(LEGACY_CHARACTER_TRANSFER.nonceKey, nonce);
+  sourceUrl.hash = '#/index';
+
+  return new Promise((resolve, reject) => {
+    let popup = null;
+    let settled = false;
+    const cleanup = () => {
+      window.removeEventListener('message', onMessage);
+      clearTimeout(timeoutId);
+    };
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback(value);
+    };
+    const onMessage = event => {
+      if (event.origin !== legacyOrigin || event.source !== popup) return;
+      if (isLegacyCharacterTransferMessage(event.data, 'ready', nonce)
+        && event.data.sourceOrigin === legacyOrigin) {
+        popup.postMessage(makeLegacyCharacterTransferMessage('request', nonce, {
+          destinationOrigin
+        }), legacyOrigin);
+        return;
+      }
+      if (isLegacyCharacterTransferMessage(event.data, 'error', nonce)
+        && event.data.sourceOrigin === legacyOrigin) {
+        try { popup?.close(); } catch {}
+        finish(reject, new Error(event.data.code || 'source-error'));
+        return;
+      }
+      if (!isLegacyCharacterTransferMessage(event.data, 'payload', nonce)
+        || event.data.sourceOrigin !== legacyOrigin) return;
+      if (!Array.isArray(event.data.characters) || !event.data.characters.every(isTransferCharacterPayload)) {
+        try { popup?.close(); } catch {}
+        finish(reject, new Error('invalid-payload'));
+        return;
+      }
+      try { popup?.close(); } catch {}
+      finish(resolve, event.data.characters);
+    };
+    const timeoutId = setTimeout(() => {
+      try { popup?.close(); } catch {}
+      finish(reject, new Error('timeout'));
+    }, LEGACY_CHARACTER_TRANSFER.timeoutMs);
+
+    window.addEventListener('message', onMessage);
+    popup = window.open(sourceUrl.href, 'symbapediaLegacyCharacterTransfer', 'popup=yes,width=560,height=720');
+    if (!popup) {
+      finish(reject, new Error('popup-blocked'));
+    }
+  });
+}
+
+function legacyCharacterTransferFailureMessage(error) {
+  const code = String(error?.message || '');
+  if (code === 'popup-blocked') {
+    return 'Webbläsaren blockerade fönstret från nederfors.github.io. Tillåt popup-fönster och försök igen. Du kan också exportera JSON på den gamla sidan och importera filen här.';
+  }
+  if (code === 'timeout') {
+    return 'Den gamla webbplatsen svarade inte. Ladda om nederfors.github.io så att den senaste versionen används och försök igen. Du kan också flytta rollpersonerna med JSON-export och import.';
+  }
+  if (code === 'invalid-payload') {
+    return 'Den gamla webbplatsen skickade data som inte kunde läsas. Använd JSON-export på nederfors.github.io och importera filen här.';
+  }
+  return 'Rollpersonerna kunde inte hämtas från nederfors.github.io. Försök igen eller använd JSON-export och import.';
+}
+
+async function runLegacyCharacterTransfer(options = {}) {
+  const marker = getMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey) || '';
+  if (!options.fromPrompt && marker === 'completed') {
+    const repeat = await openDialog(
+      'Rollpersoner har redan hämtats från nederfors.github.io. Om du fortsätter skapas nya kopior och ingenting skrivs över.',
+      { cancel: true, okText: 'Importera igen', cancelText: 'Avbryt' }
+    );
+    if (repeat !== true) return { imported: 0, cancelled: true };
+  }
+
+  try {
+    const characters = await requestLegacyCharacterTransferPayload();
+    if (!characters.length) {
+      await setMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey, 'empty');
+      await alertPopup('Inga sparade rollpersoner hittades på nederfors.github.io.');
+      return { imported: 0, empty: true };
+    }
+    const result = await importLegacyCharacterTransferPayload(characters);
+    await setMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey, 'completed');
+    window.toast?.(`Importerade ${result.imported} rollpersoner från nederfors.github.io.`);
+    return result;
+  } catch (error) {
+    console.error('Legacy character transfer failed', error);
+    await alertPopup(legacyCharacterTransferFailureMessage(error));
+    return { imported: 0, error: String(error?.message || 'transfer-failed') };
+  }
+}
+
+async function maybePromptLegacyCharacterTransfer() {
+  const { destinationOrigin } = getLegacyCharacterTransferOrigins();
+  if (location.origin !== destinationOrigin || isLegacyTransferSourceRequest()) return false;
+  if ((store.characters || []).length) return false;
+  if (getMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey)) return false;
+  if (typeof window.openDialog !== 'function') return false;
+
+  const accepted = await openDialog(
+    'Har du rollpersoner sparade på nederfors.github.io? Du kan hämta dem till Symbapedia nu utan att skriva över något.',
+    { cancel: true, okText: 'Hämta rollpersoner', cancelText: 'Inte nu' }
+  );
+  if (accepted !== true) {
+    await setMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey, 'dismissed');
+    return false;
+  }
+  await runLegacyCharacterTransfer({ fromPrompt: true });
+  return true;
+}
+
+let legacyCharacterTransferStartupScheduled = false;
+function scheduleLegacyCharacterTransferStartup() {
+  if (legacyCharacterTransferStartupScheduled) return;
+  legacyCharacterTransferStartupScheduled = true;
+  if (isLegacyTransferSourceRequest()) {
+    serveLegacyCharacterTransferPopup();
+    return;
+  }
+  setTimeout(() => {
+    maybePromptLegacyCharacterTransfer().catch(error => {
+      console.error('Legacy character transfer prompt failed', error);
+    });
+  }, 350);
+}
+
+window.symbaroumLegacyCharacterTransfer = Object.freeze({
+  request: runLegacyCharacterTransfer,
+  prompt: maybePromptLegacyCharacterTransfer,
+  getStatus: () => getMainUiPref(LEGACY_CHARACTER_TRANSFER.preferenceKey) || '',
+  protocolVersion: LEGACY_CHARACTER_TRANSFER.version
+});
+
 async function driveImportFile(fileId) {
   const text = await driveDownloadFile(fileId);
   const obj = JSON.parse(text);
@@ -6663,6 +6976,25 @@ function openDriveStoragePopup(initialTab = 'drive') {
 
     const buildLocalImportPanel = (root, choose) => {
       const wrap = make('div', 'export-sections drive-storage-sections');
+      const { destinationOrigin } = getLegacyCharacterTransferOrigins();
+      if (location.origin === destinationOrigin) {
+        const legacyCard = make('div', 'db-card export-card');
+        legacyCard.appendChild(make('div', 'card-title drive-card-title', 'Tidigare webbplats'));
+        const legacySection = make('div', 'export-section');
+        legacySection.appendChild(make(
+          'p',
+          'drive-section-intro',
+          'Hämta lokalt sparade rollpersoner från nederfors.github.io. Befintliga rollpersoner skrivs inte över.'
+        ));
+        const legacyButton = make('button', 'db-btn db-btn--primary drive-primary-action', 'Importera från nederfors.github.io');
+        legacyButton.type = 'button';
+        legacyButton.dataset.action = 'legacy-site-import';
+        legacyButton.addEventListener('click', () => choose({ mode: 'legacy-site-import' }));
+        legacySection.appendChild(legacyButton);
+        legacyCard.appendChild(legacySection);
+        wrap.appendChild(legacyCard);
+      }
+
       const importCard = make('div', 'db-card export-card');
       importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från fil'));
       const importSection = make('div', 'export-section');
@@ -6821,6 +7153,11 @@ function openDriveStoragePopup(initialTab = 'drive') {
 
     if (choice.mode === 'local-import') {
       await importCharactersFromLocal(choice.settings);
+      return;
+    }
+
+    if (choice.mode === 'legacy-site-import') {
+      await runLegacyCharacterTransfer();
       return;
     }
 
