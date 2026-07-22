@@ -181,6 +181,9 @@ const finishBoot = () => {
       finishBootMetrics();
       warmRulesWorker();
       offlineContent.scheduleWarmRules();
+      // Account state is optional network work. Start it only after the local
+      // application shell is usable and never make boot wait for it.
+      void import('./account-ui.js').then(({ initAccountUi }) => initAccountUi());
     })
     .catch(error => {
       console.error('Symbapedia presentation failed to initialize', error);

@@ -157,6 +157,7 @@ const BASE_POPUP_META_BY_ID = Object.freeze({
   generatorPopup: popupMeta('form', 'md', 'modal', 'center', 'none'),
   dupCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
   renameCharPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
+  accountPopup: popupMeta('form', 'sm', 'modal', 'sheet', 'sheet-down'),
   dialogPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down'),
   danielPopup: popupMeta('dialog', 'sm', 'modal', 'sheet', 'sheet-down')
 });
@@ -1390,6 +1391,32 @@ class SharedToolbar extends HTMLElement {
         .toolbar .overview-action [hidden] {
           display: none !important;
         }
+        .account-popup-ui {
+          width: min(28rem, calc(100vw - 2rem));
+          text-align: left;
+        }
+        .account-popup-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: .75rem;
+        }
+        .account-popup-header h3 { margin: 0; }
+        .account-popup-status,
+        .account-popup-message {
+          margin: .35rem 0 .8rem;
+          color: var(--txt-muted, var(--txt));
+        }
+        .account-popup-message:not(:empty) {
+          padding: .65rem .75rem;
+          border: 1px solid rgba(194, 163, 106, .34);
+          border-radius: .55rem;
+          background: rgba(49, 43, 39, .55);
+        }
+        .account-popup-fields { display: grid; gap: .7rem; }
+        .account-popup-fields label { display: grid; gap: .3rem; }
+        .account-popup-actions { display: flex; gap: .55rem; margin-top: 1rem; flex-wrap: wrap; }
+        .account-popup-identity { font-weight: 700; overflow-wrap: anywhere; }
         #entrySortPopup .popup-inner {
           align-items: stretch;
           text-align: left;
@@ -1603,6 +1630,9 @@ class SharedToolbar extends HTMLElement {
                 <button id="driveStorageBtn" class="db-btn">Lagring</button>
               </div>
               <div class="char-btn-row">
+                <button id="accountButton" class="db-btn db-btn--secondary" type="button" aria-haspopup="dialog" aria-controls="accountPopup">Konto</button>
+              </div>
+              <div class="char-btn-row">
                 <button id="pdfLibraryBtn" class="db-btn">PDF-bank</button>
               </div>
               <div class="char-btn-row">
@@ -1729,6 +1759,41 @@ class SharedToolbar extends HTMLElement {
           </div>
         </div>
         </aside>
+      </div>
+
+      <!-- ---------- Popup Konto ---------- -->
+      <div id="accountPopup" class="db-modal-overlay popup" aria-hidden="true">
+        <div class="db-modal popup-inner account-popup-ui">
+          <header class="account-popup-header">
+            <div>
+              <h3 id="accountPopupTitle">Konto</h3>
+              <p id="accountStatus" class="account-popup-status" role="status">Kontrollerar konto…</p>
+            </div>
+            <button id="accountClose" class="db-btn db-btn--icon" type="button" aria-label="Stäng konto" title="Stäng konto">✕</button>
+          </header>
+          <p id="accountMessage" class="account-popup-message" role="status" aria-live="polite"></p>
+          <form id="accountLoginForm">
+            <div class="account-popup-fields">
+              <label><span>E-post</span><input id="accountLoginEmail" class="db-input" name="email" type="email" autocomplete="email" required></label>
+              <label><span>Lösenord</span><input class="db-input" name="password" type="password" autocomplete="current-password" required></label>
+            </div>
+            <div class="account-popup-actions"><button class="db-btn" type="submit">Logga in</button></div>
+          </form>
+          <button id="accountShowSignup" class="db-btn db-btn--secondary" type="button">Skapa konto</button>
+          <form id="accountSignupForm" hidden>
+            <div class="account-popup-fields">
+              <label><span>Namn</span><input id="accountSignupName" class="db-input" name="name" type="text" autocomplete="name" required></label>
+              <label><span>E-post</span><input class="db-input" name="email" type="email" autocomplete="email" required></label>
+              <label><span>Lösenord</span><input class="db-input" name="password" type="password" autocomplete="new-password" required></label>
+            </div>
+            <div class="account-popup-actions"><button class="db-btn" type="submit">Skapa konto</button></div>
+          </form>
+          <button id="accountShowLogin" class="db-btn db-btn--secondary" type="button" hidden>Till inloggning</button>
+          <section id="accountSignedIn" hidden>
+            <p class="account-popup-identity" id="accountIdentity"></p>
+            <div class="account-popup-actions"><button id="accountLogout" class="db-btn db-btn--secondary" type="button">Logga ut</button></div>
+          </section>
+        </div>
       </div>
 
       <!-- ---------- Popup Kvalitet ---------- -->
