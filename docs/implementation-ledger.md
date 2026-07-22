@@ -137,15 +137,24 @@ post-Dexie-commit adapter seam is specified in the architecture contract.
 - Static rule/catalog data in PostgreSQL.
 - CORS for the selected same-origin production topology.
 
-## Later boundaries
+## Batch 6 account and hosted-character boundary
 
-Batch 6 revalidates and installs Better Auth and its current Drizzle/PostgreSQL
-adapter, implements the account/hosted-character vertical slice and
-verification/recovery email integration, and owns the recorded character CRUD
-routes. Batch 9 may add synchronization/idempotency persistence only when its
-revision/conflict work proves it necessary. Both continue to use Dexie as the
-local working copy and the finite keep-local, keep-server, or duplicate
-conflict model.
+Tasks 1-2 are complete: Better Auth 1.6.24 and its Drizzle/PostgreSQL schema
+are configured behind same-origin `/api/auth/*`, and the owned,
+revision-checked hosted-character CRUD routes exist on the server.
+
+Task 3 is complete: the vanilla browser client now provides a small account
+surface for session lookup, email/password login, signup, and logout. It uses
+HTTP-only Better Auth session cookies, stays same-origin, and does not connect
+or mutate Dexie characters or call hosted-character routes. Signup remains
+controlled exclusively by the server rollout setting and production signup is
+still disabled by default.
+
+Task 4, verification/recovery email and its transactional email provider, is
+the remaining Batch 6 boundary. Production signup stays disabled until that
+work is complete. Batch 9 may add synchronization/idempotency persistence only
+when its revision/conflict work proves it necessary. Dexie remains the local
+working copy throughout.
 
 ## Gate-task validation
 
