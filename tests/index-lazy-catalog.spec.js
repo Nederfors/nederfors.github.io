@@ -97,6 +97,54 @@ test('opening an index category hydrates its source chunk and renders every entr
   expect([...new Set(requests)]).not.toContain('data/all.json');
 });
 
+test('bulk category controls collapse hydrated categories promptly and expand without all.json', async ({ page }) => {
+  test.slow();
+  const requests = trackDataRequests(page);
+  await waitForIndex(page);
+
+  // Start from an ordinary hydrated Index state rather than from catalog-only
+  // summaries, which is where close-all previously caused visible latency.
+  await page.locator('details[data-cat="Förmåga"] > summary').click();
+  await page.waitForFunction(() => (
+    document.querySelectorAll('details[data-cat="Förmåga"] li.entry-card').length > 12
+  ));
+
+  const toggle = page.locator('shared-toolbar #catToggle');
+  await toggle.click();
+  await expect.poll(() => page.evaluate(() => ({
+    open: [...document.querySelectorAll('.cat-group > details')]
+      .filter(detail => detail.dataset.cat !== 'Hoppsan' && detail.open).length,
+    cards: document.querySelectorAll('#lista li.entry-card').length
+  }))).toEqual({ open: 0, cards: expect.any(Number) });
+
+  // Closing preserves the already-hydrated category DOM and must not request
+  // additional catalog data as a side effect.
+  expect([...new Set(requests)]).not.toContain('data/all.json');
+
+  await toggle.click();
+  await page.waitForFunction(() => {
+    const categories = [...document.querySelectorAll('.cat-group > details')]
+      .filter(detail => detail.dataset.cat !== 'Hoppsan');
+    return categories.length > 10 && categories.every(detail => detail.open);
+  });
+  await page.waitForFunction(() => (
+    document.querySelectorAll('#lista li.entry-card').length > 100
+  ));
+
+  // Repeating the pair uses the same ownership path and keeps the full-data
+  // fallback out of the request graph.
+  await toggle.click();
+  await expect.poll(() => page.locator('.cat-group > details[open]').count()).toBe(1);
+  await toggle.click();
+  await page.waitForFunction(() => {
+    const categories = [...document.querySelectorAll('.cat-group > details')]
+      .filter(detail => detail.dataset.cat !== 'Hoppsan');
+    return categories.every(detail => detail.open);
+  });
+
+  expect([...new Set(requests)]).not.toContain('data/all.json');
+});
+
 test('opening a category keeps its heading anchored in the viewport', async ({ page }, testInfo) => {
   await waitForIndex(page);
 

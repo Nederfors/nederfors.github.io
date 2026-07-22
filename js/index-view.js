@@ -2262,20 +2262,27 @@
       const valAttr = value !== undefined
         ? ` data-val="${escapeHtml(value)}"`
         : '';
-      return `<span class="db-chip removable ${chipClass}" data-type="${type}"${valAttr}>${escapeHtml(text)}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`;
+      return `<span class="db-chip removable ${chipClass}" data-type="${type}"${valAttr}><span class="db-chip__label">${escapeHtml(text)}</span><button class="db-chip__close" type="button" aria-label="Ta bort ${escapeHtml(text)}">✕</button></span>`;
     };
+    const renderRemovableActiveChip = ({ type, text, attributes = '' }) => (
+      `<span class="db-chip removable" data-type="${type}"${attributes}><span class="db-chip__label">${escapeHtml(text)}</span><button class="db-chip__close" type="button" aria-label="Ta bort ${escapeHtml(text)}">✕</button></span>`
+    );
     const activeTags = () => {
       dom.active.innerHTML = '';
       const push = t => dom.active.insertAdjacentHTML('beforeend', t);
       if (storeHelper.getOnlySelected(store)) {
-        push('<span class="db-chip removable" data-type="onlySel">Endast valda<button class="db-chip__close" aria-label="Ta bort">✕</button></span>');
+        push(renderRemovableActiveChip({ type: 'onlySel', text: 'Endast valda' }));
       }
       if (fixedRandomEntries && fixedRandomEntries.length) {
         const cnt = fixedRandomEntries.length;
         const cat = (window.catName ? (fixedRandomInfo?.cat || '') : (fixedRandomInfo?.cat || ''));
         const labelCat = cat ? (window.catName ? catName(cat) : cat) : 'Urval';
         const label = `Random: ${labelCat} ×${cnt}`;
-        push(`<span class="db-chip removable" data-type="random" data-cat="${fixedRandomInfo?.cat || ''}" data-count="${cnt}">${label}<button class="db-chip__close" aria-label="Ta bort">✕</button></span>`);
+        push(renderRemovableActiveChip({
+          type: 'random',
+          text: label,
+          attributes: ` data-cat="${escapeHtml(fixedRandomInfo?.cat || '')}" data-count="${cnt}"`
+        }));
       }
       F.search.forEach(v => push(renderActiveFilterChip({ type: 'search', value: v, text: v, variant: 'search' })));
       F.test.forEach(v => push(renderActiveFilterChip({ type: 'test', value: v, text: `Karaktärsdrag: ${v}`, variant: 'filter' })));
@@ -2569,8 +2576,48 @@
       };
     };
 
+    let bulkCategoryRenderPending = false;
+    let applyingBulkCategoryState = false;
+
+    const nextPaint = () => new Promise(resolve => {
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
+      else setTimeout(resolve, 0);
+    });
+
+    // A normal category only needs one source chunk. Bulk expansion can touch
+    // every source, so load a small number of sources at a time and yield to
+    // the browser between batches instead of making one unbounded request fan-out.
+    const hydrateVisibleEntries = async (entries, { batchSources = 0 } = {}) => {
+      if (!entries.length || typeof window.catalogLoader?.ensureEntriesData !== 'function') {
+        return entries;
+      }
+      if (!batchSources) return window.catalogLoader.ensureEntriesData(entries);
+
+      const groups = new Map();
+      entries.forEach(entry => {
+        const source = entry?.__catalogSummary && entry.__sourceFile
+          ? entry.__sourceFile
+          : `ready:${groups.size}`;
+        const group = groups.get(source) || [];
+        group.push(entry);
+        groups.set(source, group);
+      });
+      const hydratedBySource = new WeakMap();
+      const batches = [...groups.values()];
+      for (let index = 0; index < batches.length; index += batchSources) {
+        const batch = batches.slice(index, index + batchSources).flat();
+        const hydrated = await window.catalogLoader.ensureEntriesData(batch);
+        batch.forEach((entry, entryIndex) => {
+          hydratedBySource.set(entry, hydrated[entryIndex] || entry);
+        });
+        if (index + batchSources < batches.length) await nextPaint();
+      }
+      return entries.map(entry => hydratedBySource.get(entry) || entry);
+    };
+
     const renderList = async arr => {
       const renderSequence = ++renderListSequence;
+      const batchBulkHydration = bulkCategoryRenderPending;
       const sortMode = storeHelper.getEntrySort
         ? storeHelper.getEntrySort(store)
         : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
@@ -2648,7 +2695,9 @@
         hydrationQueue.push(...cats[cat]);
       });
       if (hydrationQueue.length && typeof window.catalogLoader?.ensureEntriesData === 'function') {
-        const hydratedEntries = await window.catalogLoader.ensureEntriesData(hydrationQueue);
+        const hydratedEntries = await hydrateVisibleEntries(hydrationQueue, {
+          batchSources: batchBulkHydration ? 4 : 0
+        });
         if (renderSequence !== renderListSequence) return;
         const hydratedBySource = new WeakMap();
         hydrationQueue.forEach((entry, index) => {
@@ -2671,6 +2720,7 @@
         const detailsEl = catLi.querySelector('details');
         const listEl = catLi.querySelector('ul');
         detailsEl.addEventListener('toggle', (ev) => {
+          if (applyingBulkCategoryState) return;
           updateCatToggle();
           if (detailsEl.open && !listEl.children.length) {
             lockCategoryScrollAnchor(detailsEl);
@@ -3007,6 +3057,7 @@
         updateCatToggle();
         // Only auto-open once per triggering action
         openCatsOnce.clear();
+        bulkCategoryRenderPending = false;
         saveState();
         markIndexFirstRenderComplete();
       }, {
@@ -3428,18 +3479,29 @@
     ensureDropdownChangeHandlers();
 
     dom.catToggle.addEventListener('click', () => {
-      const details = document.querySelectorAll('.cat-group > details');
+      const details = [...document.querySelectorAll('.cat-group > details')]
+        .filter(detail => detail.dataset.cat !== 'Hoppsan');
       if (catsMinimized) {
+        applyingBulkCategoryState = true;
         details.forEach(d => {
-          d.open = true;
           if (d.dataset.cat) catState[d.dataset.cat] = true;
+          d.open = true;
         });
+        applyingBulkCategoryState = false;
+        // Let one scheduled render own the opening/hydration work. Setting
+        // every details.open here emits one toggle per category, each of which
+        // used to request a render and scroll-anchor side effect.
+        bulkCategoryRenderPending = true;
+        scheduleRenderList();
       } else {
+        applyingBulkCategoryState = true;
         details.forEach(d => {
-          if (d.dataset.cat === 'Hoppsan') return;
-          d.open = false;
           if (d.dataset.cat) catState[d.dataset.cat] = false;
+          // Closing does not need a render or catalog hydration. Keep the
+          // already-rendered cards dormant inside their closed details node.
+          d.open = false;
         });
+        applyingBulkCategoryState = false;
       }
       saveState();
       updateCatToggle();

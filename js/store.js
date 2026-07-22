@@ -18,8 +18,10 @@
   const runtimeVersions = {
     custom: 0,
     revealed: 0,
-    derivedByCharacter: Object.create(null)
+    derivedByCharacter: Object.create(null),
+    inventoryByCharacter: Object.create(null)
   };
+  const inventoryRemovalValidationTokens = new WeakSet();
   const SNAPSHOT_RULES_KEY = 'snapshotRules';
   const RULE_OVERRIDES_KEY = 'ruleOverrides';
   const SNAPSHOT_SOURCE_TYPE_ENTRY = 'entry';
@@ -61,6 +63,17 @@
   const getDerivedVersionMeta = (store, charId) => {
     const key = getDerivedVersionKey(store, charId);
     return key ? (runtimeVersions.derivedByCharacter[key] || 0) : 0;
+  };
+
+  const bumpInventoryVersion = (store, charId) => {
+    const key = getDerivedVersionKey(store, charId);
+    if (!key) return 0;
+    runtimeVersions.inventoryByCharacter[key] = (runtimeVersions.inventoryByCharacter[key] || 0) + 1;
+    return runtimeVersions.inventoryByCharacter[key];
+  };
+  const getInventoryVersionMeta = (store, charId) => {
+    const key = getDerivedVersionKey(store, charId);
+    return key ? (runtimeVersions.inventoryByCharacter[key] || 0) : 0;
   };
 
   const getCustomEntriesVersionMeta = () => getRuntimeVersion('custom');
@@ -4311,6 +4324,61 @@
     return false;
   }
 
+  function createInventoryRemovalValidation(store, detail = {}) {
+    const charId = getDerivedVersionKey(store);
+    const inventory = detail.inventory;
+    const targetRow = detail.targetRow;
+    const targetUid = String(detail.targetUid || '').trim();
+    const targetIndex = Number(detail.targetIndex);
+    const beforeLength = Number(detail.beforeLength);
+    if (!charId
+        || store?.data?.[charId]?.inventory !== inventory
+        || !Array.isArray(inventory)
+        || !targetRow
+        || !targetUid
+        || !Number.isInteger(targetIndex)
+        || targetIndex < 0
+        || inventory[targetIndex] !== targetRow
+        || !Number.isInteger(beforeLength)
+        || beforeLength !== inventory.length
+        || Number(detail.inventoryVersion) !== getInventoryVersionMeta(store, charId)) {
+      return null;
+    }
+    const token = Object.freeze({
+      charId,
+      inventory,
+      inventoryVersion: getInventoryVersionMeta(store, charId),
+      targetRow,
+      targetUid,
+      targetIndex,
+      beforeLength
+    });
+    inventoryRemovalValidationTokens.add(token);
+    return token;
+  }
+
+  function isInventoryRemovalValidationCurrent(store, token) {
+    return Boolean(token
+      && inventoryRemovalValidationTokens.has(token)
+      && token.charId === getDerivedVersionKey(store)
+      && store?.data?.[token.charId]?.inventory === token.inventory
+      && getInventoryVersionMeta(store, token.charId) === token.inventoryVersion
+      && token.inventory.length === token.beforeLength
+      && token.inventory[token.targetIndex] === token.targetRow
+      && String(token.targetRow?.__uid || '').trim() === token.targetUid);
+  }
+
+  function consumeInventoryRemovalValidation(store, inv, token) {
+    if (!token || !inventoryRemovalValidationTokens.has(token)) return false;
+    inventoryRemovalValidationTokens.delete(token);
+    return token.charId === getDerivedVersionKey(store)
+      && store?.data?.[token.charId]?.inventory === inv
+      && token.inventory === inv
+      && getInventoryVersionMeta(store, token.charId) === token.inventoryVersion
+      && inv.length === token.beforeLength - 1
+      && inv[token.targetIndex] !== token.targetRow;
+  }
+
   function setInventory(store, inv, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
@@ -4323,11 +4391,26 @@
       ...(Array.isArray(options.validatedRemovedRowUids) ? options.validatedRemovedRowUids : []),
       options.validatedRemovedRowUid
     ].map(value => String(value || '').trim()).filter(Boolean);
-    const canReuseValidatedInventory = options.assumeValidInventoryUids === true
-      && currentInventory === inv
-      && (validatedRowUids.length > 0 || validatedRemovedRowUids.length > 0)
-      && validatedRowUids.every(uid => inventoryContainsRowUid(inv, uid))
-      && validatedRemovedRowUids.every(uid => !inventoryContainsRowUid(inv, uid));
+    const canReuseRemovalValidation = consumeInventoryRemovalValidation(
+      store,
+      inv,
+      options.validatedRemovalProof
+    );
+    const canReuseValidatedInventory = timeCurrentListMutationStage(
+      'inventory-uid-proof-validation',
+      () => canReuseRemovalValidation || (
+        options.assumeValidInventoryUids === true
+          && currentInventory === inv
+          && (validatedRowUids.length > 0 || validatedRemovedRowUids.length > 0)
+          && validatedRowUids.every(uid => inventoryContainsRowUid(inv, uid))
+          && validatedRemovedRowUids.every(uid => !inventoryContainsRowUid(inv, uid))
+      ),
+      {
+        validatedRows: validatedRowUids.length,
+        validatedRemovedRows: validatedRemovedRowUids.length,
+        exactRemovalProof: canReuseRemovalValidation
+      }
+    );
     if (canReuseValidatedInventory) {
       incrementCurrentListMutationCounter('inventoryUidTargetValidations');
       store.data[store.current].inventory = inv;
@@ -4335,6 +4418,7 @@
       incrementCurrentListMutationCounter('inventoryUidFullNormalizations');
       store.data[store.current].inventory = ensureInventoryRowUids(inv);
     }
+    bumpInventoryVersion(store);
     commitCurrentCharacterMutation(store, {
       bumpDerived: options.bumpDerived !== false,
       persist: options.persist,
@@ -4782,6 +4866,7 @@
     store.characters = store.characters.filter(c => c.id !== charId);
     delete store.data[charId];
     delete runtimeVersions.derivedByCharacter[String(charId)];
+    delete runtimeVersions.inventoryByCharacter[String(charId)];
     if (store.current === charId) store.current = '';
     persistMeta(store);
     persistCharacter(store, charId);
@@ -4794,6 +4879,7 @@
     store.current = '';
     persistMeta(store);
     runtimeVersions.derivedByCharacter = Object.create(null);
+    runtimeVersions.inventoryByCharacter = Object.create(null);
     prevIds.forEach(id => persistCharacter(store, id));
   }
 
@@ -4811,6 +4897,7 @@
       toDelete.forEach(id => {
         try { delete store.data[id]; } catch {}
         delete runtimeVersions.derivedByCharacter[String(id)];
+        delete runtimeVersions.inventoryByCharacter[String(id)];
       });
       if (store.current && idSet.has(store.current)) store.current = '';
       persistMeta(store);
@@ -6781,6 +6868,9 @@ function defaultTraits() {
     DARK_BLOOD_TRAITS,
     getCustomEntriesVersion: getCustomEntriesVersionMeta,
     getRevealedArtifactsVersion: getRevealedArtifactsVersionMeta,
-    getDerivedVersion: getDerivedVersionMeta
+    getDerivedVersion: getDerivedVersionMeta,
+    getInventoryVersion: getInventoryVersionMeta,
+    createInventoryRemovalValidation,
+    isInventoryRemovalValidationCurrent
   };
 })(window);

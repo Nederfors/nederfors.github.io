@@ -54,6 +54,40 @@
   }
   .toolbar .db-bottom-nav__item .btn-icon { width: 1.45rem; height: 1.45rem; }
 
+  /* Active filters share DAUB's chip/close control contract. Keep a long
+     filter set in its own scroll lane so it never widens the page. */
+  #activeFilters {
+    min-width: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding: .1rem 0 .35rem;
+    width: calc(100vw - (var(--app-page-gutter) * 2));
+    max-width: calc(100vw - (var(--app-page-gutter) * 2));
+  }
+
+  #activeFilters .db-chip.removable {
+    flex: 0 0 auto;
+    max-width: min(82vw, 22rem);
+    min-height: var(--app-touch-target);
+    padding-block: .2rem;
+  }
+
+  #activeFilters .db-chip__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #activeFilters .db-chip__close {
+    width: var(--app-touch-target);
+    min-width: var(--app-touch-target);
+    height: var(--app-touch-target);
+    margin: -.2rem -.2rem -.2rem .3rem;
+  }
+
   #view-root .traits-tabs-shell { padding: .75rem; }
   #view-root .traits-tabs { gap: .3rem; margin-bottom: 1rem; padding: .3rem; }
   #view-root .traits-tab {

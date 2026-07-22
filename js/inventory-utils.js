@@ -3565,7 +3565,9 @@
 
   function classifyInventoryMutation(entry, row, mutation = {}) {
     const types = entry?.taggar?.typ || [];
-    const capabilities = window.inventoryCapabilities?.resolve?.(entry) || null;
+    const capabilities = mutation.capabilities
+      || window.inventoryCapabilities?.resolve?.(entry)
+      || null;
     const capabilityAware = mutation.capabilityAware === true;
     const stateTransitions = Array.isArray(mutation.stateTransitions) ? mutation.stateTransitions : [];
     const hiddenStateChanged = stateTransitions.some(transition => (
@@ -3608,10 +3610,13 @@
       if (types.includes('Färdmedel')) addFallback('vehicle-topology');
       if (isInventoryBundleEntry(entry)) addFallback('bundle-expansion');
     }
+    const individualItem = capabilityAware && capabilities?.known
+      ? capabilities.quantityMode === 'instance'
+      : isIndividualItem(entry);
     if (mutation.quantityOnly !== true
         && mutation.metadataOnly !== true
         && mutation.allowIndividualInstance !== true
-        && isIndividualItem(entry)) {
+        && individualItem) {
       addFallback('individual-instance');
     }
     if (capabilityAware) {
@@ -7541,11 +7546,57 @@
     return config;
   }
 
+  function createInventoryRemovalEvidenceBuilder(inventory) {
+    const topLevelRows = Array.isArray(inventory) ? [...inventory] : [];
+    const topLevelIndexByRow = new Map();
+    topLevelRows.forEach((row, index) => {
+      if (!topLevelIndexByRow.has(row)) topLevelIndexByRow.set(row, index);
+    });
+    const rowReferenceCounts = new Map();
+    const uidCounts = new Map();
+    const ownedBaseQuantities = new Map();
+    let invalidRowIdentity = false;
+    return {
+      record(row, entry) {
+        if (!row || typeof row !== 'object') {
+          invalidRowIdentity = true;
+          return;
+        }
+        rowReferenceCounts.set(row, (rowReferenceCounts.get(row) || 0) + 1);
+        const uid = String(row.__uid || '').trim();
+        if (!uid) invalidRowIdentity = true;
+        else uidCounts.set(uid, (uidCounts.get(uid) || 0) + 1);
+        const baseIdentity = getInventoryBaseIdentity(row, entry);
+        if (baseIdentity) {
+          ownedBaseQuantities.set(
+            baseIdentity,
+            (ownedBaseQuantities.get(baseIdentity) || 0) + Math.max(0, Number(row.qty) || 0)
+          );
+        }
+      },
+      finish() {
+        return {
+          charId: store.current || '',
+          inventory,
+          inventoryVersion: storeHelper.getInventoryVersion?.(store) ?? null,
+          topLevelRows,
+          topLevelIndexByRow,
+          rowReferenceCounts,
+          uidCounts,
+          ownedBaseQuantities,
+          invalidRowIdentity,
+          duplicateUid: [...uidCounts.values()].some(count => count !== 1)
+        };
+      }
+    };
+  }
+
   function computeInventoryAggregateSnapshot() {
     incrementActiveMutationCounter('aggregateRebuilds');
     return timeActiveMutationStage('inventory-aggregate-rebuild', () => {
       const allInv = storeHelper.getInventory(store);
       const flatInv = flattenInventory(allInv);
+      const removalEvidence = createInventoryRemovalEvidenceBuilder(allInv);
       const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
       const list = storeHelper.getCurrentList(store);
       const forgeLvl = Math.max(
@@ -7560,9 +7611,10 @@
         LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0,
         storeHelper.abilityLevel(list, 'Artefaktmakande')
       );
-      const totalCostO = flatInv.reduce((sum, row) => (
-        sum + moneyToO(calcRowCost(row, forgeLvl, alcLevel, artLevel))
-      ), 0);
+      const totalCostO = flatInv.reduce((sum, row) => {
+        removalEvidence.record(row, row?.id ? null : getEntry(row?.name));
+        return sum + moneyToO(calcRowCost(row, forgeLvl, alcLevel, artLevel));
+      }, 0);
       const diffO = moneyToO(cash) - totalCostO;
       const unusedMoney = oToMoney(Math.max(0, diffO));
       const moneyWeight = calcMoneyWeight(unusedMoney);
@@ -7593,7 +7645,8 @@
         maxCapacity,
         unusedMoney,
         usedWeight,
-        moneyWeight
+        moneyWeight,
+        removalEvidence: removalEvidence.finish()
       };
       return inventoryAggregateSnapshot;
     }, { surface: 'inventory' });
@@ -8737,8 +8790,8 @@
     };
   }
 
-  function collectInventoryRemovalProof(inv, targetRow, entry) {
-    incrementActiveMutationCounter('inventoryRemovalProofScans');
+  function scanInventoryRemovalProofDiagnostics(inv, targetRow, entry) {
+    incrementActiveMutationCounter('inventoryRemovalProofFallbackScans');
     const targetUid = String(targetRow?.__uid || '').trim();
     const baseIdentity = getInventoryBaseIdentity(targetRow, entry);
     const uidCounts = new Map();
@@ -8771,9 +8824,74 @@
       ownedBaseQuantity,
       invalidRowIdentity,
       duplicateUid: [...uidCounts.values()].some(count => count !== 1),
+      validationToken: null,
       expectedTopLevelRows: targetIndex >= 0
         ? inv.filter((_, index) => index !== targetIndex)
-        : []
+        : [],
+      expectedTopLevelRowsIncludesTarget: false
+    };
+  }
+
+  function collectInventoryRemovalProof(inv, targetRow, entry) {
+    incrementActiveMutationCounter('inventoryRemovalProofEvidenceLookups');
+    const targetUid = String(targetRow?.__uid || '').trim();
+    const baseIdentity = getInventoryBaseIdentity(targetRow, entry);
+    const snapshot = inventoryAggregateSnapshot;
+    const evidence = snapshot?.removalEvidence;
+    const currentVersion = storeHelper.getInventoryVersion?.(store) ?? null;
+    let evidenceFallbackReason = '';
+    if (!evidence || evidence.inventory !== inv || evidence.charId !== (store.current || '')) {
+      evidenceFallbackReason = 'removal-proof-missing';
+    } else if (evidence.inventoryVersion === null
+        || evidence.inventoryVersion !== currentVersion) {
+      evidenceFallbackReason = 'removal-plan-stale';
+    }
+    if (evidenceFallbackReason) {
+      return {
+        ...scanInventoryRemovalProofDiagnostics(inv, targetRow, entry),
+        evidenceFallbackReason
+      };
+    }
+    const targetIndex = evidenceFallbackReason
+      ? -1
+      : (evidence.topLevelIndexByRow.get(targetRow) ?? -1);
+    const targetReferenceCount = evidenceFallbackReason
+      ? 0
+      : (evidence.rowReferenceCounts.get(targetRow) || 0);
+    const ownedBaseQuantity = evidenceFallbackReason || !baseIdentity
+      ? 0
+      : (evidence.ownedBaseQuantities.get(baseIdentity) || 0);
+    const invalidRowIdentity = evidenceFallbackReason
+      ? true
+      : evidence.invalidRowIdentity;
+    const duplicateUid = evidenceFallbackReason
+      ? false
+      : evidence.duplicateUid;
+    const validationToken = !evidenceFallbackReason
+        && targetIndex >= 0
+        && targetReferenceCount === 1
+        && !invalidRowIdentity
+        && !duplicateUid
+      ? storeHelper.createInventoryRemovalValidation?.(store, {
+          inventory: inv,
+          inventoryVersion: evidence.inventoryVersion,
+          targetRow,
+          targetUid,
+          targetIndex,
+          beforeLength: evidence.topLevelRows.length
+        }) || null
+      : null;
+    return {
+      targetUid,
+      targetIndex,
+      targetReferenceCount,
+      ownedBaseQuantity,
+      invalidRowIdentity,
+      duplicateUid,
+      evidenceFallbackReason,
+      validationToken,
+      expectedTopLevelRows: evidence?.topLevelRows || [],
+      expectedTopLevelRowsIncludesTarget: true
     };
   }
 
@@ -8914,9 +9032,17 @@
       if (liveMode && requested?.paymentHandled !== true) addFallback('live-payment-required');
 
       const removalProof = kind === 'remove'
-        ? collectInventoryRemovalProof(inv, row, entry)
+        ? timeActiveMutationStage('inventory-removal-proof-validation', () => (
+            collectInventoryRemovalProof(inv, row, entry)
+          ), {
+            surface,
+            topLevelCount: inv.length
+          })
         : null;
       if (removalProof) {
+        if (removalProof.evidenceFallbackReason) {
+          addFallback(removalProof.evidenceFallbackReason);
+        }
         if (removalProof.targetIndex < 0 || removalProof.targetReferenceCount !== 1) {
           addFallback('inventory-row-not-found');
         }
@@ -8962,7 +9088,8 @@
         parentArr,
         aggregateSnapshotAvailable: created ? false : Boolean(getReusableInventoryAggregateSnapshot()),
         activeFilterMembershipUncertain: !filterImpact.targetedPatchSafe,
-        stateTransitions
+        stateTransitions,
+        capabilities
       });
       if (kind === 'remove') {
         if (row?.perk || row?.perkGratis) addFallback('rule-reconciliation-required');
@@ -9443,10 +9570,18 @@
     if (inventoryContainsExactUid(plan.inv, proof.targetUid)) {
       return { ok: false, reason: 'removed-row-still-present' };
     }
-    if (plan.inv.length !== proof.expectedTopLevelRows.length) {
+    const expectedLength = proof.expectedTopLevelRowsIncludesTarget
+      ? proof.expectedTopLevelRows.length - 1
+      : proof.expectedTopLevelRows.length;
+    if (plan.inv.length !== expectedLength) {
       return { ok: false, reason: 'inventory-topology-postcondition-failed' };
     }
-    const unchanged = proof.expectedTopLevelRows.every((row, index) => plan.inv[index] === row);
+    const unchanged = plan.inv.every((row, index) => {
+      const expectedIndex = proof.expectedTopLevelRowsIncludesTarget && index >= proof.targetIndex
+        ? index + 1
+        : index;
+      return proof.expectedTopLevelRows[expectedIndex] === row;
+    });
     return unchanged
       ? { ok: true, reason: '' }
       : { ok: false, reason: 'inventory-topology-postcondition-failed' };
@@ -9484,7 +9619,13 @@
       return { committed: false, plan, impact: plan, mutation: null };
     }
     const index = operation.parentArr.indexOf(operation.row);
-    if (index < 0 || index !== operation.removalProof?.targetIndex) {
+    const validationTokenCurrent = storeHelper.isInventoryRemovalValidationCurrent?.(
+      store,
+      operation.removalProof?.validationToken
+    ) === true;
+    if (index < 0
+        || index !== operation.removalProof?.targetIndex
+        || !validationTokenCurrent) {
       if (!plan.fallbackReasons.includes('removal-plan-stale')) {
         plan.fallbackReasons.push('removal-plan-stale');
       }
@@ -9539,7 +9680,8 @@
         invalidates: plan.invalidates,
         targets: plan.targets,
         assumeValidInventoryUids: true,
-        validatedRemovedRowUids: [operation.row.__uid]
+        validatedRemovedRowUids: [operation.row.__uid],
+        validatedRemovalProof: operation.removalProof.validationToken
       });
     });
     markActiveMutationCheckpoint('store-mutation-complete', { action });
@@ -9558,7 +9700,14 @@
         : { ok: result === true, reason: result === true ? '' : 'dom-postcondition-failed' };
       if (reconciliation.ok) incrementActiveMutationCounter('targetedRenders');
     }
-    const statePostcondition = verifyRemovalPlanState(plan, operation);
+    const statePostcondition = timeActiveMutationStage(
+      'inventory-removal-state-postcondition',
+      () => verifyRemovalPlanState(plan, operation),
+      {
+        surface: plan.surface,
+        topLevelCount: plan.inv.length
+      }
+    );
     if (!statePostcondition.ok && reconciliation.ok) reconciliation = statePostcondition;
 
     const fallbackReasons = [];
@@ -9885,6 +10034,7 @@
 
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
+    const removalEvidence = createInventoryRemovalEvidenceBuilder(allInv);
     const nameMap = makeNameMap(allInv);
     recalcArtifactEffects();
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
@@ -9903,6 +10053,7 @@
     const tot = timeActiveMutationStage('inventory-aggregate-work', () => (
       flatInv.reduce((t, row) => {
         const entry = getEntry(row.id || row.name);
+        removalEvidence.record(row, entry);
         const baseQuals = [
           ...(entry.taggar?.kvalitet ?? []),
           ...splitQuals(entry.kvalitet)
@@ -10019,7 +10170,8 @@
       maxCapacity,
       moneyWeight,
       unusedMoney,
-      usedWeight
+      usedWeight,
+      removalEvidence: removalEvidence.finish()
     };
 
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
