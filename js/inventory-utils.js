@@ -8776,6 +8776,107 @@
     }));
   }
 
+  function getDeclaredLinkedStateFallbackReason(link) {
+    return link === 'catalog-reveal-while-owned'
+      ? 'hidden-revealed-state'
+      : `state-link-${link}-unoptimized`;
+  }
+
+  function buildLinkedStateProjectionSnapshot(inv, parentArr, row, entry) {
+    const core = window.linkedStateProjectionCore;
+    const baseIdentity = getInventoryBaseIdentity(row, entry);
+    const rowUid = String(row?.__uid || '').trim();
+    const catalogId = String(entry?.id || '').trim();
+    let rowReferenceMatches = 0;
+    let rowUidMatches = 0;
+    let baseIdentityMatches = 0;
+    let ownedQuantity = 0;
+    const visit = rows => {
+      (Array.isArray(rows) ? rows : []).forEach(candidate => {
+        if (candidate === row) rowReferenceMatches += 1;
+        if (rowUid && String(candidate?.__uid || '').trim() === rowUid) rowUidMatches += 1;
+        const candidateEntry = getEntry(candidate?.id || candidate?.name);
+        if (baseIdentity && getInventoryBaseIdentity(candidate, candidateEntry) === baseIdentity) {
+          baseIdentityMatches += 1;
+          ownedQuantity += Math.max(0, Number(candidate?.qty) || 0);
+        }
+        if (Array.isArray(candidate?.contains)) visit(candidate.contains);
+      });
+    };
+    visit(inv);
+    const character = store?.current ? store.data?.[store.current] : null;
+    const revealed = character?.revealedArtifacts;
+    return {
+      version: core?.SNAPSHOT_VERSION,
+      subject: {
+        rowUid,
+        baseIdentity,
+        catalogId,
+        location: parentArr === inv && inv.includes(row) ? 'top-level' : 'unsupported',
+        rowReferenceMatches,
+        rowUidMatches,
+        baseIdentityMatches,
+        rowQuantity: Number(row?.qty),
+        ownedQuantity
+      },
+      linkedState: {
+        catalogReveal: {
+          complete: Array.isArray(revealed),
+          ids: Array.isArray(revealed) ? [...revealed] : []
+        }
+      }
+    };
+  }
+
+  function evaluateQuantityLinkedStateProjection({
+    inv,
+    parentArr,
+    row,
+    entry,
+    capabilities,
+    currentQty,
+    nextQty,
+    previousOwnedQty,
+    nextOwnedQty
+  }) {
+    const declaredLinks = [
+      ...(Array.isArray(capabilities?.stateLinks) ? capabilities.stateLinks : []),
+      ...(Array.isArray(capabilities?.unknownStateLinks) ? capabilities.unknownStateLinks : [])
+    ];
+    if (!declaredLinks.length) return null;
+    const core = window.linkedStateProjectionCore;
+    if (!core || typeof core.evaluate !== 'function') return null;
+    return core.evaluate({
+      snapshot: buildLinkedStateProjectionSnapshot(inv, parentArr, row, entry),
+      change: {
+        version: core.CHANGE_VERSION,
+        type: 'top-level-stack-quantity',
+        location: 'top-level',
+        rowUid: String(row?.__uid || '').trim(),
+        baseIdentity: getInventoryBaseIdentity(row, entry),
+        catalogId: String(entry?.id || '').trim(),
+        delta: nextQty - currentQty,
+        beforeQuantity: currentQty,
+        afterQuantity: nextQty,
+        beforeOwnedQuantity: previousOwnedQty,
+        afterOwnedQuantity: nextOwnedQty
+      },
+      capabilities: {
+        version: capabilities?.version,
+        known: capabilities?.known === true,
+        source: capabilities?.source || '',
+        catalogId: String(entry?.id || '').trim(),
+        item: capabilities?.item === true,
+        quantityMode: capabilities?.quantityMode || '',
+        topology: capabilities?.topology || '',
+        stateLinks: Array.isArray(capabilities?.stateLinks) ? [...capabilities.stateLinks] : [],
+        unknownStateLinks: Array.isArray(capabilities?.unknownStateLinks)
+          ? [...capabilities.unknownStateLinks]
+          : []
+      }
+    });
+  }
+
   function makeInactiveInventoryFilterImpact() {
     return {
       active: false,
@@ -9062,6 +9163,30 @@
         previousOwnedQty > 0,
         nextOwnedQty > 0
       );
+      const linkedStateProjection = kind === 'quantity'
+        ? evaluateQuantityLinkedStateProjection({
+          inv,
+          parentArr,
+          row,
+          entry,
+          capabilities,
+          currentQty,
+          nextQty,
+          previousOwnedQty,
+          nextOwnedQty
+        })
+        : null;
+      const hasDeclaredLinkedState = Boolean(
+        capabilities.stateLinks?.length || capabilities.unknownStateLinks?.length
+      );
+      const linkedStateNoChangeAccepted = hasDeclaredLinkedState
+        && linkedStateProjection?.status === window.linkedStateProjectionCore?.STATUS?.UNCHANGED;
+      if (kind === 'quantity' && hasDeclaredLinkedState && !linkedStateNoChangeAccepted) {
+        [
+          ...(capabilities.stateLinks || []),
+          ...(capabilities.unknownStateLinks || [])
+        ].forEach(link => addFallback(getDeclaredLinkedStateFallbackReason(link)));
+      }
       const rowIndex = created ? inv.length : inv.indexOf(row);
       const filterImpact = kind === 'remove'
         ? getRemovalFilterImpact({ row, entry, surface })
@@ -9151,6 +9276,8 @@
         previousOwnedQty,
         nextOwnedQty,
         stateTransitions,
+        linkedStateProjection,
+        linkedStateNoChangeAccepted,
         filterImpact,
         impact,
         removalProof
@@ -9175,19 +9302,24 @@
       invalidates.push('catalog.structure');
     }
     const uniqueInvalidates = [...new Set(invalidates)];
+    const fastPath = fallbackReasons.length === 0;
     return {
       kind,
       surface,
       inv,
       operations: planned,
-      fastPath: fallbackReasons.length === 0,
-      impactClass: fallbackReasons.length ? 'fallback' : 'declared',
+      fastPath,
+      impactClass: fastPath ? 'declared' : 'fallback',
       fallbackReasons,
       fallbackReason: fallbackReasons[0] || '',
       invalidates: uniqueInvalidates,
       affectedDomains: uniqueInvalidates,
       targets,
       stateTransitions,
+      linkedStateProjections: planned
+        .map(operation => operation.linkedStateProjection)
+        .filter(Boolean),
+      linkedStateNoChangeAccepted: planned.some(operation => operation.linkedStateNoChangeAccepted),
       bumpDerived: planned.some(operation => operation.impact.bumpDerived),
       topology: 'row',
       topologyGuarantee: planned.some(operation => operation.created)
@@ -9196,7 +9328,7 @@
       aggregateStrategy: planned.some(operation => operation.created)
         ? 'rebuild'
         : (kind === 'remove' && !getReusableInventoryAggregateSnapshot() ? 'rebuild' : 'delta'),
-      renderStrategy: fallbackReasons.length
+      renderStrategy: !fastPath
         ? 'full'
         : surface === 'inventory'
           ? (kind === 'remove' ? 'targeted-remove' : 'targeted-patch')
@@ -9756,6 +9888,32 @@
     };
   }
 
+  function validateLinkedStateNoChangeAcceptance(plan) {
+    const accepted = (Array.isArray(plan?.operations) ? plan.operations : [])
+      .filter(operation => operation?.linkedStateNoChangeAccepted);
+    if (!accepted.length) return { ok: true, reason: '' };
+    for (const operation of accepted) {
+      const current = evaluateQuantityLinkedStateProjection({
+        inv: plan.inv,
+        parentArr: operation.parentArr,
+        row: operation.row,
+        entry: operation.entry,
+        capabilities: operation.capabilities,
+        currentQty: operation.previousQty,
+        nextQty: operation.nextQty,
+        previousOwnedQty: operation.previousOwnedQty,
+        nextOwnedQty: operation.nextOwnedQty
+      });
+      if (current?.status !== window.linkedStateProjectionCore?.STATUS?.UNCHANGED
+          || !current.evidenceKey
+          || current.evidenceKey !== operation.linkedStateProjection?.evidenceKey) {
+        operation.linkedStateProjectionValidation = current;
+        return { ok: false, reason: 'linked-state-projection-stale' };
+      }
+    }
+    return { ok: true, reason: '' };
+  }
+
   function commitInventoryMutation(plan, options = {}) {
     if (!plan?.fastPath || !Array.isArray(plan.operations) || !plan.operations.length) {
       (plan?.fallbackReasons || []).forEach(reason => recordActiveMutationFallback(reason, {
@@ -9766,6 +9924,20 @@
     if (plan.kind === 'remove') {
       return commitInventoryRemovalMutation(plan, options);
     }
+    const linkedStateValidation = validateLinkedStateNoChangeAcceptance(plan);
+    if (!linkedStateValidation.ok) {
+      const reason = linkedStateValidation.reason;
+      if (!plan.fallbackReasons.includes(reason)) plan.fallbackReasons.push(reason);
+      plan.fallbackReason = plan.fallbackReasons[0] || reason;
+      plan.fastPath = false;
+      plan.impactClass = 'fallback';
+      plan.renderStrategy = 'full';
+      recordActiveMutationFallback(reason, { action: plan.kind || 'inventory-mutation' });
+      return { committed: false, plan, impact: plan, mutation: null };
+    }
+    plan.operations
+      .filter(operation => operation.linkedStateNoChangeAccepted)
+      .forEach(() => incrementActiveMutationCounter('linkedStateNoChangeAcceptances'));
     const source = options.source || `inventory-${plan.kind}`;
     const action = plan.operations.length > 1
       ? `${plan.kind}-batch`
@@ -9781,6 +9953,8 @@
       aggregateStrategy: plan.aggregateStrategy,
       topologyGuarantee: plan.topologyGuarantee,
       stateTransitions: plan.stateTransitions,
+      linkedStateNoChangeAccepted: plan.linkedStateNoChangeAccepted,
+      linkedStateProjections: plan.linkedStateProjections,
       filterMembership: plan.operations.map(operation => operation.filterImpact)
     });
     const changes = [];

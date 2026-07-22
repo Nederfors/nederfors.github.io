@@ -245,7 +245,7 @@ test('metadata quantity fast path matches the conservative save/render path and 
   expect(removalReload).toEqual(fastRemovalState.inventory);
 });
 
-test('owned hidden stack quantity matches forced-safe state without replaying reveal work', async ({ page }) => {
+test('owned hidden stack quantity uses No-change Acceptance with forced-safe and reload parity', async ({ page }) => {
   await seedStore(page);
   await page.goto('/#/inventory');
   await page.waitForFunction(() => Boolean(window.__symbaroumBootCompleted) && Boolean(window.symbaroumPersistence?.ready));
@@ -277,6 +277,68 @@ test('owned hidden stack quantity matches forced-safe state without replaying re
     };
   });
 
+  const projectionEvidence = await page.evaluate(({ target }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const row = window.storeHelper.getInventory(activeStore)
+      .find(candidate => String(candidate?.id || '') === String(target.id));
+    const entry = window.lookupEntry?.({ id: target.id, name: target.name });
+    const accepted = window.invUtil.planInventoryMutation({
+      kind: 'quantity',
+      row,
+      entry,
+      inv: window.storeHelper.getInventory(activeStore),
+      parentArr: window.storeHelper.getInventory(activeStore),
+      delta: 1,
+      surface: 'index'
+    });
+    const crossing = window.invUtil.planInventoryMutation({
+      kind: 'quantity',
+      row,
+      entry,
+      inv: window.storeHelper.getInventory(activeStore),
+      parentArr: window.storeHelper.getInventory(activeStore),
+      delta: -1,
+      surface: 'index'
+    });
+    return {
+      accepted: {
+        fastPath: accepted.fastPath,
+        noChangeAccepted: accepted.linkedStateNoChangeAccepted,
+        projection: accepted.linkedStateProjections[0] || null,
+        fallbackReasons: accepted.fallbackReasons
+      },
+      crossing: {
+        fastPath: crossing.fastPath,
+        noChangeAccepted: crossing.linkedStateNoChangeAccepted,
+        projection: crossing.linkedStateProjections[0] || null,
+        fallbackReasons: crossing.fallbackReasons
+      }
+    };
+  }, { target });
+  expect(projectionEvidence.accepted).toMatchObject({
+    fastPath: true,
+    noChangeAccepted: true,
+    projection: {
+      version: 1,
+      status: 'unchanged',
+      reason: 'all-declared-links-proven-unchanged'
+    },
+    fallbackReasons: []
+  });
+  expect(projectionEvidence.crossing).toMatchObject({
+    fastPath: false,
+    noChangeAccepted: false,
+    projection: {
+      version: 1,
+      status: 'changed',
+      reason: 'catalog-reveal-ownership-transition'
+    },
+    fallbackReasons: expect.arrayContaining([
+      'quantity-removal-unoptimized',
+      'hidden-revealed-state'
+    ])
+  });
+
   const run = async forceSafe => {
     await page.evaluate(({ forceSafe }) => {
       const perf = window.symbaroumPerf;
@@ -306,13 +368,29 @@ test('owned hidden stack quantity matches forced-safe state without replaying re
       return {
         core: {
           inventory: JSON.parse(JSON.stringify(window.storeHelper.getInventory(activeStore))),
+          selected: JSON.parse(JSON.stringify(window.storeHelper.getCurrentList(activeStore))),
+          onlySelected: window.storeHelper.getOnlySelected(activeStore),
           revealed: [...window.storeHelper.getRevealedArtifacts(activeStore)],
           artifactEffects: window.storeHelper.getArtifactEffects(activeStore),
+          snapshotSources: JSON.parse(JSON.stringify(
+            window.storeHelper.getSnapshotRuleRecords?.(activeStore) || []
+          )),
+          money: window.storeHelper.getMoney(activeStore),
+          derived: window.storeHelper.getDerived?.(activeStore) || null,
           rendered: {
             quantity: card?.querySelector('.count-badge')?.textContent || '',
-            totalWeight: document.querySelector('#weightOutput')?.textContent || ''
+            title: card?.querySelector('.entry-title-main')?.textContent || '',
+            price: card?.querySelector('.price-click')?.textContent || '',
+            weight: card?.querySelector('.weight-badge')?.textContent || '',
+            totalWeight: document.querySelector('#weightOutput')?.textContent || '',
+            cardCount: document.querySelectorAll('#invList li.entry-card[data-uid]').length
           },
-          rowUid: row?.__uid || ''
+          identity: {
+            id: row?.id || '',
+            name: row?.name || '',
+            rowUid: row?.__uid || '',
+            qty: Number(row?.qty || 0)
+          }
         },
         counters: scenario?.detail?.profile?.counters || {},
         fallbacks: scenario?.detail?.profile?.fallbacks || []
@@ -339,6 +417,7 @@ test('owned hidden stack quantity matches forced-safe state without replaying re
   expect(declared.core.revealed).toEqual(target.revealed);
   expect(declared.counters.fullInventoryRenders || 0).toBe(0);
   expect(declared.counters.artifactEffectScans || 0).toBe(0);
+  expect(declared.counters.linkedStateNoChangeAcceptances).toBe(1);
   expect(declared.counters.commonCommits).toBe(1);
   expect(declared.counters.persistenceSchedules).toBe(1);
   expect(declared.fallbacks).toEqual([]);
@@ -351,10 +430,29 @@ test('owned hidden stack quantity matches forced-safe state without replaying re
       .find(candidate => String(candidate?.id || '') === String(id));
     return {
       qty: Number(row?.qty || 0),
-      revealed: [...window.storeHelper.getRevealedArtifacts(activeStore)]
+      rowUid: row?.__uid || '',
+      selected: JSON.parse(JSON.stringify(window.storeHelper.getCurrentList(activeStore))),
+      onlySelected: window.storeHelper.getOnlySelected(activeStore),
+      revealed: [...window.storeHelper.getRevealedArtifacts(activeStore)],
+      artifactEffects: window.storeHelper.getArtifactEffects(activeStore),
+      snapshotSources: JSON.parse(JSON.stringify(
+        window.storeHelper.getSnapshotRuleRecords?.(activeStore) || []
+      )),
+      money: window.storeHelper.getMoney(activeStore),
+      derived: window.storeHelper.getDerived?.(activeStore) || null
     };
   }, { id: target.id });
-  expect(reloaded).toEqual({ qty: 2, revealed: target.revealed });
+  expect(reloaded).toEqual({
+    qty: 2,
+    rowUid: declared.core.identity.rowUid,
+    selected: declared.core.selected,
+    onlySelected: declared.core.onlySelected,
+    revealed: target.revealed,
+    artifactEffects: declared.core.artifactEffects,
+    snapshotSources: declared.core.snapshotSources,
+    money: declared.core.money,
+    derived: declared.core.derived
+  });
 });
 
 test('filtered final-row removal matches the forced safe path and reload', async ({ page }) => {
