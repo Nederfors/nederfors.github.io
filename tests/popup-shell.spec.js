@@ -7,6 +7,118 @@ async function waitForApp(page, route = '/#/index') {
   await expect(page.locator('shared-toolbar')).toHaveCount(1);
 }
 
+const REAL_POPUP_STACK_VIEWPORTS = Object.freeze({
+  chromium: { width: 1280, height: 900 },
+  'Mobile Chrome': { width: 390, height: 844 }
+});
+
+async function openRealToolbarSortPopup(page) {
+  const toolbar = page.locator('shared-toolbar');
+  await toolbar.locator('#filterToggle').click();
+
+  const drawer = toolbar.locator('#filterPanel');
+  await expect(drawer).toHaveAttribute('aria-hidden', 'false');
+
+  const settingsCard = toolbar.locator('#filterSettingsCard');
+  if (await settingsCard.evaluate(card => card.classList.contains('compact'))) {
+    await settingsCard.locator('.card-title').click();
+  }
+
+  await toolbar.locator('#entrySortBtn').click();
+  const popup = toolbar.locator('#entrySortPopup');
+  await expect(popup).toBeVisible();
+  return { drawer, popup };
+}
+
+test('real shadow-root popup keeps its shell vertical inside the horizontal toolbar drawer', async ({ page }, testInfo) => {
+  const viewport = REAL_POPUP_STACK_VIEWPORTS[testInfo.project.name];
+  test.skip(!viewport, 'Chromium desktop and Mobile Chrome own the real popup stack contract.');
+
+  await page.setViewportSize(viewport);
+  await waitForApp(page);
+  const { popup } = await openRealToolbarSortPopup(page);
+
+  const geometry = await popup.evaluate(overlay => {
+    const modal = overlay.querySelector(':scope > .db-modal, :scope > .popup-inner');
+    const header = modal?.querySelector(':scope > .db-modal__header');
+    const body = modal?.querySelector(':scope > .db-modal__body');
+    const footer = modal?.querySelector(':scope > .db-modal__footer');
+    const close = header?.querySelector('.db-modal__close');
+    const toolbarRoot = overlay.getRootNode();
+    const drawer = toolbarRoot.getElementById?.('filterPanel');
+    const drawerSurface = drawer?.querySelector(':scope > .db-drawer__panel');
+    const rect = element => {
+      const value = element?.getBoundingClientRect();
+      return value ? {
+        left: value.left,
+        top: value.top,
+        right: value.right,
+        bottom: value.bottom,
+        width: value.width,
+        height: value.height
+      } : null;
+    };
+    const modalRect = rect(modal);
+    const headerRect = rect(header);
+    const bodyRect = rect(body);
+    const footerRect = rect(footer);
+    const closeRect = rect(close);
+    const modalStyle = modal ? window.getComputedStyle(modal) : null;
+    const drawerSurfaceStyle = drawerSurface ? window.getComputedStyle(drawerSurface) : null;
+
+    return {
+      normalized: Boolean(
+        overlay.dataset.popupUnified === 'true'
+        && modal?.classList.contains('popup-shell--daub')
+        && header?.classList.contains('popup-modal-header')
+        && body?.classList.contains('popup-modal-body')
+        && footer?.classList.contains('popup-modal-footer')
+      ),
+      modalDisplay: modalStyle?.display || '',
+      modalFlexDirection: modalStyle?.flexDirection || '',
+      inlineDisplay: modal?.style.display || '',
+      inlineFlexDirection: modal?.style.flexDirection || '',
+      inlineMinHeight: modal?.style.minHeight || '',
+      modalClientWidth: modal?.clientWidth || 0,
+      modal: modalRect,
+      header: headerRect,
+      body: bodyRect,
+      footer: footerRect,
+      close: closeRect,
+      drawerTouchProfile: drawer?.dataset.touchProfile || '',
+      drawerSurfacePosition: drawerSurfaceStyle?.position || '',
+      drawerSurfaceTransform: drawerSurfaceStyle?.transform || ''
+    };
+  });
+
+  expect(geometry.normalized).toBe(true);
+  expect(geometry.modalDisplay).toBe('flex');
+  expect(geometry.modalFlexDirection).toBe('column');
+  expect(geometry.inlineDisplay).toBe('flex');
+  expect(geometry.inlineFlexDirection).toBe('column');
+  expect(geometry.inlineMinHeight).toBe('0px');
+  expect(geometry.modal).not.toBeNull();
+  expect(geometry.header).not.toBeNull();
+  expect(geometry.body).not.toBeNull();
+  expect(geometry.footer).not.toBeNull();
+  expect(geometry.close).not.toBeNull();
+  expect(geometry.header.height).toBeLessThan(100);
+  expect(geometry.header.height).toBeLessThan(geometry.modal.height / 2);
+  expect(Math.abs(geometry.header.width - geometry.modalClientWidth)).toBeLessThanOrEqual(2);
+  expect(geometry.header.width).toBeGreaterThan(geometry.modal.width * 0.9);
+  expect(geometry.header.bottom).toBeLessThanOrEqual(geometry.body.top + 1);
+  expect(geometry.body.bottom).toBeLessThanOrEqual(geometry.footer.top + 1);
+  expect(geometry.footer.bottom).toBeLessThanOrEqual(geometry.modal.bottom + 1);
+  expect(geometry.close.top).toBeGreaterThanOrEqual(geometry.header.top - 1);
+  expect(geometry.close.bottom).toBeLessThanOrEqual(geometry.header.bottom + 1);
+  expect(geometry.close.left).toBeGreaterThanOrEqual(geometry.header.left - 1);
+  expect(geometry.close.right).toBeLessThanOrEqual(geometry.header.right + 1);
+  expect(geometry.close.bottom).toBeLessThanOrEqual(geometry.modal.top + 100);
+  expect(geometry.drawerTouchProfile).toBe('panel-right');
+  expect(geometry.drawerSurfacePosition).toBe('absolute');
+  expect(geometry.drawerSurfaceTransform).not.toBe('none');
+});
+
 test('shared popup shells keep header, scrolling body, and actions in a vertical stack', async ({ page }, testInfo) => {
   await waitForApp(page);
 

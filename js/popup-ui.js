@@ -439,6 +439,9 @@
 
   function applyShellLayout(modal, header, body, footer) {
     if (modal instanceof HTMLElement) {
+      modal.style.display = 'flex';
+      modal.style.flexDirection = 'column';
+      modal.style.minHeight = '0';
       modal.style.padding = '0';
       modal.style.gap = '0';
       modal.style.textAlign = 'left';
