@@ -30,3 +30,41 @@ owner. Programmatic and route closes neutralize the current overlay history
 marker synchronously instead of calling `history.back()`, avoiding a second
 asynchronous route/close race while preserving browser-Back dismissal for an
 open overlay.
+
+## Persistence and deployment baseline
+
+`js/store.js` sends local mutations through the persistence API. In Dexie mode,
+field-scoped changes retain this path:
+
+```text
+saveCharacterFields()
+  -> queued writes
+  -> flushPendingWrites()
+  -> commitPendingWrites()
+  -> one IndexedDB transaction
+```
+
+The queue coalesces character fields, resolves lazy field values at commit
+time, and keeps the in-memory snapshot current while the IndexedDB write is
+debounced. Explicit route, page, PWA-update, and test boundaries can await a
+flush. Local-storage persistence is a compatibility fallback. These contracts,
+and the mutation planning and exact-removal behavior above them, remain client
+concerns.
+
+The service worker owns the static application shell, versioned/offline rule
+JSON, images, and opt-in PDF caching. It currently treats any same-scope GET
+whose `Accept` header contains `application/json` as cacheable rule JSON. A
+future API therefore requires an explicit `/api/` bypass before any JSON or
+runtime-cache branch.
+
+`.github/workflows/build.yaml` currently creates one static `dist/` artifact.
+That same artifact is deployed to GitHub Pages and uploaded to STRATO webspace
+over SFTP. The workflow contains no application-process deployment, process
+supervision, reverse proxy, PostgreSQL migration, or health probe. Node 22 in
+the build job is a CI runtime, not evidence of a production Node runtime.
+
+The accepted online-first boundary and hosting gate are recorded in
+[online-character-contract.md](./online-character-contract.md). The
+`nederfors.github.io` to `symbapedia.se` popup/postMessage flow remains a
+static, origin-checked legacy transfer bridge; it is not a hosted persistence
+or synchronization channel.
