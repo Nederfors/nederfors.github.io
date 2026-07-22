@@ -65,9 +65,7 @@ if (testDatabaseUrl) {
 
     afterAll(async () => {
       await appDatabase.pool.query('DELETE FROM "user" WHERE email = ANY($1::text[])', [
-        email,
-        disabledEmail,
-        rejectedOriginEmail
+        [email, disabledEmail, rejectedOriginEmail]
       ]);
       await app.close();
       await migrationDatabase.close();
