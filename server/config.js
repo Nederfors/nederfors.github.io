@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 const VALID_ENVIRONMENTS = new Set(['development', 'test', 'production']);
 const VALID_SSL_MODES = new Set(['disable', 'verify-full']);
 
@@ -55,6 +57,75 @@ function bindHost(environment) {
   return value;
 }
 
+function authSecret(environment) {
+  const value = requiredString(environment, 'BETTER_AUTH_SECRET');
+  if (value.length < 32) {
+    throw new ConfigError('BETTER_AUTH_SECRET must contain at least 32 characters.');
+  }
+  return value;
+}
+
+function authSecrets(environment) {
+  const raw = environment.BETTER_AUTH_SECRETS?.trim();
+  if (!raw) return undefined;
+
+  const versions = new Set();
+  const secrets = raw.split(',').map(entry => {
+    const separator = entry.indexOf(':');
+    const version = Number(entry.slice(0, separator));
+    const value = entry.slice(separator + 1).trim();
+    if (separator < 1 || !Number.isSafeInteger(version) || version < 0 || versions.has(version) || value.length < 32) {
+      throw new ConfigError('BETTER_AUTH_SECRETS must be a comma-separated list of unique non-negative versions and secrets of at least 32 characters.');
+    }
+    versions.add(version);
+    return Object.freeze({ version, value });
+  });
+
+  return Object.freeze(secrets);
+}
+
+function authBaseUrl(environment, nodeEnv) {
+  const value = requiredString(environment, 'BETTER_AUTH_URL');
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new ConfigError('BETTER_AUTH_URL must be a valid absolute application origin.');
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol)
+      || url.username
+      || url.password
+      || url.pathname !== '/'
+      || url.search
+      || url.hash) {
+    throw new ConfigError('BETTER_AUTH_URL must be an exact HTTP(S) application origin without a path, credentials, query, or fragment.');
+  }
+  if (nodeEnv === 'production' && url.protocol !== 'https:') {
+    throw new ConfigError('Production BETTER_AUTH_URL must use HTTPS.');
+  }
+  return url.origin;
+}
+
+function trustedProxies(environment) {
+  const raw = environment.BETTER_AUTH_TRUSTED_PROXIES?.trim();
+  if (!raw) return Object.freeze([]);
+
+  const entries = raw.split(',').map(entry => entry.trim());
+  const valid = entries.every(entry => {
+    if (isIP(entry)) return true;
+    const match = /^(.+)\/(\d{1,3})$/.exec(entry);
+    if (!match) return false;
+    const version = isIP(match[1]);
+    const prefix = Number(match[2]);
+    return version !== 0 && prefix > 0 && prefix <= (version === 4 ? 32 : 128);
+  });
+  if (!valid) {
+    throw new ConfigError('BETTER_AUTH_TRUSTED_PROXIES must be a comma-separated list of explicit IP addresses or CIDR ranges.');
+  }
+  return Object.freeze(entries);
+}
+
 export function loadConfig(environment = process.env) {
   const nodeEnv = environment.NODE_ENV || 'development';
   if (!VALID_ENVIRONMENTS.has(nodeEnv)) {
@@ -71,12 +142,25 @@ export function loadConfig(environment = process.env) {
     throw new ConfigError('Production DATABASE_SSL_MODE=disable requires DATABASE_PRIVATE_NETWORK=true.');
   }
 
+  const auth = {
+    secret: authSecret(environment),
+    secrets: authSecrets(environment),
+    baseUrl: authBaseUrl(environment, nodeEnv),
+    signupEnabled: boolean(environment, 'AUTH_SIGNUP_ENABLED', false),
+    trustedProxies: trustedProxies(environment)
+  };
+  const frozenAuth = Object.freeze(auth);
+  if (boolean(environment, 'TRUST_PROXY')) {
+    throw new ConfigError('TRUST_PROXY=true is not supported; configure explicit BETTER_AUTH_TRUSTED_PROXIES entries.');
+  }
+
   const config = {
     environment: nodeEnv,
     host: bindHost(environment),
     port: integer(environment, 'PORT', 3000, { min: 1, max: 65535 }),
-    trustProxy: boolean(environment, 'TRUST_PROXY'),
+    trustProxy: auth.trustedProxies.length > 0 ? auth.trustedProxies : false,
     shutdownTimeoutMs: integer(environment, 'SHUTDOWN_TIMEOUT_MS', 10_000, { min: 1_000, max: 60_000 }),
+    auth: frozenAuth,
     database: {
       url: databaseUrl(environment),
       poolMax: integer(environment, 'DATABASE_POOL_MAX', 10, { min: 1, max: 50 }),
@@ -90,5 +174,5 @@ export function loadConfig(environment = process.env) {
     }
   };
 
-  return Object.freeze({ ...config, database: Object.freeze(config.database) });
+  return Object.freeze({ ...config, auth: frozenAuth, database: Object.freeze(config.database) });
 }

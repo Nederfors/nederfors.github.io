@@ -8,6 +8,7 @@
     "sync:static": "python3 ./scripts/sync_static_assets.py",
     "dev": "vite --config ./vite.config.js",
     "server:start": "node ./server/start.js",
+    "auth:schema": "auth generate --config ./better-auth.config.js --output ./server/db/auth-schema.js --adapter drizzle --dialect postgresql --yes",
     "db:generate": "drizzle-kit generate --config ./drizzle.config.js",
     "db:check": "drizzle-kit check --config ./drizzle.config.js",
     "db:migrate": "node ./server/db/migrate.js",
@@ -34,6 +35,8 @@
     "smoke:production": "node ./scripts/run-production-smoke.mjs"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.6.24",
+    "better-auth": "1.6.24",
     "comlink": "^4.4.2",
     "daub-ui": "^3.19.6",
     "dexie": "^4.2.0",
@@ -46,6 +49,7 @@
   "devDependencies": {
     "@playwright/test": "^1.47.2",
     "ajv": "^8.20.0",
+    "auth": "1.6.24",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.1.0",
     "lighthouse": "^12.0.0",

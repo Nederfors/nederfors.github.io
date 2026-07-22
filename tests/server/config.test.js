@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { ConfigError, loadConfig } from '../../server/config.js';
+import { TEST_AUTH_SECRET, testEnvironment } from './helpers.js';
 
-const validEnvironment = Object.freeze({
-  NODE_ENV: 'test',
+const validEnvironment = Object.freeze(testEnvironment({
   DATABASE_URL: 'postgresql://test_user:super-secret-password@127.0.0.1:5432/symbapedia_test',
   PORT: '3100',
   DATABASE_POOL_MAX: '4'
-});
+}));
 
 describe('server configuration', () => {
   it('parses valid runtime configuration without serializing credentials', () => {
@@ -17,6 +17,11 @@ describe('server configuration', () => {
       host: '127.0.0.1',
       port: 3100,
       trustProxy: false,
+      auth: {
+        baseUrl: 'http://127.0.0.1:3100',
+        signupEnabled: false,
+        trustedProxies: []
+      },
       database: { poolMax: 4, sslMode: 'disable' }
     });
     expect(JSON.stringify({ ...config, database: { ...config.database, url: '[redacted]' } }))
@@ -48,14 +53,95 @@ describe('server configuration', () => {
     expect(() => loadConfig({
       ...validEnvironment,
       NODE_ENV: 'production',
+      BETTER_AUTH_URL: 'https://symbapedia.example',
       DATABASE_SSL_MODE: 'disable'
     })).toThrow('DATABASE_PRIVATE_NETWORK=true');
 
     expect(loadConfig({
       ...validEnvironment,
       NODE_ENV: 'production',
+      BETTER_AUTH_URL: 'https://symbapedia.example',
       DATABASE_SSL_MODE: 'disable',
       DATABASE_PRIVATE_NETWORK: 'true'
     }).database.privateNetwork).toBe(true);
+  });
+
+  it('rejects missing and short Better Auth secrets without echoing their values', () => {
+    const missing = { ...validEnvironment };
+    delete missing.BETTER_AUTH_SECRET;
+
+    expect(() => loadConfig(missing)).toThrow('BETTER_AUTH_SECRET must be configured.');
+
+    const shortSecret = 'sensitive-short-secret';
+    try {
+      loadConfig({ ...validEnvironment, BETTER_AUTH_SECRET: shortSecret });
+      throw new Error('expected configuration failure');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigError);
+      expect(error.message).toBe('BETTER_AUTH_SECRET must contain at least 32 characters.');
+      expect(error.message).not.toContain(shortSecret);
+    }
+  });
+
+  it('requires an exact absolute auth origin and HTTPS in production', () => {
+    const missing = { ...validEnvironment };
+    delete missing.BETTER_AUTH_URL;
+    expect(() => loadConfig(missing)).toThrow('BETTER_AUTH_URL must be configured.');
+    expect(() => loadConfig({ ...validEnvironment, BETTER_AUTH_URL: 'not a URL' }))
+      .toThrow('BETTER_AUTH_URL must be a valid absolute application origin.');
+    expect(() => loadConfig({ ...validEnvironment, BETTER_AUTH_URL: 'https://example.test/api/auth' }))
+      .toThrow('BETTER_AUTH_URL must be an exact HTTP(S) application origin');
+    expect(() => loadConfig({ ...validEnvironment, BETTER_AUTH_URL: 'https://example.test/another-path' }))
+      .toThrow('BETTER_AUTH_URL must be an exact HTTP(S) application origin');
+    expect(() => loadConfig({
+      ...validEnvironment,
+      NODE_ENV: 'production',
+      DATABASE_SSL_MODE: 'disable',
+      DATABASE_PRIVATE_NETWORK: 'true',
+      BETTER_AUTH_URL: 'http://example.test'
+    })).toThrow('Production BETTER_AUTH_URL must use HTTPS.');
+  });
+
+  it('validates signup booleans and defaults signup to disabled', () => {
+    expect(loadConfig(validEnvironment).auth.signupEnabled).toBe(false);
+    expect(loadConfig({ ...validEnvironment, AUTH_SIGNUP_ENABLED: 'true' }).auth.signupEnabled).toBe(true);
+    expect(() => loadConfig({ ...validEnvironment, AUTH_SIGNUP_ENABLED: 'yes' }))
+      .toThrow('AUTH_SIGNUP_ENABLED must be true or false.');
+  });
+
+  it('accepts only explicit valid trusted proxy IPs and CIDRs', () => {
+    const config = loadConfig({
+      ...validEnvironment,
+      BETTER_AUTH_TRUSTED_PROXIES: '192.0.2.10, 2001:db8::/64'
+    });
+    expect(config.auth.trustedProxies).toEqual(['192.0.2.10', '2001:db8::/64']);
+    expect(config.trustProxy).toEqual(['192.0.2.10', '2001:db8::/64']);
+    expect(() => loadConfig({ ...validEnvironment, BETTER_AUTH_TRUSTED_PROXIES: '192.0.2.999' }))
+      .toThrow('BETTER_AUTH_TRUSTED_PROXIES must be a comma-separated list');
+    expect(() => loadConfig({ ...validEnvironment, BETTER_AUTH_TRUSTED_PROXIES: '0.0.0.0/0' }))
+      .toThrow('BETTER_AUTH_TRUSTED_PROXIES must be a comma-separated list');
+    expect(() => loadConfig({ ...validEnvironment, TRUST_PROXY: 'true' }))
+      .toThrow('TRUST_PROXY=true is not supported');
+  });
+
+  it('supports Better Auth 1.6.24 versioned secret rotation while retaining the singular baseline', () => {
+    const rotated = loadConfig({
+      ...validEnvironment,
+      BETTER_AUTH_SECRETS: `2:${TEST_AUTH_SECRET}-current,1:${TEST_AUTH_SECRET}-previous`
+    });
+    expect(rotated.auth.secret).toBe(TEST_AUTH_SECRET);
+    expect(rotated.auth.secrets).toEqual([
+      { version: 2, value: `${TEST_AUTH_SECRET}-current` },
+      { version: 1, value: `${TEST_AUTH_SECRET}-previous` }
+    ]);
+
+    const invalidValue = '3:too-short';
+    try {
+      loadConfig({ ...validEnvironment, BETTER_AUTH_SECRETS: invalidValue });
+      throw new Error('expected configuration failure');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigError);
+      expect(error.message).not.toContain(invalidValue);
+    }
   });
 });

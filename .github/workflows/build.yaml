@@ -65,7 +65,7 @@ jobs:
       - name: Validate Drizzle migration metadata
         run: npm run db:check
 
-      - name: Run disposable PostgreSQL migration integration
+      - name: Run disposable PostgreSQL migration and auth integration
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/symbapedia_test
         run: npm run test:server:integration

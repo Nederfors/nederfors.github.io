@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { loadConfig } from '../../server/config.js';
 import { createDatabaseClient } from '../../server/db/client.js';
+import { testEnvironment } from './helpers.js';
 
 class FakePool {
   constructor(options) {
@@ -13,8 +14,7 @@ class FakePool {
 describe('database client', () => {
   it('owns one bounded pool, uses it for Drizzle, and closes it once', async () => {
     const config = loadConfig({
-      NODE_ENV: 'test',
-      DATABASE_URL: 'postgresql://test:secret@127.0.0.1:5432/test',
+      ...testEnvironment(),
       DATABASE_POOL_MAX: '3',
       DATABASE_CONNECTION_TIMEOUT_MS: '1200',
       DATABASE_HEALTHCHECK_TIMEOUT_MS: '800'
@@ -39,8 +39,9 @@ describe('database client', () => {
 
   it('uses certificate verification for the production TLS mode', () => {
     const config = loadConfig({
+      ...testEnvironment(),
       NODE_ENV: 'production',
-      DATABASE_URL: 'postgresql://test:secret@127.0.0.1:5432/test',
+      BETTER_AUTH_URL: 'https://symbapedia.example',
       DATABASE_SSL_CA: 'test-ca'
     });
     const database = createDatabaseClient(config, { PoolConstructor: FakePool, drizzleFactory: () => ({}) });
