@@ -15,6 +15,13 @@
       "when": 1784729446345,
       "tag": "0001_new_kat_farrell",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784731534519,
+      "tag": "0002_workable_master_chief",
+      "breakpoints": true
     }
   ]
 }
