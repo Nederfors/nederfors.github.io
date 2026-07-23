@@ -12,6 +12,11 @@ const COARSE_TABLET_VIEWPORTS = [
   { name: 'tablet baseline', width: 768, height: 1024 }
 ];
 
+const DRAWER_LAYOUT_VIEWPORTS = [
+  { name: 'desktop', width: 1440, height: 900, yrkeWidth: 580, filterWidth: 440 },
+  { name: 'phone', width: 390, height: 844, yrkeWidth: 390, filterWidth: 390 }
+];
+
 const CORE_ROUTES = [
   '/#/index',
   '/#/character',
@@ -68,6 +73,106 @@ async function loadRoute(page, path) {
       && document.body.dataset.role === role
       && viewRoot?.getAttribute('aria-busy') === 'false';
   }, expectedRole);
+}
+
+async function expectVerticalDrawerLayout(page, drawer, expectedWidth) {
+  await expect(drawer).toBeVisible();
+  await expect.poll(async () => drawer.evaluate(root => {
+    const panel = root.querySelector(':scope > .db-drawer__panel');
+    return Math.abs((panel?.getBoundingClientRect().right || 0) - window.innerWidth);
+  })).toBeLessThan(1);
+
+  const metrics = await drawer.evaluate(root => {
+    const panel = root.querySelector(':scope > .db-drawer__panel');
+    const header = panel?.querySelector(':scope > .inv-header');
+    const title = header?.querySelector('h2');
+    const close = header?.querySelector('button');
+    const body = panel?.querySelector(':scope > .db-drawer__body');
+    const overlay = root.querySelector(':scope > .db-drawer__overlay');
+    const main = document.querySelector('main');
+    const box = element => {
+      const rect = element?.getBoundingClientRect() || null;
+      return rect ? {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        centerY: rect.top + (rect.height / 2)
+      } : null;
+    };
+    const style = element => {
+      const computed = element ? window.getComputedStyle(element) : null;
+      return computed ? {
+        display: computed.display,
+        flexDirection: computed.flexDirection,
+        alignItems: computed.alignItems,
+        justifyContent: computed.justifyContent,
+        overflowX: computed.overflowX,
+        overflowY: computed.overflowY,
+        filter: computed.filter,
+        backdropFilter: computed.backdropFilter,
+        backgroundColor: computed.backgroundColor,
+        backgroundImage: computed.backgroundImage
+      } : null;
+    };
+    const before = window.getComputedStyle(root, '::before');
+    return {
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      document: {
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth
+      },
+      root: box(root),
+      panel: { box: box(panel), style: style(panel) },
+      header: { box: box(header), style: style(header) },
+      title: box(title),
+      close: box(close),
+      body: { box: box(body), style: style(body) },
+      overlay: style(overlay),
+      before: {
+        backgroundColor: before.backgroundColor,
+        backgroundImage: before.backgroundImage,
+        backdropFilter: before.backdropFilter
+      },
+      main: style(main)
+    };
+  });
+
+  expect(metrics.document.scrollWidth).toBe(metrics.document.clientWidth);
+  expect(metrics.root?.left).toBeCloseTo(0, 1);
+  expect(metrics.root?.top).toBeCloseTo(0, 1);
+  expect(metrics.root?.width).toBeCloseTo(metrics.viewport.width, 1);
+  expect(metrics.root?.height).toBeCloseTo(metrics.viewport.height, 1);
+  expect(metrics.panel.box?.right).toBeCloseTo(metrics.viewport.width, 1);
+  expect(metrics.panel.box?.width).toBeCloseTo(expectedWidth, 1);
+  expect(metrics.panel.box?.height).toBeCloseTo(metrics.viewport.height, 1);
+  expect(metrics.panel.style?.display).toBe('flex');
+  expect(metrics.panel.style?.flexDirection).toBe('column');
+  expect(metrics.panel.style?.overflowY).toBe('hidden');
+  expect(metrics.header.style?.display).toBe('flex');
+  expect(metrics.header.style?.flexDirection).toBe('row');
+  expect(metrics.header.style?.alignItems).toBe('center');
+  expect(metrics.header.style?.justifyContent).toBe('space-between');
+  expect(Math.abs((metrics.header.box?.top || 0) - (metrics.panel.box?.top || 0))).toBeLessThan(3);
+  expect(Math.abs((metrics.header.box?.width || 0) - (metrics.panel.box?.width || 0))).toBeLessThan(4);
+  expect(metrics.header.box?.height || 0).toBeLessThan((metrics.panel.box?.height || 0) * 0.25);
+  expect(Math.abs((metrics.title?.centerY || 0) - (metrics.close?.centerY || 0))).toBeLessThan(3);
+  expect(metrics.close?.centerY || 0).toBeGreaterThanOrEqual(metrics.header.box?.top || 0);
+  expect(metrics.close?.centerY || 0).toBeLessThanOrEqual(metrics.header.box?.bottom || 0);
+  expect(metrics.header.box?.bottom || 0).toBeLessThanOrEqual((metrics.body.box?.top || 0) + 2);
+  expect(metrics.body.box?.width || 0).toBeGreaterThan(0);
+  expect(metrics.body.box?.height || 0).toBeGreaterThan(0);
+  expect(['auto', 'scroll']).toContain(metrics.body.style?.overflowY);
+  expect(metrics.overlay?.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(metrics.overlay?.backgroundImage).toBe('none');
+  expect(metrics.overlay?.backdropFilter).toBe('none');
+  expect(metrics.before.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(metrics.before.backgroundImage).toBe('none');
+  expect(metrics.before.backdropFilter).toBe('none');
+  expect(metrics.main?.filter).toBe('none');
+  expect(metrics.main?.backdropFilter).toBe('none');
 }
 
 function measureShell() {
@@ -367,15 +472,18 @@ for (const width of [320, 390, 640]) {
 
     const drawerMetrics = await drawer.evaluate(root => {
       const panel = root.querySelector('.db-drawer__panel');
+      const body = root.querySelector('.db-drawer__body');
       const rootRect = root.getBoundingClientRect();
       const panelRect = panel?.getBoundingClientRect() || null;
       const panelStyle = panel ? window.getComputedStyle(panel) : null;
+      const bodyStyle = body ? window.getComputedStyle(body) : null;
       return {
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
         root: { left: rootRect.left, top: rootRect.top, width: rootRect.width, height: rootRect.height },
         panel: panelRect ? { left: panelRect.left, top: panelRect.top, width: panelRect.width, height: panelRect.height } : null,
         overflowY: panelStyle?.overflowY || '',
+        bodyOverflowY: bodyStyle?.overflowY || '',
         paddingTop: Number.parseFloat(panelStyle?.paddingTop || '0'),
         paddingBottom: Number.parseFloat(panelStyle?.paddingBottom || '0')
       };
@@ -389,7 +497,8 @@ for (const width of [320, 390, 640]) {
     expect(drawerMetrics.panel?.top).toBeCloseTo(0, 1);
     expect(drawerMetrics.panel?.width).toBeCloseTo(drawerMetrics.viewportWidth, 1);
     expect(drawerMetrics.panel?.height).toBeCloseTo(drawerMetrics.viewportHeight, 1);
-    expect(['auto', 'scroll']).toContain(drawerMetrics.overflowY);
+    expect(drawerMetrics.overflowY).toBe('hidden');
+    expect(['auto', 'scroll']).toContain(drawerMetrics.bodyOverflowY);
     expect(drawerMetrics.paddingTop).toBeGreaterThanOrEqual(16);
     expect(drawerMetrics.paddingBottom).toBeGreaterThanOrEqual(16);
 
@@ -397,6 +506,43 @@ for (const width of [320, 390, 640]) {
     await expect(drawer).toBeHidden();
     await expect(overview).toHaveAttribute('aria-expanded', 'false');
     await expect(overview).toBeFocused();
+  });
+}
+
+for (const viewport of DRAWER_LAYOUT_VIEWPORTS) {
+  test(`${viewport.name} slide-in drawers keep a top header and scrolling body`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await seedParityProfile(page);
+    await loadRoute(page, '/#/index');
+
+    await page.evaluate(() => window.handleIndexSearchTerm?.('Bandage', { scroll: false }));
+    const infoTrigger = page.locator('#lista li.entry-card[data-name="Bandage"] button[data-info]');
+    await expect(infoTrigger).toHaveCount(1);
+    await expect(infoTrigger).toBeVisible();
+    await infoTrigger.click();
+
+    const entryDrawer = page.locator('#yrkePanel');
+    await expect(entryDrawer).toHaveClass(/db-drawer--structured/);
+    await expectVerticalDrawerLayout(page, entryDrawer, viewport.yrkeWidth);
+    await entryDrawer.locator('#yrkeClose').click();
+    await expect(entryDrawer).toBeHidden();
+    await expect(infoTrigger).toBeFocused();
+
+    const toolbar = page.locator('shared-toolbar');
+    const filterToggle = toolbar.locator('#filterToggle');
+    await expect(filterToggle).toHaveCount(1);
+    await filterToggle.click();
+
+    const filterDrawer = toolbar.locator('#filterPanel');
+    await expectVerticalDrawerLayout(page, filterDrawer, viewport.filterWidth);
+    await filterDrawer.locator('button[data-close="filterPanel"]').click();
+    await expect(filterDrawer).toBeHidden();
+    await expect(filterToggle).toBeFocused();
+
+    await loadRoute(page, '/#/character');
+    await expect(page.locator('#conflictPanel')).toHaveClass(/db-drawer--structured/);
+    await expect(page.locator('#conflictPanel > .db-drawer__overlay')).toHaveCount(1);
+    await expect(page.locator('#conflictPanel > .db-drawer__panel > .db-drawer__body')).toHaveCount(1);
   });
 }
 

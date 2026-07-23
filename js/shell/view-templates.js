@@ -63,35 +63,38 @@ export const VIEW_TEMPLATES = Object.freeze({
   </div>
 
   <!-- Konfliktpanel för aktiva handlingar -->
-  <aside id="conflictPanel" class="db-drawer offcanvas" data-touch-profile="panel-right">
-    <header class="inv-header">
-      <h2 id="conflictTitle">Kan ej användas samtidigt som</h2>
-      <div class="inv-actions">
-        <button class="db-btn db-btn--icon db-btn--icon-only" id="conflictClose">${icon('cross')}</button>
-      </div>
-    </header>
-    <div class="conflict-panel-content info-panel-content summary-content">
-      <div class="info-panel-stack">
-        <section class="summary-section info-panel-section info-panel-overview conflict-panel-overview">
-          <div class="info-panel-overview-grid">
-            <div class="info-panel-overview-block">
-              <div class="info-panel-overview-label">Konflikter</div>
-              <p>Poster här blockerar varandra och kan inte vara aktiva samtidigt.</p>
+  <div id="conflictPanel" class="db-drawer db-drawer--structured db-drawer--content-medium offcanvas" data-touch-profile="panel-right" aria-hidden="true" inert>
+    <div class="db-drawer__overlay" aria-hidden="true"></div>
+    <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="conflictTitle">
+      <header class="inv-header">
+        <h2 id="conflictTitle">Kan ej användas samtidigt som</h2>
+        <div class="inv-actions">
+          <button class="db-btn db-btn--icon db-btn--icon-only" id="conflictClose">${icon('cross')}</button>
+        </div>
+      </header>
+      <div class="db-drawer__body conflict-panel-content info-panel-content summary-content">
+        <div class="info-panel-stack">
+          <section class="summary-section info-panel-section info-panel-overview conflict-panel-overview">
+            <div class="info-panel-overview-grid">
+              <div class="info-panel-overview-block">
+                <div class="info-panel-overview-label">Konflikter</div>
+                <p>Poster här blockerar varandra och kan inte vara aktiva samtidigt.</p>
+              </div>
+              <div class="info-panel-overview-block">
+                <div class="info-panel-overview-label">Tips</div>
+                <p>Öppna en post för att läsa varför den krockar med din nuvarande uppsättning.</p>
+              </div>
             </div>
-            <div class="info-panel-overview-block">
-              <div class="info-panel-overview-label">Tips</div>
-              <p>Öppna en post för att läsa varför den krockar med din nuvarande uppsättning.</p>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="summary-section info-panel-section conflict-panel-section">
-          <h3>Aktiva konflikter</h3>
-          <ul id="conflictList" class="card-list entry-card-list conflict-card-list" data-entry-page="conflict"></ul>
-        </section>
+          <section class="summary-section info-panel-section conflict-panel-section">
+            <h3>Aktiva konflikter</h3>
+            <ul id="conflictList" class="card-list entry-card-list conflict-card-list" data-entry-page="conflict"></ul>
+          </section>
+        </div>
       </div>
-    </div>
-  </aside>
+    </aside>
+  </div>
 `,
 
   inventory: `

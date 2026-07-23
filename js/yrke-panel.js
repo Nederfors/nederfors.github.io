@@ -17,18 +17,23 @@
 
   function create() {
     if (document.getElementById('yrkePanel')) return;
-    const panel = document.createElement('aside');
+    const panel = document.createElement('div');
     panel.id = 'yrkePanel';
-    panel.classList.add('offcanvas');
+    panel.classList.add('db-drawer', 'db-drawer--structured', 'db-drawer--content-wide', 'offcanvas');
     panel.dataset.touchProfile = 'panel-right';
+    panel.setAttribute('aria-hidden', 'true');
+    panel.setAttribute('inert', '');
     panel.innerHTML = `
-      <header class="inv-header">
-        <h2 id="yrkeTitle"></h2>
-        <div class="inv-actions">
-          <button id="yrkeClose" class="db-btn db-btn--icon">✕</button>
-        </div>
-      </header>
-      <div id="yrkeContent"></div>
+      <div class="db-drawer__overlay" aria-hidden="true"></div>
+      <aside class="db-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="yrkeTitle">
+        <header class="inv-header">
+          <h2 id="yrkeTitle"></h2>
+          <div class="inv-actions">
+            <button id="yrkeClose" class="db-btn db-btn--icon">✕</button>
+          </div>
+        </header>
+        <div id="yrkeContent" class="db-drawer__body"></div>
+      </aside>
     `;
     document.body.appendChild(panel);
     window.registerOverlayElement?.(panel);

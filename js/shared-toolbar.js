@@ -1008,7 +1008,7 @@ class SharedToolbar extends HTMLElement {
       `.trim();
     };
     const helpPanelHtml = `
-      <div class="help-content info-panel-content summary-content">
+      <div class="db-drawer__body help-content info-panel-content summary-content">
         <div class="info-panel-stack">
           <section class="summary-section info-panel-section info-panel-overview help-panel-overview">
             <div class="info-panel-overview-grid">
@@ -1603,7 +1603,7 @@ class SharedToolbar extends HTMLElement {
             <button class="db-btn db-btn--icon" data-close="filterPanel">✕</button>
           </div>
         </header>
-        <div class="filter-panel-content info-panel-content summary-content">
+        <div class="db-drawer__body filter-panel-content info-panel-content summary-content">
           <div class="filter-panel-stack">
         <ul class="card-list filter-card-list">
           <li class="db-card" data-special="__formal__" id="filterFormalCard">
@@ -2286,7 +2286,7 @@ class SharedToolbar extends HTMLElement {
             <button class="db-btn db-btn--icon" data-close="summarySlidePanel">✕</button>
           </div>
         </header>
-        <div class="summary-slide-content summary-content">
+        <div class="db-drawer__body summary-slide-content summary-content">
           <div id="summarySlideInner"></div>
         </div>
         </aside>
@@ -2302,7 +2302,7 @@ class SharedToolbar extends HTMLElement {
             <button class="db-btn db-btn--icon" data-close="invDashPanel" aria-label="Stäng inventarium">${icon('cross', { alt: '', width: 24, height: 24 }) || '✕'}</button>
           </div>
         </header>
-        <div class="inv-dash-panel-content">
+        <div class="db-drawer__body inv-dash-panel-content">
           <div id="invDashInner"></div>
         </div>
         </aside>

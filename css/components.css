@@ -3191,8 +3191,7 @@ input:focus, select:focus, textarea:focus {
 .overview-action.under .overview-action-value { color: inherit; }
 
 
-/* Specifika paneler använder samma klass plus egna id:n */
-#filterPanel { max-width: 360px; }
+/* Specifika äldre paneler använder samma klass plus egna id:n */
 #summaryPanel{ max-width: 360px; }
 #effectsPanel{ max-width: 360px; }
 
@@ -3721,13 +3720,8 @@ select.level {
   }
 }
 /* ---------- Off-canvas-paneler från höger ---------- */
-#filterPanel,
-#yrkePanel,
-#infoPanel,
 #summaryPanel,
-#summarySlidePanel,
-#effectsPanel,
-#conflictPanel {
+#effectsPanel {
   position: fixed;
   top: 0;
   right: 0;
@@ -3753,13 +3747,10 @@ select.level {
 }
 
 /* Specifika max-breddar */
-#filterPanel { max-width: 390px; }
 #summaryPanel{ max-width: 360px; }
-#summarySlidePanel { max-width: 390px; }
 #effectsPanel{ max-width: 360px; }
-#conflictPanel { max-width: 390px; }
-#yrkePanel   { max-width: 400px; font-size: 1.12rem; line-height: 1.6; }
-#infoPanel   { max-width: 390px; font-size: 1rem; line-height: 1.5; }
+#yrkePanel   { font-size: 1.12rem; line-height: 1.6; }
+#infoPanel   { font-size: 1rem; line-height: 1.5; }
 #yrkePanel p { margin: 0 0 1rem; }
 #yrkePanel table {
   width: 100%;
@@ -3996,25 +3987,15 @@ select.level {
 }
 
 /* När klassen .open läggs på – låt panelen glida in */
-#filterPanel.open,
-#yrkePanel.open,
-#infoPanel.open,
 #summaryPanel.open,
-#summarySlidePanel.open,
-#effectsPanel.open,
-#conflictPanel.open {
+#effectsPanel.open {
   transform: translate3d(0, 0, 0);
   box-shadow: -4px 0 20px #0009;
 }
 
 @media (min-width: 1024px) {
-  #filterPanel { max-width: 520px; }
   #summaryPanel{ max-width: 460px; }
-  #summarySlidePanel { max-width: 460px; }
   #effectsPanel{ max-width: 460px; }
-  #conflictPanel{ max-width: 500px; }
-  #yrkePanel   { max-width: 580px; }
-  #infoPanel   { max-width: 540px; }
 
   #filterPanel .info-panel-overview-grid,
   #conflictPanel .info-panel-overview-grid {
@@ -4041,13 +4022,8 @@ select.level {
 }
 /* Mobile: make right panels fill ~90% width and full dynamic height */
 @media (max-width: 640px) {
-  #filterPanel,
-  #yrkePanel,
-  #infoPanel,
   #summaryPanel,
-  #summarySlidePanel,
-  #effectsPanel,
-  #conflictPanel {
+  #effectsPanel {
     width: 100vw;
     max-width: 100vw;
     height: 100dvh;
@@ -7410,7 +7386,7 @@ textarea.auto-resize {
 }
 
 /* ---------- Inventory dashboard sidebar panel ---------- */
-#invDashPanel.inv-dash-drawer {
+#invDashPanel.inv-dash-drawer > .db-drawer__panel {
   color: #f1e8da;
   background:
     radial-gradient(circle at 12% 0%, rgba(166, 107, 66, .14), transparent 28%),
@@ -7421,7 +7397,7 @@ textarea.auto-resize {
     inset 1px 0 0 rgba(255, 243, 228, .06);
 }
 
-#invDashPanel > .inv-header {
+#invDashPanel > .db-drawer__panel > .inv-header {
   position: sticky;
   top: 0;
   z-index: 7;
@@ -7433,7 +7409,7 @@ textarea.auto-resize {
   backdrop-filter: blur(16px);
 }
 
-#invDashPanel > .inv-header h2 {
+#invDashPanel > .db-drawer__panel > .inv-header h2 {
   margin: 0;
   color: #f4eadf;
   font-family: Georgia, "Times New Roman", serif;
@@ -7444,7 +7420,7 @@ textarea.auto-resize {
   text-shadow: 0 2px 10px rgba(0, 0, 0, .5);
 }
 
-#invDashPanel > .inv-header .db-btn--icon {
+#invDashPanel > .db-drawer__panel > .inv-header .db-btn--icon {
   width: 3rem;
   height: 3rem;
   padding: 0;
@@ -7455,7 +7431,7 @@ textarea.auto-resize {
   font-size: 2.05rem;
   font-weight: 300;
 }
-#invDashPanel > .inv-header .db-btn--icon img {
+#invDashPanel > .db-drawer__panel > .inv-header .db-btn--icon img {
   width: 1.35rem;
   height: 1.35rem;
   filter: brightness(1.7) sepia(.12);
@@ -7959,14 +7935,14 @@ textarea.auto-resize {
   grid-template-columns: 1fr 1fr;
 }
 @media (max-width: 560px) {
-  #invDashPanel > .inv-header {
+  #invDashPanel > .db-drawer__panel > .inv-header {
     min-height: 4.6rem;
     padding: 1.1rem 1.1rem 1rem;
   }
-  #invDashPanel > .inv-header h2 {
+  #invDashPanel > .db-drawer__panel > .inv-header h2 {
     font-size: 2rem;
   }
-  #invDashPanel > .inv-header .db-btn--icon {
+  #invDashPanel > .db-drawer__panel > .inv-header .db-btn--icon {
     width: 3rem;
     height: 3rem;
     font-size: 1.65rem;
