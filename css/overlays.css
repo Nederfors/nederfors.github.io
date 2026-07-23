@@ -5,7 +5,7 @@
  * DAUB's drawer state is mirrored with .db-drawer--open.  This final layer
  * owns the geometry so old right-panel declarations cannot override it.
  */
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured {
+.db-drawer.db-drawer--structured {
   position: fixed;
   inset: 0;
   z-index: 1100;
@@ -24,13 +24,13 @@
   box-shadow: none;
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.open,
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.db-drawer--open {
+.db-drawer.db-drawer--structured.open,
+.db-drawer.db-drawer--structured.db-drawer--open {
   visibility: visible;
   pointer-events: auto;
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured::before {
+.db-drawer.db-drawer--structured::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -39,23 +39,22 @@
   transition: opacity 0.22s ease;
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.open::before,
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.db-drawer--open::before {
+.db-drawer.db-drawer--structured.open::before,
+.db-drawer.db-drawer--structured.db-drawer--open::before {
   opacity: 1;
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__panel {
+.db-drawer.db-drawer--structured > .db-drawer__panel {
   position: absolute;
   inset: 0 0 0 auto;
   display: flex;
   flex-direction: column;
-  width: min(27.5rem, 88vw);
+  width: min(var(--app-drawer-width, 27.5rem), var(--app-drawer-viewport-width, 88vw));
+  max-width: none;
   height: 100%;
   max-height: none;
   padding: 1.2rem 1rem 2rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   color: var(--db-color-text, var(--txt));
   background:
     radial-gradient(circle at top right, rgba(194, 163, 106, .12), transparent 32%),
@@ -67,28 +66,40 @@
   transition: transform .25s ease;
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.open > .db-drawer__panel,
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured.db-drawer--open > .db-drawer__panel {
+.db-drawer.db-drawer--structured.open > .db-drawer__panel,
+.db-drawer.db-drawer--structured.db-drawer--open > .db-drawer__panel {
   transform: translate3d(0, 0, 0);
 }
 
 @media (min-width: 641px) {
-  #invDashPanel.db-drawer--structured.inv-dash-drawer > .db-drawer__panel {
-    width: min(32.5rem, 90vw);
+  .db-drawer.db-drawer--structured.inv-dash-drawer {
+    --app-drawer-width: 32.5rem;
+    --app-drawer-viewport-width: 90vw;
+  }
+
+  .db-drawer.db-drawer--structured.db-drawer--content-medium {
+    --app-drawer-width: 24.375rem;
+    --app-drawer-viewport-width: 80vw;
+  }
+
+  .db-drawer.db-drawer--structured.db-drawer--content-wide {
+    --app-drawer-width: 25rem;
+    --app-drawer-viewport-width: 80vw;
   }
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__overlay {
+.db-drawer.db-drawer--structured > .db-drawer__overlay {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header {
-  position: sticky;
-  top: -1.2rem;
+.db-drawer.db-drawer--structured > .db-drawer__panel > .inv-header {
+  position: relative;
+  top: auto;
   z-index: 2;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   gap: .75rem;
@@ -99,26 +110,45 @@
   backdrop-filter: blur(14px);
 }
 
-:is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header h2 {
+.db-drawer.db-drawer--structured > .db-drawer__panel > .inv-header h2 {
   margin: 0;
   font-size: 1.18rem;
   line-height: 1.2;
 }
 
+.db-drawer.db-drawer--structured > .db-drawer__panel > .db-drawer__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.db-drawer.db-drawer--structured > .db-drawer__panel > .db-drawer__footer {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .db-drawer.db-drawer--structured.db-drawer--content-medium {
+    --app-drawer-width: 31.25rem;
+  }
+
+  .db-drawer.db-drawer--structured.db-drawer--content-wide {
+    --app-drawer-width: 36.25rem;
+  }
+}
+
 @media (max-width: 640px) {
-  :is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured > .db-drawer__panel {
+  .db-drawer.db-drawer--structured > .db-drawer__panel {
     width: 100%;
     max-width: none;
     max-height: none;
     padding: calc(1rem + var(--app-safe-top)) 1rem calc(1rem + var(--app-safe-bottom));
   }
 
-  #invDashPanel.db-drawer--structured.inv-dash-drawer > .db-drawer__panel {
-    width: 100%;
-  }
-
-  :is(#filterPanel, #infoPanel, #summarySlidePanel, #invDashPanel).db-drawer--structured .inv-header {
-    top: calc(-1rem - var(--app-safe-top));
+  .db-drawer.db-drawer--structured > .db-drawer__panel > .inv-header {
     margin: calc(-1rem - var(--app-safe-top)) -1rem 1rem;
     padding: calc(1rem + var(--app-safe-top)) 1rem .9rem;
   }

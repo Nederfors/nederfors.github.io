@@ -3094,8 +3094,7 @@ input:focus, select:focus, textarea:focus {
 .exp-counter.under span { color: inherit; }
 
 
-/* Specifika paneler använder samma klass plus egna id:n */
-#filterPanel { max-width: 360px; }
+/* Specifika äldre paneler använder samma klass plus egna id:n */
 #summaryPanel{ max-width: 360px; }
 #effectsPanel{ max-width: 360px; }
 
@@ -3615,13 +3614,8 @@ select.level {
   }
 }
 /* ---------- Off-canvas-paneler från höger ---------- */
-#filterPanel,
-#yrkePanel,
-#infoPanel,
 #summaryPanel,
-#summarySlidePanel,
-#effectsPanel,
-#conflictPanel {
+#effectsPanel {
   position: fixed;
   top: 0;
   right: 0;
@@ -3647,13 +3641,10 @@ select.level {
 }
 
 /* Specifika max-breddar */
-#filterPanel { max-width: 390px; }
 #summaryPanel{ max-width: 360px; }
-#summarySlidePanel { max-width: 390px; }
 #effectsPanel{ max-width: 360px; }
-#conflictPanel { max-width: 390px; }
-#yrkePanel   { max-width: 400px; font-size: 1.12rem; line-height: 1.6; }
-#infoPanel   { max-width: 390px; font-size: 1rem; line-height: 1.5; }
+#yrkePanel   { font-size: 1.12rem; line-height: 1.6; }
+#infoPanel   { font-size: 1rem; line-height: 1.5; }
 #yrkePanel p { margin: 0 0 1rem; }
 #yrkePanel table {
   width: 100%;
@@ -3890,25 +3881,15 @@ select.level {
 }
 
 /* När klassen .open läggs på – låt panelen glida in */
-#filterPanel.open,
-#yrkePanel.open,
-#infoPanel.open,
 #summaryPanel.open,
-#summarySlidePanel.open,
-#effectsPanel.open,
-#conflictPanel.open {
+#effectsPanel.open {
   transform: translate3d(0, 0, 0);
   box-shadow: -4px 0 20px #0009;
 }
 
 @media (min-width: 1024px) {
-  #filterPanel { max-width: 520px; }
   #summaryPanel{ max-width: 460px; }
-  #summarySlidePanel { max-width: 460px; }
   #effectsPanel{ max-width: 460px; }
-  #conflictPanel{ max-width: 500px; }
-  #yrkePanel   { max-width: 580px; }
-  #infoPanel   { max-width: 540px; }
 
   #filterPanel .info-panel-overview-grid,
   #conflictPanel .info-panel-overview-grid {
@@ -3935,13 +3916,8 @@ select.level {
 }
 /* Mobile: make right panels fill ~90% width and full dynamic height */
 @media (max-width: 640px) {
-  #filterPanel,
-  #yrkePanel,
-  #infoPanel,
   #summaryPanel,
-  #summarySlidePanel,
-  #effectsPanel,
-  #conflictPanel {
+  #effectsPanel {
     width: 100vw;
     max-width: 100vw;
     height: 100dvh;

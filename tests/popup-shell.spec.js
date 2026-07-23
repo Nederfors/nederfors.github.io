@@ -489,13 +489,16 @@ test('shadow-root drawers and choice controls keep their complete component layo
   const drawerGeometry = await toolbar.locator('#filterPanel').evaluate(panel => {
     const actionRow = panel.querySelector('#filterFormalCard .char-btn-row');
     const panelSurface = panel.querySelector('.db-drawer__panel');
+    const panelBody = panel.querySelector('.db-drawer__body');
     const rowStyle = actionRow ? window.getComputedStyle(actionRow) : null;
     const panelStyle = panelSurface ? window.getComputedStyle(panelSurface) : null;
+    const bodyStyle = panelBody ? window.getComputedStyle(panelBody) : null;
     return {
       actionDisplay: rowStyle?.display || '',
       actionColumns: rowStyle?.gridTemplateColumns.split(/\s+/).filter(Boolean).length || 0,
       surfacePosition: panelStyle?.position || '',
       surfaceOverflowY: panelStyle?.overflowY || '',
+      bodyOverflowY: bodyStyle?.overflowY || '',
       surfaceFlexDirection: panelStyle?.flexDirection || '',
       surfaceTransform: panelStyle?.transform || ''
     };
@@ -504,7 +507,8 @@ test('shadow-root drawers and choice controls keep their complete component layo
   expect(drawerGeometry.actionDisplay).toBe('grid');
   expect(drawerGeometry.actionColumns).toBeGreaterThanOrEqual(1);
   expect(drawerGeometry.surfacePosition).toBe('absolute');
-  expect(['auto', 'scroll']).toContain(drawerGeometry.surfaceOverflowY);
+  expect(drawerGeometry.surfaceOverflowY).toBe('hidden');
+  expect(['auto', 'scroll']).toContain(drawerGeometry.bodyOverflowY);
   expect(drawerGeometry.surfaceFlexDirection).toBe('column');
   expect(drawerGeometry.surfaceTransform).not.toBe('none');
 
