@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Symbapedia legacy recovery</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Migration-only utility</p>
+    <h1>Recover legacy Symbapedia characters</h1>
+    <p>This standalone page reads supported browser storage on <code>nederfors.github.io</code>. It does not start the old application, change source storage, or save anything into the current Symbapedia application.</p>
+
+    <section aria-labelledby="scan-heading">
+      <h2 id="scan-heading">1. Scan safely</h2>
+      <p>You may also select old Symbapedia JSON exports. Files are read locally in this browser.</p>
+      <label for="json-files">Optional legacy JSON files</label>
+      <input id="json-files" type="file" accept="application/json,.json" multiple>
+      <button id="scan-button" type="button">Scan supported storage</button>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite">Ready to scan.</p>
+
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">2. Review results</h2>
+      <p id="summary">No scan has run.</p>
+      <h3>Source inventory</h3>
+      <ul id="source-list"><li>No source inventory yet.</li></ul>
+      <h3>Anomalies and conflicts</h3>
+      <ul id="anomaly-list"><li>No anomaly inventory yet.</li></ul>
+    </section>
+
+    <section aria-labelledby="backup-heading">
+      <h2 id="backup-heading">3. Download the canonical backup</h2>
+      <p>The versioned JSON backup is independently useful even if transfer fails or is never attempted.</p>
+      <button id="download-button" type="button" disabled>Download recovery backup</button>
+    </section>
+
+    <section id="transfer-section" aria-labelledby="transfer-heading" hidden>
+      <h2 id="transfer-heading">4. Transfer handoff</h2>
+      <p>This sends the canonical recovery envelope only to a connected Symbapedia recovery request. Destination merge and persistence belong to R1C.</p>
+      <button id="transfer-button" type="button">Send recovery handoff</button>
+    </section>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
