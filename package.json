@@ -1,0 +1,14 @@
+{
+  "name": "symbapedia-legacy-recovery",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:unit": "node --test tests/recovery-core.test.mjs",
+    "test:browser": "playwright test",
+    "test": "npm run test:unit && npm run test:browser"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0"
+  }
+}

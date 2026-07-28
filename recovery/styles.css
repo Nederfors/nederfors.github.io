@@ -1,0 +1,80 @@
+:root {
+  color-scheme: light dark;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.55;
+}
+body {
+  margin: 0;
+  background: Canvas;
+  color: CanvasText;
+}
+
+main {
+  width: min(48rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3rem 0 5rem;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  max-width: 14ch;
+}
+
+section {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, CanvasText 22%, transparent);
+  border-radius: 0.75rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+label,
+input,
+button {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.status {
+  padding: 0.9rem 1rem;
+  border-inline-start: 0.3rem solid #51647a;
+  background: color-mix(in srgb, CanvasText 7%, Canvas);
+}
+
+.status[data-kind="success"] {
+  border-color: #24733f;
+}
+
+.status[data-kind="error"] {
+  border-color: #b43a32;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
