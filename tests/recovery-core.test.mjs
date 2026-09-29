@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   buildHandoffMessage,
   buildRecoveryEnvelope,
+  buildCharacterExports,
   extractIndexedDb,
   extractLegacyJson,
   extractLocalStorage,
@@ -11,6 +12,43 @@ import {
 } from '../recovery/recovery-core.js';
 
 const sourceOrigin = 'https://nederfors.github.io';
+
+test('individual exports preserve every variant, data and folder in importable character files', () => {
+  const input = [
+    { name: 'Åsa / Hero', folderId: 'f1', folder: 'Heroes', data: { notes: { background: 'first' }, inventory: [{ i: 'di10', q: 2 }], custom: [{ id: 'custom-a', namn: 'Custom' }] } },
+    { name: 'Åsa / Hero', folderId: 'f1', folder: 'Heroes', data: { notes: { background: 'second' }, money: { daler: 7 } } },
+    { name: '', data: { list: [] } }
+  ];
+  const extraction = extractLegacyJson(JSON.stringify(input), 'characters.json');
+  // Same source ID with different data must retain both conflict variants.
+  extraction.candidates[1].sourceId = extraction.candidates[0].sourceId;
+  const envelope = buildRecoveryEnvelope({ sourceOrigin, extractions: [extraction] });
+  const before = serializeRecoveryEnvelope(envelope);
+  const exports = buildCharacterExports(envelope);
+  assert.equal(exports.length, 3);
+  assert.equal(new Set(exports.map(file => file.filename)).size, 3);
+  exports.forEach((file, index) => {
+    assert.match(file.filename, /^\d{3}-.+\.json$/);
+    assert.doesNotMatch(file.filename, /[\\/:*?"<>|]/);
+    const payload = JSON.parse(file.serialized);
+    const character = envelope.characters[index];
+    assert.equal(payload.format, 'symbapedia-character');
+    assert.equal(payload.formatVersion, 1);
+    assert.equal(payload.name, character.name);
+    assert.deepEqual(payload.data, character.data);
+    assert.equal(payload.folderId, character.folder?.id);
+    assert.equal(payload.folder, character.folder?.name);
+    assert.equal(payload.characters, undefined);
+    assert.equal(payload.recoveryFormat, undefined);
+    const roundtrip = extractLegacyJson(file.serialized, file.filename);
+    assert.equal(roundtrip.candidates.length, 1);
+    assert.equal(roundtrip.anomalies.length, 0);
+    assert.deepEqual(roundtrip.candidates[0].data, character.data);
+    if (character.variant.count > 1) assert.match(file.filename, /-variant-[12]\.json$/);
+  });
+  assert.equal(serializeRecoveryEnvelope(envelope), before);
+  assert.deepEqual(buildCharacterExports({ characters: [] }), []);
+});
 
 test('combined and split localStorage are both inventoried, exact duplicates deduplicate, and conflicts survive', () => {
   const shared = { list: [{ id: 'ability-a' }], notes: { background: 'shared' } };
