@@ -471,6 +471,32 @@ export function serializeRecoveryEnvelope(envelope) {
   return `${stableStringify(envelope, 2)}\n`;
 }
 
+export function buildCharacterExports(envelope) {
+  return envelope.characters.map((character, index) => {
+    // Version 1 keeps these legacy fields on the destination's migration path.
+    const payload = {
+      format: 'symbapedia-character',
+      formatVersion: 1,
+      name: character.name,
+      data: character.data
+    };
+    if (character.folder) {
+      payload.folderId = character.folder.id;
+      payload.folder = character.folder.name;
+    }
+    const name = String(character.name || 'Recovered character')
+      .replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g, '-')
+      .replace(/\s+/g, '-')
+      .replace(/^\.+|\.+$/g, '')
+      .slice(0, 100) || 'Recovered-character';
+    const variant = character.variant.count > 1 ? `-variant-${character.variant.index}` : '';
+    return {
+      filename: `${String(index + 1).padStart(3, '0')}-${name}${variant}.json`,
+      serialized: `${stableStringify(payload, 2)}\n`
+    };
+  });
+}
+
 export function buildHandoffMessage(envelope, nonce, sourceOrigin) {
   return {
     type: HANDOFF_TYPE,

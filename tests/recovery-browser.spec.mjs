@@ -1,6 +1,53 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 const DB_NAME = 'symbapedia-app';
+
+test('each recovered character downloads as its own file without changing storage or unlocking transfer', async ({ page }) => {
+  await page.goto('/recovery/');
+  await page.evaluate(() => {
+    localStorage.setItem('rpall', JSON.stringify({
+      characters: [
+        { id: 'one', name: 'Same / Hero', folderId: 'heroes' },
+        { id: 'two', name: 'Same / Hero', folderId: 'heroes' }
+      ],
+      folders: [{ id: 'heroes', name: 'Heroes' }],
+      data: {
+        one: { notes: { background: 'first' }, money: { daler: 3 } },
+        two: { notes: { background: 'second' }, inventory: [{ i: 'di10', q: 2 }] }
+      }
+    }));
+  });
+  const before = await browserStorageSnapshot(page);
+  await page.locator('#scan-button').click();
+  await expect(page.locator('#status')).toContainText('Scan complete');
+  const buttons = page.locator('#character-downloads button');
+  await expect(buttons).toHaveCount(2);
+  const envelope = await page.evaluate(() => window.symbapediaRecovery.getEnvelope());
+  const filenames = [];
+  for (let index = 0; index < 2; index += 1) {
+    const downloadPromise = page.waitForEvent('download');
+    await buttons.nth(index).click();
+    const download = await downloadPromise;
+    filenames.push(download.suggestedFilename());
+    const payload = JSON.parse(await readFile(await download.path(), 'utf8'));
+    expect(payload).toEqual({
+      format: 'symbapedia-character', formatVersion: 1,
+      name: envelope.characters[index].name, folder: 'Heroes', folderId: 'heroes',
+      data: envelope.characters[index].data
+    });
+    await expect(page.locator('#status')).toContainText('Character file download started');
+  }
+  expect(new Set(filenames).size).toBe(2);
+  await expect(page.locator('#transfer-section')).toBeHidden();
+  expect(await browserStorageSnapshot(page)).toEqual(before);
+
+  await page.evaluate(() => localStorage.clear());
+  await page.locator('#scan-button').click();
+  await expect(page.locator('#status')).toContainText('Scan complete');
+  await expect(buttons).toHaveCount(0);
+  await expect(page.locator('#character-downloads')).toContainText('No recoverable characters');
+});
 
 async function deleteDatabase(page) {
   await page.evaluate(async name => {

@@ -4,6 +4,7 @@ import {
   HANDOFF_VERSION,
   buildHandoffMessage,
   buildRecoveryEnvelope,
+  buildCharacterExports,
   extractIndexedDb,
   extractLegacyJson,
   extractLocalStorage,
@@ -21,6 +22,7 @@ const byId = id => document.getElementById(id);
 const scanButton = byId('scan-button');
 const fileInput = byId('json-files');
 const downloadButton = byId('download-button');
+const characterDownloads = byId('character-downloads');
 const transferSection = byId('transfer-section');
 const transferButton = byId('transfer-button');
 const status = byId('status');
@@ -199,11 +201,36 @@ function renderEnvelope(envelope) {
     row.textContent = 'No anomalies detected.';
     anomalyList.append(row);
   }
+  characterDownloads.replaceChildren(...buildCharacterExports(envelope).map((file, index) => {
+    const character = envelope.characters[index];
+    const row = document.createElement('li');
+    const label = character.variant.count > 1 ? ` (${character.variant.label})` : '';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `Download ${character.name || 'Recovered character'}${label}`;
+    button.addEventListener('click', () => {
+      try {
+        downloadJson(file.serialized, file.filename);
+        setStatus(`Character file download started: ${file.filename}. Import this file in Symbapedia V2.`, 'success');
+      } catch (error) {
+        setStatus(`Character file could not be created: ${String(error?.message || error)} Retry this download.`, 'error');
+      }
+    });
+    row.append(button);
+    if (character.folder?.name) row.append(document.createTextNode(`Folder: ${character.folder.name}`));
+    return row;
+  }));
+  if (!envelope.characters.length) {
+    const row = document.createElement('li');
+    row.textContent = 'No recoverable characters found.';
+    characterDownloads.append(row);
+  }
 }
 
 async function scan() {
   scanButton.disabled = true;
   downloadButton.disabled = true;
+  characterDownloads.replaceChildren();
   transferSection.hidden = true;
   state.backupAvailable = false;
   setStatus('Scanning supported storage with read-only APIs…');
@@ -213,7 +240,7 @@ async function scan() {
     state.serialized = serializeRecoveryEnvelope(state.envelope);
     renderEnvelope(state.envelope);
     downloadButton.disabled = false;
-    setStatus('Scan complete. Download the canonical backup before transfer becomes available.', 'success');
+    setStatus('Scan complete. Download individual character files to import in Symbapedia V2, or the full backup to use transfer.', 'success');
     return state.envelope;
   } catch (error) {
     state.envelope = null;
@@ -225,21 +252,29 @@ async function scan() {
   }
 }
 
+function downloadJson(serialized, filename) {
+  let url = '';
+  try {
+    const blob = new Blob([serialized], { type: 'application/json' });
+    url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+  } finally {
+    if (url) setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+}
+
 function downloadBackup() {
   if (!state.envelope || !state.serialized) {
     setStatus('Scan storage before downloading a backup.', 'error');
     return false;
   }
-  let url = '';
   try {
-    const blob = new Blob([state.serialized], { type: 'application/json' });
-    url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = 'symbapedia-recovery-v1.json';
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
+    downloadJson(state.serialized, 'symbapedia-recovery-v1.json');
     state.backupAvailable = true;
     transferSection.hidden = false;
     setStatus('Canonical backup download started. Keep the file; transfer is now available.', 'success');
@@ -249,8 +284,6 @@ function downloadBackup() {
     transferSection.hidden = true;
     setStatus(`Backup could not be created: ${String(error?.message || error)} The scan remains available so you can retry.`, 'error');
     return false;
-  } finally {
-    if (url) setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 }
 
